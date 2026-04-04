@@ -1,0 +1,62 @@
+# Sarmal
+
+> Parametric curve renderer for loading indicators. Beautiful spinners from two lines of math.
+
+Sarmal is a tiny (2.75 KB gzipped), zero-dependency JavaScript library that renders animated
+loading indicators by tracing parametric curves on an HTML canvas element.
+
+## Quick start
+
+### CDN (one line)
+
+```html
+<script src="https://unpkg.com/@sarmal/core/dist/auto-init.js"></script>
+<canvas data-sarmal="artemis2" data-trail-color="#60a5fa"></canvas>
+```
+
+### npm
+
+```sh
+npm install @sarmal/core
+```
+
+```js
+import { createSarmal, curves } from '@sarmal/core'
+
+const canvas = document.querySelector('canvas')
+const sarmal = createSarmal(canvas, curves.artemis2, {
+  trailColor: '#60a5fa',
+})
+sarmal.start()
+```
+
+## Available curves
+
+- `artemis2`: Artemis II free-return lunar trajectory approximation
+- `epitrochoid7`: 7-lobed epitrochoid with a breathing distance parameter
+- `astroid`: 4-cusped hypocycloid (x=cos³t, y=sin³t)
+- `deltoid`: 3-cusped hypocycloid
+- `rose5`: 5-petal rose curve (r=cos(5t))
+- `rose3`: 3-petal rose curve (r=cos(3t))
+
+## API
+
+### createSarmal(canvas, curveDef, options?)
+
+Returns an instance with `.start()`, `.stop()`, `.destroy()`.
+
+**Options:**
+- `trailColor`: CSS color for the animated trail
+- `skeletonColor`: CSS color for the static skeleton outline
+- `headColor`: CSS color for the leading dot
+- `headRadius`: radius of the leading dot (pixels)
+- `glowSize`: blur radius for glow effect (pixels)
+- `trailLength`: number of points in the trail buffer
+
+The `data-*` attributes on `<canvas>` mirror all options for CDN/no-build usage.
+
+## Links
+
+- npm: https://www.npmjs.com/package/@sarmal/core
+- GitHub: https://github.com/yethranayeh/sarmal
+- Site: https://sarmal.art
