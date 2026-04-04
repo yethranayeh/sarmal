@@ -6,9 +6,13 @@ const POINTS_PER_PERIOD_UNIT = 50;
 /**
  * A fixed-size list of points with first in, last out method
  * The oldest entry is automatically discarded when the list is at capacity
+ *
+ * Note: `result.length` is *never* changed,
+ *  so callers use the separate `count` getter to know valid size
  */
 class CircularBuffer {
   private data: Array<Point>;
+  private result: Array<Point>;
   private capacity: number;
   private head: number = 0;
   private count: number = 0;
@@ -16,31 +20,38 @@ class CircularBuffer {
   constructor(capacity: number) {
     this.capacity = capacity;
     this.data = Array.from({ length: capacity }, () => ({ x: 0, y: 0 }));
+    this.result = Array.from({ length: capacity }, () => ({ x: 0, y: 0 }));
   }
 
-  /**
-   * Array elements are pre-allocated and `head` pointer is manually assigned,
-   *  because AI said using `Array.shift` would be `O(n)` and this would be `O(1)`
-   *  and I don't know any better.
-   */
+  /** Mutates in-place */
   push(x: number, y: number): void {
-    this.data[this.head] = { x: x, y: y };
+    const slot = this.data[this.head]!;
+
+    slot.x = x;
+    slot.y = y;
     this.head = (this.head + 1) % this.capacity;
+
     if (this.count < this.capacity) {
       this.count++;
     }
   }
 
+  /**
+   * Copies ordered points into the pre-allocated result buffer and returns it
+   * Note: The *same* array reference is returned every call,
+   *  so `result.length` is also always `capacity`
+   */
   toArray(): Array<Point> {
-    // oxlint-disable-next-line unicorn/no-new-array -- AI said it is pre-allocated for performance (runs every frame)
-    const result: Array<Point> = new Array(this.count);
     const start = this.count < this.capacity ? 0 : this.head;
+
     for (let i = 0; i < this.count; i++) {
-      const index = (start + i) % this.capacity;
-      const p = this.data[index]!;
-      result[i] = { x: p.x, y: p.y };
+      const src = this.data[(start + i) % this.capacity]!;
+      const dst = this.result[i]!;
+      dst.x = src.x;
+      dst.y = src.y;
     }
-    return result;
+
+    return this.result;
   }
 
   clear(): void {
@@ -48,7 +59,7 @@ class CircularBuffer {
     this.count = 0;
   }
 
-  get length(): number {
+  get length() {
     return this.count;
   }
 }
@@ -85,7 +96,11 @@ export function createEngine(curveDef: CurveDef, trailLength: number = 120): Eng
       return trail.toArray();
     },
 
-    reset(): void {
+    get trailCount() {
+      return trail.length;
+    },
+
+    reset() {
       t = 0;
       actualTime = 0;
       trail.clear();

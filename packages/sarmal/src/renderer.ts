@@ -12,8 +12,10 @@ const FIT_PADDING = 0.1;
  * The trail is drawn in batches of points
  * Each batch has lower opacity than the one that comes before it
  *  (0 = oldest/tail, 1 = newest/head)
+ *
+ * ! Performance note: Larger batch size = fewer GPU stroke calls per frame
  */
-const TRAIL_BATCH_SIZE = 10;
+const TRAIL_BATCH_SIZE = 20;
 /** Higher values = sharper fade near the tail, more of the trail appears faint */
 const TRAIL_FADE_CURVE = 1.5;
 const TRAIL_MAX_OPACITY = 0.88;
@@ -26,15 +28,15 @@ const GLOW_INNER_EDGE = 0.4;
 /** Opacity at the inner edge of the glow falloff */
 const GLOW_FALLOFF_OPACITY = 0.53;
 
-// TODO: might as well accept rgb/rgba directly too
-function hexToRgba(hex: string, alpha: number): string {
+/** Parses a hex color into its "r,g,b" string for use in rgba() — called once at init */
+function hexToRgbComponents(hex: string): string {
   const n = parseInt(hex.slice(1), 16);
-  return `rgba(${n >> 16},${(n >> 8) & 255},${n & 255},${alpha})`;
+  return `${n >> 16},${(n >> 8) & 255},${n & 255}`;
 }
 
 /**
  * Creates a Canvas 2D renderer for sarmal animations
- * Renders the skeleton, the trail, and the glowing dot.
+ * Renders the skeleton, the trail, and the glowing dot
  */
 export function createRenderer(options: RendererOptions): SarmalInstance {
   const canvas = options.canvas;
@@ -52,8 +54,13 @@ export function createRenderer(options: RendererOptions): SarmalInstance {
     glowSize: options.glowSize ?? DEFAULT_GLOW_SIZE,
   };
 
+  const trailRgb = hexToRgbComponents(opts.trailColor);
+  const headRgbFalloff = `rgba(${hexToRgbComponents(opts.headColor)},${GLOW_FALLOFF_OPACITY})`;
+
   let skeleton: Array<Point> = [];
+  let skeletonCanvas: OffscreenCanvas | null = null;
   let trail: Array<Point> = [];
+  let trailCount = 0;
   let head: Point | null = null;
   let scale = 1;
   let offsetX = 0;
@@ -113,59 +120,73 @@ export function createRenderer(options: RendererOptions): SarmalInstance {
     offsetY = (canvasHeight - boundsHeight) / 2 - minY * scale;
   }
 
-  function transformCoordinateToPixel(p: Point) {
-    return {
-      x: p.x * scale + offsetX,
-      y: p.y * scale + offsetY,
-    };
+  /**
+   * Draws the skeleton once into an OffscreenCanvas so that every frame
+   * only needs a single ctx.drawImage() instead of rebuilding the full path.
+   */
+  function buildSkeletonCanvas() {
+    if (skeleton.length < 2) return;
+
+    skeletonCanvas = new OffscreenCanvas(canvas.width, canvas.height);
+    const skeletonCtx = skeletonCanvas.getContext("2d")!;
+
+    skeletonCtx.strokeStyle = `rgba(${hexToRgbComponents(opts.skeletonColor)},${DEFAULT_SKELETON_OPACITY})`;
+    skeletonCtx.lineWidth = 1.5;
+    skeletonCtx.beginPath();
+
+    const first = skeleton[0]!;
+    skeletonCtx.moveTo(first.x * scale + offsetX, first.y * scale + offsetY);
+
+    for (let i = 1; i < skeleton.length; i++) {
+      const p = skeleton[i]!;
+      skeletonCtx.lineTo(p.x * scale + offsetX, p.y * scale + offsetY);
+    }
+
+    skeletonCtx.stroke();
   }
 
   function drawSkeleton() {
-    if (skeleton.length < 2) {
+    if (!skeletonCanvas) {
       return;
     }
 
-    ctx.strokeStyle = hexToRgba(opts.skeletonColor, DEFAULT_SKELETON_OPACITY);
-    ctx.lineWidth = 1.5;
-    ctx.beginPath();
-
-    const firstPixel = transformCoordinateToPixel(skeleton[0]!);
-    ctx.moveTo(firstPixel.x, firstPixel.y);
-
-    for (let i = 1; i < skeleton.length; i++) {
-      const pixel = transformCoordinateToPixel(skeleton[i]!);
-      ctx.lineTo(pixel.x, pixel.y);
-    }
-
-    ctx.stroke();
+    ctx.drawImage(skeletonCanvas, 0, 0);
   }
 
   function drawTrail() {
-    if (trail.length < 2) {
+    if (trailCount < 2) {
       return;
     }
 
-    for (let b = 0; b < trail.length - 1; b += TRAIL_BATCH_SIZE) {
-      const bEnd = Math.min(b + TRAIL_BATCH_SIZE, trail.length - 1);
+    // Set constant state once outside the batch loop
+    ctx.lineJoin = "round";
+    ctx.lineCap = "round";
+
+    for (let batchIndex = 0; batchIndex < trailCount - 1; batchIndex += TRAIL_BATCH_SIZE) {
+      const bEnd = Math.min(batchIndex + TRAIL_BATCH_SIZE, trailCount - 1);
       /** Normalized position of this batch along the trail (0 = tail, 1 = head) */
-      const progress = (b + bEnd) / 2 / (trail.length - 1);
+      const progress = (batchIndex + bEnd) / 2 / (trailCount - 1);
       const alpha = Math.pow(progress, TRAIL_FADE_CURVE) * TRAIL_MAX_OPACITY;
       const lineWidth = TRAIL_MIN_WIDTH + progress * (TRAIL_MAX_WIDTH - TRAIL_MIN_WIDTH);
 
       ctx.beginPath();
-      for (let i = b; i <= bEnd; i++) {
-        const pixel = transformCoordinateToPixel(trail[i]!);
-        if (i === b) {
-          ctx.moveTo(pixel.x, pixel.y);
+      for (let i = batchIndex; i <= bEnd; i++) {
+        const point = trail[i]!;
+
+        if (i === batchIndex) {
+          ctx.moveTo(point.x * scale + offsetX, point.y * scale + offsetY);
         } else {
-          ctx.lineTo(pixel.x, pixel.y);
+          ctx.lineTo(point.x * scale + offsetX, point.y * scale + offsetY);
         }
       }
 
-      ctx.strokeStyle = hexToRgba(opts.trailColor, alpha);
+      // ! AI Note
+      // FIXME: still allocates a new string every batch every frame (~20x/frame).
+      // `trailRgb` avoids re-parsing the hex, but alpha is a continuous float so the full
+      // rgba string can't be pre-computed. Fix: discretize alpha into N buckets at init
+      // and do a lookup (e.g. trailColors[Math.round(progress * N)]) instead of a template literal.
+      ctx.strokeStyle = `rgba(${trailRgb},${alpha})`;
       ctx.lineWidth = lineWidth;
-      ctx.lineJoin = "round";
-      ctx.lineCap = "round";
       ctx.stroke();
     }
   }
@@ -175,11 +196,12 @@ export function createRenderer(options: RendererOptions): SarmalInstance {
       return;
     }
 
-    const { x, y } = transformCoordinateToPixel(head);
+    const x = head.x * scale + offsetX;
+    const y = head.y * scale + offsetY;
 
     const gradient = ctx.createRadialGradient(x, y, 0, x, y, opts.glowSize);
     gradient.addColorStop(0, opts.headColor);
-    gradient.addColorStop(GLOW_INNER_EDGE, hexToRgba(opts.headColor, GLOW_FALLOFF_OPACITY));
+    gradient.addColorStop(GLOW_INNER_EDGE, headRgbFalloff);
     gradient.addColorStop(1, "transparent");
 
     ctx.fillStyle = gradient;
@@ -199,7 +221,8 @@ export function createRenderer(options: RendererOptions): SarmalInstance {
     lastTime = now;
 
     trail = engine.tick(deltaTime);
-    head = trail.length > 0 ? trail[trail.length - 1]! : null;
+    trailCount = engine.trailCount;
+    head = trailCount > 0 ? trail[trailCount - 1]! : null;
 
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
@@ -210,9 +233,10 @@ export function createRenderer(options: RendererOptions): SarmalInstance {
     animationId = requestAnimationFrame(render);
   }
 
-  // Initialize skeleton on creation
+  // Initialize skeleton and offscreen canvas on creation
   skeleton = engine.getSarmalSkeleton();
   calculateBoundaries();
+  buildSkeletonCanvas();
 
   return {
     start() {
@@ -228,6 +252,7 @@ export function createRenderer(options: RendererOptions): SarmalInstance {
       if (animationId === null) {
         return;
       }
+
       cancelAnimationFrame(animationId);
       animationId = null;
     },

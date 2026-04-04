@@ -27,10 +27,16 @@ export interface Engine {
    * Internally, this increases the simulation time `t` by `speed * dt`,
    *  wraps `t` at `period`, evaluates the curve's parametric function `fn(t)`,
    *  and appends the new point to the trail.
-   * Returns a `Point` array, which are sorted oldest to newest
+   * Returns the pre-allocated trail buffer, which has the *same* reference every call
+   * ! Do not use `Array.length` to determine size
    * @param deltaTime Delta time in seconds (typically frame time from **requestAnimationFrame** or similar)
    */
   tick(deltaTime: number): Array<Point>;
+  /**
+   * Number of valid points in the trail buffer returned by the last `tick()` call
+   * ! Use this instead of `trail.length`
+   */
+  readonly trailCount: number;
   /**
    * Resets the simulation state, by clearing the trail and reverting internal time `t` to 0.
    * The next call to `tick` will start fresh from the beginning of the curve.
