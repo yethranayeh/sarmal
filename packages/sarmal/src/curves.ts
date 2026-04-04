@@ -62,6 +62,38 @@ function rose3(t: number, _time: number, _params: Record<string, number>): Point
   };
 }
 
+function lissajous32(t: number, time: number, _params: Record<string, number>): Point {
+  const phi = time * 0.45;
+  return {
+    x: Math.sin(3 * t + phi),
+    y: Math.sin(2 * t),
+  };
+}
+
+function lissajous43(t: number, time: number, _params: Record<string, number>): Point {
+  const phi = time * 0.38;
+  return {
+    x: Math.sin(4 * t + phi),
+    y: Math.sin(3 * t),
+  };
+}
+
+function epicycloid3(t: number, _time: number, _params: Record<string, number>): Point {
+  return {
+    x: 4 * Math.cos(t) - Math.cos(4 * t),
+    y: 4 * Math.sin(t) - Math.sin(4 * t),
+  };
+}
+
+function lame(t: number, time: number, _params: Record<string, number>): Point {
+  const p = 1.75 + 1.25 * Math.sin(time * 0.48);
+  const c = Math.cos(t),
+    s = Math.sin(t);
+  return {
+    x: Math.sign(c) * Math.pow(Math.abs(c), p),
+    y: Math.sign(s) * Math.pow(Math.abs(s), p),
+  };
+}
 export const curves: Record<string, CurveDef> = {
   artemis2: {
     name: "Artemis II",
@@ -98,5 +130,29 @@ export const curves: Record<string, CurveDef> = {
     fn: rose3,
     period: TWO_PI,
     speed: 1.15,
+  },
+  lissajous32: {
+    name: "Lissajous 3:2",
+    fn: lissajous32,
+    period: TWO_PI,
+    speed: 2.0,
+  },
+  lissajous43: {
+    name: "Lissajous 4:3",
+    fn: lissajous43,
+    period: TWO_PI,
+    speed: 1.8,
+  },
+  epicycloid3: {
+    name: "Epicycloid (n=3)",
+    fn: epicycloid3,
+    period: TWO_PI,
+    speed: 0.75,
+  },
+  lame: {
+    name: "Lamé Curve",
+    fn: lame,
+    period: TWO_PI,
+    speed: 1.0,
   },
 };
