@@ -23,6 +23,8 @@ function init(): void {
       ...(canvas.dataset.trailColor && { trailColor: canvas.dataset.trailColor }),
       ...(canvas.dataset.skeletonColor && { skeletonColor: canvas.dataset.skeletonColor }),
       ...(canvas.dataset.headColor && { headColor: canvas.dataset.headColor }),
+      ...(canvas.dataset.headRadius && { headRadius: parseFloat(canvas.dataset.headRadius) }),
+      ...(canvas.dataset.glowSize && { glowSize: parseInt(canvas.dataset.glowSize, 10) }),
     });
     sarmal.start();
   });

@@ -1,6 +1,15 @@
 ---
 import "../styles/globals.css";
 import Sarmal from "../components/Sarmal.astro";
+import { Code } from "astro:components";
+
+const sarmals = [
+	{ id: "rose3", name: "Rose (n=3)", color: "#e879f9" },
+	{ id: "deltoid", name: "Deltoid", color: "#fb923c" },
+	{ id: "astroid", name: "Astroid", color: "#38bdf8" },
+	{ id: "epitrochoid7", name: "Epitrochoid", color: "#a78bfa" },
+	{ id: "rose5", name: "Rose (n=5)", color: "#f472b6" }
+] as const;
 ---
 
 <html lang='en'>
@@ -11,14 +20,70 @@ import Sarmal from "../components/Sarmal.astro";
 		<meta name='viewport' content='width=device-width' />
 		<meta name='generator' content={Astro.generator} />
 		<title>Sarmal</title>
+		<meta name='description' content='Beautiful loading spinners from parametric curves. 2.8 KB, no dependencies.' />
 	</head>
-	<body class='min-h-screen flex items-center justify-center'>
-		<main class='text-center'>
-			<Sarmal curve='artemis2' width={400} height={400} trailColor='#000000' />
-			<h1 class='font-display text-[clamp(4rem,20vw,10rem)] leading-none tracking-tight uppercase text-accent'>
-				Sarmal
-			</h1>
-			<p class='font-mono text-xs tracking-[0.2em] uppercase text-muted mt-4'>loading indicators</p>
+	<body class='min-h-screen'>
+		<header class='w-full px-4 py-3 flex items-center justify-between border-b border-border'>
+			<a href='/' class='font-heading text-lg text-foreground hover:text-primary transition-colors'>
+				<span class='text-primary'>sarmal</span>.art
+			</a>
+			<a
+				href='https://github.com/yethranayeh/sarmal'
+				target='_blank'
+				rel='noopener noreferrer'
+				class='font-mono text-xs tracking-wider uppercase text-muted hover:text-foreground transition-colors'>
+				GitHub
+			</a>
+		</header>
+
+		<main class='max-w-3xl mx-auto p-4'>
+			<section class='text-center mb-16'>
+				<div class='flex justify-center mb-6'>
+					<Sarmal curve='artemis2' width={200} height={200} trailColor='#60a5fa' trailLength={300} />
+				</div>
+				<h1 class='font-heading text-4xl md:text-5xl leading-tight tracking-tight text-foreground mb-3'>
+					Loading <span class='text-primary'>Artemis II</span>
+				</h1>
+				<p class='font-body text-base text-muted max-w-sm mx-auto mb-8'>
+					A spinner that traces humanity's return to <span class='text-primary'>the Moon</span>. <em>The first</em> crewed
+					lunar flight since <span class='text-primary'>Apollo 17</span>.
+				</p>
+				<div class='bg-surface border border-border rounded-md max-w-md mx-auto text-left'>
+					<Code
+						class='p-2'
+						code={`<script src="https://unpkg.com/@sarmal/core/dist/auto-init.js"></script>
+
+<canvas
+  data-sarmal="artemis2"
+  data-trail-color="#60a5fa"
+  data-skeleton-color="#60a5fa"></canvas>`}
+						lang='html'
+						theme='slack-ochin'
+					/>
+				</div>
+			</section>
+
+			<section>
+				<h2 class='font-heading text-xl text-center text-foreground mb-6'>Standard sarmals</h2>
+				<div class='grid grid-cols-3 md:grid-cols-5 gap-4'>
+					{
+						sarmals.map((curve) => (
+							<div class='flex flex-col items-center'>
+								<div title={curve.id} class='bg-surface border border-border rounded-md p-3 mb-2 overflow-visible'>
+									<Sarmal curve={curve.id} width={72} height={72} trailColor={curve.color} />
+								</div>
+								<span title={curve.id} class='font-mono text-[10px] tracking-wider uppercase text-muted'>
+									{curve.name}
+								</span>
+							</div>
+						))
+					}
+				</div>
+			</section>
 		</main>
+
+		<footer class='w-full px-4 py-6 border-t border-border text-center'>
+			<p class='font-mono text-[10px] tracking-wider uppercase text-muted'>2.75 KB gzipped · MIT License · © 2026</p>
+		</footer>
 	</body>
 </html>

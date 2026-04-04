@@ -8,16 +8,23 @@ interface Props extends SarmalOptions {
 	height?: number;
 }
 
+const defaultTrailColor = "#1b1c1a";
+const defaultTrailLength = 120;
+
 const {
 	curve = "artemis2",
 	width = 400,
 	height = 400,
-	skeletonColor = "#1b1c1a",
-	trailColor = "#1b1c1a",
-	headColor = "#1b1c1a"
+	trailColor = defaultTrailColor,
+	skeletonColor = defaultTrailColor,
+	headColor,
+	headRadius = 2.5,
+	glowSize = 0,
+	trailLength = defaultTrailLength,
 } = Astro.props;
 
 const curveId = `sarmal-${Math.random().toString(36).slice(2, 8)}`;
+const resolvedHeadColor = headColor ?? trailColor;
 ---
 
 <canvas
@@ -27,7 +34,10 @@ const curveId = `sarmal-${Math.random().toString(36).slice(2, 8)}`;
 	data-sarmal={curve}
 	data-skeleton-color={skeletonColor}
 	data-trail-color={trailColor}
-	data-head-color={headColor}></canvas>
+	data-head-color={resolvedHeadColor}
+	data-head-radius={headRadius}
+	data-glow-size={glowSize}
+	data-trail-length={trailLength}></canvas>
 
 <script>
 	import "@sarmal/core/auto";

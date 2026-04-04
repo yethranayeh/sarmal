@@ -22,11 +22,81 @@ function artemis2(t: number, _time: number, _params: Record<string, number>): Po
   };
 }
 
+function epitrochoid7(t: number, _time: number, _params: Record<string, number>): Point {
+  const d = 1.0 + 0.55 * Math.sin(t * 0.5);
+  return {
+    x: 7 * Math.cos(t) - d * Math.cos(7 * t),
+    y: 7 * Math.sin(t) - d * Math.sin(7 * t),
+  };
+}
+
+function astroid(t: number, _time: number, _params: Record<string, number>): Point {
+  const c = Math.cos(t);
+  const s = Math.sin(t);
+  return {
+    x: c * c * c,
+    y: s * s * s,
+  };
+}
+
+function deltoid(t: number, _time: number, _params: Record<string, number>): Point {
+  return {
+    x: 2 * Math.cos(t) + Math.cos(2 * t),
+    y: 2 * Math.sin(t) - Math.sin(2 * t),
+  };
+}
+
+function rose5(t: number, _time: number, _params: Record<string, number>): Point {
+  const r = Math.cos(5 * t);
+  return {
+    x: r * Math.cos(t),
+    y: r * Math.sin(t),
+  };
+}
+
+function rose3(t: number, _time: number, _params: Record<string, number>): Point {
+  const r = Math.cos(3 * t);
+  return {
+    x: r * Math.cos(t),
+    y: r * Math.sin(t),
+  };
+}
+
 export const curves: Record<string, CurveDef> = {
   artemis2: {
     name: "Artemis II",
     fn: artemis2,
     period: TWO_PI,
     speed: 0.7,
+  },
+  epitrochoid7: {
+    name: "Epitrochoid",
+    fn: epitrochoid7,
+    period: TWO_PI,
+    speed: 1.4,
+  },
+  astroid: {
+    name: "Astroid",
+    fn: astroid,
+    period: TWO_PI,
+    speed: 1.1,
+  },
+  deltoid: {
+    name: "Deltoid",
+    fn: deltoid,
+    period: TWO_PI,
+    speed: 0.9,
+  },
+  rose5: {
+    name: "Rose (n=5)",
+    fn: rose5,
+    period: TWO_PI,
+    speed: 1.0,
+  },
+  rose3: {
+    name: "Rose (n=3)",
+    fn: rose3,
+    period: TWO_PI,
+    speed: 1.15,
   },
 };
