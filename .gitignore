@@ -17,6 +17,9 @@ pnpm-debug.log*
 .env
 .env.production
 
+# npm auth (never commit)
+.npmrc
+
 # macOS-specific files
 .DS_Store
 

@@ -1,0 +1,34 @@
+---
+import type { SarmalOptions } from "@sarmal/core";
+import { curves } from "@sarmal/core";
+
+interface Props extends SarmalOptions {
+	curve?: keyof typeof curves;
+	width?: number;
+	height?: number;
+}
+
+const {
+	curve = "artemis2",
+	width = 400,
+	height = 400,
+	skeletonColor = "#1b1c1a",
+	trailColor = "#1b1c1a",
+	headColor = "#1b1c1a"
+} = Astro.props;
+
+const curveId = `sarmal-${Math.random().toString(36).slice(2, 8)}`;
+---
+
+<canvas
+	id={curveId}
+	width={width}
+	height={height}
+	data-sarmal={curve}
+	data-skeleton-color={skeletonColor}
+	data-trail-color={trailColor}
+	data-head-color={headColor}></canvas>
+
+<script>
+	import "@sarmal/core/auto";
+</script>

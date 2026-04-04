@@ -1,0 +1,58 @@
+{
+  "name": "@sarmal/core",
+  "version": "0.1.0",
+  "description": "Curve path based loading indicators and their renderer",
+  "keywords": [
+    "animation",
+    "canvas",
+    "curve",
+    "loading",
+    "parametric",
+    "spinner",
+    "svg"
+  ],
+  "license": "MIT",
+  "author": {
+    "name": "Alper Halil",
+    "email": "contact@aktasalper.com",
+    "url": "https://aktasalper.com"
+  },
+  "files": [
+    "dist"
+  ],
+  "type": "module",
+  "sideEffects": [
+    "./dist/auto-init.*"
+  ],
+  "main": "./dist/index.js",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
+    },
+    "./auto": {
+      "import": "./dist/auto-init.js",
+      "require": "./dist/auto-init.cjs"
+    }
+  },
+  "scripts": {
+    "build": "tsup",
+    "dev": "tsup --watch",
+    "typecheck": "tsc --noEmit",
+    "lint": "oxlint",
+    "format": "oxfmt"
+  },
+  "devDependencies": {
+    "@types/node": "^25.5.2",
+    "oxfmt": "^0.43.0",
+    "oxlint": "^1.58.0",
+    "tsup": "^8.5.1",
+    "typescript": "^6.0.2"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
