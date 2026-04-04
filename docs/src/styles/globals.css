@@ -17,7 +17,9 @@
 	--color-accent: #97002a;
 	--color-accent-foreground: #ffffff;
 
-	--color-muted: #888888;
+	--color-muted: #7a7067;
+	--color-muted-gray: #888888;
+	--color-muted-dark: #666666;
 	--color-muted-foreground: #5b4041;
 
 	--color-error: #ba1a1a;
