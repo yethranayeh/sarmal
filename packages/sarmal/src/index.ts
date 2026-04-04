@@ -1,3 +1,4 @@
+export type { SVGRendererOptions, SVGSarmalOptions } from "./renderer-svg";
 export type {
   Point,
   CurveDef,
@@ -9,6 +10,7 @@ export type {
 
 export { createEngine } from "./engine";
 export { createRenderer } from "./renderer";
+export { createSVGRenderer, createSarmalSVG } from "./renderer-svg";
 export { curves } from "./curves";
 
 import type { CurveDef, SarmalInstance, SarmalOptions } from "./types";
