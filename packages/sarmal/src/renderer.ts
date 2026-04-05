@@ -148,7 +148,7 @@ export function createRenderer(options: RendererOptions): SarmalInstance {
   }
 
   function drawSkeleton() {
-    if (!skeletonCanvas) {
+    if (!skeletonCanvas || opts.skeletonColor === "transparent") {
       return;
     }
 

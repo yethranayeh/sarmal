@@ -1,0 +1,197 @@
+---
+import "../styles/globals.css";
+import { curves } from "@sarmal/core";
+import { SEPARATOR_DOT } from "../variables";
+
+const curveEntries = Object.entries(curves).map(([id, def]) => ({
+	id,
+	name: def.name,
+	fn: def.fn.toString()
+}));
+
+const DEFAULT_CODE = `return {
+  x: Math.cos(t),
+  y: Math.sin(t)
+}`;
+
+const presetsJson = JSON.stringify(
+	curveEntries.map((c) => ({
+		id: c.id,
+		name: c.name,
+		fn: c.fn
+	}))
+);
+
+// FIXME: must create a layout so as not to duplicate and repeat base structure
+---
+
+<html lang='en'>
+	<head>
+		<meta charset='utf-8' />
+		<link rel='icon' type='image/svg+xml' href='/favicon.svg' />
+		<link rel='icon' href='/favicon.ico' />
+		<meta name='viewport' content='width=device-width' />
+		<meta name='generator' content={Astro.generator} />
+		<title>Play {SEPARATOR_DOT} Sarmal</title>
+		<meta name='description' content='Type math, see it follow a path. Create your own sarmal loading indicators.' />
+	</head>
+	<body class='min-h-screen'>
+		<header class='w-full px-4 py-3 flex items-center justify-between border-b border-border bg-surface'>
+			<a href='/' class='font-heading text-lg text-foreground hover:text-primary transition-colors'>
+				<span class='text-primary'>sarmal</span>.art
+			</a>
+			<div class='flex items-center gap-4'>
+				<a
+					href='/play'
+					class='font-mono text-xs tracking-wider uppercase text-primary hover:text-foreground transition-colors'>
+					Play
+				</a>
+				<a
+					href='/'
+					class='font-mono text-xs tracking-wider uppercase text-muted hover:text-foreground transition-colors'>
+					Back
+				</a>
+			</div>
+		</header>
+
+		<main class='flex flex-col lg:flex-row h-[calc(100vh-57px)]'>
+			<section class='w-full lg:w-1/2 flex flex-col border-b lg:border-b-0 lg:border-r border-border'>
+				<div class='flex items-center justify-between px-4 py-2 border-b border-border-subtle bg-surface'>
+					<div class='flex items-center gap-3'>
+						<span class='font-mono text-xs tracking-wider uppercase text-muted'>Editor</span>
+						<select
+							id='preset-select'
+							class='font-mono text-xs bg-transparent border border-border rounded px-2 py-1 text-foreground cursor-pointer hover:border-primary transition-colors'>
+							<option value=''>Select a curve</option>
+							{curveEntries.map((curve) => <option value={curve.id}>{curve.name}</option>)}
+						</select>
+					</div>
+					<button
+						id='clear-btn'
+						class='font-mono text-xs tracking-wider uppercase text-muted hover:text-error transition-colors'>
+						Clear
+					</button>
+				</div>
+
+				<div class='flex-1 p-4 overflow-auto'>
+					<div class='mb-3'>
+						<label for='code-input' class='block font-mono text-[10px] tracking-wider text-muted mb-1'>
+							<span class='text-muted'
+								>function (<span></span><code title='parametric angle (0 -> period)' class='text-primary'>t</code><span
+									class='text-muted'>:</span
+								><span class='text-muted'>number</span><span class='text-muted'> </span>,
+							</span><code title='elapsed time in seconds' class='text-primary'>time</code><span class='text-muted'
+								>:</span
+							><span class='text-muted'>number</span><span class='text-muted'>) {"{"}</span>
+						</label>
+						<textarea
+							id='code-input'
+							class='w-full h-48 font-mono text-sm bg-surface-raised border border-border rounded-md p-3 text-foreground resize-none focus:outline-none focus:border-primary transition-colors'
+							>{DEFAULT_CODE}</textarea
+						>
+						<div id='error-display' class='hidden mt-2 font-mono text-xs text-error'></div>
+						<p class='mt-2 font-mono text-[10px] text-muted'>{"}"}</p>
+					</div>
+
+					<div class='space-y-4'>
+						<div class='flex items-center justify-between'>
+							<label for='skeleton-toggle' class='font-mono text-xs tracking-wider uppercase text-muted'>
+								Skeleton
+							</label>
+							<button
+								id='skeleton-toggle'
+								class='w-10 h-5 rounded-full bg-foreground relative transition-colors'
+								role='switch'
+								aria-checked='true'>
+								<span
+									class='absolute top-0.5 left-0.5 w-4 h-4 rounded-full bg-background transition-transform translate-x-5'
+								></span>
+							</button>
+						</div>
+
+						<div>
+							<div class='flex items-center justify-between mb-1'>
+								<label for='speed-slider' class='font-mono text-xs tracking-wider uppercase text-muted'> Speed </label>
+								<span id='speed-value' class='font-mono text-xs text-muted'>1.0</span>
+							</div>
+							<input
+								type='range'
+								id='speed-slider'
+								min='0.1'
+								max='5'
+								step='0.1'
+								value='1'
+								class='w-full accent-primary'
+							/>
+						</div>
+
+						<div>
+							<div class='flex items-center justify-between mb-1'>
+								<label for='trail-slider' class='font-mono text-xs tracking-wider uppercase text-muted'>
+									Trail Length
+								</label>
+								<span id='trail-value' class='font-mono text-xs text-muted'>120</span>
+							</div>
+							<input
+								type='range'
+								id='trail-slider'
+								min='10'
+								max='500'
+								step='10'
+								value='120'
+								class='w-full accent-primary'
+							/>
+						</div>
+
+						<div>
+							<div class='flex items-center justify-between mb-1'>
+								<label for='glow-slider' class='font-mono text-xs tracking-wider uppercase text-muted'>
+									Glow Size
+								</label>
+								<span id='glow-value' class='font-mono text-xs text-muted'>20</span>
+							</div>
+							<input type='range' id='glow-slider' min='0' max='50' step='1' value='20' class='w-full accent-primary' />
+						</div>
+
+						<div>
+							<div class='flex items-center justify-between mb-1'>
+								<label for='color-input' class='font-mono text-xs tracking-wider uppercase text-muted'>
+									Trail Color
+								</label>
+								<input
+									type='color'
+									id='color-input'
+									value='#c0143c'
+									class='w-8 h-5 rounded border border-border cursor-pointer'
+								/>
+							</div>
+						</div>
+
+						<div>
+							<div class='flex items-center justify-between mb-1'>
+								<label for='head-color-input' class='font-mono text-xs tracking-wider uppercase text-muted'>
+									Head Color
+								</label>
+								<input
+									type='color'
+									id='head-color-input'
+									value='#c0143c'
+									class='w-8 h-5 rounded border border-border cursor-pointer'
+								/>
+							</div>
+						</div>
+					</div>
+				</div>
+			</section>
+
+			<section class='w-full lg:w-1/2 flex items-center justify-center bg-background p-4'>
+				<div class='relative w-full max-w-md aspect-square'>
+					<canvas id='preview-canvas' width='400' height='400' class='w-full h-full'></canvas>
+				</div>
+			</section>
+		</main>
+
+		<script type='application/json' id='presets-data' set:html={presetsJson} />
+		<script src='../play.ts'></script>
+	</body>
+</html>

@@ -2,6 +2,7 @@
   "name": "sarmal",
   "private": true,
   "scripts": {
+    "dev": "pnpm --parallel -r dev",
     "test": "pnpm -r test",
     "lint": "pnpm -r lint",
     "format": "pnpm -r format",
