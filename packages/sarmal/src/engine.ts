@@ -113,10 +113,11 @@ export function createEngine(curveDef: CurveDef, trailLength: number = 120): Eng
       }
     },
 
-    seekWithTrail(targetT: number, { wrap = false }: SeekWithTrailOptions = {}) {
-      // TODO: assumes 60fps, will need to further evaluate approach
-      const STEP = 1 / 60;
-      const advance = curve.speed * STEP;
+    seekWithTrail(
+      targetT: number,
+      { wrap = false, step = curve.period / trailLength }: SeekWithTrailOptions = {},
+    ) {
+      const advance = curve.speed * step;
       const target = ((targetT % curve.period) + curve.period) % curve.period;
       const targetTime = target / curve.speed;
 
@@ -127,11 +128,12 @@ export function createEngine(curveDef: CurveDef, trailLength: number = 120): Eng
       const pointsFromStart = Math.floor(target / advance) + 1;
       const count = wrap ? trailLength : Math.min(trailLength, pointsFromStart);
 
-      for (let step = count - 1; step >= 0; step--) {
-        const sampleT = target - step * advance;
+      for (let i = count - 1; i >= 0; i--) {
+        const sampleT = target - i * advance;
         const wrappedT = sampleT < 0 ? sampleT + curve.period : sampleT;
-        const time = targetTime - step * STEP;
+        const time = targetTime - i * step;
         const point = curve.fn(wrappedT, time, {});
+
         trail.push(point.x, point.y);
       }
     },

@@ -36,6 +36,12 @@ export type SeekWithTrailOptions = {
    * @default false
    */
   wrap?: boolean;
+  /**
+   * Time gap between each trail point (in same units as `t`)
+   * Smaller value means a trail that is more dense
+   * @default period / trailLength
+   */
+  step?: number;
 };
 
 export interface Engine {
