@@ -21,6 +21,23 @@ export interface CurveDef {
   version?: number;
 }
 
+export type SeekOptions = {
+  /**
+   * Decides whether the sarmal trail should be cleared when `seek` is called
+   */
+  clearTrail?: boolean;
+};
+
+export type SeekWithTrailOptions = {
+  /**
+   * When true, the trail wraps around the period boundary,
+   *  which results in a full trail even near `t=0`
+   * By default, the trail stops at `t=0`, which results in a partial trail near the start
+   * @default false
+   */
+  wrap?: boolean;
+};
+
 export interface Engine {
   /**
    * Advances the Sarmal simulation by the given delta time (dt) in seconds.
@@ -54,6 +71,17 @@ export interface Engine {
    * The number of sample points is automatically derived from the curve's period.
    */
   getSarmalSkeleton(): Array<Point>;
+  /**
+   * Sets the simulation time `t` directly to the specified value.
+   * By default, the trail is preserved
+   * @param t The time value to seek to (will be wrapped into [0, period))
+   */
+  seek(t: number, options?: SeekOptions): void;
+  /**
+   * Seeks to `t` and rebuilds the trail as if the animation naturally arrived there from `t=0`
+   * @param t The time value to seek to (will be wrapped into [0, period))
+   */
+  seekWithTrail(t: number, options?: SeekWithTrailOptions): void;
 }
 
 export interface SarmalInstance {
@@ -63,6 +91,19 @@ export interface SarmalInstance {
   reset(): void;
   /** Stops the animation and cleans up resources */
   destroy(): void;
+  // FIXME: JSDoc repetition of proxied functions (maybe use `extend`?)
+  /**
+   * Sets the simulation time `t` directly to the specified value.
+   * By default, the trail is preserved
+   * @param t The time value to seek to (will be wrapped into [0, period))
+   */
+  seek(t: number, options?: SeekOptions): void;
+  // FIXME: JSDoc repetition of proxied functions (maybe use `extend`?)
+  /**
+   * Seeks to `t` and rebuilds the trail as if the animation naturally arrived there from `t=0`
+   * @param t The time value to seek to (will be wrapped into [0, period))
+   */
+  seekWithTrail(t: number, options?: SeekWithTrailOptions): void;
 }
 
 export interface RendererOptions {

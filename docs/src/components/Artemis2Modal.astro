@@ -1,0 +1,230 @@
+---
+import { SEPARATOR_DOT } from "../variables";
+---
+
+<dialog
+	id='artemis2-modal'
+	class='backdrop:bg-foreground/40 backdrop:backdrop-blur-sm bg-transparent p-0 max-w-none w-full max-h-none my-auto outline-none'>
+	<div
+		class='bg-surface border border-border rounded-lg w-[min(90vw,780px)] mx-auto my-auto flex flex-col md:flex-row overflow-hidden shadow-xl'>
+		<div
+			class='flex-1 border-b border-border md:border-b-0 md:border-r flex items-center justify-center p-6 relative min-h-55'>
+			<canvas id='artemis2-modal-canvas' width='260' height='170'></canvas>
+			<div
+				class='absolute top-4 left-4 font-mono text-[9px] tracking-widest uppercase text-muted/60 leading-relaxed pointer-events-none'>
+				<span class='block'>Artemis II</span>
+			</div>
+		</div>
+
+		<div class='flex-1 flex flex-col p-6 font-mono text-[11px]'>
+			<div class='grid grid-cols-[80px_12px_1fr] gap-y-1.5 leading-snug'>
+				<span class='text-muted/70 uppercase tracking-wider'>Launch</span>
+				<span class='text-muted/40'>{">"}</span>
+				<span class='text-foreground/90'>Apr 1, 2026 {SEPARATOR_DOT} 22:35 UTC</span>
+
+				<span class='text-muted/70 uppercase tracking-wider'>Crew</span>
+				<span class='text-muted/40'>{">"}</span>
+				<span class='text-foreground/90'>{["Glover", "Hansen", "Koch", "Wiseman"].join(" " + SEPARATOR_DOT + " ")}</span
+				>
+
+				<span class='text-muted/70 uppercase tracking-wider'>Status</span>
+				<span class='text-muted/40'>{">"}</span>
+				<span id='modal-status' class='text-primary uppercase tracking-wider'></span>
+
+				<span class='text-muted/70 uppercase tracking-wider'>Progress</span>
+				<span class='text-muted/40'>{">"}</span>
+				<span id='modal-progress' class='text-foreground/90'></span>
+			</div>
+
+			<hr class='my-4 w-full border-t-px border-dotted text-muted' />
+
+			<div class='flex-1 flex flex-col'>
+				<div class='flex items-center justify-between mb-3'>
+					<span class='text-muted/50 uppercase tracking-wider text-[9px]'>Mission timeline</span>
+					<div class='flex gap-2'>
+						<button
+							id='modal-mode-auto'
+							class='font-mono text-[9px] tracking-widest uppercase transition-colors cursor-pointer text-primary'
+							>Auto</button
+						>
+						<span class='text-muted/30'>{SEPARATOR_DOT}</span>
+						<button
+							id='modal-mode-manual'
+							class='font-mono text-[9px] tracking-widest uppercase transition-colors cursor-pointer text-muted/50 hover:text-foreground'
+							>Explore</button
+						>
+					</div>
+				</div>
+
+				<div id='modal-slider-wrap' class='hidden'>
+					<input
+						id='modal-slider'
+						type='range'
+						min='0'
+						max='628'
+						step='1'
+						class='w-full accent-primary cursor-pointer'
+					/>
+				</div>
+
+				<div id='modal-milestone-label' class='mt-2 text-[10px] text-muted/70 min-h-10 leading-relaxed'></div>
+			</div>
+
+			<div class='border-t border-border/60 pt-3 mt-3 flex items-center justify-between'>
+				<span class='text-muted/50 uppercase tracking-widest text-[9px]'>NASA {SEPARATOR_DOT} Artemis II</span>
+				<button
+					id='artemis2-modal-close'
+					class='font-mono text-[9px] tracking-widest uppercase text-muted/50 hover:text-foreground transition-colors cursor-pointer'>
+					Close
+				</button>
+			</div>
+		</div>
+	</div>
+</dialog>
+
+<script>
+	// FIXME: code duplication...
+	import { createSarmal, curves } from "@sarmal/core";
+	import { SEPARATOR_DOT } from "../variables";
+
+	const LAUNCH = new Date("2026-04-01T22:35:12Z").getTime();
+	const SPLASHDOWN = new Date("2026-04-11T00:21:00Z").getTime();
+	const TWO_PI = Math.PI * 2;
+	const TOTAL_HOURS = (SPLASHDOWN - LAUNCH) / (1000 * 60 * 60);
+
+	const dialog = document.getElementById("artemis2-modal") as HTMLDialogElement;
+	const canvas = document.getElementById("artemis2-modal-canvas") as HTMLCanvasElement;
+	const statusEl = document.getElementById("modal-status") as HTMLElement;
+	const progressEl = document.getElementById("modal-progress") as HTMLElement;
+	const sliderWrap = document.getElementById("modal-slider-wrap") as HTMLElement;
+	const slider = document.getElementById("modal-slider") as HTMLInputElement;
+	const milestoneEl = document.getElementById("modal-milestone-label") as HTMLElement;
+	const openBtn = document.getElementById("artemis2-details") as HTMLButtonElement;
+	const closeBtn = document.getElementById("artemis2-modal-close") as HTMLButtonElement;
+	const btnAuto = document.getElementById("modal-mode-auto") as HTMLButtonElement;
+	const btnExplore = document.getElementById("modal-mode-manual") as HTMLButtonElement;
+
+	const milestones = [
+		{ label: "Launch", t: 0, note: "Liftoff from Kennedy Space Center." },
+		{
+			label: "Halfway to Moon",
+			t: Math.PI / 2,
+			note: "Lock in, we're Moonbound. Astronauts are more than halfway to their destination, preparations for lunar flyby underway. — NASA, Apr 4"
+		},
+		{ label: "Lunar flyby", t: Math.PI, note: "Free-return trajectory around the far side of the Moon." },
+		{ label: "Splashdown", t: TWO_PI, note: "Pacific Ocean splashdown. Mission complete." }
+	];
+
+	let sarmal: ReturnType<typeof createSarmal> | null = null;
+	let initialized = false;
+	let mode: "auto" | "explore" = "auto";
+
+	function computeMissionState() {
+		const elapsed = Date.now() - LAUNCH;
+		const elapsedHours = elapsed / (1000 * 60 * 60);
+		const dayNumber = Math.floor(elapsed / (1000 * 60 * 60 * 24)) + 1;
+		return { elapsedHours, dayNumber };
+	}
+
+	function nearestMilestone(t: number) {
+		return milestones.reduce((closest, m) => (Math.abs(m.t - t) < Math.abs(closest.t - t) ? m : closest));
+	}
+
+	function updateMilestoneLabel(t: number) {
+		const m = nearestMilestone(t);
+		const THRESHOLD = TWO_PI * 0.08;
+		milestoneEl.textContent = Math.abs(m.t - t) < THRESHOLD ? `${m.label} — ${m.note}` : "";
+	}
+
+	function seekAndFreeze(t: number) {
+		sarmal!.seekWithTrail(t);
+		sarmal!.start();
+		sarmal!.stop();
+	}
+
+	function setMode(newMode: "auto" | "explore") {
+		mode = newMode;
+
+		if (newMode === "auto") {
+			btnAuto.classList.replace("text-muted/50", "text-primary");
+			btnExplore.classList.replace("text-primary", "text-muted/50");
+			sliderWrap.classList.add("hidden");
+			milestoneEl.textContent = "";
+		} else {
+			btnExplore.classList.replace("text-muted/50", "text-primary");
+			btnAuto.classList.replace("text-primary", "text-muted/50");
+			sliderWrap.classList.remove("hidden");
+		}
+	}
+
+	function openModal() {
+		dialog.showModal();
+
+		const { elapsedHours, dayNumber } = computeMissionState();
+
+		statusEl.textContent = elapsedHours >= TOTAL_HOURS ? "Complete" : `In flight ${SEPARATOR_DOT} Day ${dayNumber}`;
+		const elapsedPercentage = Math.round((elapsedHours / TOTAL_HOURS) * 100);
+		const timeRemainingHours = Math.round(TOTAL_HOURS - elapsedHours);
+		progressEl.textContent = `${elapsedPercentage}% ${SEPARATOR_DOT} ${timeRemainingHours}h remaining`;
+
+		if (!initialized) {
+			sarmal = createSarmal(canvas, curves.artemis2, {
+				trailColor: "#60a5fa",
+				skeletonColor: "#1b1c1a",
+				headColor: "#60a5fa",
+				trailLength: 300,
+				glowSize: 0
+			});
+
+			initialized = true;
+		}
+
+		setMode("auto");
+
+		sarmal!.reset();
+		sarmal!.start();
+
+		// Automatically set slider to live mission position for when user switches to "explore"
+		const halfwayMilestone = milestones.find(m => m.label === "Halfway to Moon")!;
+		slider.value = String(Math.round(halfwayMilestone.t * 100));
+	}
+
+	btnAuto.addEventListener("click", () => {
+		if (mode === "auto") {
+			return;
+		}
+		setMode("auto");
+
+		sarmal!.reset();
+		sarmal!.start();
+		milestoneEl.textContent = "";
+	});
+
+	btnExplore.addEventListener("click", () => {
+		if (mode === "explore") {
+			return;
+		}
+
+		sarmal!.stop();
+
+		const halfwayMilestone = milestones.find(m => m.label === "Halfway to Moon")!;
+		slider.value = String(Math.round(halfwayMilestone.t * 100));
+
+		seekAndFreeze(halfwayMilestone.t);
+		updateMilestoneLabel(halfwayMilestone.t);
+		setMode("explore");
+	});
+
+	slider.addEventListener("input", () => {
+		const t = Number(slider.value) / 100;
+
+		seekAndFreeze(t);
+		updateMilestoneLabel(t);
+	});
+
+	openBtn?.addEventListener("click", openModal);
+	closeBtn.addEventListener("click", () => dialog.close());
+	dialog.addEventListener("click", (e) => {
+		if (e.target === dialog) dialog.close();
+	});
+</script>

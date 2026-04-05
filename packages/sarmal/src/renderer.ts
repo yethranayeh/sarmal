@@ -1,6 +1,8 @@
 import type { Point, RendererOptions, SarmalInstance } from "./types";
 
 const DEFAULT_HEAD_RADIUS = 4;
+// TODO: Re-evaluate glow implementation. Current approach looks TERRIBLE!
+// Consider: remove glow entirely, replace with a sharper bloom, or make it opt-in only (default 0).
 const DEFAULT_GLOW_SIZE = 20;
 const DEFAULT_SKELETON_COLOR = "#ffffff";
 const DEFAULT_SKELETON_OPACITY = 0.15;
@@ -217,7 +219,7 @@ export function createRenderer(options: RendererOptions): SarmalInstance {
 
   function render() {
     const now = performance.now();
-    const deltaTime = (now - lastTime) / 1000;
+    const deltaTime = Math.min((now - lastTime) / 1000, 1 / 30);
     lastTime = now;
 
     trail = engine.tick(deltaTime);
@@ -268,6 +270,14 @@ export function createRenderer(options: RendererOptions): SarmalInstance {
         cancelAnimationFrame(animationId);
         animationId = null;
       }
+    },
+
+    seek(t, options) {
+      engine.seek(t, options);
+    },
+
+    seekWithTrail(t) {
+      engine.seekWithTrail(t);
     },
   };
 }

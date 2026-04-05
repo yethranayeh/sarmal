@@ -4,6 +4,8 @@ export type {
   CurveDef,
   Engine,
   SarmalInstance,
+  SeekOptions,
+  SeekWithTrailOptions,
   RendererOptions,
   SarmalOptions,
 } from "./types";

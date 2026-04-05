@@ -249,7 +249,7 @@ export function createSVGRenderer(options: SVGRendererOptions): SarmalInstance {
 
   function renderFrame() {
     const now = performance.now();
-    const dt = (now - lastTime) / 1000;
+    const dt = Math.min((now - lastTime) / 1000, 1 / 30);
     lastTime = now;
 
     const trail = engine.tick(dt);
@@ -290,6 +290,14 @@ export function createSVGRenderer(options: SVGRendererOptions): SarmalInstance {
         animationId = null;
       }
       svg.remove();
+    },
+
+    seek(t, options) {
+      engine.seek(t, options);
+    },
+
+    seekWithTrail(t) {
+      engine.seekWithTrail(t);
     },
   };
 }

@@ -1,8 +1,12 @@
 ---
 import "../styles/globals.css";
-import Sarmal from "../components/Sarmal.astro";
-import SectionLabel from "../components/SectionLabel.astro";
 import { Code } from "astro:components";
+
+import Sarmal from "../components/Sarmal.astro";
+import Button from "../components/Button.astro";
+import Artemis2Modal from "../components/Artemis2Modal.astro";
+import SectionLabel from "../components/SectionLabel.astro";
+import { SEPARATOR_DOT } from "../variables";
 
 const sarmals = [
 	{ id: "rose3", name: "Rose (n=3)", color: "#e879f9" },
@@ -37,6 +41,8 @@ const sarmals = [
 		<meta property='og:image' content='https://sarmal.art/og-image.png' />
 		<meta property='og:image:width' content='1200' />
 		<meta property='og:image:height' content='630' />
+		<meta property='og:image:alt' content='Sarmal - A loading spinner tracing the Artemis II trajectory' />
+		<meta property='og:site_name' content='Sarmal' />
 
 		<meta name='twitter:card' content='summary_large_image' />
 		<meta name='twitter:title' content='Sarmal | Loading indicators from parametric curves' />
@@ -45,6 +51,7 @@ const sarmals = [
 			content='Beautiful loading spinners from two lines of math. 2.86 KB, zero dependencies.'
 		/>
 		<meta name='twitter:image' content='https://sarmal.art/og-image.png' />
+		<meta name='twitter:image:alt' content='Sarmal - A loading spinner tracing the Artemis II trajectory' />
 
 		<link rel='canonical' href='https://sarmal.art/' />
 	</head>
@@ -64,8 +71,14 @@ const sarmals = [
 
 		<main class='max-w-3xl mx-auto p-4'>
 			<section class='text-center mb-16'>
-				<div class='flex justify-center mb-6'>
-					<Sarmal curve='artemis2' width={200} height={130} trailColor='#60a5fa' trailLength={300} />
+				<div class='flex flex-col items-center mb-6 gap-2'>
+					<canvas id='artemis2-hero' width={200} height={130}></canvas>
+					<div class='flex items-center gap-3'>
+						<span id='artemis2-status' class='font-mono text-[10px] tracking-wider uppercase text-muted'></span>{
+							" " + SEPARATOR_DOT
+						}
+						<Button id='artemis2-details' variant='ghost'>Details</Button>
+					</div>
 				</div>
 				<h1 class='font-heading italic text-4xl md:text-5xl leading-tight tracking-tight text-foreground mb-3'>
 					Loading <span class='text-primary'>Artemis II</span>
@@ -114,9 +127,45 @@ const sarmals = [
 		</main>
 
 		<footer class='w-full px-4 py-6 border-t border-border text-center'>
-			<p class='font-mono text-[10px] tracking-wider uppercase text-muted'>
-				0.0000028 GB gzipped · MIT License · © 2026
+			<p class='font-mono text-[10px] tracking-wider text-muted'>
+				0.0000028 GB gzipped {SEPARATOR_DOT} MIT License {SEPARATOR_DOT} © 2026
 			</p>
 		</footer>
+		<Artemis2Modal />
+
+		<script>
+			import { createSarmal, curves } from "@sarmal/core";
+
+			const LAUNCH = new Date("2026-04-01T22:35:12Z").getTime();
+			const SPLASHDOWN = new Date("2026-04-11T00:21:00Z").getTime();
+			const TOTAL_HOURS = (SPLASHDOWN - LAUNCH) / (1000 * 60 * 60);
+			const SPEED = curves.artemis2.speed ?? 1;
+
+			const canvas = document.getElementById("artemis2-hero") as HTMLCanvasElement;
+			const statusEl = document.getElementById("artemis2-status") as HTMLElement;
+
+			const sarmal = createSarmal(canvas, curves.artemis2, {
+				trailColor: "#60a5fa",
+				skeletonColor: "#1b1c1a",
+				headColor: "#60a5fa",
+				trailLength: 300,
+				glowSize: 0
+			});
+
+			const elapsed = Date.now() - LAUNCH;
+			const elapsedHours = elapsed / (1000 * 60 * 60);
+			const dayNumber = Math.floor(elapsed / (1000 * 60 * 60 * 24)) + 1;
+
+			statusEl.textContent = elapsedHours >= TOTAL_HOURS ? "Mission complete" : `Day ${dayNumber}`;
+
+			const missionT = Math.PI / 2;
+			const SEEK_MS = (missionT / SPEED) * 1000;
+
+			sarmal.start();
+			setTimeout(() => {
+				sarmal.seek(missionT);
+				requestAnimationFrame(() => sarmal.stop());
+			}, SEEK_MS);
+		</script>
 	</body>
 </html>

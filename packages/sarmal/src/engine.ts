@@ -1,4 +1,4 @@
-import type { CurveDef, Engine, Point } from "./types";
+import type { CurveDef, Engine, Point, SeekOptions, SeekWithTrailOptions } from "./types";
 
 const TWO_PI = Math.PI * 2;
 const POINTS_PER_PERIOD_UNIT = 50;
@@ -104,6 +104,36 @@ export function createEngine(curveDef: CurveDef, trailLength: number = 120): Eng
       t = 0;
       actualTime = 0;
       trail.clear();
+    },
+
+    seek(newT: number, { clearTrail = false }: SeekOptions = {}) {
+      t = ((newT % curve.period) + curve.period) % curve.period;
+      if (clearTrail) {
+        trail.clear();
+      }
+    },
+
+    seekWithTrail(targetT: number, { wrap = false }: SeekWithTrailOptions = {}) {
+      // TODO: assumes 60fps, will need to further evaluate approach
+      const STEP = 1 / 60;
+      const advance = curve.speed * STEP;
+      const target = ((targetT % curve.period) + curve.period) % curve.period;
+      const targetTime = target / curve.speed;
+
+      t = target;
+      actualTime = targetTime;
+      trail.clear();
+
+      const pointsFromStart = Math.floor(target / advance) + 1;
+      const count = wrap ? trailLength : Math.min(trailLength, pointsFromStart);
+
+      for (let step = count - 1; step >= 0; step--) {
+        const sampleT = target - step * advance;
+        const wrappedT = sampleT < 0 ? sampleT + curve.period : sampleT;
+        const time = targetTime - step * STEP;
+        const point = curve.fn(wrappedT, time, {});
+        trail.push(point.x, point.y);
+      }
     },
 
     getSarmalSkeleton(): Array<Point> {
