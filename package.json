@@ -1,0 +1,8 @@
+{
+  "name": "sarmal",
+  "private": true,
+  "scripts": {
+    "test": "pnpm -r test"
+  },
+  "packageManager": "pnpm@9.15.0"
+}
