@@ -74,8 +74,6 @@ export function createRenderer(options: RendererOptions): SarmalInstance {
   let morphResolve: (() => void) | null = null;
   let morphDurationMs = DEFAULT_MORPH_DURATION_MS;
   let morphAlpha = 0;
-  let morphBoundsA: { scale: number; offsetX: number; offsetY: number } | null = null;
-  let morphBoundsB: { scale: number; offsetX: number; offsetY: number } | null = null;
 
   /**
    * Computes how to map engine coordinates to canvas pixels.
@@ -273,13 +271,17 @@ export function createRenderer(options: RendererOptions): SarmalInstance {
       morphAlpha = Math.min(1, morphAlpha + deltaTime / (morphDurationMs / 1000));
       engine.setMorphAlpha(morphAlpha);
 
-      // Lerp the coordinate transform smoothly from curveA's space to curveB's space
-      if (morphBoundsA && morphBoundsB) {
-        const a = morphBoundsA;
-        const b = morphBoundsB;
-        scale = a.scale + (b.scale - a.scale) * morphAlpha;
-        offsetX = a.offsetX + (b.offsetX - a.offsetX) * morphAlpha;
-        offsetY = a.offsetY + (b.offsetY - a.offsetY) * morphAlpha;
+      /**
+       * Compute bounds from the actual interpolated skeleton during morph
+       * ! This ensures the curve stays properly centered and scaled
+       */
+      const interpolatedSkeleton = engine.getSarmalSkeleton();
+      const bounds = computeBoundaries(interpolatedSkeleton);
+
+      if (bounds) {
+        scale = bounds.scale;
+        offsetX = bounds.offsetX;
+        offsetY = bounds.offsetY;
       }
 
       if (morphAlpha >= 1) {
@@ -287,9 +289,7 @@ export function createRenderer(options: RendererOptions): SarmalInstance {
         morphResolve?.();
         morphResolve = null;
         morphAlpha = 0;
-        morphBoundsA = null;
-        morphBoundsB = null;
-        // Coordinate space is already at curveB (morphAlpha was 1); rebuild skeleton cache
+
         skeleton = engine.getSarmalSkeleton();
         if (!engine.isLiveSkeleton) {
           buildSkeletonCanvas();
@@ -364,37 +364,17 @@ export function createRenderer(options: RendererOptions): SarmalInstance {
     },
 
     morphTo(target: CurveDef, options?: MorphOptions): Promise<void> {
-      // On interrupt: snapshot the current visual state so the new morph starts from
-      // exactly where things look right now — no jump at the handoff point
-      // On interrupt: snapshot current visual state as the starting bounds for the new morph
-      const interruptBounds = morphResolve !== null ? { scale, offsetX, offsetY } : null;
-
       if (morphResolve !== null) {
         engine.completeMorph();
         morphResolve();
         morphResolve = null;
         morphAlpha = 0;
-        morphBoundsA = null;
-        morphBoundsB = null;
       }
 
       morphDurationMs = options?.duration ?? DEFAULT_MORPH_DURATION_MS;
       morphAlpha = 0;
 
-      // Compute `curveA`'s bounds from the current skeleton (or use the interrupted visual state)
-      morphBoundsA = interruptBounds ??
-        computeBoundaries(engine.getSarmalSkeleton()) ?? { scale, offsetX, offsetY };
-
       engine.startMorph(target, options?.morphStrategy);
-
-      // Compute `curveB`'s bounds for the boundary lerp
-      const period = target.period ?? Math.PI * 2;
-      const samples = Math.max(50, Math.round(period * 20));
-      const skeletonFn = target.skeletonFn ?? ((t: number) => target.fn(t, 0, {}));
-      const skeletonB = Array.from({ length: samples + 1 }, (_, i) =>
-        skeletonFn((i / samples) * period),
-      );
-      morphBoundsB = computeBoundaries(skeletonB) ?? { scale, offsetX, offsetY };
 
       return new Promise<void>((resolve) => {
         morphResolve = resolve;

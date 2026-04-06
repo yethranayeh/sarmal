@@ -206,6 +206,7 @@ const morphPairs = [
 
 		const MORPH_DURATION = 400;
 		const HOLD_DURATION = 1200;
+		const WARMUP_DURATION = 1500;
 
 		interface MorphPair {
 			from: string;
@@ -237,13 +238,14 @@ const morphPairs = [
 
 			const sarmal = createSarmal(canvas, fromCurve as Parameters<typeof createSarmal>[1], {
 				trailColor: pair.color,
-				skeletonColor: "transparent",
+				skeletonColor: pair.color,
 				headColor: pair.color,
-				trailLength: 80,
+				trailLength: 60,
 				glowSize: 0
 			});
 
 			sarmal.start();
+			await new Promise((resolve) => setTimeout(resolve, WARMUP_DURATION));
 
 			while (true) {
 				await sarmal.morphTo(toCurve as Parameters<typeof createSarmal>[1], { duration: MORPH_DURATION });
