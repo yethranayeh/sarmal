@@ -419,7 +419,7 @@ describe("edge cases", () => {
   });
 });
 
-// ─── getSarmalSkeleton() ─────────────────────────────────────────────────────
+//getSarmalSkeleton() ─────────────────────────────────────────────────────
 
 describe("getSarmalSkeleton()", () => {
   it("returns Math.ceil(period * 50) points", () => {
@@ -467,5 +467,87 @@ describe("getSarmalSkeleton()", () => {
     expect(before[0]!.x).toBeCloseTo(after[0]!.x);
     expect(before[0]!.y).toBeCloseTo(after[0]!.y);
     expect(before[before.length - 1]!.x).toBeCloseTo(after[after.length - 1]!.x);
+  });
+});
+
+// ─── getSarmalSkeleton() skeleton modes ───────────────────────────────────────
+
+describe("getSarmalSkeleton() with skeleton modes", () => {
+  /**
+   * Drifting curve — shape changes based on actualTime.
+   * fn(t, time) = { x: cos(t), y: sin(t + time*0.1) }
+   * The phase shifts over time, making the skeleton drift.
+   */
+  const drifting: CurveDef = {
+    name: "drifting",
+    fn: (t, time) => ({ x: Math.cos(t), y: Math.sin(t + time * 0.1) }),
+    period: TWO_PI,
+    speed: 1,
+    skeleton: "live",
+  };
+
+  /**
+   * Static curve with explicit skeletonFn override.
+   * fn drifts, but skeletonFn provides a stable circle.
+   */
+  const withSkeletonFn: CurveDef = {
+    name: "with-skeleton-fn",
+    fn: (t, time) => ({ x: Math.cos(t + time * 0.5), y: Math.sin(t + time * 0.5) }),
+    period: TWO_PI,
+    speed: 1,
+    skeletonFn: (t) => ({ x: Math.cos(t), y: Math.sin(t) }),
+  };
+
+  it("static skeleton (default) does not change when actualTime advances", () => {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars -- omit skeleton to test default behavior
+    const { skeleton: _, ...staticCurve }: CurveDef = { ...drifting };
+    const staticEngine = createEngine(staticCurve);
+    const before = staticEngine.getSarmalSkeleton();
+    staticEngine.tick(5); // advance actualTime
+    const after = staticEngine.getSarmalSkeleton();
+    expect(before[0]!.y).toBeCloseTo(after[0]!.y);
+    expect(before[50]!.y).toBeCloseTo(after[50]!.y);
+  });
+
+  it("live skeleton changes when actualTime advances", () => {
+    const engine = createEngine(drifting);
+    const before = engine.getSarmalSkeleton();
+    engine.tick(5); // advance actualTime
+    const after = engine.getSarmalSkeleton();
+    // The y values should be different because time shifted the phase
+    expect(before[50]!.y).not.toBeCloseTo(after[50]!.y);
+  });
+
+  it("skeletonFn is used instead of fn when provided", () => {
+    const engine = createEngine(withSkeletonFn);
+    const skeleton = engine.getSarmalSkeleton();
+    // skeletonFn provides a perfect circle, so y should match sin(t) not sin(t + time*0.5)
+    const midIdx = Math.floor(skeleton.length / 2);
+    const tMid = (midIdx / (skeleton.length - 1)) * TWO_PI;
+    expect(skeleton[midIdx]!.x).toBeCloseTo(Math.cos(tMid));
+    expect(skeleton[midIdx]!.y).toBeCloseTo(Math.sin(tMid));
+  });
+
+  it("skeletonFn ignores actualTime (always static)", () => {
+    const engine = createEngine(withSkeletonFn);
+    const before = engine.getSarmalSkeleton();
+    engine.tick(10); // advance actualTime significantly
+    const after = engine.getSarmalSkeleton();
+    expect(before[0]!.x).toBeCloseTo(after[0]!.x);
+    expect(before[0]!.y).toBeCloseTo(after[0]!.y);
+    expect(before[100]!.x).toBeCloseTo(after[100]!.x);
+  });
+
+  it("live skeleton at actualTime=0 matches static skeleton", () => {
+    // At time=0, live and static should produce the same skeleton
+    const engine = createEngine(drifting);
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars -- omit skeleton to test default behavior
+    const { skeleton: _, ...staticCurve }: CurveDef = { ...drifting };
+    const staticEngine = createEngine(staticCurve);
+    const liveSkeleton = engine.getSarmalSkeleton();
+    const staticSkeleton = staticEngine.getSarmalSkeleton();
+    expect(liveSkeleton[0]!.x).toBeCloseTo(staticSkeleton[0]!.x);
+    expect(liveSkeleton[0]!.y).toBeCloseTo(staticSkeleton[0]!.y);
+    expect(liveSkeleton[100]!.x).toBeCloseTo(staticSkeleton[100]!.x);
   });
 });

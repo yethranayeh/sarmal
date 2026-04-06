@@ -82,6 +82,8 @@ export function createEngine(curveDef: CurveDef, trailLength: number = 120): Eng
     fn: curveDef.fn,
     period: curveDef.period ?? TWO_PI,
     speed: curveDef.speed ?? 1,
+    skeleton: curveDef.skeleton,
+    skeletonFn: curveDef.skeletonFn,
   };
   const trail = new CircularBuffer(trailLength);
   let t = 0;
@@ -98,6 +100,10 @@ export function createEngine(curveDef: CurveDef, trailLength: number = 120): Eng
 
     get trailCount() {
       return trail.length;
+    },
+
+    get isLiveSkeleton() {
+      return curve.skeleton === "live";
     },
 
     reset() {
@@ -142,11 +148,24 @@ export function createEngine(curveDef: CurveDef, trailLength: number = 120): Eng
       const steps = Math.ceil(curve.period * POINTS_PER_PERIOD_UNIT);
       // oxlint-disable-next-line unicorn/no-new-array -- array is pre-allocated, filled immediately below
       const points: Array<Point> = new Array(steps);
-      for (let i = 0; i < steps; i++) {
-        const sampleT = (i / (steps - 1)) * curve.period;
-        const point = curve.fn(sampleT, 0, {});
-        points[i] = point;
+
+      if (curve.skeletonFn) {
+        for (let i = 0; i < steps; i++) {
+          const sampleT = (i / (steps - 1)) * curve.period;
+          points[i] = curve.skeletonFn(sampleT);
+        }
+      } else if (curve.skeleton === "live") {
+        for (let i = 0; i < steps; i++) {
+          const sampleT = (i / (steps - 1)) * curve.period;
+          points[i] = curve.fn(sampleT, actualTime, {});
+        }
+      } else {
+        for (let i = 0; i < steps; i++) {
+          const sampleT = (i / (steps - 1)) * curve.period;
+          points[i] = curve.fn(sampleT, 0, {});
+        }
       }
+
       return points;
     },
   };

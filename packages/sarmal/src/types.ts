@@ -19,6 +19,21 @@ export interface CurveDef {
    * Intended for potential backwards compatibility scenarios and futureproofing
    */
   version?: number;
+  /**
+   * Skeleton rendering mode:
+   * - 'static': Skeleton is computed once at init from `fn(t, 0)` and cached
+   * - 'live': Skeleton is recomputed each frame using `fn(t, actualTime)` specifically for curves whose shape drifts *over time*
+   * @default "static"
+   */
+  skeleton?: "static" | "live";
+  /**
+   * An **override** function for computing a skeleton independent of `fn`
+   * If provided, this function is used instead of `fn` to sample the skeleton,
+   *  and the result is cached just like like 'static' mode
+   * @param t The parametric time value from `0` to `period`
+   * @returns The point on the skeleton at time `t`
+   */
+  skeletonFn?: (t: number) => Point;
 }
 
 export type SeekOptions = {
@@ -70,13 +85,14 @@ export interface Engine {
    * In technicality, it just represents the complete traversal of the curve over one full period,
    *  which is sampled at points from `t=0` to `t=period`
    *
-   * The skeleton is always derived from the curve's state at `t=0` using `fn(t, 0)`
-   * This represents the full path the sarmal would trace on its first complete cycle,
-   *  rendered as a static background reference.
+   * For "static" skeletons, this returns the same array on every call
+   * For "live" skeletons, this returns a different array each frame
+   * For `skeletonFn` overrides, this returns the skeleton from that function, which is *always* static
    *
    * The number of sample points is automatically derived from the curve's period.
    */
   getSarmalSkeleton(): Array<Point>;
+  readonly isLiveSkeleton: boolean;
   /**
    * Sets the simulation time `t` directly to the specified value.
    * By default, the trail is preserved

@@ -148,11 +148,33 @@ export function createRenderer(options: RendererOptions): SarmalInstance {
   }
 
   function drawSkeleton() {
-    if (!skeletonCanvas || opts.skeletonColor === "transparent") {
+    if (opts.skeletonColor === "transparent") {
       return;
     }
 
-    ctx.drawImage(skeletonCanvas, 0, 0);
+    if (engine.isLiveSkeleton) {
+      // Live skeletons change each frame
+      // ! `skeleton` is already updated for this frame in `render()` before `drawSkeleton()` is called
+      if (skeleton.length < 2) {
+        return;
+      }
+
+      ctx.strokeStyle = `rgba(${hexToRgbComponents(opts.skeletonColor)},${DEFAULT_SKELETON_OPACITY})`;
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+
+      const first = skeleton[0]!;
+      ctx.moveTo(first.x * scale + offsetX, first.y * scale + offsetY);
+
+      for (let i = 1; i < skeleton.length; i++) {
+        const p = skeleton[i]!;
+        ctx.lineTo(p.x * scale + offsetX, p.y * scale + offsetY);
+      }
+
+      ctx.stroke();
+    } else if (skeletonCanvas) {
+      ctx.drawImage(skeletonCanvas, 0, 0);
+    }
   }
 
   function drawTrail() {
@@ -228,6 +250,12 @@ export function createRenderer(options: RendererOptions): SarmalInstance {
 
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
+    if (engine.isLiveSkeleton) {
+      // ! "live" skeletons change shape, so we need to recalculate boundaries each frame
+      skeleton = engine.getSarmalSkeleton();
+      calculateBoundaries();
+    }
+
     drawSkeleton();
     drawTrail();
     drawHead();
@@ -238,7 +266,10 @@ export function createRenderer(options: RendererOptions): SarmalInstance {
   // Initialize skeleton and offscreen canvas on creation
   skeleton = engine.getSarmalSkeleton();
   calculateBoundaries();
-  buildSkeletonCanvas();
+
+  if (!engine.isLiveSkeleton) {
+    buildSkeletonCanvas();
+  }
 
   return {
     start() {

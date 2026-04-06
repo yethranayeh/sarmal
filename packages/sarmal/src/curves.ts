@@ -30,6 +30,15 @@ function epitrochoid7(t: number, _time: number, _params: Record<string, number>)
   };
 }
 
+function epitrochoid7Skeleton(t: number): Point {
+  // average of the oscillating range for a stable base shape
+  const d = 1.275;
+  return {
+    x: 7 * Math.cos(t) - d * Math.cos(7 * t),
+    y: 7 * Math.sin(t) - d * Math.sin(7 * t),
+  };
+}
+
 function astroid(t: number, _time: number, _params: Record<string, number>): Point {
   const c = Math.cos(t);
   const s = Math.sin(t);
@@ -106,6 +115,7 @@ export const curves: Record<string, CurveDef> = {
     fn: epitrochoid7,
     period: TWO_PI,
     speed: 1.4,
+    skeletonFn: epitrochoid7Skeleton,
   },
   astroid: {
     name: "Astroid",
@@ -136,12 +146,14 @@ export const curves: Record<string, CurveDef> = {
     fn: lissajous32,
     period: TWO_PI,
     speed: 2.0,
+    skeleton: "live",
   },
   lissajous43: {
     name: "Lissajous 4:3",
     fn: lissajous43,
     period: TWO_PI,
     speed: 1.8,
+    skeleton: "live",
   },
   epicycloid3: {
     name: "Epicycloid (n=3)",
@@ -154,5 +166,6 @@ export const curves: Record<string, CurveDef> = {
     fn: lame,
     period: TWO_PI,
     speed: 1.0,
+    skeleton: "live",
   },
 };

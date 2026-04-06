@@ -181,10 +181,12 @@ export function createSVGRenderer(options: SVGRendererOptions): SarmalInstance {
     return (p.y * scale + offsetY).toFixed(2);
   }
 
-  const skeleton = engine.getSarmalSkeleton();
-  calculateBoundaries(skeleton);
+  function updateSkeleton(skeleton: Point[]) {
+    if (skeleton.length < 2) {
+      skeletonPath.setAttribute("d", "");
+      return;
+    }
 
-  if (skeleton.length >= 2) {
     let d = `M${px(skeleton[0]!)} ${py(skeleton[0]!)}`;
 
     for (let i = 1; i < skeleton.length; i++) {
@@ -193,6 +195,13 @@ export function createSVGRenderer(options: SVGRendererOptions): SarmalInstance {
     d += " Z";
 
     skeletonPath.setAttribute("d", d);
+  }
+
+  const skeleton = engine.getSarmalSkeleton();
+  calculateBoundaries(skeleton);
+
+  if (!engine.isLiveSkeleton) {
+    updateSkeleton(skeleton);
   }
 
   function updateTrail(trail: Point[], trailCount: number) {
@@ -254,6 +263,13 @@ export function createSVGRenderer(options: SVGRendererOptions): SarmalInstance {
 
     const trail = engine.tick(dt);
     const trailCount = engine.trailCount;
+
+    if (engine.isLiveSkeleton) {
+      const liveSkeleton = engine.getSarmalSkeleton();
+
+      calculateBoundaries(liveSkeleton);
+      updateSkeleton(liveSkeleton);
+    }
 
     updateTrail(trail, trailCount);
     updateHead(trail, trailCount);
