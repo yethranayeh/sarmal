@@ -1,6 +1,7 @@
 ---
 import "../styles/globals.css";
 import { Code } from "astro:components";
+import { curves } from "@sarmal/core";
 
 import Sarmal from "../components/Sarmal.astro";
 import Button from "../components/Button.astro";
@@ -14,6 +15,13 @@ const sarmals = [
 	{ id: "astroid", name: "Astroid", color: "#38bdf8" },
 	{ id: "epitrochoid7", name: "Epitrochoid", color: "#a78bfa" },
 	{ id: "rose5", name: "Rose (n=5)", color: "#f472b6" }
+] as const;
+
+const morphPairs = [
+	{ from: "astroid", to: "deltoid", color: "#38bdf8" },
+	{ from: "rose3", to: "epitrochoid7", color: "#e879f9" },
+	{ from: "lissajous32", to: "rose5", color: "#fb923c" },
+	{ from: "lame", to: "astroid", color: "#a78bfa" }
 ] as const;
 ---
 
@@ -132,6 +140,27 @@ const sarmals = [
 				}
 			</div>
 		</section>
+
+		<section class='mb-16'>
+			<h2 class='font-heading text-xl text-center text-foreground mb-6'>Morphing sarmals</h2>
+			<div class='grid grid-cols-2 md:grid-cols-4 gap-4'>
+				{
+					morphPairs.map((pair) => (
+						<div class='flex flex-col items-center'>
+							<div
+								id={`morph-${pair.from}-${pair.to}`}
+								title={`${pair.from} -> ${pair.to}`}
+								class='bg-surface border border-border rounded-md p-3 mb-2 overflow-visible'>
+								<Sarmal curve={pair.from as keyof typeof curves} width={72} height={72} trailColor={pair.color} />
+							</div>
+							<span class='font-mono text-[10px] tracking-wider uppercase text-muted'>
+								{pair.from} {"->"} {pair.to}
+							</span>
+						</div>
+					))
+				}
+			</div>
+		</section>
 	</main>
 
 	<footer class='w-full px-4 py-6 border-t border-border text-center'>
@@ -174,5 +203,76 @@ const sarmals = [
 			sarmal.seek(LIVE_T);
 			requestAnimationFrame(() => sarmal.stop());
 		}, SEEK_MS);
+
+		const MORPH_DURATION = 400;
+		const HOLD_DURATION = 1200;
+
+		interface MorphPair {
+			from: string;
+			to: string;
+			color: string;
+		}
+
+		async function runMorphLoop(canvas: HTMLCanvasElement, pair: MorphPair): Promise<void> {
+			const fromCurve = (
+				curves as Record<
+					string,
+					{
+						fn: (t: number, time: number, params: Record<string, number>) => { x: number; y: number };
+						period?: number;
+						speed?: number;
+					}
+				>
+			)[pair.from];
+			const toCurve = (
+				curves as Record<
+					string,
+					{ fn: (t: number, time: number, params: Record<string, number>) => { period?: number; speed?: number } }
+				>
+			)[pair.to];
+
+			if (!fromCurve || !toCurve) {
+				return;
+			}
+
+			const sarmal = createSarmal(canvas, fromCurve as Parameters<typeof createSarmal>[1], {
+				trailColor: pair.color,
+				skeletonColor: "transparent",
+				headColor: pair.color,
+				trailLength: 80,
+				glowSize: 0
+			});
+
+			sarmal.start();
+
+			while (true) {
+				await sarmal.morphTo(toCurve as Parameters<typeof createSarmal>[1], { duration: MORPH_DURATION });
+				await new Promise((resolve) => setTimeout(resolve, HOLD_DURATION));
+				await sarmal.morphTo(fromCurve as Parameters<typeof createSarmal>[1], { duration: MORPH_DURATION });
+				await new Promise((resolve) => setTimeout(resolve, HOLD_DURATION));
+			}
+		}
+
+		const morphContainers = document.querySelectorAll<HTMLDivElement>("[id^='morph-']");
+		morphContainers.forEach((container) => {
+			const idMatch = container.id.match(/^morph-(.+)-(.+)$/);
+			if (!idMatch) {
+				return;
+			}
+
+			const fromId = idMatch[1]!;
+			const toId = idMatch[2]!;
+			const color = container.querySelector("canvas")?.getAttribute("data-trail-color") ?? "#c0143c";
+
+			const canvas = document.createElement("canvas");
+			canvas.width = 72;
+			canvas.height = 72;
+			canvas.className = "w-[72px] h-[72px]";
+			container.innerHTML = "";
+			container.appendChild(canvas);
+
+			const pair = { from: fromId, to: toId, color };
+			runMorphLoop(canvas, pair).catch(() => {});
+		});
 	</script>
 </html>

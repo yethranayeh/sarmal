@@ -3,6 +3,7 @@ import Dialog from "./Dialog/Dialog.astro";
 import DialogShowcase from "./Dialog/DialogShowcase.astro";
 import DialogInfoGrid from "./Dialog/DialogInfoGrid.astro";
 import { SEPARATOR_DOT } from "../variables";
+import Button from "./Button.astro";
 ---
 
 <Dialog id='artemis2-modal'>
@@ -15,8 +16,10 @@ import { SEPARATOR_DOT } from "../variables";
 		<div
 			slot='bottom-left'
 			class='absolute bottom-4 left-4 font-mono text-[8px] text-muted/35 leading-relaxed pointer-events-none'>
-			Stylized {SEPARATOR_DOT}
-			<span class='text-primary'>not to scale</span>
+			<div class='flex flex-col'>
+				<span class='text-primary'>not to scale</span>
+				<span>Stylized Approximation</span>
+			</div>
 		</div>
 	</DialogShowcase>
 
@@ -36,16 +39,16 @@ import { SEPARATOR_DOT } from "../variables";
 			<div class='flex items-center justify-between mb-3'>
 				<span class='text-muted/50 uppercase tracking-wider text-[9px]'>Mission timeline</span>
 				<div class='flex gap-2'>
-					<button
+					<Button
 						id='modal-mode-auto'
-						class='font-mono text-[9px] tracking-widest uppercase transition-colors cursor-pointer text-primary'
-						>Auto</button
+						variant='ghost'
+						class='font-mono text-[9px] tracking-widest uppercase text-primary'>Auto</Button
 					>
 					<span class='text-muted/30'>{SEPARATOR_DOT}</span>
-					<button
+					<Button
 						id='modal-mode-manual'
-						class='font-mono text-[9px] tracking-widest uppercase transition-colors cursor-pointer text-muted/50 hover:text-foreground'
-						>Explore</button
+						variant='ghost'
+						class='font-mono text-[9px] tracking-widest uppercase text-muted'>Explore</Button
 					>
 				</div>
 			</div>
@@ -103,17 +106,19 @@ import { SEPARATOR_DOT } from "../variables";
 		{
 			label: "Halfway to Moon",
 			t: (50 / TOTAL_HOURS) * TWO_PI,
-			note: `Lock in, we're Moonbound. Crew is more than halfway to their destination, preparations for lunar flyby underway. ${SEPARATOR_DOT} NASA, Apr 4`
+			note: `Lock in, we're Moonbound. Crew is more than halfway to their destination, preparations for lunar flyby underway. ${SEPARATOR_DOT} NASA, Apr 4`,
+			source: { url: "https://x.com/NASA/status/2040393011616452726", label: "NASA" }
 		},
 		{
 			label: "Sphere of Influence",
 			t: 1.95,
-			note: `Outbound correction burn complete (17.5 sec). Orion enters the Moon's sphere of gravitational influence ${SEPARATOR_DOT} lunar gravity now dominates the trajectory. ${SEPARATOR_DOT} NASA, Apr 5-6`
+			note: `Outbound correction burn complete (17.5 sec). Orion enters the Moon's sphere of gravitational influence ${SEPARATOR_DOT} lunar gravity now dominates the trajectory. ${SEPARATOR_DOT} NASA`
 		},
 		{
 			label: "Distance Record",
 			t: 2.56,
-			note: `The 54-year-old Apollo 13 record for the farthest distance humans have ever traveled from Earth was just broken by the Artemis II crew aboard the Orion spacecraft.`
+			note: `The 54-year-old Apollo 13 record — 248,655 miles from Earth — was surpassed at 17:56 UTC by the Artemis II crew aboard Orion.`,
+			source: { url: "https://x.com/NASAArtemis/status/2041216809748013274", label: "NASA Artemis" }
 		},
 		{
 			label: "Closest Approach",
@@ -166,7 +171,15 @@ import { SEPARATOR_DOT } from "../variables";
 	function updateMilestoneLabel(t: number) {
 		const m = nearestMilestone(t);
 		const THRESHOLD = TWO_PI * 0.03;
-		milestoneEl.textContent = Math.abs(m.t - t) < THRESHOLD ? `${m.label} ${SEPARATOR_DOT} ${m.note}` : "";
+		if (Math.abs(m.t - t) < THRESHOLD) {
+			const sourceHtml =
+				"source" in m && m.source
+					? ` <a href="${m.source.url}" target="_blank" rel="noopener noreferrer" class="text-primary underline underline-offset-2">${m.source.label}</a>`
+					: "";
+			milestoneEl.innerHTML = `${m.label} ${SEPARATOR_DOT} ${m.note}${sourceHtml}`;
+		} else {
+			milestoneEl.textContent = "";
+		}
 		document.getElementById("modal-debug")!.textContent =
 			`t=${t.toFixed(4)} | elapsed=${((t / TWO_PI) * TOTAL_HOURS).toFixed(2)}h`;
 	}

@@ -73,13 +73,13 @@ export function createRenderer(options: RendererOptions): SarmalInstance {
 
   let morphResolve: (() => void) | null = null;
   let morphDurationMs = DEFAULT_MORPH_DURATION_MS;
-  let morphTarget: CurveDef | null = null;
   let morphAlpha = 0;
-  let skeletonCanvasA: OffscreenCanvas | null = null;
-  let skeletonCanvasB: OffscreenCanvas | null = null;
+  let morphBoundsA: { scale: number; offsetX: number; offsetY: number } | null = null;
+  let morphBoundsB: { scale: number; offsetX: number; offsetY: number } | null = null;
 
   /**
-   * Computes how to map engine coordinates to canvas pixels
+   * Computes how to map engine coordinates to canvas pixels.
+   * Returns the transform values without mutating renderer state.
    *
    * Steps are roughly: curve fn -> coordinate point -> (scale + offset) -> pixel
    *
@@ -87,32 +87,21 @@ export function createRenderer(options: RendererOptions): SarmalInstance {
    * 2. Compute a scale factor within the bounds into the canvas with padding
    * 3. Compute offsets to center the curve in the canvas
    */
-  function calculateBoundaries() {
-    if (skeleton.length === 0) {
-      return;
-    }
+  function computeBoundaries(
+    pts: Array<Point>,
+  ): { scale: number; offsetX: number; offsetY: number } | null {
+    if (pts.length === 0) return null;
 
-    const first = skeleton[0]!;
+    const first = pts[0]!;
     let minX = first.x,
       maxX = first.x,
       minY = first.y,
       maxY = first.y;
-    for (const p of skeleton) {
-      if (p.x < minX) {
-        minX = p.x;
-      }
-
-      if (p.x > maxX) {
-        maxX = p.x;
-      }
-
-      if (p.y < minY) {
-        minY = p.y;
-      }
-
-      if (p.y > maxY) {
-        maxY = p.y;
-      }
+    for (const p of pts) {
+      if (p.x < minX) minX = p.x;
+      if (p.x > maxX) maxX = p.x;
+      if (p.y < minY) minY = p.y;
+      if (p.y > maxY) maxY = p.y;
     }
 
     const width = maxX - minX;
@@ -122,12 +111,23 @@ export function createRenderer(options: RendererOptions): SarmalInstance {
 
     const scaleX = canvasWidth / (width * (1 + FIT_PADDING * 2));
     const scaleY = canvasHeight / (height * (1 + FIT_PADDING * 2));
-    scale = Math.min(scaleX, scaleY);
+    const s = Math.min(scaleX, scaleY);
+    const boundsWidth = width * s;
+    const boundsHeight = height * s;
+    return {
+      scale: s,
+      offsetX: (canvasWidth - boundsWidth) / 2 - minX * s,
+      offsetY: (canvasHeight - boundsHeight) / 2 - minY * s,
+    };
+  }
 
-    const boundsWidth = width * scale;
-    const boundsHeight = height * scale;
-    offsetX = (canvasWidth - boundsWidth) / 2 - minX * scale;
-    offsetY = (canvasHeight - boundsHeight) / 2 - minY * scale;
+  function calculateBoundaries() {
+    const b = computeBoundaries(skeleton);
+    if (b) {
+      scale = b.scale;
+      offsetX = b.offsetX;
+      offsetY = b.offsetY;
+    }
   }
 
   /**
@@ -155,23 +155,27 @@ export function createRenderer(options: RendererOptions): SarmalInstance {
     skeletonCtx.stroke();
   }
 
+  function drawSkeletonPath(pts: Array<Point>, opacity: number) {
+    if (pts.length < 2) return;
+    ctx.strokeStyle = `rgba(${hexToRgbComponents(opts.skeletonColor)},${opacity})`;
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.moveTo(pts[0]!.x * scale + offsetX, pts[0]!.y * scale + offsetY);
+    for (let i = 1; i < pts.length; i++) {
+      ctx.lineTo(pts[i]!.x * scale + offsetX, pts[i]!.y * scale + offsetY);
+    }
+    ctx.stroke();
+  }
+
   function drawSkeleton() {
     if (opts.skeletonColor === "transparent") {
       return;
     }
 
     if (engine.morphAlpha !== null) {
-      if (skeletonCanvasA) {
-        ctx.globalAlpha = (1 - morphAlpha) * DEFAULT_SKELETON_OPACITY;
-        ctx.drawImage(skeletonCanvasA, 0, 0);
-      }
-
-      if (skeletonCanvasB) {
-        ctx.globalAlpha = morphAlpha * DEFAULT_SKELETON_OPACITY;
-        ctx.drawImage(skeletonCanvasB, 0, 0);
-      }
-
-      ctx.globalAlpha = 1;
+      // Draw the live lerped skeleton every frame so it always matches the current
+      // scale/offset and correctly tracks live curves that change with actualTime
+      drawSkeletonPath(engine.getSarmalSkeleton(), DEFAULT_SKELETON_OPACITY);
       return;
     }
 
@@ -268,18 +272,28 @@ export function createRenderer(options: RendererOptions): SarmalInstance {
     if (engine.morphAlpha !== null) {
       morphAlpha = Math.min(1, morphAlpha + deltaTime / (morphDurationMs / 1000));
       engine.setMorphAlpha(morphAlpha);
-      skeleton = engine.getSarmalSkeleton();
 
-      calculateBoundaries();
+      // Lerp the coordinate transform smoothly from curveA's space to curveB's space
+      if (morphBoundsA && morphBoundsB) {
+        const a = morphBoundsA;
+        const b = morphBoundsB;
+        scale = a.scale + (b.scale - a.scale) * morphAlpha;
+        offsetX = a.offsetX + (b.offsetX - a.offsetX) * morphAlpha;
+        offsetY = a.offsetY + (b.offsetY - a.offsetY) * morphAlpha;
+      }
 
       if (morphAlpha >= 1) {
         engine.completeMorph();
         morphResolve?.();
         morphResolve = null;
-        morphTarget = null;
         morphAlpha = 0;
-        skeletonCanvasA = null;
-        skeletonCanvasB = null;
+        morphBoundsA = null;
+        morphBoundsB = null;
+        // Coordinate space is already at curveB (morphAlpha was 1); rebuild skeleton cache
+        skeleton = engine.getSarmalSkeleton();
+        if (!engine.isLiveSkeleton) {
+          buildSkeletonCanvas();
+        }
       }
     }
 
@@ -289,7 +303,7 @@ export function createRenderer(options: RendererOptions): SarmalInstance {
 
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-    if (engine.isLiveSkeleton || engine.morphAlpha !== null) {
+    if (engine.isLiveSkeleton && engine.morphAlpha === null) {
       skeleton = engine.getSarmalSkeleton();
       calculateBoundaries();
     }
@@ -350,62 +364,37 @@ export function createRenderer(options: RendererOptions): SarmalInstance {
     },
 
     morphTo(target: CurveDef, options?: MorphOptions): Promise<void> {
+      // On interrupt: snapshot the current visual state so the new morph starts from
+      // exactly where things look right now — no jump at the handoff point
+      // On interrupt: snapshot current visual state as the starting bounds for the new morph
+      const interruptBounds = morphResolve !== null ? { scale, offsetX, offsetY } : null;
+
       if (morphResolve !== null) {
         engine.completeMorph();
         morphResolve();
         morphResolve = null;
         morphAlpha = 0;
-        skeletonCanvasA = null;
-        skeletonCanvasB = null;
+        morphBoundsA = null;
+        morphBoundsB = null;
       }
 
       morphDurationMs = options?.duration ?? DEFAULT_MORPH_DURATION_MS;
-      morphTarget = target;
       morphAlpha = 0;
 
-      const currentSkeleton = engine.getSarmalSkeleton();
-
-      if (currentSkeleton.length >= 2) {
-        skeletonCanvasA = new OffscreenCanvas(canvas.width, canvas.height);
-
-        const ctxA = skeletonCanvasA.getContext("2d")!;
-        ctxA.strokeStyle = `rgba(${hexToRgbComponents(opts.skeletonColor)},${DEFAULT_SKELETON_OPACITY})`;
-        ctxA.lineWidth = 1.5;
-        ctxA.beginPath();
-
-        const first = currentSkeleton[0]!;
-        ctxA.moveTo(first.x * scale + offsetX, first.y * scale + offsetY);
-
-        for (let i = 1; i < currentSkeleton.length; i++) {
-          const p = currentSkeleton[i]!;
-          ctxA.lineTo(p.x * scale + offsetX, p.y * scale + offsetY);
-        }
-
-        ctxA.stroke();
-      }
+      // Compute `curveA`'s bounds from the current skeleton (or use the interrupted visual state)
+      morphBoundsA = interruptBounds ??
+        computeBoundaries(engine.getSarmalSkeleton()) ?? { scale, offsetX, offsetY };
 
       engine.startMorph(target, options?.morphStrategy);
 
-      if (morphTarget && !engine.isLiveSkeleton) {
-        skeletonCanvasB = new OffscreenCanvas(canvas.width, canvas.height);
-
-        const skeletonCtx = skeletonCanvasB.getContext("2d")!;
-        skeletonCtx.strokeStyle = `rgba(${hexToRgbComponents(opts.skeletonColor)},${DEFAULT_SKELETON_OPACITY})`;
-        skeletonCtx.lineWidth = 1.5;
-        skeletonCtx.beginPath();
-
-        const period = morphTarget.period ?? Math.PI * 2;
-        const samples = Math.max(50, Math.round(period * 20));
-        const firstB = morphTarget.fn(0, 0, {});
-        skeletonCtx.moveTo(firstB.x * scale + offsetX, firstB.y * scale + offsetY);
-
-        for (let i = 1; i <= samples; i++) {
-          const t = (i / samples) * period;
-          const p = morphTarget.fn(t, 0, {});
-          skeletonCtx.lineTo(p.x * scale + offsetX, p.y * scale + offsetY);
-        }
-        skeletonCtx.stroke();
-      }
+      // Compute `curveB`'s bounds for the boundary lerp
+      const period = target.period ?? Math.PI * 2;
+      const samples = Math.max(50, Math.round(period * 20));
+      const skeletonFn = target.skeletonFn ?? ((t: number) => target.fn(t, 0, {}));
+      const skeletonB = Array.from({ length: samples + 1 }, (_, i) =>
+        skeletonFn((i / samples) * period),
+      );
+      morphBoundsB = computeBoundaries(skeletonB) ?? { scale, offsetX, offsetY };
 
       return new Promise<void>((resolve) => {
         morphResolve = resolve;

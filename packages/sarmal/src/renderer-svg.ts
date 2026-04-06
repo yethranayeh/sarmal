@@ -319,12 +319,6 @@ export function createSVGRenderer(options: SVGRendererOptions): SarmalInstance {
     if (engine.morphAlpha !== null) {
       morphAlpha = Math.min(1, morphAlpha + dt / (morphDurationMs / 1000));
       engine.setMorphAlpha(morphAlpha);
-      const morphSkeleton = engine.getSarmalSkeleton();
-      calculateBoundaries(morphSkeleton);
-
-      if (!engine.isLiveSkeleton) {
-        updateSkeleton(morphSkeleton);
-      }
 
       if (morphPathABuilt) {
         skeletonPathA.setAttribute("d", morphPathABuilt);
@@ -351,13 +345,17 @@ export function createSVGRenderer(options: SVGRendererOptions): SarmalInstance {
         morphPathBBuilt = "";
         skeletonPathA.setAttribute("visibility", "hidden");
         skeletonPathB.setAttribute("visibility", "hidden");
+        // Snap coordinate space to `curveB` and update skeleton path
+        const newSkeleton = engine.getSarmalSkeleton();
+        calculateBoundaries(newSkeleton);
+        updateSkeleton(newSkeleton);
       }
     }
 
     const trail = engine.tick(dt);
     const trailCount = engine.trailCount;
 
-    if (engine.isLiveSkeleton) {
+    if (engine.isLiveSkeleton && engine.morphAlpha === null) {
       const liveSkeleton = engine.getSarmalSkeleton();
       calculateBoundaries(liveSkeleton);
       updateSkeleton(liveSkeleton);

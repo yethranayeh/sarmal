@@ -231,6 +231,12 @@ export function createEngine(curveDef: CurveDef, trailLength: number = 120): Eng
 
     completeMorph() {
       if (morphCurveB !== null) {
+        // Normalized strategy drives `curveB` at `tB` = `(t / periodA) * periodB`
+        // Remap `t` so the trail continues from the same position on `curveB`,
+        //  not from a raw `t` value that belongs to `curveA`'s smaller range.
+        if (_morphStrategy === "normalized" && curve.period !== morphCurveB.period) {
+          t = (t / curve.period) * morphCurveB.period;
+        }
         curve = morphCurveB;
       }
       morphCurveB = null;

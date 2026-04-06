@@ -83,7 +83,12 @@ const presetsJson = JSON.stringify(
 								><span class='text-muted'>number</span><span class='text-muted'> </span>,
 							</span><code title='elapsed time in seconds' class='text-primary'>time</code><span class='text-muted'
 								>:</span
-							><span class='text-muted'>number</span><span class='text-muted'>) {"{"}</span>
+							><span class='text-muted'>number</span><span class='text-muted'>, </span><code
+								title='custom parameters object'
+								class='text-primary'>params</code
+							><span class='text-muted'>:</span><span class='text-muted'>{`Record<string, number>;`}</span><span
+								class='text-muted'>) {"{"}</span
+							>
 						</label>
 						<textarea
 							id='code-input'
@@ -178,6 +183,13 @@ const presetsJson = JSON.stringify(
 				</div>
 			</section>
 		</main>
+
+		<section class='w-full border-t border-border'>
+			<div class='px-4 py-3 border-b border-border-subtle bg-surface'>
+				<span class='font-mono text-xs tracking-wider uppercase text-muted'>Morph Demo</span>
+			</div>
+			<div id='morph-demo-grid' class='flex flex-wrap gap-4 p-4'></div>
+		</section>
 
 		<script type='application/json' id='presets-data' set:html={presetsJson} />
 		<script src='../play.ts'></script>

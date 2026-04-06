@@ -721,6 +721,65 @@ describe("getSarmalSkeleton() during morph", () => {
     expect(last.y).toBeCloseTo(10);
   });
 
+  it("completeMorph() remaps t to curveB period for normalized strategy", () => {
+    // circle-fast: period=π, astroid-like: period=2π
+    // normalized lerp drives curveB at tB = (t/π)*2π = 2t
+    // so at t=π/2 the morph ends with curveB sampled at π
+    // → after completeMorph t must be remapped to π (not left at π/2)
+    const circleA: CurveDef = {
+      name: "circle-a",
+      fn: (t) => ({ x: Math.cos(t), y: Math.sin(t) }),
+      period: Math.PI,
+      speed: 1,
+    };
+    const curveB: CurveDef = {
+      name: "curve-b",
+      fn: (t) => ({ x: Math.cos(t), y: Math.sin(t) }),
+      period: Math.PI * 2,
+      speed: 1,
+    };
+    const engine = createEngine(circleA);
+    engine.seek(Math.PI / 2); // t = π/2, curveA head = (0, 1)
+    engine.startMorph(curveB, "normalized");
+    engine.setMorphAlpha(1);
+    // Last morph point: curveB.fn(tB) = curveB.fn(2*(π/2)) = curveB.fn(π) = (-1, 0)
+    engine.completeMorph();
+    // After completion, t must be π so the trail continues from (-1, 0)
+    const trail = engine.tick(0.0001);
+    const p = lastPoint(trail, engine.trailCount);
+    // curveB.fn(π + tiny) ≈ (-1, tiny positive) — close to (-1, 0)
+    expect(p.x).toBeCloseTo(-1, 1);
+    // NOT close to curveB.fn(π/2 + tiny) = (0, 1), which would indicate no remap
+    expect(p.y).not.toBeCloseTo(1, 1);
+  });
+
+  it("completeMorph() does NOT remap t for raw strategy", () => {
+    // raw strategy: tB = t (same value for both curves), so t needs no remapping
+    const halfCircle: CurveDef = {
+      name: "half-circle",
+      fn: (t) => ({ x: Math.cos(t), y: Math.sin(t) }),
+      period: Math.PI,
+      speed: 1,
+    };
+    const fullCircle: CurveDef = {
+      name: "full-circle",
+      fn: (t) => ({ x: Math.cos(t), y: Math.sin(t) }),
+      period: Math.PI * 2,
+      speed: 1,
+    };
+    const engine = createEngine(halfCircle);
+    engine.seek(Math.PI / 2); // t = π/2
+    engine.startMorph(fullCircle, "raw");
+    engine.setMorphAlpha(1);
+    engine.completeMorph();
+    // raw: last morph point was curveB.fn(π/2) = (0, 1)
+    // after completion t stays at π/2, next tick continues from curveB.fn(π/2 + tiny) ≈ (0, 1)
+    const trail = engine.tick(0.0001);
+    const p = lastPoint(trail, engine.trailCount);
+    expect(p.x).toBeCloseTo(0, 1);
+    expect(p.y).toBeCloseTo(1, 1);
+  });
+
   it("live skeleton during morph still updates each call", () => {
     const liveX: CurveDef = {
       name: "live-x",
