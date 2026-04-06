@@ -1,93 +1,74 @@
 ---
+import Dialog from "./Dialog/Dialog.astro";
+import DialogShowcase from "./Dialog/DialogShowcase.astro";
+import DialogInfoGrid from "./Dialog/DialogInfoGrid.astro";
 import { SEPARATOR_DOT } from "../variables";
 ---
 
-<dialog
-	id='artemis2-modal'
-	class='backdrop:bg-foreground/40 backdrop:backdrop-blur-sm bg-transparent p-0 max-w-none w-full max-h-none my-auto outline-none'>
-	<div
-		class='bg-surface border border-border rounded-lg w-[min(90vw,780px)] mx-auto my-auto flex flex-col md:flex-row overflow-hidden shadow-xl'>
+<Dialog id='artemis2-modal'>
+	<DialogShowcase slot='showcase' canvasId='artemis2-modal-canvas'>
 		<div
-			class='flex-1 border-b border-border md:border-b-0 md:border-r flex items-center justify-center p-6 relative min-h-55'>
-			<canvas id='artemis2-modal-canvas' width='260' height='170'></canvas>
-			<div
-				class='absolute top-4 left-4 font-mono text-[9px] tracking-widest uppercase text-muted/60 leading-relaxed pointer-events-none'>
-				<span class='block'>Artemis II</span>
+			slot='top-left'
+			class='absolute top-4 left-4 font-mono text-[9px] tracking-widest uppercase text-muted/60 leading-relaxed pointer-events-none'>
+			<span class='block'>Artemis II</span>
+		</div>
+		<div
+			slot='bottom-left'
+			class='absolute bottom-4 left-4 font-mono text-[8px] text-muted/35 leading-relaxed pointer-events-none'>
+			Stylized {SEPARATOR_DOT}
+			<span class='text-primary'>not to scale</span>
+		</div>
+	</DialogShowcase>
+
+	<div slot='details' class='flex-1 flex flex-col p-6 font-mono text-[11px]'>
+		<DialogInfoGrid
+			items={[
+				{ label: "Launch", value: `Apr 1, 2026 ${SEPARATOR_DOT} 22:35 UTC` },
+				{ label: "Crew", value: ["Glover", "Hansen", "Koch", "Wiseman"].join(` ${SEPARATOR_DOT} `) },
+				{ label: "Status", value: "", highlight: true, id: "modal-status" },
+				{ label: "Progress", value: "", id: "modal-progress" }
+			]}
+		/>
+
+		<hr class='my-4 w-full border-t-px border-dotted text-muted' />
+
+		<div class='flex-1 flex flex-col'>
+			<div class='flex items-center justify-between mb-3'>
+				<span class='text-muted/50 uppercase tracking-wider text-[9px]'>Mission timeline</span>
+				<div class='flex gap-2'>
+					<button
+						id='modal-mode-auto'
+						class='font-mono text-[9px] tracking-widest uppercase transition-colors cursor-pointer text-primary'
+						>Auto</button
+					>
+					<span class='text-muted/30'>{SEPARATOR_DOT}</span>
+					<button
+						id='modal-mode-manual'
+						class='font-mono text-[9px] tracking-widest uppercase transition-colors cursor-pointer text-muted/50 hover:text-foreground'
+						>Explore</button
+					>
+				</div>
 			</div>
-			<div class='absolute bottom-4 left-4 font-mono text-[8px] text-muted/35 leading-relaxed pointer-events-none'>
-				Stylized {SEPARATOR_DOT}
-				<span class='text-primary'>not to scale</span>
+
+			<div id='modal-slider-wrap' class='hidden'>
+				<input id='modal-slider' type='range' min='0' max='628' step='1' class='w-full accent-primary cursor-pointer' />
 			</div>
+
+			<div id='modal-milestone-label' class='mt-2 text-[10px] text-muted/70 min-h-10 leading-relaxed'></div>
 		</div>
 
-		<div class='flex-1 flex flex-col p-6 font-mono text-[11px]'>
-			<div class='grid grid-cols-[80px_12px_1fr] gap-y-1.5 leading-snug'>
-				<span class='text-muted/70 uppercase tracking-wider'>Launch</span>
-				<span class='text-muted/40'>{">"}</span>
-				<span class='text-foreground/90'>Apr 1, 2026 {SEPARATOR_DOT} 22:35 UTC</span>
-
-				<span class='text-muted/70 uppercase tracking-wider'>Crew</span>
-				<span class='text-muted/40'>{">"}</span>
-				<span class='text-foreground/90'>{["Glover", "Hansen", "Koch", "Wiseman"].join(" " + SEPARATOR_DOT + " ")}</span
-				>
-
-				<span class='text-muted/70 uppercase tracking-wider'>Status</span>
-				<span class='text-muted/40'>{">"}</span>
-				<span id='modal-status' class='text-primary uppercase tracking-wider'></span>
-
-				<span class='text-muted/70 uppercase tracking-wider'>Progress</span>
-				<span class='text-muted/40'>{">"}</span>
-				<span id='modal-progress' class='text-foreground/90'></span>
-			</div>
-
-			<hr class='my-4 w-full border-t-px border-dotted text-muted' />
-
-			<div class='flex-1 flex flex-col'>
-				<div class='flex items-center justify-between mb-3'>
-					<span class='text-muted/50 uppercase tracking-wider text-[9px]'>Mission timeline</span>
-					<div class='flex gap-2'>
-						<button
-							id='modal-mode-auto'
-							class='font-mono text-[9px] tracking-widest uppercase transition-colors cursor-pointer text-primary'
-							>Auto</button
-						>
-						<span class='text-muted/30'>{SEPARATOR_DOT}</span>
-						<button
-							id='modal-mode-manual'
-							class='font-mono text-[9px] tracking-widest uppercase transition-colors cursor-pointer text-muted/50 hover:text-foreground'
-							>Explore</button
-						>
-					</div>
-				</div>
-
-				<div id='modal-slider-wrap' class='hidden'>
-					<input
-						id='modal-slider'
-						type='range'
-						min='0'
-						max='628'
-						step='1'
-						class='w-full accent-primary cursor-pointer'
-					/>
-				</div>
-
-				<div id='modal-milestone-label' class='mt-2 text-[10px] text-muted/70 min-h-10 leading-relaxed'></div>
-			</div>
-
-			<div class='border-t border-border/60 pt-3 mt-3 flex items-center justify-between'>
-				<span class='text-muted/50 uppercase tracking-widest text-[9px]'>NASA {SEPARATOR_DOT} Artemis II</span>
-				<button
-					id='artemis2-modal-close'
-					class='font-mono text-[9px] tracking-widest uppercase text-muted/50 hover:text-foreground transition-colors cursor-pointer'>
-					Close
-				</button>
-			</div>
+		<div class='border-t border-border/60 pt-3 mt-3 flex items-center justify-between'>
+			<span class='text-muted/50 uppercase tracking-widest text-[9px]'>NASA {SEPARATOR_DOT} Artemis II</span>
+			<button
+				id='artemis2-modal-close'
+				class='font-mono text-[9px] tracking-widest uppercase text-muted/50 hover:text-foreground transition-colors cursor-pointer'>
+				Close
+			</button>
 		</div>
 	</div>
-</dialog>
+</Dialog>
 
 <script>
-	// FIXME: code duplication...
 	import { createSarmal, curves } from "@sarmal/core";
 	import { SEPARATOR_DOT } from "../variables";
 
@@ -112,33 +93,58 @@ import { SEPARATOR_DOT } from "../variables";
 		{ label: "Launch", t: 0, note: `Liftoff from Kennedy Space Center, Launch Complex 39B. ${SEPARATOR_DOT} Apr 1` },
 		{
 			label: "TLI Burn",
-			t: 0.73,
+			t: (30 / TOTAL_HOURS) * TWO_PI,
 			note: `Orion's main engine fires for 5 min 50 sec. Crew leaves Earth orbit and begins the journey to the Moon. ${SEPARATOR_DOT} NASA, Apr 2`
 		},
 		{
 			label: "Halfway to Moon",
-			t: Math.PI / 2,
+			t: (106 / TOTAL_HOURS) * TWO_PI,
 			note: `Lock in, we're Moonbound. Crew is more than halfway to their destination, preparations for lunar flyby underway. ${SEPARATOR_DOT} NASA, Apr 4`
 		},
 		{
 			label: "Manual Piloting Demo",
-			t: 2.15,
+			t: (50 / TOTAL_HOURS) * TWO_PI,
 			note: `Koch and Hansen take turns manually controlling Orion in deep space ${SEPARATOR_DOT} two thruster modes, six degrees of freedom. 41 minutes of engineering data. ${SEPARATOR_DOT} NASA, Apr 4`
 		},
 		{
 			label: "Sphere of Influence",
-			t: 2.92,
+			t: (118 / TOTAL_HOURS) * TWO_PI,
 			note: `Outbound correction burn complete (17.5 sec). Orion enters the Moon's sphere of gravitational influence ${SEPARATOR_DOT} lunar gravity now dominates the trajectory. ${SEPARATOR_DOT} NASA, Apr 5-6`
 		},
 		{
-			label: "Distance Record",
-			t: 3.33,
-			note: `Artemis II surpasses the Apollo 13 record ${SEPARATOR_DOT} 252,760 miles from Earth. The farthest humans have ever traveled from our planet. ${SEPARATOR_DOT} Apr 6, 1:56 PM EDT`
+			label: "Closest Approach",
+			t: (130 / TOTAL_HOURS) * TWO_PI,
+			note: `Closest approach: 6,000 miles above the surface. Free-return trajectory around the far side of the Moon. ${SEPARATOR_DOT} Apr 6`
 		},
 		{
-			label: "Lunar flyby",
-			t: 3.47,
-			note: `Closest approach: 4,070 miles above the surface. Free-return trajectory around the far side of the Moon. ${SEPARATOR_DOT} Apr 6, 7:02 PM EDT`
+			label: "Distance Record",
+			t: (131 / TOTAL_HOURS) * TWO_PI,
+			note: `Artemis II surpasses the Apollo 13 record ${SEPARATOR_DOT} 400,171 km from Earth. The farthest humans have ever traveled from our planet. ${SEPARATOR_DOT} Apr 6, 1:56 PM EDT`
+		},
+		{
+			label: "Far Side Blackout",
+			t: (132 / TOTAL_HOURS) * TWO_PI,
+			note: `Orion passes behind the Moon. ~45 minutes of communication blackout with Mission Control. ${SEPARATOR_DOT} Apr 6`
+		},
+		{
+			label: "Slingshot Maneuver",
+			t: (140 / TOTAL_HOURS) * TWO_PI,
+			note: `Free-return trajectory set. Orion uses lunar gravity to slingshot back toward Earth. ${SEPARATOR_DOT} Apr 7`
+		},
+		{
+			label: "Radiation Test",
+			t: (192 / TOTAL_HOURS) * TWO_PI,
+			note: `Van Allen belt passage. Crew collects radiation shielding data for future deep space missions. ${SEPARATOR_DOT} Apr 9`
+		},
+		{
+			label: "Reentry Prep",
+			t: (216 / TOTAL_HOURS) * TWO_PI,
+			note: `Final day preparations. Crew reviews landing procedures, stows equipment. ${SEPARATOR_DOT} Apr 10`
+		},
+		{
+			label: "CM/SM Separation",
+			t: (232 / TOTAL_HOURS) * TWO_PI,
+			note: `Crew module separates from service module. The final descent begins. ${SEPARATOR_DOT} Apr 11`
 		},
 		{ label: "Splashdown", t: TWO_PI, note: `Pacific Ocean splashdown. Mission complete. ${SEPARATOR_DOT} Apr 11` }
 	];
@@ -212,7 +218,6 @@ import { SEPARATOR_DOT } from "../variables";
 		sarmal!.reset();
 		sarmal!.start();
 
-		// Automatically set slider to live mission position for when user switches to "explore"
 		const liveMissionT = Math.min(TWO_PI, (elapsedHours / TOTAL_HOURS) * TWO_PI);
 		slider.value = String(Math.round(liveMissionT * 100));
 	}

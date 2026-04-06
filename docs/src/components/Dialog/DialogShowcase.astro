@@ -1,0 +1,17 @@
+---
+interface Props {
+	canvasId: string;
+	width?: number;
+	height?: number;
+}
+
+const { canvasId, width = 260, height = 170 } = Astro.props;
+---
+
+<div
+	class="flex-1 border-b border-border md:border-b-0 md:border-r flex items-center justify-center p-6 relative min-h-55"
+>
+	<canvas id={canvasId} width={width} height={height}></canvas>
+	<slot name="top-left" />
+	<slot name="bottom-left" />
+</div>

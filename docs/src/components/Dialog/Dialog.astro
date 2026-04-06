@@ -1,0 +1,19 @@
+---
+interface Props {
+	id: string;
+}
+
+const { id } = Astro.props;
+---
+
+<dialog
+	id={id}
+	class="backdrop:bg-foreground/40 backdrop:backdrop-blur-sm bg-transparent p-0 max-w-none w-full max-h-none my-auto outline-none"
+>
+	<div
+		class="bg-surface border border-border rounded-lg w-[min(90vw,780px)] mx-auto my-auto flex flex-col md:flex-row overflow-hidden shadow-xl"
+	>
+		<slot name="showcase" />
+		<slot name="details" />
+	</div>
+</dialog>
