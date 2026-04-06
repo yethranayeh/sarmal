@@ -59,7 +59,9 @@ import { SEPARATOR_DOT } from "../variables";
 		</div>
 
 		<div class='border-t border-border/60 pt-3 mt-3 flex items-center justify-between'>
-			<span class='text-muted/50 uppercase tracking-widest text-[9px]'>NASA {SEPARATOR_DOT} Artemis II</span>
+			<span class='text-muted/50 uppercase tracking-widest text-[9px]'
+				>Artemis II {SEPARATOR_DOT} <span class='text-primary'>Integrity</span></span
+			>
 			<button
 				id='artemis2-modal-close'
 				class='font-mono text-[9px] tracking-widest uppercase text-muted/50 hover:text-foreground transition-colors cursor-pointer'>
@@ -77,7 +79,7 @@ import { SEPARATOR_DOT } from "../variables";
 	const SPLASHDOWN = new Date("2026-04-11T00:21:00Z").getTime();
 	const TWO_PI = Math.PI * 2;
 	const TOTAL_HOURS = (SPLASHDOWN - LAUNCH) / (1000 * 60 * 60);
-	const LIVE_T = 2.46;
+	const LIVE_T = 2.27;
 
 	const dialog = document.getElementById("artemis2-modal") as HTMLDialogElement;
 	const canvas = document.getElementById("artemis2-modal-canvas") as HTMLCanvasElement;
@@ -105,27 +107,27 @@ import { SEPARATOR_DOT } from "../variables";
 		},
 		{
 			label: "Sphere of Influence",
-			t: 2.46,
+			t: 1.95,
 			note: `Outbound correction burn complete (17.5 sec). Orion enters the Moon's sphere of gravitational influence ${SEPARATOR_DOT} lunar gravity now dominates the trajectory. ${SEPARATOR_DOT} NASA, Apr 5-6`
 		},
 		{
+			label: "Distance Record",
+			t: 2.56,
+			note: `The 54-year-old Apollo 13 record for the farthest distance humans have ever traveled from Earth was just broken by the Artemis II crew aboard the Orion spacecraft.`
+		},
+		{
 			label: "Closest Approach",
-			t: (130 / TOTAL_HOURS) * TWO_PI,
+			t: 3.17,
 			note: `Closest approach: 6,000 miles above the surface. Free-return trajectory around the far side of the Moon. ${SEPARATOR_DOT} Apr 6`
 		},
 		{
-			label: "Distance Record",
-			t: (131 / TOTAL_HOURS) * TWO_PI,
-			note: `Artemis II surpasses the Apollo 13 record ${SEPARATOR_DOT} 400,171 km from Earth. The farthest humans have ever traveled from our planet. ${SEPARATOR_DOT} Apr 6, 1:56 PM EDT`
-		},
-		{
 			label: "Far Side Blackout",
-			t: (132 / TOTAL_HOURS) * TWO_PI,
+			t: 3.1,
 			note: `Orion passes behind the Moon. ~45 minutes of communication blackout with Mission Control. ${SEPARATOR_DOT} Apr 6`
 		},
 		{
 			label: "Slingshot Maneuver",
-			t: (140 / TOTAL_HOURS) * TWO_PI,
+			t: 3.9,
 			note: `Free-return trajectory set. Orion uses lunar gravity to slingshot back toward Earth. ${SEPARATOR_DOT} Apr 7`
 		},
 		{
@@ -153,7 +155,7 @@ import { SEPARATOR_DOT } from "../variables";
 	function computeMissionState() {
 		const elapsed = Date.now() - LAUNCH;
 		const elapsedHours = elapsed / (1000 * 60 * 60);
-		const dayNumber = Math.floor(elapsed / (1000 * 60 * 60 * 24)) + 1;
+		const dayNumber = Math.floor(elapsed / (1000 * 60 * 60 * 24));
 		return { elapsedHours, dayNumber };
 	}
 
