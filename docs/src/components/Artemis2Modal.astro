@@ -14,6 +14,10 @@ import { SEPARATOR_DOT } from "../variables";
 				class='absolute top-4 left-4 font-mono text-[9px] tracking-widest uppercase text-muted/60 leading-relaxed pointer-events-none'>
 				<span class='block'>Artemis II</span>
 			</div>
+			<div class='absolute bottom-4 left-4 font-mono text-[8px] text-muted/35 leading-relaxed pointer-events-none'>
+				Stylized {SEPARATOR_DOT}
+				<span class='text-primary'>not to scale</span>
+			</div>
 		</div>
 
 		<div class='flex-1 flex flex-col p-6 font-mono text-[11px]'>
@@ -105,14 +109,38 @@ import { SEPARATOR_DOT } from "../variables";
 	const btnExplore = document.getElementById("modal-mode-manual") as HTMLButtonElement;
 
 	const milestones = [
-		{ label: "Launch", t: 0, note: "Liftoff from Kennedy Space Center." },
+		{ label: "Launch", t: 0, note: `Liftoff from Kennedy Space Center, Launch Complex 39B. ${SEPARATOR_DOT} Apr 1` },
+		{
+			label: "TLI Burn",
+			t: 0.73,
+			note: `Orion's main engine fires for 5 min 50 sec. Crew leaves Earth orbit and begins the journey to the Moon. ${SEPARATOR_DOT} NASA, Apr 2`
+		},
 		{
 			label: "Halfway to Moon",
 			t: Math.PI / 2,
-			note: "Lock in, we're Moonbound. Astronauts are more than halfway to their destination, preparations for lunar flyby underway. — NASA, Apr 4"
+			note: `Lock in, we're Moonbound. Crew is more than halfway to their destination, preparations for lunar flyby underway. ${SEPARATOR_DOT} NASA, Apr 4`
 		},
-		{ label: "Lunar flyby", t: Math.PI, note: "Free-return trajectory around the far side of the Moon." },
-		{ label: "Splashdown", t: TWO_PI, note: "Pacific Ocean splashdown. Mission complete." }
+		{
+			label: "Manual Piloting Demo",
+			t: 2.15,
+			note: `Koch and Hansen take turns manually controlling Orion in deep space ${SEPARATOR_DOT} two thruster modes, six degrees of freedom. 41 minutes of engineering data. ${SEPARATOR_DOT} NASA, Apr 4`
+		},
+		{
+			label: "Sphere of Influence",
+			t: 2.92,
+			note: `Outbound correction burn complete (17.5 sec). Orion enters the Moon's sphere of gravitational influence ${SEPARATOR_DOT} lunar gravity now dominates the trajectory. ${SEPARATOR_DOT} NASA, Apr 5-6`
+		},
+		{
+			label: "Distance Record",
+			t: 3.33,
+			note: `Artemis II surpasses the Apollo 13 record ${SEPARATOR_DOT} 252,760 miles from Earth. The farthest humans have ever traveled from our planet. ${SEPARATOR_DOT} Apr 6, 1:56 PM EDT`
+		},
+		{
+			label: "Lunar flyby",
+			t: 3.47,
+			note: `Closest approach: 4,070 miles above the surface. Free-return trajectory around the far side of the Moon. ${SEPARATOR_DOT} Apr 6, 7:02 PM EDT`
+		},
+		{ label: "Splashdown", t: TWO_PI, note: `Pacific Ocean splashdown. Mission complete. ${SEPARATOR_DOT} Apr 11` }
 	];
 
 	let sarmal: ReturnType<typeof createSarmal> | null = null;
@@ -133,7 +161,7 @@ import { SEPARATOR_DOT } from "../variables";
 	function updateMilestoneLabel(t: number) {
 		const m = nearestMilestone(t);
 		const THRESHOLD = TWO_PI * 0.08;
-		milestoneEl.textContent = Math.abs(m.t - t) < THRESHOLD ? `${m.label} — ${m.note}` : "";
+		milestoneEl.textContent = Math.abs(m.t - t) < THRESHOLD ? `${m.label} ${SEPARATOR_DOT} ${m.note}` : "";
 	}
 
 	function seekAndFreeze(t: number) {
@@ -185,8 +213,8 @@ import { SEPARATOR_DOT } from "../variables";
 		sarmal!.start();
 
 		// Automatically set slider to live mission position for when user switches to "explore"
-		const halfwayMilestone = milestones.find(m => m.label === "Halfway to Moon")!;
-		slider.value = String(Math.round(halfwayMilestone.t * 100));
+		const liveMissionT = Math.min(TWO_PI, (elapsedHours / TOTAL_HOURS) * TWO_PI);
+		slider.value = String(Math.round(liveMissionT * 100));
 	}
 
 	btnAuto.addEventListener("click", () => {
@@ -207,11 +235,11 @@ import { SEPARATOR_DOT } from "../variables";
 
 		sarmal!.stop();
 
-		const halfwayMilestone = milestones.find(m => m.label === "Halfway to Moon")!;
-		slider.value = String(Math.round(halfwayMilestone.t * 100));
+		const liveT = Math.min(TWO_PI, ((Date.now() - LAUNCH) / (1000 * 60 * 60) / TOTAL_HOURS) * TWO_PI);
+		slider.value = String(Math.round(liveT * 100));
 
-		seekAndFreeze(halfwayMilestone.t);
-		updateMilestoneLabel(halfwayMilestone.t);
+		seekAndFreeze(liveT);
+		updateMilestoneLabel(liveT);
 		setMode("explore");
 	});
 

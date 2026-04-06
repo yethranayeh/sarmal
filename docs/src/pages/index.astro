@@ -147,7 +147,8 @@ const sarmals = [
 			const LAUNCH = new Date("2026-04-01T22:35:12Z").getTime();
 			const SPLASHDOWN = new Date("2026-04-11T00:21:00Z").getTime();
 			const TOTAL_HOURS = (SPLASHDOWN - LAUNCH) / (1000 * 60 * 60);
-			const SPEED = curves.artemis2.speed ?? 1;
+			const TWO_PI = Math.PI * 2;
+			const SPEED = curves.artemis2.speed ??1;
 
 			const canvas = document.getElementById("artemis2-hero") as HTMLCanvasElement;
 			const statusEl = document.getElementById("artemis2-status") as HTMLElement;
@@ -166,7 +167,7 @@ const sarmals = [
 
 			statusEl.textContent = elapsedHours >= TOTAL_HOURS ? "Mission complete" : `Day ${dayNumber}`;
 
-			const missionT = Math.PI / 2;
+			const missionT = Math.min(TWO_PI, (elapsedHours / TOTAL_HOURS) * TWO_PI);
 			const SEEK_MS = (missionT / SPEED) * 1000;
 
 			sarmal.start();
