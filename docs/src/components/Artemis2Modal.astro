@@ -52,6 +52,7 @@ import { SEPARATOR_DOT } from "../variables";
 
 			<div id='modal-slider-wrap' class='hidden'>
 				<input id='modal-slider' type='range' min='0' max='628' step='1' class='w-full accent-primary cursor-pointer' />
+				<div id='modal-debug' class='mt-2 text-[9px] text-muted/50 font-mono'></div>
 			</div>
 
 			<div id='modal-milestone-label' class='mt-2 text-[10px] text-muted/70 min-h-10 leading-relaxed'></div>
@@ -76,6 +77,7 @@ import { SEPARATOR_DOT } from "../variables";
 	const SPLASHDOWN = new Date("2026-04-11T00:21:00Z").getTime();
 	const TWO_PI = Math.PI * 2;
 	const TOTAL_HOURS = (SPLASHDOWN - LAUNCH) / (1000 * 60 * 60);
+	const LIVE_T = 2.46;
 
 	const dialog = document.getElementById("artemis2-modal") as HTMLDialogElement;
 	const canvas = document.getElementById("artemis2-modal-canvas") as HTMLCanvasElement;
@@ -98,17 +100,12 @@ import { SEPARATOR_DOT } from "../variables";
 		},
 		{
 			label: "Halfway to Moon",
-			t: (106 / TOTAL_HOURS) * TWO_PI,
+			t: (50 / TOTAL_HOURS) * TWO_PI,
 			note: `Lock in, we're Moonbound. Crew is more than halfway to their destination, preparations for lunar flyby underway. ${SEPARATOR_DOT} NASA, Apr 4`
 		},
 		{
-			label: "Manual Piloting Demo",
-			t: (50 / TOTAL_HOURS) * TWO_PI,
-			note: `Koch and Hansen take turns manually controlling Orion in deep space ${SEPARATOR_DOT} two thruster modes, six degrees of freedom. 41 minutes of engineering data. ${SEPARATOR_DOT} NASA, Apr 4`
-		},
-		{
 			label: "Sphere of Influence",
-			t: (118 / TOTAL_HOURS) * TWO_PI,
+			t: 2.46,
 			note: `Outbound correction burn complete (17.5 sec). Orion enters the Moon's sphere of gravitational influence ${SEPARATOR_DOT} lunar gravity now dominates the trajectory. ${SEPARATOR_DOT} NASA, Apr 5-6`
 		},
 		{
@@ -166,8 +163,10 @@ import { SEPARATOR_DOT } from "../variables";
 
 	function updateMilestoneLabel(t: number) {
 		const m = nearestMilestone(t);
-		const THRESHOLD = TWO_PI * 0.08;
+		const THRESHOLD = TWO_PI * 0.03;
 		milestoneEl.textContent = Math.abs(m.t - t) < THRESHOLD ? `${m.label} ${SEPARATOR_DOT} ${m.note}` : "";
+		document.getElementById("modal-debug")!.textContent =
+			`t=${t.toFixed(4)} | elapsed=${((t / TWO_PI) * TOTAL_HOURS).toFixed(2)}h`;
 	}
 
 	function seekAndFreeze(t: number) {
@@ -218,7 +217,7 @@ import { SEPARATOR_DOT } from "../variables";
 		sarmal!.reset();
 		sarmal!.start();
 
-		const liveMissionT = Math.min(TWO_PI, (elapsedHours / TOTAL_HOURS) * TWO_PI);
+		const liveMissionT = LIVE_T;
 		slider.value = String(Math.round(liveMissionT * 100));
 	}
 
@@ -240,11 +239,10 @@ import { SEPARATOR_DOT } from "../variables";
 
 		sarmal!.stop();
 
-		const liveT = Math.min(TWO_PI, ((Date.now() - LAUNCH) / (1000 * 60 * 60) / TOTAL_HOURS) * TWO_PI);
-		slider.value = String(Math.round(liveT * 100));
+		slider.value = String(Math.round(LIVE_T * 100));
 
-		seekAndFreeze(liveT);
-		updateMilestoneLabel(liveT);
+		seekAndFreeze(LIVE_T);
+		updateMilestoneLabel(LIVE_T);
 		setMode("explore");
 	});
 

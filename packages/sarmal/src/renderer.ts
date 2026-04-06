@@ -1,5 +1,6 @@
-import type { Point, RendererOptions, SarmalInstance } from "./types";
+import type { CurveDef, MorphOptions, Point, RendererOptions, SarmalInstance } from "./types";
 
+const DEFAULT_MORPH_DURATION_MS = 300;
 const DEFAULT_HEAD_RADIUS = 4;
 // TODO: Re-evaluate glow implementation. Current approach looks TERRIBLE!
 // Consider: remove glow entirely, replace with a sharper bloom, or make it opt-in only (default 0).
@@ -69,6 +70,13 @@ export function createRenderer(options: RendererOptions): SarmalInstance {
   let offsetY = 0;
   let animationId: number | null = null;
   let lastTime = 0;
+
+  let morphResolve: (() => void) | null = null;
+  let morphDurationMs = DEFAULT_MORPH_DURATION_MS;
+  let morphTarget: CurveDef | null = null;
+  let morphAlpha = 0;
+  let skeletonCanvasA: OffscreenCanvas | null = null;
+  let skeletonCanvasB: OffscreenCanvas | null = null;
 
   /**
    * Computes how to map engine coordinates to canvas pixels
@@ -152,9 +160,22 @@ export function createRenderer(options: RendererOptions): SarmalInstance {
       return;
     }
 
+    if (engine.morphAlpha !== null) {
+      if (skeletonCanvasA) {
+        ctx.globalAlpha = (1 - morphAlpha) * DEFAULT_SKELETON_OPACITY;
+        ctx.drawImage(skeletonCanvasA, 0, 0);
+      }
+
+      if (skeletonCanvasB) {
+        ctx.globalAlpha = morphAlpha * DEFAULT_SKELETON_OPACITY;
+        ctx.drawImage(skeletonCanvasB, 0, 0);
+      }
+
+      ctx.globalAlpha = 1;
+      return;
+    }
+
     if (engine.isLiveSkeleton) {
-      // Live skeletons change each frame
-      // ! `skeleton` is already updated for this frame in `render()` before `drawSkeleton()` is called
       if (skeleton.length < 2) {
         return;
       }
@@ -244,14 +265,31 @@ export function createRenderer(options: RendererOptions): SarmalInstance {
     const deltaTime = Math.min((now - lastTime) / 1000, 1 / 30);
     lastTime = now;
 
+    if (engine.morphAlpha !== null) {
+      morphAlpha = Math.min(1, morphAlpha + deltaTime / (morphDurationMs / 1000));
+      engine.setMorphAlpha(morphAlpha);
+      skeleton = engine.getSarmalSkeleton();
+
+      calculateBoundaries();
+
+      if (morphAlpha >= 1) {
+        engine.completeMorph();
+        morphResolve?.();
+        morphResolve = null;
+        morphTarget = null;
+        morphAlpha = 0;
+        skeletonCanvasA = null;
+        skeletonCanvasB = null;
+      }
+    }
+
     trail = engine.tick(deltaTime);
     trailCount = engine.trailCount;
     head = trailCount > 0 ? trail[trailCount - 1]! : null;
 
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-    if (engine.isLiveSkeleton) {
-      // ! "live" skeletons change shape, so we need to recalculate boundaries each frame
+    if (engine.isLiveSkeleton || engine.morphAlpha !== null) {
       skeleton = engine.getSarmalSkeleton();
       calculateBoundaries();
     }
@@ -309,6 +347,69 @@ export function createRenderer(options: RendererOptions): SarmalInstance {
 
     seekWithTrail(t) {
       engine.seekWithTrail(t);
+    },
+
+    morphTo(target: CurveDef, options?: MorphOptions): Promise<void> {
+      if (morphResolve !== null) {
+        engine.completeMorph();
+        morphResolve();
+        morphResolve = null;
+        morphAlpha = 0;
+        skeletonCanvasA = null;
+        skeletonCanvasB = null;
+      }
+
+      morphDurationMs = options?.duration ?? DEFAULT_MORPH_DURATION_MS;
+      morphTarget = target;
+      morphAlpha = 0;
+
+      const currentSkeleton = engine.getSarmalSkeleton();
+
+      if (currentSkeleton.length >= 2) {
+        skeletonCanvasA = new OffscreenCanvas(canvas.width, canvas.height);
+
+        const ctxA = skeletonCanvasA.getContext("2d")!;
+        ctxA.strokeStyle = `rgba(${hexToRgbComponents(opts.skeletonColor)},${DEFAULT_SKELETON_OPACITY})`;
+        ctxA.lineWidth = 1.5;
+        ctxA.beginPath();
+
+        const first = currentSkeleton[0]!;
+        ctxA.moveTo(first.x * scale + offsetX, first.y * scale + offsetY);
+
+        for (let i = 1; i < currentSkeleton.length; i++) {
+          const p = currentSkeleton[i]!;
+          ctxA.lineTo(p.x * scale + offsetX, p.y * scale + offsetY);
+        }
+
+        ctxA.stroke();
+      }
+
+      engine.startMorph(target, options?.morphStrategy);
+
+      if (morphTarget && !engine.isLiveSkeleton) {
+        skeletonCanvasB = new OffscreenCanvas(canvas.width, canvas.height);
+
+        const skeletonCtx = skeletonCanvasB.getContext("2d")!;
+        skeletonCtx.strokeStyle = `rgba(${hexToRgbComponents(opts.skeletonColor)},${DEFAULT_SKELETON_OPACITY})`;
+        skeletonCtx.lineWidth = 1.5;
+        skeletonCtx.beginPath();
+
+        const period = morphTarget.period ?? Math.PI * 2;
+        const samples = Math.max(50, Math.round(period * 20));
+        const firstB = morphTarget.fn(0, 0, {});
+        skeletonCtx.moveTo(firstB.x * scale + offsetX, firstB.y * scale + offsetY);
+
+        for (let i = 1; i <= samples; i++) {
+          const t = (i / samples) * period;
+          const p = morphTarget.fn(t, 0, {});
+          skeletonCtx.lineTo(p.x * scale + offsetX, p.y * scale + offsetY);
+        }
+        skeletonCtx.stroke();
+      }
+
+      return new Promise<void>((resolve) => {
+        morphResolve = resolve;
+      });
     },
   };
 }

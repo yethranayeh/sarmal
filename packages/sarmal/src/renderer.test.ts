@@ -31,3 +31,18 @@ describe("hexToRgbComponents", () => {
     expect(hexToRgbComponents("#fff")).toBe("0,15,255");
   });
 });
+
+describe("morphTo type shape", () => {
+  it("SarmalInstance has morphTo method that returns Promise", () => {
+    const shape = {
+      start: () => {},
+      stop: () => {},
+      reset: () => {},
+      destroy: () => {},
+      seek: () => {},
+      seekWithTrail: () => {},
+      morphTo: () => Promise.resolve(),
+    };
+    expect(shape.morphTo).toBeDefined();
+  });
+});

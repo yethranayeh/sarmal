@@ -1,4 +1,11 @@
-import type { CurveDef, Engine, Point, SeekOptions, SeekWithTrailOptions } from "./types";
+import type {
+  CurveDef,
+  Engine,
+  MorpStrategy,
+  Point,
+  SeekOptions,
+  SeekWithTrailOptions,
+} from "./types";
 
 const TWO_PI = Math.PI * 2;
 const POINTS_PER_PERIOD_UNIT = 50;
@@ -76,8 +83,18 @@ class CircularBuffer {
  * @param curveDef A curve definition
  * @param trailLength default: `120`
  */
-export function createEngine(curveDef: CurveDef, trailLength: number = 120): Engine {
-  const curve = {
+/** Normalised resolution of a CurveDef, with required fields filled in */
+type ResolvedCurve = {
+  name: string;
+  fn: CurveDef["fn"];
+  period: number;
+  speed: number;
+  skeleton?: CurveDef["skeleton"];
+  skeletonFn?: CurveDef["skeletonFn"];
+};
+
+function resolveCurve(curveDef: CurveDef): ResolvedCurve {
+  return {
     name: curveDef.name,
     fn: curveDef.fn,
     period: curveDef.period ?? TWO_PI,
@@ -85,16 +102,45 @@ export function createEngine(curveDef: CurveDef, trailLength: number = 120): Eng
     skeleton: curveDef.skeleton,
     skeletonFn: curveDef.skeletonFn,
   };
+}
+
+export function createEngine(curveDef: CurveDef, trailLength: number = 120): Engine {
+  let curve = resolveCurve(curveDef);
   const trail = new CircularBuffer(trailLength);
   let t = 0;
   let actualTime = 0;
+
+  // Morph state which is `null` when not morphing
+  let morphCurveB: ResolvedCurve | null = null;
+  let _morphAlpha: number | null = null;
+  let _morphStrategy: MorpStrategy = "normalized";
+
+  /** Samples a resolved curve's skeleton at position `sampleT` */
+  function sampleSkeleton(c: ResolvedCurve, sampleT: number): Point {
+    if (c.skeletonFn) {
+      return c.skeletonFn(sampleT);
+    }
+    if (c.skeleton === "live") {
+      return c.fn(sampleT, actualTime, {});
+    }
+    return c.fn(sampleT, 0, {});
+  }
 
   return {
     tick(deltaTime: number): Array<Point> {
       t = (t + curve.speed * deltaTime) % curve.period;
       actualTime += deltaTime;
-      const point = curve.fn(t, actualTime, {});
-      trail.push(point.x, point.y);
+
+      if (morphCurveB !== null && _morphAlpha !== null) {
+        const a = curve.fn(t, actualTime, {});
+        const tB = _morphStrategy === "normalized" ? (t / curve.period) * morphCurveB.period : t;
+        const b = morphCurveB.fn(tB, actualTime, {});
+        trail.push(a.x + (b.x - a.x) * _morphAlpha, a.y + (b.y - a.y) * _morphAlpha);
+      } else {
+        const point = curve.fn(t, actualTime, {});
+        trail.push(point.x, point.y);
+      }
+
       return trail.toArray();
     },
 
@@ -104,6 +150,10 @@ export function createEngine(curveDef: CurveDef, trailLength: number = 120): Eng
 
     get isLiveSkeleton() {
       return curve.skeleton === "live";
+    },
+
+    get morphAlpha() {
+      return _morphAlpha;
     },
 
     reset() {
@@ -144,26 +194,75 @@ export function createEngine(curveDef: CurveDef, trailLength: number = 120): Eng
       }
     },
 
+    startMorph(target: CurveDef, strategy: MorpStrategy = "normalized") {
+      const resolvedTarget = resolveCurve(target);
+
+      if (morphCurveB !== null && _morphAlpha !== null) {
+        const frozenAlpha = _morphAlpha;
+        const frozenA = curve;
+        const frozenB = morphCurveB;
+        const frozenStrategy = _morphStrategy;
+
+        curve = {
+          ...frozenB,
+          fn: (sampleT: number, time: number, params: Record<string, number>) => {
+            const a = frozenA.fn(sampleT, time, params);
+            const tB =
+              frozenStrategy === "normalized"
+                ? (sampleT / frozenA.period) * frozenB.period
+                : sampleT;
+            const b = frozenB.fn(tB, time, params);
+            return {
+              x: a.x + (b.x - a.x) * frozenAlpha,
+              y: a.y + (b.y - a.y) * frozenAlpha,
+            };
+          },
+        };
+      }
+
+      _morphStrategy = strategy;
+      morphCurveB = resolvedTarget;
+      _morphAlpha = 0;
+    },
+
+    setMorphAlpha(alpha: number) {
+      _morphAlpha = alpha;
+    },
+
+    completeMorph() {
+      if (morphCurveB !== null) {
+        curve = morphCurveB;
+      }
+      morphCurveB = null;
+      _morphAlpha = null;
+    },
+
     getSarmalSkeleton(): Array<Point> {
       const steps = Math.ceil(curve.period * POINTS_PER_PERIOD_UNIT);
       // oxlint-disable-next-line unicorn/no-new-array -- array is pre-allocated, filled immediately below
       const points: Array<Point> = new Array(steps);
 
-      if (curve.skeletonFn) {
+      if (morphCurveB !== null && _morphAlpha !== null) {
         for (let i = 0; i < steps; i++) {
           const sampleT = (i / (steps - 1)) * curve.period;
-          points[i] = curve.skeletonFn(sampleT);
+          const a = sampleSkeleton(curve, sampleT);
+          const tB =
+            _morphStrategy === "normalized"
+              ? (sampleT / curve.period) * morphCurveB.period
+              : sampleT;
+          const b = sampleSkeleton(morphCurveB, tB);
+
+          points[i] = {
+            x: a.x + (b.x - a.x) * _morphAlpha,
+            y: a.y + (b.y - a.y) * _morphAlpha,
+          };
         }
-      } else if (curve.skeleton === "live") {
-        for (let i = 0; i < steps; i++) {
-          const sampleT = (i / (steps - 1)) * curve.period;
-          points[i] = curve.fn(sampleT, actualTime, {});
-        }
-      } else {
-        for (let i = 0; i < steps; i++) {
-          const sampleT = (i / (steps - 1)) * curve.period;
-          points[i] = curve.fn(sampleT, 0, {});
-        }
+        return points;
+      }
+
+      for (let i = 0; i < steps; i++) {
+        const sampleT = (i / (steps - 1)) * curve.period;
+        points[i] = sampleSkeleton(curve, sampleT);
       }
 
       return points;

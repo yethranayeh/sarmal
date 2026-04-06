@@ -551,3 +551,192 @@ describe("getSarmalSkeleton() with skeleton modes", () => {
     expect(liveSkeleton[100]!.x).toBeCloseTo(staticSkeleton[100]!.x);
   });
 });
+
+// ─── morph support ───────────────────────────────────────────────────────────
+//
+// Fixtures: xCurve outputs {x:t, y:0}, yCurve outputs {x:0, y:t}, both period=10.
+// Using tick(5) to land t at 5, then tick(0) to read without advancing.
+// Same-period fixtures so normalized and raw lerp are identical — tests focus on alpha math.
+
+describe("morphAlpha state", () => {
+  const xCurve: CurveDef = {
+    name: "x-curve",
+    fn: (t) => ({ x: t, y: 0 }),
+    period: 10,
+    speed: 1,
+  };
+
+  const yCurve: CurveDef = {
+    name: "y-curve",
+    fn: (t) => ({ x: 0, y: t }),
+    period: 10,
+    speed: 1,
+  };
+
+  it("morphAlpha is null before any morph", () => {
+    const engine = createEngine(xCurve);
+    expect(engine.morphAlpha).toBeNull();
+  });
+
+  it("morphAlpha is 0 immediately after startMorph()", () => {
+    const engine = createEngine(xCurve);
+    engine.startMorph(yCurve);
+    expect(engine.morphAlpha).toBe(0);
+  });
+
+  it("morphAlpha reflects setMorphAlpha() calls", () => {
+    const engine = createEngine(xCurve);
+    engine.startMorph(yCurve);
+    engine.setMorphAlpha(0.7);
+    expect(engine.morphAlpha).toBe(0.7);
+  });
+
+  it("morphAlpha is null after completeMorph()", () => {
+    const engine = createEngine(xCurve);
+    engine.startMorph(yCurve);
+    engine.setMorphAlpha(1);
+    engine.completeMorph();
+    expect(engine.morphAlpha).toBeNull();
+  });
+});
+
+describe("tick() during morph", () => {
+  const xCurve: CurveDef = {
+    name: "x-curve",
+    fn: (t) => ({ x: t, y: 0 }),
+    period: 10,
+    speed: 1,
+  };
+
+  const yCurve: CurveDef = {
+    name: "y-curve",
+    fn: (t) => ({ x: 0, y: t }),
+    period: 10,
+    speed: 1,
+  };
+
+  it("setMorphAlpha(0) → tick output matches curveA", () => {
+    const engine = createEngine(xCurve);
+    engine.tick(5); // t=5, actualTime=5
+    engine.startMorph(yCurve);
+    engine.setMorphAlpha(0);
+    const trail = engine.tick(0); // t stays at 5
+    const p = lastPoint(trail, engine.trailCount);
+    expect(p.x).toBe(5); // xCurve(5) = {x:5, y:0}
+    expect(p.y).toBe(0);
+  });
+
+  it("setMorphAlpha(1) → tick output matches curveB", () => {
+    const engine = createEngine(xCurve);
+    engine.tick(5); // t=5
+    engine.startMorph(yCurve);
+    engine.setMorphAlpha(1);
+    const trail = engine.tick(0);
+    const p = lastPoint(trail, engine.trailCount);
+    expect(p.x).toBe(0); // yCurve(5) = {x:0, y:5}
+    expect(p.y).toBe(5);
+  });
+
+  it("setMorphAlpha(0.5) → tick output is exact midpoint", () => {
+    const engine = createEngine(xCurve);
+    engine.tick(5); // t=5
+    engine.startMorph(yCurve);
+    engine.setMorphAlpha(0.5);
+    const trail = engine.tick(0);
+    const p = lastPoint(trail, engine.trailCount);
+    expect(p.x).toBe(2.5); // lerp(5, 0, 0.5) = 2.5
+    expect(p.y).toBe(2.5); // lerp(0, 5, 0.5) = 2.5
+  });
+
+  it("completeMorph() → subsequent tick uses curveB", () => {
+    const engine = createEngine(xCurve);
+    engine.tick(5); // t=5
+    engine.startMorph(yCurve);
+    engine.setMorphAlpha(1);
+    engine.completeMorph();
+    const trail = engine.tick(0);
+    const p = lastPoint(trail, engine.trailCount);
+    expect(p.x).toBe(0); // yCurve(5) = {x:0, y:5}
+    expect(p.y).toBe(5);
+  });
+
+  it("mid-morph startMorph() → synthetic curveA captures frozen interpolated state", () => {
+    // Start morph from xCurve → yCurve, freeze at alpha=0.5
+    // Then interrupt with a new morph to diagonal (t→t, t→t)
+    // At alpha=0 of new morph, output should equal frozen midpoint
+    const diagonal: CurveDef = {
+      name: "diagonal",
+      fn: (t) => ({ x: t, y: t }),
+      period: 10,
+      speed: 1,
+    };
+    const engine = createEngine(xCurve);
+    engine.tick(5); // t=5
+    engine.startMorph(yCurve);
+    engine.setMorphAlpha(0.5); // frozen state: lerp(xCurve(5), yCurve(5), 0.5) = {x:2.5, y:2.5}
+    engine.startMorph(diagonal); // interrupt — syntheticA = frozen midpoint fn
+    // alpha resets to 0; output should match syntheticA at t=5
+    const trail = engine.tick(0);
+    const p = lastPoint(trail, engine.trailCount);
+    expect(p.x).toBe(2.5);
+    expect(p.y).toBe(2.5);
+  });
+});
+
+describe("getSarmalSkeleton() during morph", () => {
+  const xCurve: CurveDef = {
+    name: "x-curve",
+    fn: (t) => ({ x: t, y: 0 }),
+    period: 10,
+    speed: 1,
+  };
+
+  const yCurve: CurveDef = {
+    name: "y-curve",
+    fn: (t) => ({ x: 0, y: t }),
+    period: 10,
+    speed: 1,
+  };
+
+  it("at alpha=0.5 → skeleton points are lerped midpoints", () => {
+    const engine = createEngine(xCurve);
+    engine.startMorph(yCurve);
+    engine.setMorphAlpha(0.5);
+    const skeleton = engine.getSarmalSkeleton();
+    // Last point: sampleT=10, xCurve→{x:10,y:0}, yCurve→{x:0,y:10}, lerped→{x:5,y:5}
+    const last = skeleton[skeleton.length - 1]!;
+    expect(last.x).toBeCloseTo(5);
+    expect(last.y).toBeCloseTo(5);
+  });
+
+  it("after completeMorph() → skeleton is curveB only", () => {
+    const engine = createEngine(xCurve);
+    engine.startMorph(yCurve);
+    engine.setMorphAlpha(1);
+    engine.completeMorph();
+    const skeleton = engine.getSarmalSkeleton();
+    // Last point: sampleT=10, yCurve→{x:0, y:10}
+    const last = skeleton[skeleton.length - 1]!;
+    expect(last.x).toBeCloseTo(0);
+    expect(last.y).toBeCloseTo(10);
+  });
+
+  it("live skeleton during morph still updates each call", () => {
+    const liveX: CurveDef = {
+      name: "live-x",
+      fn: (t, time) => ({ x: t + time, y: 0 }),
+      period: 10,
+      speed: 1,
+      skeleton: "live",
+    };
+    const engine = createEngine(liveX);
+    engine.startMorph(yCurve);
+    engine.setMorphAlpha(0.5);
+    engine.tick(3); // advance actualTime to 3
+    const s1 = engine.getSarmalSkeleton();
+    engine.tick(3); // advance actualTime to 6
+    const s2 = engine.getSarmalSkeleton();
+    // curveA is live — its skeleton changes with actualTime, so lerped skeleton changes too
+    expect(s1[s1.length - 1]?.x).not.toBeCloseTo(s2[s2.length - 1]?.x ?? 0);
+  });
+});

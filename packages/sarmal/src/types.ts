@@ -59,6 +59,23 @@ export type SeekWithTrailOptions = {
   step?: number;
 };
 
+export type MorpStrategy = "raw" | "normalized";
+
+export type MorphOptions = {
+  /**
+   * Duration of the morph transition in milliseconds
+   * @default 300
+   */
+  duration?: number;
+  /**
+   * Strategy for lerping between curves with different periods:
+   * - 'normalized': maps `t` proportionally into each curve's period (smooth for all period ratios)
+   * - 'raw': uses the same `t` for both curves (can produce incoherent results for mismatched periods)
+   * @default 'normalized'
+   */
+  morphStrategy?: MorpStrategy;
+};
+
 export interface Engine {
   /**
    * Advances the Sarmal simulation by the given delta time (dt) in seconds.
@@ -104,6 +121,34 @@ export interface Engine {
    * @param t The time value to seek to (will be wrapped into [0, period))
    */
   seekWithTrail(t: number, options?: SeekWithTrailOptions): void;
+  /**
+   * Begins a smooth transition from the current curve to `target`
+   * Saves the current curve as `curveA`, registers `target` as `curveB`, and resets `morphAlpha` to `0`
+   *
+   * If called while a morph is already in progress,
+   *  the interpolated state is frozen and becomes the new `curveA`
+   * @param target The curve to transition to
+   * @param strategy 'normalized' maps t proportionally into each curve's period (default), 'raw' uses the same t
+   */
+  startMorph(target: CurveDef, strategy?: MorpStrategy): void;
+  /**
+   * Sets the interpolation amount between `curveA` and `curveB`.
+   * 0 = full curveA
+   * 1 = full curveB
+   * Called by the renderer each frame as `actualTime` advances
+   * @param alpha A value in [0, 1]
+   */
+  setMorphAlpha(alpha: number): void;
+  /**
+   * Finalises the morph: `curveB` becomes the new active curve and `morphAlpha` is reset to `null`
+   * ! Called by the renderer when alpha reaches `1`
+   */
+  completeMorph(): void;
+  /**
+   * Current interpolation progress between `curveA` and `curveB`
+   * `null` when no morph is in progress
+   */
+  readonly morphAlpha: number | null;
 }
 
 export interface SarmalInstance {
@@ -126,6 +171,15 @@ export interface SarmalInstance {
    * @param t The time value to seek to (will be wrapped into [0, period))
    */
   seekWithTrail(t: number, options?: SeekWithTrailOptions): void;
+  /**
+   * Smoothly transitions from the current curve to `target`.
+   * The trail naturally reflects the new curve as new points are added.
+   * @param target The curve to transition to
+   * @param options.duration How long the morph takes in milliseconds (default: 300)
+   * @param options.morphStrategy 'normalized' uses proportional t mapping (default), 'raw' uses same t
+   * @returns Promise that resolves when the morph is complete
+   */
+  morphTo(target: CurveDef, options?: MorphOptions): Promise<void>;
 }
 
 export interface RendererOptions {

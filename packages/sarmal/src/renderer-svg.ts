@@ -1,6 +1,7 @@
-import type { CurveDef, Engine, Point, SarmalInstance } from "./types";
+import type { CurveDef, Engine, MorphOptions, Point, SarmalInstance } from "./types";
 import { createEngine } from "./engine";
 
+const DEFAULT_MORPH_DURATION_MS = 300;
 const TRAIL_BATCH_COUNT = 12;
 /** Higher values = sharper fade near the tail */
 const TRAIL_FADE_CURVE = 1.5;
@@ -106,6 +107,23 @@ export function createSVGRenderer(options: SVGRendererOptions): SarmalInstance {
   skeletonPath.setAttribute("stroke-opacity", String(DEFAULT_SKELETON_OPACITY));
   skeletonPath.setAttribute("stroke-width", "1.5");
   svg.appendChild(skeletonPath);
+
+  const skeletonPathA = el("path") as SVGPathElement;
+  skeletonPathA.setAttribute("fill", "none");
+  skeletonPathA.setAttribute("stroke", opts.skeletonColor);
+  skeletonPathA.setAttribute("stroke-width", "1.5");
+  skeletonPathA.setAttribute("visibility", "hidden");
+  svg.appendChild(skeletonPathA);
+
+  const skeletonPathB = el("path") as SVGPathElement;
+  skeletonPathB.setAttribute("fill", "none");
+  skeletonPathB.setAttribute("stroke", opts.skeletonColor);
+  skeletonPathB.setAttribute("stroke-width", "1.5");
+  skeletonPathB.setAttribute("visibility", "hidden");
+  svg.appendChild(skeletonPathB);
+
+  let morphPathABuilt = "";
+  let morphPathBBuilt = "";
 
   const trailPaths: SVGPathElement[] = [];
   for (let i = 0; i < TRAIL_BATCH_COUNT; i++) {
@@ -256,17 +274,91 @@ export function createSVGRenderer(options: SVGRendererOptions): SarmalInstance {
   const prefersReducedMotion =
     typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
+  let morphResolve: (() => void) | null = null;
+  let morphDurationMs = DEFAULT_MORPH_DURATION_MS;
+  let morphTarget: CurveDef | null = null;
+  let morphAlpha = 0;
+
+  function buildSkeletonPath(
+    target: CurveDef,
+    scale: number,
+    offsetX: number,
+    offsetY: number,
+  ): string {
+    const period = target.period ?? Math.PI * 2;
+    const samples = Math.max(50, Math.round(period * 20));
+    const points: Point[] = [];
+
+    for (let i = 0; i <= samples; i++) {
+      const t = (i / samples) * period;
+      const p = target.fn(t, 0, {});
+      points.push(p);
+    }
+
+    if (points.length < 2) {
+      return "";
+    }
+
+    const px = (p: Point) => (p.x * scale + offsetX).toFixed(2);
+    const py = (p: Point) => (p.y * scale + offsetY).toFixed(2);
+    let d = `M${px(points[0]!)} ${py(points[0]!)}`;
+
+    for (let i = 1; i < points.length; i++) {
+      d += ` L${px(points[i]!)} ${py(points[i]!)}`;
+    }
+    d += " Z";
+
+    return d;
+  }
+
   function renderFrame() {
     const now = performance.now();
     const dt = Math.min((now - lastTime) / 1000, 1 / 30);
     lastTime = now;
+
+    if (engine.morphAlpha !== null) {
+      morphAlpha = Math.min(1, morphAlpha + dt / (morphDurationMs / 1000));
+      engine.setMorphAlpha(morphAlpha);
+      const morphSkeleton = engine.getSarmalSkeleton();
+      calculateBoundaries(morphSkeleton);
+
+      if (!engine.isLiveSkeleton) {
+        updateSkeleton(morphSkeleton);
+      }
+
+      if (morphPathABuilt) {
+        skeletonPathA.setAttribute("d", morphPathABuilt);
+        skeletonPathA.setAttribute("visibility", "visible");
+        skeletonPathA.setAttribute(
+          "stroke-opacity",
+          String((1 - morphAlpha) * DEFAULT_SKELETON_OPACITY),
+        );
+      }
+
+      if (morphPathBBuilt) {
+        skeletonPathB.setAttribute("d", morphPathBBuilt);
+        skeletonPathB.setAttribute("visibility", "visible");
+        skeletonPathB.setAttribute("stroke-opacity", String(morphAlpha * DEFAULT_SKELETON_OPACITY));
+      }
+
+      if (morphAlpha >= 1) {
+        engine.completeMorph();
+        morphResolve?.();
+        morphResolve = null;
+        morphTarget = null;
+        morphAlpha = 0;
+        morphPathABuilt = "";
+        morphPathBBuilt = "";
+        skeletonPathA.setAttribute("visibility", "hidden");
+        skeletonPathB.setAttribute("visibility", "hidden");
+      }
+    }
 
     const trail = engine.tick(dt);
     const trailCount = engine.trailCount;
 
     if (engine.isLiveSkeleton) {
       const liveSkeleton = engine.getSarmalSkeleton();
-
       calculateBoundaries(liveSkeleton);
       updateSkeleton(liveSkeleton);
     }
@@ -314,6 +406,44 @@ export function createSVGRenderer(options: SVGRendererOptions): SarmalInstance {
 
     seekWithTrail(t) {
       engine.seekWithTrail(t);
+    },
+
+    morphTo(target: CurveDef, options?: MorphOptions): Promise<void> {
+      if (morphResolve !== null) {
+        engine.completeMorph();
+        morphResolve();
+        morphResolve = null;
+        morphAlpha = 0;
+        skeletonPathA.setAttribute("visibility", "hidden");
+        skeletonPathB.setAttribute("visibility", "hidden");
+      }
+
+      morphDurationMs = options?.duration ?? DEFAULT_MORPH_DURATION_MS;
+      morphTarget = target;
+      morphAlpha = 0;
+
+      const currentSkeleton = engine.getSarmalSkeleton();
+      if (currentSkeleton.length >= 2) {
+        const px = (p: Point) => (p.x * scale + offsetX).toFixed(2);
+        const py = (p: Point) => (p.y * scale + offsetY).toFixed(2);
+        morphPathABuilt = `M${px(currentSkeleton[0]!)} ${py(currentSkeleton[0]!)}`;
+        for (let i = 1; i < currentSkeleton.length; i++) {
+          morphPathABuilt += ` L${px(currentSkeleton[i]!)} ${py(currentSkeleton[i]!)}`;
+        }
+        morphPathABuilt += " Z";
+      } else {
+        morphPathABuilt = "";
+      }
+
+      engine.startMorph(target, options?.morphStrategy);
+
+      if (morphTarget) {
+        morphPathBBuilt = buildSkeletonPath(morphTarget, scale, offsetX, offsetY);
+      }
+
+      return new Promise<void>((resolve) => {
+        morphResolve = resolve;
+      });
     },
   };
 }
