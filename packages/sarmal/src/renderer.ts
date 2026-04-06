@@ -31,7 +31,7 @@ const GLOW_INNER_EDGE = 0.4;
 const GLOW_FALLOFF_OPACITY = 0.53;
 
 /** Parses a hex color into its "r,g,b" string for use in rgba() — called once at init */
-function hexToRgbComponents(hex: string): string {
+export function hexToRgbComponents(hex: string): string {
   const n = parseInt(hex.slice(1), 16);
   return `${n >> 16},${(n >> 8) & 255},${n & 255}`;
 }

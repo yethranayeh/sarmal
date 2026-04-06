@@ -339,6 +339,86 @@ describe("seekWithTrail(t, options)", () => {
   });
 });
 
+// ─── Edge cases ──────────────────────────────────────────────────────────────
+
+describe("edge cases", () => {
+  it("KNOWN: createEngine(curve, 0) throws when tick() is called", () => {
+    // CircularBuffer(0) allocates an empty data array. push() immediately dereferences
+    // data[0] which is undefined, throwing a TypeError at runtime.
+    const engine = createEngine(identity, 0);
+    expect(() => engine.tick(1)).toThrow();
+  });
+
+  it("KNOWN: getSarmalSkeleton with period < 0.02 produces NaN points", () => {
+    // Math.ceil(period * 50) = 1 when period < 0.02, so steps-1 = 0
+    // sampleT = (0 / 0) * period = NaN — all skeleton points are NaN
+    const tinyPeriod: CurveDef = {
+      name: "tiny",
+      fn: (t) => ({ x: t, y: t }),
+      period: 0.01,
+    };
+    const engine = createEngine(tinyPeriod);
+    const skeleton = engine.getSarmalSkeleton();
+    expect(skeleton[0]!.x).toBeNaN();
+    expect(skeleton[0]!.y).toBeNaN();
+  });
+
+  it("KNOWN: seekWithTrail with wrap:true passes negative t to curve fn when trail reaches back beyond -period", () => {
+    // With period=2 and step=0.15, going back 20 steps from t=0.1:
+    // sampleT = 0.1 - 19*0.15 = -2.75 which is < -period (-2)
+    // The single +period correction gives -0.75 (still negative) — bug
+    const captured: number[] = [];
+    const short: CurveDef = {
+      name: "capture",
+      fn: (t, time) => {
+        captured.push(t);
+        return { x: t, y: time };
+      },
+      period: 2,
+      speed: 1,
+    };
+    const engine = createEngine(short, 20);
+    engine.seekWithTrail(0.1, { wrap: true, step: 0.15 });
+    // captured[0] is the t value for the oldest trail point (i=19 in the loop)
+    expect(captured[0]).toBeCloseTo(-0.75);
+  });
+
+  it("KNOWN: tick(-1) produces negative t (JS modulo returns sign of dividend)", () => {
+    // -1 % 10 = -1 in JavaScript (not 9), so t goes negative for negative dt
+    const engine = createEngine(identity); // period=10
+    const trail = engine.tick(-1);
+    const p = lastPoint(trail, engine.trailCount);
+    expect(p.x).toBe(-1); // x = t = -1
+  });
+
+  it("KNOWN: period: 0 causes NaN in tick() output", () => {
+    // t = (0 + 1*1) % 0 = NaN — any modulo by zero is NaN in JS
+    const zeroPeriod: CurveDef = {
+      name: "zero",
+      fn: (t) => ({ x: t, y: t }),
+      period: 0,
+    };
+    const engine = createEngine(zeroPeriod);
+    const trail = engine.tick(1);
+    const p = lastPoint(trail, engine.trailCount);
+    expect(p.x).toBeNaN();
+    expect(p.y).toBeNaN();
+  });
+
+  it("KNOWN: period: 0 in seekWithTrail silently produces 0 trail points", () => {
+    // step=0, advance=0, target=NaN → pointsFromStart=NaN → count=NaN
+    // Loop condition NaN >= 0 is false — loop never runs, trail stays empty
+    const zeroPeriod: CurveDef = {
+      name: "zero",
+      fn: (t) => ({ x: t, y: t }),
+      period: 0,
+    };
+    const engine = createEngine(zeroPeriod);
+    engine.seekWithTrail(0);
+    expect(engine.trailCount).toBe(0);
+  });
+});
+
 // ─── getSarmalSkeleton() ─────────────────────────────────────────────────────
 
 describe("getSarmalSkeleton()", () => {
