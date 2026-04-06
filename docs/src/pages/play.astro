@@ -2,6 +2,7 @@
 import "../styles/globals.css";
 import { curves } from "@sarmal/core";
 import { SEPARATOR_DOT } from "../variables";
+import Toggle from "../components/Toggle.astro";
 
 const curveEntries = Object.entries(curves).map(([id, def]) => ({
 	id,
@@ -94,20 +95,7 @@ const presetsJson = JSON.stringify(
 					</div>
 
 					<div class='space-y-4'>
-						<div class='flex items-center justify-between'>
-							<label for='skeleton-toggle' class='font-mono text-xs tracking-wider uppercase text-muted'>
-								Skeleton
-							</label>
-							<button
-								id='skeleton-toggle'
-								class='w-10 h-5 rounded-full bg-foreground relative transition-colors'
-								role='switch'
-								aria-checked='true'>
-								<span
-									class='absolute top-0.5 left-0.5 w-4 h-4 rounded-full bg-background transition-transform translate-x-5'
-								></span>
-							</button>
-						</div>
+						<Toggle id='skeleton-toggle' label='Skeleton' checked={true} />
 
 						<div>
 							<div class='flex items-center justify-between mb-1'>
