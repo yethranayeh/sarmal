@@ -1,12 +1,16 @@
 ---
+import Block from "./Block.astro";
+
 interface Props {
 	label: string;
+	variant?: "default" | "info" | "tip" | "warning" | "error" | "success";
+	template?: "solid" | "kanji";
 }
 
-const { label } = Astro.props;
+const { label, variant = "default", template = "solid" } = Astro.props;
 ---
 
 <div class='flex items-center gap-2'>
-	<span class='w-2.5 h-2.5 bg-primary inline-block shrink-0'></span>
+	<Block variant={variant} template={template} />
 	<span class='font-mono text-[10px] tracking-[0.2em] uppercase text-muted'>{label}</span>
 </div>

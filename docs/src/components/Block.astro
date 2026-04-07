@@ -1,0 +1,33 @@
+---
+interface Props {
+	variant?: "default" | "info" | "tip" | "warning" | "error" | "success";
+	template?: "solid" | "kanji";
+}
+
+const { variant = "default", template = "solid" } = Astro.props;
+
+const config: Record<string, { kanji?: string; color: string }> = {
+	default: { color: "#c0143c" },
+	info: { kanji: "報", color: "#c0143c" },
+	tip: { kanji: "秘", color: "#97002a" },
+	warning: { kanji: "危", color: "#c0143c" },
+	error: { kanji: "誤", color: "#ba1a1a" },
+	success: { kanji: "達", color: "#c0143c" }
+};
+
+const { kanji, color } = config[variant] ?? config.default;
+const isDefault = variant === "default";
+const bgColor = template === "kanji" ? color : "#c0143c";
+---
+
+{
+	isDefault ? (
+		<span class='w-2.5 h-2.5 inline-block shrink-0' style={`background-color: ${bgColor}`} />
+	) : (
+		<span
+			class='inline-flex items-center justify-center w-4 h-4 shrink-0 font-sans text-[10px] leading-none text-white select-none'
+			style={`background-color: ${bgColor}`}>
+			{kanji}
+		</span>
+	)
+}

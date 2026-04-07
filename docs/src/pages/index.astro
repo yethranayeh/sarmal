@@ -35,7 +35,7 @@ const morphPairs = [
 	title='Sarmal'
 	description='Beautiful loading spinners from two lines of math. 2.86 KB, zero dependencies. Drop in a canvas, pick a curve.'
 	ogTitle='Sarmal | Loading indicators from parametric curves'>
-	<header class='w-full px-4 py-3 flex items-center justify-between border-b border-border'>
+	<header class='w-full px-4 py-2 flex items-center justify-between border-b border-border'>
 		<a href='/' class='font-heading text-lg text-foreground hover:text-primary transition-colors'>
 			<span class='text-primary'>sarmal</span>.art
 		</a>
@@ -55,7 +55,7 @@ const morphPairs = [
 		</div>
 	</header>
 
-	<main class='max-w-3xl mx-auto p-4'>
+	<main class='max-w-3xl mx-auto p-4 mb-4'>
 		<section class='text-center mb-16'>
 			<div class='flex flex-col items-center mb-6 gap-2'>
 				<canvas id='artemis2-hero' width={200} height={130}></canvas>
@@ -74,10 +74,8 @@ const morphPairs = [
 				flight since <span class='text-primary'>Apollo 17</span>.
 			</p>
 
-			<div class='flex flex-col justify-start max-w-md mx-auto'>
-				<div class='flex justify-start mb-3'>
-					<SectionLabel label='Two lines of HTML' />
-				</div>
+			<div class='flex flex-col gap-2 justify-start max-w-md mx-auto'>
+				<SectionLabel variant='info' label='Two lines of HTML' />
 				<div class='bg-surface border border-border rounded-md text-left'>
 					<Code
 						class='p-2 rounded-md'
@@ -98,49 +96,51 @@ const morphPairs = [
 			</div>
 		</section>
 
-		<section>
-			<h2 class='font-heading text-xl text-center text-foreground mb-6'>Standard sarmals</h2>
-			<div class='grid grid-cols-3 gap-4'>
-				{
-					sarmals.map((curve) => (
-						<div class='flex flex-col items-center'>
-							<div
-								title={curve.id}
-								class='demo-card bg-surface-raised border border-border-subtle rounded-lg p-4 mb-2 overflow-visible shadow-sm'>
-								<Sarmal curve={curve.id} width={80} height={80} trailColor={curve.color} />
+		<div class='space-y-8'>
+			<section class='space-y-2'>
+				<h2 class='font-heading text-xl text-center text-foreground'>Standard sarmals</h2>
+				<div class='grid grid-cols-3 gap-4'>
+					{
+						sarmals.map((curve) => (
+							<div class='flex flex-col items-center'>
+								<div
+									title={curve.id}
+									class='demo-card bg-surface-raised border border-border-subtle rounded-lg p-4 mb-2 overflow-visible shadow-sm'>
+									<Sarmal curve={curve.id} width={80} height={80} trailColor={curve.color} />
+								</div>
+								<span title={curve.id} class='font-mono text-[10px] tracking-wider uppercase text-muted'>
+									{curve.name}
+								</span>
 							</div>
-							<span title={curve.id} class='font-mono text-[10px] tracking-wider uppercase text-muted'>
-								{curve.name}
-							</span>
-						</div>
-					))
-				}
-			</div>
-		</section>
+						))
+					}
+				</div>
+			</section>
 
-		<section class='mb-16'>
-			<h2 class='font-heading text-xl text-center text-foreground mb-6'>Morphing sarmals</h2>
-			<div class='grid grid-cols-2 md:grid-cols-4 gap-4'>
-				{
-					morphPairs.map((pair) => (
-						<div class='flex flex-col items-center'>
-							<div
-								id={`morph-${pair.from}-${pair.to}`}
-								title={`${pair.from} -> ${pair.to}`}
-								class='demo-card bg-surface-raised border border-border-subtle rounded-lg p-4 mb-2 overflow-visible shadow-sm'>
-								<Sarmal curve={pair.from as keyof typeof curves} width={80} height={80} trailColor={pair.color} />
+			<section class='space-y-2'>
+				<h2 class='font-heading text-xl text-center text-foreground'>Morphing sarmals</h2>
+				<div class='grid grid-cols-2 md:grid-cols-4 gap-4'>
+					{
+						morphPairs.map((pair) => (
+							<div class='flex flex-col items-center'>
+								<div
+									id={`morph-${pair.from}-${pair.to}`}
+									title={`${pair.from} -> ${pair.to}`}
+									class='demo-card bg-surface-raised border border-border-subtle rounded-lg p-4 mb-2 overflow-visible shadow-sm'>
+									<Sarmal curve={pair.from as keyof typeof curves} width={80} height={80} trailColor={pair.color} />
+								</div>
+								<span class='font-mono text-[10px] tracking-wider uppercase text-muted'>
+									{pair.from} {"->"} {pair.to}
+								</span>
 							</div>
-							<span class='font-mono text-[10px] tracking-wider uppercase text-muted'>
-								{pair.from} {"->"} {pair.to}
-							</span>
-						</div>
-					))
-				}
-			</div>
-		</section>
+						))
+					}
+				</div>
+			</section>
+		</div>
 	</main>
 
-	<footer class='w-full px-4 py-6 border-t border-border text-center'>
+	<footer class='w-full p-2 border-t border-border text-center'>
 		<p class='font-mono text-[10px] tracking-wider text-muted'>
 			0.0000028 GB gzipped {SEPARATOR_DOT} MIT License {SEPARATOR_DOT} © 2026
 		</p>
