@@ -4,9 +4,10 @@ interface Props {
 	type?: "button" | "submit" | "reset";
 	class?: string;
 	variant?: "primary" | "ghost";
+	active?: boolean;
 }
 
-const { id, type = "button", class: className, variant = "primary" } = Astro.props;
+const { id, type = "button", class: className, variant = "primary", active = false } = Astro.props;
 ---
 
 <button
@@ -15,7 +16,8 @@ const { id, type = "button", class: className, variant = "primary" } = Astro.pro
 	class:list={[
 		"font-mono text-xs tracking-wider uppercase cursor-pointer transition-colors",
 		variant === "primary" && "bg-primary text-primary-foreground px-4 py-2 rounded-sm hover:bg-accent",
-		variant === "ghost" && "text-muted underline underline-offset-2 hover:text-foreground",
+		variant === "ghost" && active && "text-primary",
+		variant === "ghost" && !active && "text-muted hover:text-foreground",
 		className
 	]}>
 	<slot />

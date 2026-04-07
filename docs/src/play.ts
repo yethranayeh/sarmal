@@ -73,10 +73,7 @@ function clearError(): void {
   codeInput.classList.add("border-border");
 }
 
-/**
- * FIXME
- * ! `params` is reserved for future, but not yet exposed on UI
- */
+// TODO: expose `params` as user-configurable key-value sliders in the UI
 function buildCurveFn(code: string) {
   try {
     const fn = new Function("t", "time", "params", code);

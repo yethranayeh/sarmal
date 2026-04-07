@@ -38,18 +38,14 @@ import Button from "./Button.astro";
 		<div class='flex-1 flex flex-col'>
 			<div class='flex items-center justify-between mb-3'>
 				<span class='text-muted/50 uppercase tracking-wider text-[9px]'>Mission timeline</span>
-				<div class='flex gap-2'>
-					<Button
-						id='modal-mode-auto'
-						variant='ghost'
-						class='font-mono text-[9px] tracking-widest uppercase text-primary'>Auto</Button
-					>
-					<span class='text-muted/30'>{SEPARATOR_DOT}</span>
-					<Button
-						id='modal-mode-manual'
-						variant='ghost'
-						class='font-mono text-[9px] tracking-widest uppercase text-muted'>Explore</Button
-					>
+				<div class='flex items-center gap-1'>
+					<Button id='modal-mode-auto' variant='ghost' active class='text-[9px] tracking-widest'>
+						Auto
+					</Button>
+					<span class='text-muted/30 mx-1'>{SEPARATOR_DOT}</span>
+					<Button id='modal-mode-manual' variant='ghost' class='text-[9px] tracking-widest'>
+						Explore
+					</Button>
 				</div>
 			</div>
 
@@ -194,13 +190,17 @@ import Button from "./Button.astro";
 		mode = newMode;
 
 		if (newMode === "auto") {
-			btnAuto.classList.replace("text-muted/50", "text-primary");
-			btnExplore.classList.replace("text-primary", "text-muted/50");
+			btnAuto.classList.add("text-primary");
+			btnAuto.classList.remove("text-muted");
+			btnExplore.classList.add("text-muted");
+			btnExplore.classList.remove("text-primary");
 			sliderWrap.classList.add("hidden");
 			milestoneEl.textContent = "";
 		} else {
-			btnExplore.classList.replace("text-muted/50", "text-primary");
-			btnAuto.classList.replace("text-primary", "text-muted/50");
+			btnExplore.classList.add("text-primary");
+			btnExplore.classList.remove("text-muted");
+			btnAuto.classList.add("text-muted");
+			btnAuto.classList.remove("text-primary");
 			sliderWrap.classList.remove("hidden");
 		}
 	}
