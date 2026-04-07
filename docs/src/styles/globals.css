@@ -2,44 +2,49 @@
 @import "tailwindcss";
 
 @theme {
-	--color-background: #fbf9f5;
-	--color-foreground: #1b1c1a;
+  --color-background: #fbf9f5;
+  --color-foreground: #1b1c1a;
 
-	--color-surface: #f5f3ef;
-	--color-surface-raised: #ffffff;
+  --color-surface: #f5f3ef;
+  --color-surface-raised: #ffffff;
 
-	--color-border: #e4e2de;
-	--color-border-subtle: #f0eeea;
+  --color-border: #e4e2de;
+  --color-border-subtle: #f0eeea;
 
-	--color-primary: #c0143c;
-	--color-primary-foreground: #ffffff;
+  --color-primary: #c0143c;
+  --color-primary-foreground: #ffffff;
 
-	--color-accent: #97002a;
-	--color-accent-foreground: #ffffff;
+  --color-accent: #97002a;
+  --color-accent-foreground: #ffffff;
 
-	--color-muted: #7a7067;
-	--color-muted-gray: #888888;
-	--color-muted-dark: #666666;
-	--color-muted-foreground: #5b4041;
+  --color-muted: #7a7067;
+  --color-muted-gray: #888888;
+  --color-muted-dark: #666666;
+  --color-muted-foreground: #5b4041;
 
-	--color-error: #ba1a1a;
-	--color-error-foreground: #ffffff;
+  --color-error: #ba1a1a;
+  --color-error-foreground: #ffffff;
 
-	--font-heading: "Newsreader", Georgia, serif;
-	--font-body: "Manrope", system-ui, sans-serif;
-	--font-mono: "Inter", ui-monospace, monospace;
+  --font-heading: "Newsreader", Georgia, serif;
+  --font-body: "Manrope", system-ui, sans-serif;
+  --font-mono: "Inter", ui-monospace, monospace;
 
-	--radius-sm: 2px;
-	--radius-md: 4px;
-	--radius-lg: 8px;
+  --radius-sm: 2px;
+  --radius-md: 4px;
+  --radius-lg: 8px;
 }
 
 body {
-	background-color: var(--color-background);
-	color: var(--color-foreground);
-	font-family: var(--font-body);
-	-webkit-font-smoothing: antialiased;
-	text-rendering: geometricPrecision;
+  background-color: var(--color-background);
+  color: var(--color-foreground);
+  font-family: var(--font-body);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: geometricPrecision;
+}
+
+.demo-card {
+  content-visibility: auto;
+  contain-intrinsic-size: 100px 100px;
 }
 
 h1,
@@ -48,8 +53,34 @@ h3,
 h4,
 h5,
 h6 {
-	font-family: var(--font-heading);
-	font-weight: 500;
-	letter-spacing: -0.02em;
-	font-optical-sizing: auto;
+  font-family: var(--font-heading);
+  font-weight: 500;
+  letter-spacing: -0.02em;
+  font-optical-sizing: auto;
+}
+
+.astro-code,
+.astro-code span {
+  background-color: var(--shiki-light-bg);
+  color: var(--shiki-light);
+}
+
+@media (prefers-color-scheme: dark) {
+  .astro-code,
+  .astro-code span {
+    background-color: var(--shiki-dark-bg);
+    color: var(--shiki-dark);
+    font-style: var(--shiki-dark-font-style) !important;
+    font-weight: var(--shiki-dark-font-weight) !important;
+    text-decoration: var(--shiki-dark-text-decoration) !important;
+  }
+}
+
+html.dark .astro-code,
+html.dark .astro-code span {
+  background-color: var(--shiki-dark-bg);
+  color: var(--shiki-dark);
+  font-style: var(--shiki-dark-font-style) !important;
+  font-weight: var(--shiki-dark-font-weight) !important;
+  text-decoration: var(--shiki-dark-text-decoration) !important;
 }

@@ -7,6 +7,10 @@ import Sarmal from "../components/Sarmal.astro";
 import Button from "../components/Button.astro";
 import Artemis2Modal from "../components/Artemis2Modal.astro";
 import SectionLabel from "../components/SectionLabel.astro";
+
+import sarmalTheme from "../themes/sarmal-editorial.json";
+import sarmalDarkTheme from "../themes/sarmal-editorial-dark.json";
+
 import { SEPARATOR_DOT } from "../variables";
 
 const sarmals = [
@@ -14,7 +18,8 @@ const sarmals = [
 	{ id: "deltoid", name: "Deltoid", color: "#fb923c" },
 	{ id: "astroid", name: "Astroid", color: "#38bdf8" },
 	{ id: "epitrochoid7", name: "Epitrochoid", color: "#a78bfa" },
-	{ id: "rose5", name: "Rose (n=5)", color: "#f472b6" }
+	{ id: "rose5", name: "Rose (n=5)", color: "#f472b6" },
+	{ id: "lissajous43", name: "Lissajous 4:3", color: "#2dd4bf" }
 ] as const;
 
 const morphPairs = [
@@ -110,14 +115,19 @@ const morphPairs = [
 				</div>
 				<div class='bg-surface border border-border rounded-md text-left'>
 					<Code
-						class='p-2'
+						class='p-2 rounded-md'
+						lang='html'
+						theme={undefined}
+						themes={{
+							light: sarmalTheme as unknown as { name: string },
+							dark: sarmalDarkTheme as unknown as { name: string }
+						} as Parameters<typeof Code>[0]["themes"]}
+						defaultColor={false}
 						code={`<script src="https://unpkg.com/@sarmal/core/dist/auto-init.js"></script>
 <canvas
   data-sarmal="artemis2"
   data-trail-color="#60a5fa"
   data-skeleton-color="#60a5fa"></canvas>`}
-						lang='html'
-						theme='horizon-bright'
 					/>
 				</div>
 			</div>
@@ -125,12 +135,14 @@ const morphPairs = [
 
 		<section>
 			<h2 class='font-heading text-xl text-center text-foreground mb-6'>Standard sarmals</h2>
-			<div class='grid grid-cols-3 md:grid-cols-5 gap-4'>
+			<div class='grid grid-cols-3 gap-4'>
 				{
 					sarmals.map((curve) => (
 						<div class='flex flex-col items-center'>
-							<div title={curve.id} class='bg-surface border border-border rounded-md p-3 mb-2 overflow-visible'>
-								<Sarmal curve={curve.id} width={72} height={72} trailColor={curve.color} />
+							<div
+								title={curve.id}
+								class='demo-card bg-surface-raised border border-border-subtle rounded-lg p-4 mb-2 overflow-visible shadow-sm'>
+								<Sarmal curve={curve.id} width={80} height={80} trailColor={curve.color} />
 							</div>
 							<span title={curve.id} class='font-mono text-[10px] tracking-wider uppercase text-muted'>
 								{curve.name}
@@ -150,8 +162,8 @@ const morphPairs = [
 							<div
 								id={`morph-${pair.from}-${pair.to}`}
 								title={`${pair.from} -> ${pair.to}`}
-								class='bg-surface border border-border rounded-md p-3 mb-2 overflow-visible'>
-								<Sarmal curve={pair.from as keyof typeof curves} width={72} height={72} trailColor={pair.color} />
+								class='demo-card bg-surface-raised border border-border-subtle rounded-lg p-4 mb-2 overflow-visible shadow-sm'>
+								<Sarmal curve={pair.from as keyof typeof curves} width={80} height={80} trailColor={pair.color} />
 							</div>
 							<span class='font-mono text-[10px] tracking-wider uppercase text-muted'>
 								{pair.from} {"->"} {pair.to}
@@ -178,7 +190,7 @@ const morphPairs = [
 		const TOTAL_HOURS = (SPLASHDOWN - LAUNCH) / (1000 * 60 * 60);
 		const TWO_PI = Math.PI * 2;
 		const SPEED = curves.artemis2.speed ?? 1;
-		const LIVE_T = 3.6100;
+		const LIVE_T = 3.61;
 
 		const canvas = document.getElementById("artemis2-hero") as HTMLCanvasElement;
 		const statusEl = document.getElementById("artemis2-status") as HTMLElement;
@@ -267,9 +279,9 @@ const morphPairs = [
 			const color = container.querySelector("canvas")?.getAttribute("data-trail-color") ?? "#c0143c";
 
 			const canvas = document.createElement("canvas");
-			canvas.width = 72;
-			canvas.height = 72;
-			canvas.className = "w-[72px] h-[72px]";
+			canvas.width = 80;
+			canvas.height = 80;
+			canvas.className = "w-[80px] h-[80px]";
 			container.innerHTML = "";
 			container.appendChild(canvas);
 
