@@ -1,5 +1,6 @@
 ---
-import "../styles/globals.css";
+import BaseLayout from "../layouts/BaseLayout.astro";
+
 import { Code } from "astro:components";
 import { curves } from "@sarmal/core";
 
@@ -30,65 +31,29 @@ const morphPairs = [
 ] as const;
 ---
 
-<html lang='en'>
-	<head>
-		<meta charset='utf-8' />
-		<link rel='icon' type='image/svg+xml' href='/favicon.svg' />
-		<link rel='icon' href='/favicon.ico' />
-		<meta name='viewport' content='width=device-width' />
-		<meta name='generator' content={Astro.generator} />
-
-		<title>Sarmal</title>
-		<meta
-			name='description'
-			content='Beautiful loading spinners from two lines of math. 2.86 KB, zero dependencies. Drop in a canvas, pick a curve.'
-		/>
-
-		<meta property='og:type' content='website' />
-		<meta property='og:url' content='https://sarmal.art/' />
-		<meta property='og:title' content='Sarmal | Loading indicators from parametric curves' />
-		<meta
-			property='og:description'
-			content='Beautiful loading spinners from two lines of math. 2.86 KB, zero dependencies. Drop in a canvas, pick a curve.'
-		/>
-		<meta property='og:image' content='https://sarmal.art/og-image.png' />
-		<meta property='og:image:width' content='1200' />
-		<meta property='og:image:height' content='630' />
-		<meta property='og:image:alt' content='Sarmal - A loading spinner tracing the Artemis II trajectory' />
-		<meta property='og:site_name' content='Sarmal' />
-
-		<meta name='twitter:card' content='summary_large_image' />
-		<meta name='twitter:title' content='Sarmal | Loading indicators from parametric curves' />
-		<meta
-			name='twitter:description'
-			content='Beautiful loading spinners from two lines of math. 2.86 KB, zero dependencies.'
-		/>
-		<meta name='twitter:image' content='https://sarmal.art/og-image.png' />
-		<meta name='twitter:image:alt' content='Sarmal - A loading spinner tracing the Artemis II trajectory' />
-
-		<link rel='canonical' href='https://sarmal.art/' />
-	</head>
-	<body class='min-h-screen'>
-		<header class='w-full px-4 py-3 flex items-center justify-between border-b border-border'>
-			<a href='/' class='font-heading text-lg text-foreground hover:text-primary transition-colors'>
-				<span class='text-primary'>sarmal</span>.art
+<BaseLayout
+	title='Sarmal'
+	description='Beautiful loading spinners from two lines of math. 2.86 KB, zero dependencies. Drop in a canvas, pick a curve.'
+	ogTitle='Sarmal | Loading indicators from parametric curves'>
+	<header class='w-full px-4 py-3 flex items-center justify-between border-b border-border'>
+		<a href='/' class='font-heading text-lg text-foreground hover:text-primary transition-colors'>
+			<span class='text-primary'>sarmal</span>.art
+		</a>
+		<div class='flex items-center gap-4'>
+			<a
+				href='/play'
+				class='font-mono text-xs tracking-wider uppercase text-muted hover:text-foreground transition-colors'>
+				Play
 			</a>
-			<div class='flex items-center gap-4'>
-				<a
-					href='/play'
-					class='font-mono text-xs tracking-wider uppercase text-muted hover:text-foreground transition-colors'>
-					Play
-				</a>
-				<a
-					href='https://github.com/yethranayeh/sarmal'
-					target='_blank'
-					rel='noopener noreferrer'
-					class='font-mono text-xs tracking-wider uppercase text-muted hover:text-foreground transition-colors'>
-					GitHub
-				</a>
-			</div>
-		</header>
-	</body>
+			<a
+				href='https://github.com/yethranayeh/sarmal'
+				target='_blank'
+				rel='noopener noreferrer'
+				class='font-mono text-xs tracking-wider uppercase text-muted hover:text-foreground transition-colors'>
+				GitHub
+			</a>
+		</div>
+	</header>
 
 	<main class='max-w-3xl mx-auto p-4'>
 		<section class='text-center mb-16'>
@@ -216,8 +181,8 @@ const morphPairs = [
 			requestAnimationFrame(() => sarmal.stop());
 		}, SEEK_MS);
 
-		const MORPH_DURATION = 400;
-		const HOLD_DURATION = 1200;
+		const MORPH_DURATION = 800;
+		const HOLD_DURATION = 2400;
 		const WARMUP_DURATION = 1500;
 
 		interface MorphPair {
@@ -289,4 +254,4 @@ const morphPairs = [
 			runMorphLoop(canvas, pair).catch(() => {});
 		});
 	</script>
-</html>
+</BaseLayout>
