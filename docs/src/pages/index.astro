@@ -165,7 +165,7 @@ const morphPairs = [
 		const TOTAL_HOURS = (SPLASHDOWN - LAUNCH) / (1000 * 60 * 60);
 		const TWO_PI = Math.PI * 2;
 		const SPEED = curves.artemis2.speed ?? 1;
-		const LIVE_T = 3.61;
+		const LIVE_T = 4.94;
 
 		const canvas = document.getElementById("artemis2-hero") as HTMLCanvasElement;
 		const statusEl = document.getElementById("artemis2-status") as HTMLElement;
@@ -174,8 +174,7 @@ const morphPairs = [
 			trailColor: "#60a5fa",
 			skeletonColor: "#1b1c1a",
 			headColor: "#60a5fa",
-			trailLength: 300,
-			glowSize: 0
+			trailLength: 300
 		});
 
 		const elapsedHours = (LIVE_T / TWO_PI) * TOTAL_HOURS;
@@ -227,8 +226,7 @@ const morphPairs = [
 				trailColor: pair.color,
 				skeletonColor: pair.color,
 				headColor: pair.color,
-				trailLength: 60,
-				glowSize: 0
+				trailLength: 60
 			});
 
 			sarmal.start();

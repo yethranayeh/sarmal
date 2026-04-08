@@ -19,7 +19,6 @@ const {
 	skeletonColor = defaultTrailColor,
 	headColor,
 	headRadius = 2.5,
-	glowSize = 0,
 	trailLength = defaultTrailLength,
 } = Astro.props;
 
@@ -36,7 +35,6 @@ const resolvedHeadColor = headColor ?? trailColor;
 	data-trail-color={trailColor}
 	data-head-color={resolvedHeadColor}
 	data-head-radius={headRadius}
-	data-glow-size={glowSize}
 	data-trail-length={trailLength}></canvas>
 
 <script>

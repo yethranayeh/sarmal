@@ -39,8 +39,6 @@ const speedSlider = document.getElementById("speed-slider") as HTMLInputElement;
 const speedValue = document.getElementById("speed-value") as HTMLElement;
 const trailSlider = document.getElementById("trail-slider") as HTMLInputElement;
 const trailValue = document.getElementById("trail-value") as HTMLElement;
-const glowSlider = document.getElementById("glow-slider") as HTMLInputElement;
-const glowValue = document.getElementById("glow-value") as HTMLElement;
 const colorInput = document.getElementById("color-input") as HTMLInputElement;
 const headColorInput = document.getElementById("head-color-input") as HTMLInputElement;
 
@@ -98,7 +96,6 @@ function getParams() {
     trailColor: colorInput.value,
     skeletonColor: showSkeleton ? colorInput.value : "transparent",
     headColor: headColorInput.value,
-    glowSize: parseInt(glowSlider.value, 10),
     trailLength: parseInt(trailSlider.value, 10),
     speed: parseFloat(speedSlider.value),
   };
@@ -128,7 +125,6 @@ function createInstance(
     trailColor: params.trailColor,
     skeletonColor: params.skeletonColor,
     headColor: params.headColor,
-    glowSize: params.glowSize,
   });
   currentInstance.start();
 }
@@ -245,12 +241,6 @@ speedSlider.addEventListener("input", (e) => {
 trailSlider.addEventListener("input", (e) => {
   const target = e.target as HTMLInputElement;
   trailValue.textContent = target.value;
-  updateInstance();
-});
-
-glowSlider.addEventListener("input", (e) => {
-  const target = e.target as HTMLInputElement;
-  glowValue.textContent = target.value;
   updateInstance();
 });
 
@@ -371,7 +361,6 @@ function setupMorphDemo() {
       skeletonColor: color,
       headColor: color,
       trailLength: 60,
-      glowSize: 0,
     });
 
     sarmal.start();
