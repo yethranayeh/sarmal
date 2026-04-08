@@ -2,7 +2,11 @@
 // Visual regression test fixture: DPR sizing verification
 // NO CSS sizing on canvas — this page tests that applyDprSizing correctly
 // pins the display size via inline styles, preventing "canvas doubling"
-export const prerender = false;
+//
+// NOTE: This page is built in production but only used for visual testing.
+// It was originally marked prerender=false to "exclude from production" but that
+// doesn't work in Astro without a server adapter. Keeping it as a static page
+// is harmless and simpler.
 ---
 
 <!doctype html>

@@ -2,7 +2,11 @@
 // Visual regression test fixture: Mid-morph frame (Astroid → Deltoid at alpha=0.5)
 // Minimal page with no chrome for deterministic pixel comparison
 // Uses low-level API to set exact morph alpha
-export const prerender = false;
+//
+// NOTE: This page is built in production but only used for visual testing.
+// It was originally marked prerender=false to "exclude from production" but that
+// doesn't work in Astro without a server adapter. Keeping it as a static page
+// is harmless and simpler.
 ---
 
 <!doctype html>
