@@ -1,0 +1,199 @@
+---
+import { curves } from "@sarmal/core";
+import { Code } from "astro:components";
+
+import Dialog from "./Dialog/Dialog.astro";
+import DialogShowcase from "./Dialog/DialogShowcase.astro";
+import DialogInfoGrid from "./Dialog/DialogInfoGrid.astro";
+
+import sarmalTheme from "../themes/sarmal-editorial.json";
+import sarmalDarkTheme from "../themes/sarmal-editorial-dark.json";
+
+interface Props {
+	fromId: string;
+	toId: string;
+}
+
+const { fromId, toId } = Astro.props;
+const fromCurve = curves[fromId];
+const toCurve = curves[toId];
+
+if (!fromCurve || !toCurve) {
+	throw new Error(`Unknown curve pair: ${fromId} -> ${toId}`);
+}
+
+const morphSnippet = `sarmal.morphTo(curves.${toId});`;
+---
+
+<Dialog id={`morph-${fromId}-${toId}-modal`}>
+	<DialogShowcase slot='showcase' canvasId={`morph-${fromId}-${toId}-modal-canvas`}>
+		<div
+			slot='top-left'
+			class='absolute top-4 left-4 font-mono text-[9px] tracking-widest uppercase text-muted/60 leading-relaxed pointer-events-none'>
+			<span class='block'>{fromCurve.name} → {toCurve.name}</span>
+		</div>
+	</DialogShowcase>
+
+	<div slot='details' class='flex-1 flex flex-col p-6 font-mono text-[11px]'>
+		<DialogInfoGrid
+			items={[
+				{ label: "From", value: fromCurve.name },
+				{ label: "To", value: toCurve.name },
+				{ label: "Type", value: "Morph" }
+			]}
+		/>
+
+		<hr class='my-4 w-full border-t-px border-dotted text-muted' />
+
+		<div class='mb-4'>
+			<div class='flex items-center justify-between mb-2'>
+				<span class='text-muted/50 uppercase tracking-wider text-[9px]'>Code</span>
+				<button
+					data-morph-copy-btn
+					class='font-mono text-[9px] tracking-widest uppercase text-muted hover:text-foreground transition-colors cursor-pointer'>
+					Copy
+				</button>
+			</div>
+			<div class='bg-surface border border-border rounded-md'>
+				<Code
+					class='p-2 rounded-md'
+					lang='javascript'
+					theme={undefined}
+					themes={{
+						light: sarmalTheme as unknown as { name: string },
+						dark: sarmalDarkTheme as unknown as { name: string }
+					} as Parameters<typeof Code>[0]["themes"]}
+					defaultColor={false}
+					code={morphSnippet}
+				/>
+			</div>
+		</div>
+
+		<div class='flex-1'>
+			<div class='text-muted/50 uppercase tracking-wider text-[9px] mb-2'>Description</div>
+			<div class='text-foreground/70 leading-relaxed'>
+				Watch the curve morph from <span class='text-primary'>{fromCurve.name}</span> to{" "}
+				<span class='text-primary'>{toCurve.name}</span>. The animation smoothly interpolates between the two curve
+				definitions.
+			</div>
+		</div>
+
+		<div class='border-t border-border/60 pt-3 mt-3 flex items-center justify-between'>
+			<span class='text-muted/50 uppercase tracking-widest text-[9px]'>Morph</span>
+			<button
+				data-morph-close-btn
+				class='font-mono text-[9px] tracking-widest uppercase text-muted/50 hover:text-foreground transition-colors cursor-pointer'>
+				Close
+			</button>
+		</div>
+	</div>
+</Dialog>
+
+<script>
+	import { createSarmal, curves } from "@sarmal/core";
+
+	interface MorphModal {
+		fromId: string;
+		toId: string;
+		dialog: HTMLDialogElement;
+		canvas: HTMLCanvasElement;
+		openBtn: HTMLButtonElement | null;
+		closeBtn: HTMLButtonElement;
+		copyBtn: HTMLButtonElement;
+		sarmal: ReturnType<typeof createSarmal> | null;
+		initialized: boolean;
+	}
+
+	const colorMap: Record<string, string> = {
+		astroid: "#38bdf8",
+		deltoid: "#fb923c",
+		rose3: "#e879f9",
+		epitrochoid7: "#a78bfa",
+		lissajous32: "#fb923c",
+		rose5: "#f472b6",
+		lame: "#a78bfa"
+	};
+
+	const MORPH_DURATION = 800;
+
+	async function initMorphModal(modal: MorphModal) {
+		const { fromId, toId, dialog, canvas, closeBtn, copyBtn } = modal;
+
+		modal.openBtn?.addEventListener("click", async () => {
+			dialog.showModal();
+
+			if (!modal.initialized) {
+				const fromCurve = curves[fromId];
+				modal.sarmal = createSarmal(canvas, fromCurve, {
+					trailColor: colorMap[fromId] || "#60a5fa",
+					skeletonColor: colorMap[fromId] || "#60a5fa",
+					headColor: colorMap[fromId] || "#60a5fa",
+					trailLength: 60,
+					glowSize: 0
+				});
+				modal.initialized = true;
+			}
+
+			modal.sarmal!.reset();
+			modal.sarmal!.start();
+
+			const HOLD_DURATION = 2400;
+
+			async function runMorphLoop() {
+				while (dialog.open) {
+					await modal.sarmal!.morphTo(curves[toId], { duration: MORPH_DURATION });
+					await new Promise((resolve) => setTimeout(resolve, HOLD_DURATION));
+					await modal.sarmal!.morphTo(curves[fromId], { duration: MORPH_DURATION });
+					await new Promise((resolve) => setTimeout(resolve, HOLD_DURATION));
+				}
+			}
+
+			runMorphLoop();
+		});
+
+		closeBtn.addEventListener("click", () => {
+			dialog.close();
+			modal.sarmal?.stop();
+		});
+
+		dialog.addEventListener("click", (e) => {
+			if (e.target === dialog) {
+				dialog.close();
+				modal.sarmal?.stop();
+			}
+		});
+
+		copyBtn.addEventListener("click", async () => {
+			const morphSnippet = `sarmal.morphTo(curves.${toId});`;
+			await navigator.clipboard.writeText(morphSnippet);
+			copyBtn.textContent = "Copied!";
+			setTimeout(() => {
+				copyBtn.textContent = "Copy";
+			}, 2000);
+		});
+	}
+
+	document.querySelectorAll<HTMLDialogElement>("[id^='morph-'][id$='-modal']").forEach((dialog) => {
+		const idMatch = dialog.id.match(/^morph-(.+)-(.+)-modal$/);
+		if (!idMatch) return;
+
+		const fromId = idMatch[1]!;
+		const toId = idMatch[2]!;
+		const canvas = document.getElementById(`morph-${fromId}-${toId}-modal-canvas`) as HTMLCanvasElement;
+		const openBtn = document.getElementById(`morph-${fromId}-${toId}-details`) as HTMLButtonElement | null;
+		const closeBtn = dialog.querySelector("[data-morph-close-btn]") as HTMLButtonElement;
+		const copyBtn = dialog.querySelector("[data-morph-copy-btn]") as HTMLButtonElement;
+
+		initMorphModal({
+			fromId,
+			toId,
+			dialog,
+			canvas,
+			openBtn,
+			closeBtn,
+			copyBtn,
+			sarmal: null,
+			initialized: false
+		});
+	});
+</script>

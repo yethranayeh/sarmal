@@ -200,8 +200,6 @@ export interface RendererOptions {
   headColor?: string;
   /** @default 4 */
   headRadius?: number;
-  /** @default 20 */
-  glowSize?: number;
 }
 
 export interface SarmalOptions extends Omit<RendererOptions, "canvas" | "engine"> {

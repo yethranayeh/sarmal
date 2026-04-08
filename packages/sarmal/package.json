@@ -1,6 +1,6 @@
 {
   "name": "@sarmal/core",
-  "version": "0.7.1",
+  "version": "0.8.0",
   "description": "Curve path based loading indicators and their renderer",
   "keywords": [
     "animation",
@@ -11,14 +11,24 @@
     "spinner",
     "svg"
   ],
+  "homepage": "https://sarmal.art",
+  "bugs": {
+    "url": "https://github.com/yethranayeh/sarmal/issues"
+  },
   "license": "MIT",
   "author": {
     "name": "Alper Halil",
     "email": "contact@aktasalper.com",
     "url": "https://aktasalper.com"
   },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/yethranayeh/sarmal.git",
+    "directory": "packages/sarmal"
+  },
   "files": [
-    "dist"
+    "dist",
+    "LICENSE"
   ],
   "type": "module",
   "sideEffects": [

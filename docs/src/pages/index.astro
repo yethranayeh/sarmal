@@ -7,6 +7,8 @@ import { curves } from "@sarmal/core";
 import Sarmal from "../components/Sarmal.astro";
 import Button from "../components/Button.astro";
 import Artemis2Modal from "../components/Artemis2Modal.astro";
+import CurveDetailModal from "../components/CurveDetailModal.astro";
+import MorphDetailModal from "../components/MorphDetailModal.astro";
 import SectionLabel from "../components/SectionLabel.astro";
 
 import sarmalTheme from "../themes/sarmal-editorial.json";
@@ -111,6 +113,9 @@ const morphPairs = [
 								<span title={curve.id} class='font-mono text-[10px] tracking-wider uppercase text-muted'>
 									{curve.name}
 								</span>
+								<Button id={`${curve.id}-details`} variant='ghost' class='text-[9px] mt-1'>
+									Details
+								</Button>
 							</div>
 						))
 					}
@@ -132,6 +137,9 @@ const morphPairs = [
 								<span class='font-mono text-[10px] tracking-wider uppercase text-muted'>
 									{pair.from} {"->"} {pair.to}
 								</span>
+								<Button id={`morph-${pair.from}-${pair.to}-details`} variant='ghost' class='text-[9px] mt-1'>
+									Details
+								</Button>
 							</div>
 						))
 					}
@@ -146,6 +154,8 @@ const morphPairs = [
 		</p>
 	</footer>
 	<Artemis2Modal />
+	{sarmals.map((curve) => <CurveDetailModal curveId={curve.id} />)}
+	{morphPairs.map((pair) => <MorphDetailModal fromId={pair.from} toId={pair.to} />)}
 
 	<script>
 		import { createSarmal, curves } from "@sarmal/core";
@@ -232,7 +242,7 @@ const morphPairs = [
 			}
 		}
 
-		const morphContainers = document.querySelectorAll<HTMLDivElement>("[id^='morph-']");
+		const morphContainers = document.querySelectorAll<HTMLDivElement>("div[id^='morph-']");
 		morphContainers.forEach((container) => {
 			const idMatch = container.id.match(/^morph-(.+)-(.+)$/);
 			if (!idMatch) {

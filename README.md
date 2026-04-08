@@ -1,7 +1,22 @@
 # Sarmal
 
-Here be dragons
+**[sarmal.art](https://sarmal.art)**
 
-<p align="center">
-  <a title="By Unknown author; cropped by Beyond My Ken 07:41, 7 July 2019 (UTC) - British Library Add. MS 28681" href="https://commons.wikimedia.org/w/index.php?curid=80222262" target="_blank"><img src="https://upload.wikimedia.org/wikipedia/commons/0/09/Psalter_World_Map%2C_c.1265_dragons.jpg"></a>
-</p>
+This is a monorepo of the **Sarmal** project, which aims to be a parametric curve renderer, mainly for loading/thinking indicators, but you are also allowed to use it however you like :)
+
+## Packages
+
+| Package | Description |
+|---------|-------------|
+| [`@sarmal/core`](./packages/sarmal/README.md) | renderers, engine, and curve exports |
+
+## Documentation
+
+- **[Homepage](https://sarmal.art)** | The semi-cliche marketing stuff
+- **[Playground](https://sarmal.art/play)** | A playground where you can struggle at math like me
+- **[Docs](https://sarmal.art/docs)** | A documentation page that *I would like to build* for info about getting into Sarmal
+- **[Core README](./packages/sarmal/README.md)** | Having two READMEs is always better than none
+
+## License
+
+MIT — see [LICENSE](./LICENSE)

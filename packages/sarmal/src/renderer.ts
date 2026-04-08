@@ -2,23 +2,12 @@ import type { CurveDef, MorphOptions, Point, RendererOptions, SarmalInstance } f
 
 const DEFAULT_MORPH_DURATION_MS = 300;
 const DEFAULT_HEAD_RADIUS = 4;
-// TODO: Re-evaluate glow implementation. Current approach looks TERRIBLE!
-// Consider: remove glow entirely, replace with a sharper bloom, or make it opt-in only (default 0).
-const DEFAULT_GLOW_SIZE = 20;
 const DEFAULT_SKELETON_COLOR = "#ffffff";
 const DEFAULT_SKELETON_OPACITY = 0.15;
 
 /** Fraction of the bounding box added as padding when fitting the curve to the canvas */
 const FIT_PADDING = 0.1;
 
-/**
- * The trail is drawn in batches of points
- * Each batch has lower opacity than the one that comes before it
- *  (0 = oldest/tail, 1 = newest/head)
- *
- * ! Performance note: Larger batch size = fewer GPU stroke calls per frame
- */
-const TRAIL_BATCH_SIZE = 20;
 /** Higher values = sharper fade near the tail, more of the trail appears faint */
 const TRAIL_FADE_CURVE = 1.5;
 const TRAIL_MAX_OPACITY = 0.88;
@@ -27,19 +16,117 @@ const TRAIL_MIN_WIDTH = 0.5;
 /** Line width of head */
 const TRAIL_MAX_WIDTH = 2.5;
 
-const GLOW_INNER_EDGE = 0.4;
-/** Opacity at the inner edge of the glow falloff */
-const GLOW_FALLOFF_OPACITY = 0.53;
-
 /** Parses a hex color into its "r,g,b" string for use in rgba() — called once at init */
 export function hexToRgbComponents(hex: string): string {
   const n = parseInt(hex.slice(1), 16);
   return `${n >> 16},${(n >> 8) & 255},${n & 255}`;
 }
 
+export interface TrailPoint {
+  x: number;
+  y: number;
+}
+
+/**
+ * Computes the unit tangent vector at a point on the trail.
+ * For interior points, uses central difference (previous → next).
+ * For endpoints, uses forward/backward difference.
+ *
+ * @param trail - Array of trail points
+ * @param i - Index of the point to compute tangent for
+ * @returns Unit vector in the direction of travel at that point
+ */
+export function computeTangent(trail: TrailPoint[], i: number): TrailPoint {
+  const count = trail.length;
+  if (count < 2) {
+    return { x: 1, y: 0 };
+  }
+
+  if (i === 0) {
+    const dx = trail[1]!.x - trail[0]!.x;
+    const dy = trail[1]!.y - trail[0]!.y;
+    const len = Math.sqrt(dx * dx + dy * dy) || 1;
+    return { x: dx / len, y: dy / len };
+  }
+
+  if (i === count - 1) {
+    const dx = trail[count - 1]!.x - trail[count - 2]!.x;
+    const dy = trail[count - 1]!.y - trail[count - 2]!.y;
+    const len = Math.sqrt(dx * dx + dy * dy) || 1;
+    return { x: dx / len, y: dy / len };
+  }
+
+  const dx = trail[i + 1]!.x - trail[i - 1]!.x;
+  const dy = trail[i + 1]!.y - trail[i - 1]!.y;
+  const len = Math.sqrt(dx * dx + dy * dy) || 1;
+  return { x: dx / len, y: dy / len };
+}
+
+/**
+ * Computes the unit normal vector at a point on the trail.
+ * The normal is perpendicular to the tangent, rotated 90° counter-clockwise.
+ * This gives the "left" direction relative to the direction of travel.
+ *
+ * @param trail - Array of trail points
+ * @param i - Index of the point to compute normal for
+ * @returns Unit vector perpendicular to the trail at that point
+ */
+export function computeNormal(trail: TrailPoint[], i: number): TrailPoint {
+  const tangent = computeTangent(trail, i);
+  return { x: -tangent.y, y: tangent.x };
+}
+
+/**
+ * ! Exported purely so `applyDprSizing` can be unit-tested without a DOM
+ */
+export interface DprSizingTarget {
+  width: number;
+  height: number;
+  style: { width: string; height: string };
+}
+
+/**
+ * Applies DPR sizing to a target
+ *
+ * ! DO NOT REMOVE THE `style.width` and `style.height` ASSIGNMENTS
+ *
+ * A canvas with only `width`/`height` HTML attributes and no CSS derives
+ *  its displayed size from those attributes.
+ * If we set `canvas.width = logicalWidth * dpr` to scale the drawing buffer for "crispness",
+ *  the element ALSO visually grows by the DPR factor
+ * ! The bug is silent and sneaky. It just resulsts in a broken render without any obvious reasons
+ *
+ * @see https://developer.mozilla.org/en-US/docs/Web/API/Canvas_API/Tutorial/Optimizing_canvas
+ *      MDN: "If you don't set the CSS attributes, the intrinsic size of the canvas will be used as its display size"
+ *
+ * @see https://webglfundamentals.org/webgl/lessons/webgl-resizing-the-canvas.html
+ *      "Every canvas has 2 sizes: the drawingbuffer (pixels) and the display
+ *        size (CSS). If no CSS affects display size, it equals drawingbuffer."
+ *
+ * @see https://stackoverflow.com/questions/4938346/canvas-width-and-height-in-html5
+ *      Phrogz: "If you don't set the CSS attributes, the intrinsic size of
+ *        the canvas will be used as its display size."
+ *
+ * The regression test for this lives in **renderer.test.ts**
+ */
+export function applyDprSizing(
+  target: DprSizingTarget,
+  logicalWidth: number,
+  logicalHeight: number,
+  dpr: number,
+): void {
+  // Pin the CSS display size FIRST so changing the attributes below
+  // cannot resize the element.
+  target.style.width = `${logicalWidth}px`;
+  target.style.height = `${logicalHeight}px`;
+
+  target.width = logicalWidth * dpr;
+  target.height = logicalHeight * dpr;
+}
+
 /**
  * Creates a Canvas 2D renderer for sarmal animations
- * Renders the skeleton, the trail, and the glowing dot
+ * Renders the skeleton and the trail
  */
 export function createRenderer(options: RendererOptions): SarmalInstance {
   const canvas = options.canvas;
@@ -54,11 +141,32 @@ export function createRenderer(options: RendererOptions): SarmalInstance {
     trailColor: options.trailColor ?? "#ffffff",
     headColor: options.headColor ?? "#ffffff",
     headRadius: options.headRadius ?? DEFAULT_HEAD_RADIUS,
-    glowSize: options.glowSize ?? DEFAULT_GLOW_SIZE,
   };
 
   const trailRgb = hexToRgbComponents(opts.trailColor);
-  const headRgbFalloff = `rgba(${hexToRgbComponents(opts.headColor)},${GLOW_FALLOFF_OPACITY})`;
+
+  /**
+   * Device pixel ratio for high-DPI displays.
+   * We scale the canvas buffer size by DPR and apply a transform scale
+   */
+  const dpr = typeof window !== "undefined" ? window.devicePixelRatio || 1 : 1;
+
+  /**
+   * Sets up the canvas for DPR scaling
+   */
+  function setupCanvas() {
+    const rect = canvas.getBoundingClientRect();
+    const lw = rect.width || 200;
+    const lh = rect.height || 200;
+    applyDprSizing(canvas, lw, lh, dpr);
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  }
+
+  setupCanvas();
+
+  // Store logical dimensions for boundary calculations
+  let logicalWidth = canvas.width / dpr;
+  let logicalHeight = canvas.height / dpr;
 
   let skeleton: Array<Point> = [];
   let skeletonCanvas: OffscreenCanvas | null = null;
@@ -104,18 +212,16 @@ export function createRenderer(options: RendererOptions): SarmalInstance {
 
     const width = maxX - minX;
     const height = maxY - minY;
-    const canvasWidth = canvas.width;
-    const canvasHeight = canvas.height;
 
-    const scaleX = canvasWidth / (width * (1 + FIT_PADDING * 2));
-    const scaleY = canvasHeight / (height * (1 + FIT_PADDING * 2));
+    const scaleX = logicalWidth / (width * (1 + FIT_PADDING * 2));
+    const scaleY = logicalHeight / (height * (1 + FIT_PADDING * 2));
     const s = Math.min(scaleX, scaleY);
     const boundsWidth = width * s;
     const boundsHeight = height * s;
     return {
       scale: s,
-      offsetX: (canvasWidth - boundsWidth) / 2 - minX * s,
-      offsetY: (canvasHeight - boundsHeight) / 2 - minY * s,
+      offsetX: (logicalWidth - boundsWidth) / 2 - minX * s,
+      offsetY: (logicalHeight - boundsHeight) / 2 - minY * s,
     };
   }
 
@@ -137,6 +243,9 @@ export function createRenderer(options: RendererOptions): SarmalInstance {
 
     skeletonCanvas = new OffscreenCanvas(canvas.width, canvas.height);
     const skeletonCtx = skeletonCanvas.getContext("2d")!;
+
+    // Apply DPR scale to draw in logical coordinates
+    skeletonCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
 
     skeletonCtx.strokeStyle = `rgba(${hexToRgbComponents(opts.skeletonColor)},${DEFAULT_SKELETON_OPACITY})`;
     skeletonCtx.lineWidth = 1.5;
@@ -196,7 +305,11 @@ export function createRenderer(options: RendererOptions): SarmalInstance {
 
       ctx.stroke();
     } else if (skeletonCanvas) {
-      ctx.drawImage(skeletonCanvas, 0, 0);
+      /**
+       * ! The offscreen buffer is *already* DPR-scaled, but the main ctx also has a DPR transform applied,
+       * ! so passing natural pixel size would **double-scale** it.
+       */
+      ctx.drawImage(skeletonCanvas, 0, 0, logicalWidth, logicalHeight);
     }
   }
 
@@ -205,36 +318,57 @@ export function createRenderer(options: RendererOptions): SarmalInstance {
       return;
     }
 
-    // Set constant state once outside the batch loop
-    ctx.lineJoin = "round";
-    ctx.lineCap = "round";
-
-    for (let batchIndex = 0; batchIndex < trailCount - 1; batchIndex += TRAIL_BATCH_SIZE) {
-      const bEnd = Math.min(batchIndex + TRAIL_BATCH_SIZE, trailCount - 1);
-      /** Normalized position of this batch along the trail (0 = tail, 1 = head) */
-      const progress = (batchIndex + bEnd) / 2 / (trailCount - 1);
+    /**
+     * ! Claude's fix for the chopped looking curve trail
+     *
+     * Ribbon approach: draw the trail as a sequence of filled quads.
+     * Each quad connects two consecutive trail points with left/right offsets
+     * based on the width at that position. Quads are drawn from tail to head
+     * so later quads naturally overlay earlier ones.
+     *
+     * @see https://mattdesl.svbtle.com/drawing-lines-is-hard
+     *      DesLauriers: "Triangulated Lines" — expand points outward by half
+     *      the thickness on either side using normals to create thick lines.
+     *
+     * @see https://cesium.com/blog/2013/04/22/robust-polyline-rendering-with-webgl
+     *      Cesium: "draw a screen-aligned quad for each segment... extrude them
+     *      in screen space in the direction normal to the line."
+     */
+    for (let i = 0; i < trailCount - 1; i++) {
+      const progress = i / (trailCount - 1);
+      const nextProgress = (i + 1) / (trailCount - 1);
       const alpha = Math.pow(progress, TRAIL_FADE_CURVE) * TRAIL_MAX_OPACITY;
-      const lineWidth = TRAIL_MIN_WIDTH + progress * (TRAIL_MAX_WIDTH - TRAIL_MIN_WIDTH);
+      const width = TRAIL_MIN_WIDTH + progress * (TRAIL_MAX_WIDTH - TRAIL_MIN_WIDTH);
+      const nextWidth = TRAIL_MIN_WIDTH + nextProgress * (TRAIL_MAX_WIDTH - TRAIL_MIN_WIDTH);
 
+      const curr = trail[i]!;
+      const next = trail[i + 1]!;
+      const n0 = computeNormal(trail, i);
+      const n1 = computeNormal(trail, i + 1);
+
+      const halfW0 = width / 2;
+      const halfW1 = nextWidth / 2;
+
+      // Four corners of the quad: left0, left1, right1, right0
+      // Left = +normal direction, Right = -normal direction
+      const l0x = curr.x * scale + offsetX + n0.x * halfW0;
+      const l0y = curr.y * scale + offsetY + n0.y * halfW0;
+      const r0x = curr.x * scale + offsetX - n0.x * halfW0;
+      const r0y = curr.y * scale + offsetY - n0.y * halfW0;
+
+      const l1x = next.x * scale + offsetX + n1.x * halfW1;
+      const l1y = next.y * scale + offsetY + n1.y * halfW1;
+      const r1x = next.x * scale + offsetX - n1.x * halfW1;
+      const r1y = next.y * scale + offsetY - n1.y * halfW1;
+
+      ctx.fillStyle = `rgba(${trailRgb},${alpha})`;
       ctx.beginPath();
-      for (let i = batchIndex; i <= bEnd; i++) {
-        const point = trail[i]!;
-
-        if (i === batchIndex) {
-          ctx.moveTo(point.x * scale + offsetX, point.y * scale + offsetY);
-        } else {
-          ctx.lineTo(point.x * scale + offsetX, point.y * scale + offsetY);
-        }
-      }
-
-      // ! AI Note
-      // FIXME: still allocates a new string every batch every frame (~20x/frame).
-      // `trailRgb` avoids re-parsing the hex, but alpha is a continuous float so the full
-      // rgba string can't be pre-computed. Fix: discretize alpha into N buckets at init
-      // and do a lookup (e.g. trailColors[Math.round(progress * N)]) instead of a template literal.
-      ctx.strokeStyle = `rgba(${trailRgb},${alpha})`;
-      ctx.lineWidth = lineWidth;
-      ctx.stroke();
+      ctx.moveTo(l0x, l0y);
+      ctx.lineTo(l1x, l1y);
+      ctx.lineTo(r1x, r1y);
+      ctx.lineTo(r0x, r0y);
+      ctx.closePath();
+      ctx.fill();
     }
   }
 
@@ -245,16 +379,6 @@ export function createRenderer(options: RendererOptions): SarmalInstance {
 
     const x = head.x * scale + offsetX;
     const y = head.y * scale + offsetY;
-
-    const gradient = ctx.createRadialGradient(x, y, 0, x, y, opts.glowSize);
-    gradient.addColorStop(0, opts.headColor);
-    gradient.addColorStop(GLOW_INNER_EDGE, headRgbFalloff);
-    gradient.addColorStop(1, "transparent");
-
-    ctx.fillStyle = gradient;
-    ctx.beginPath();
-    ctx.arc(x, y, opts.glowSize, 0, Math.PI * 2);
-    ctx.fill();
 
     ctx.fillStyle = opts.headColor;
     ctx.beginPath();
@@ -301,7 +425,7 @@ export function createRenderer(options: RendererOptions): SarmalInstance {
     trailCount = engine.trailCount;
     head = trailCount > 0 ? trail[trailCount - 1]! : null;
 
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.clearRect(0, 0, logicalWidth, logicalHeight);
 
     if (engine.isLiveSkeleton && engine.morphAlpha === null) {
       skeleton = engine.getSarmalSkeleton();

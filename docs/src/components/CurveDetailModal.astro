@@ -1,0 +1,188 @@
+---
+import { Code } from "astro:components";
+import { curves } from "@sarmal/core";
+
+import Dialog from "./Dialog/Dialog.astro";
+import DialogShowcase from "./Dialog/DialogShowcase.astro";
+import DialogInfoGrid from "./Dialog/DialogInfoGrid.astro";
+import { curveMetadata } from "../data/curveMetadata";
+
+import sarmalTheme from "../themes/sarmal-editorial.json";
+import sarmalDarkTheme from "../themes/sarmal-editorial-dark.json";
+
+interface Props {
+	curveId: string;
+}
+
+const { curveId } = Astro.props;
+const metadata = curveMetadata[curveId];
+const curve = curves[curveId];
+
+if (!metadata || !curve) {
+	throw new Error(`Unknown curve: ${curveId}`);
+}
+
+const period =
+	typeof curve.period === "number" ? (curve.period === Math.PI * 2 ? "2π" : curve.period.toFixed(2)) : "2π";
+
+const codeSnippet = `<canvas data-sarmal="${curveId}"></canvas>`;
+---
+
+<Dialog id={`${curveId}-modal`}>
+	<DialogShowcase slot='showcase' canvasId={`${curveId}-modal-canvas`}>
+		<div
+			slot='top-left'
+			class='absolute top-4 left-4 font-mono text-[9px] tracking-widest uppercase text-muted/60 leading-relaxed pointer-events-none'>
+			<span class='block'>{metadata.name}</span>
+		</div>
+	</DialogShowcase>
+
+	<div slot='details' class='flex-1 flex flex-col p-6 font-mono text-[11px]'>
+		<DialogInfoGrid
+			items={[
+				{ label: "Name", value: metadata.name },
+				{ label: "Family", value: metadata.family },
+				{ label: "Period", value: period }
+			]}
+		/>
+
+		<hr class='my-4 w-full border-t-px border-dotted text-muted' />
+
+		<div class='mb-4'>
+			<div class='text-muted/50 uppercase tracking-wider text-[9px] mb-2'>Equation</div>
+			<div class='text-foreground/90 font-mono text-sm'>{metadata.equation}</div>
+		</div>
+
+		<hr class='my-4 w-full border-t-px border-dotted text-muted' />
+
+		<div class='mb-4'>
+			<div class='flex items-center justify-between mb-2'>
+				<span class='text-muted/50 uppercase tracking-wider text-[9px]'>Code</span>
+				<button
+					data-curve-copy-btn
+					class='font-mono text-[9px] tracking-widest uppercase text-muted hover:text-foreground transition-colors cursor-pointer'>
+					Copy
+				</button>
+			</div>
+			<div class='bg-surface border border-border rounded-md'>
+				<Code
+					class='p-2 rounded-md'
+					lang='html'
+					theme={undefined}
+					themes={{
+						light: sarmalTheme as unknown as { name: string },
+						dark: sarmalDarkTheme as unknown as { name: string }
+					} as Parameters<typeof Code>[0]["themes"]}
+					defaultColor={false}
+					code={codeSnippet}
+				/>
+			</div>
+		</div>
+
+		<div class='flex-1'>
+			<div class='text-muted/50 uppercase tracking-wider text-[9px] mb-2'>Description</div>
+			<div class='text-foreground/70 leading-relaxed'>{metadata.description}</div>
+		</div>
+
+		<div class='border-t border-border/60 pt-3 mt-3 flex items-center justify-between'>
+			<span class='text-muted/50 uppercase tracking-widest text-[9px]'>{metadata.family}</span>
+			<button
+				data-curve-close-btn
+				class='font-mono text-[9px] tracking-widest uppercase text-muted/50 hover:text-foreground transition-colors cursor-pointer'>
+				Close
+			</button>
+		</div>
+	</div>
+</Dialog>
+
+<script>
+	import { createSarmal, curves } from "@sarmal/core";
+
+	interface CurveDetailModal {
+		curveId: string;
+		dialog: HTMLDialogElement;
+		canvas: HTMLCanvasElement;
+		openBtn: HTMLButtonElement | null;
+		closeBtn: HTMLButtonElement;
+		copyBtn: HTMLButtonElement;
+		sarmal: ReturnType<typeof createSarmal> | null;
+		initialized: boolean;
+	}
+
+	const colorMap: Record<string, string> = {
+		rose3: "#e879f9",
+		deltoid: "#fb923c",
+		astroid: "#38bdf8",
+		epitrochoid7: "#a78bfa",
+		rose5: "#f472b6",
+		lissajous43: "#2dd4bf",
+		lissajous32: "#fb923c",
+		lame: "#a78bfa"
+	};
+
+	function initCurveModal(modal: CurveDetailModal) {
+		const { curveId, dialog, canvas, closeBtn, copyBtn } = modal;
+
+		modal.openBtn?.addEventListener("click", () => {
+			dialog.showModal();
+
+			if (!modal.initialized) {
+				const curve = curves[curveId];
+				modal.sarmal = createSarmal(canvas, curve, {
+					trailColor: colorMap[curveId] || "#60a5fa",
+					skeletonColor: "#1b1c1a",
+					headColor: colorMap[curveId] || "#60a5fa",
+					trailLength: 60,
+					glowSize: 0
+				});
+				modal.initialized = true;
+			}
+
+			modal.sarmal!.reset();
+			modal.sarmal!.start();
+		});
+
+		closeBtn.addEventListener("click", () => {
+			dialog.close();
+			modal.sarmal?.stop();
+		});
+
+		dialog.addEventListener("click", (e) => {
+			if (e.target === dialog) {
+				dialog.close();
+				modal.sarmal?.stop();
+			}
+		});
+
+		copyBtn.addEventListener("click", async () => {
+			const codeSnippet = `<canvas data-sarmal="${curveId}"></canvas>`;
+			await navigator.clipboard.writeText(codeSnippet);
+			copyBtn.textContent = "Copied!";
+			setTimeout(() => {
+				copyBtn.textContent = "Copy";
+			}, 2000);
+		});
+	}
+
+	document.querySelectorAll<HTMLDialogElement>("[id$=-modal]").forEach((dialog) => {
+		if (!dialog.id.includes("artemis2")) {
+			const idParts = dialog.id.replace("-modal", "").split("-");
+			const curveId = idParts.join("-");
+			const canvas = document.getElementById(`${curveId}-modal-canvas`) as HTMLCanvasElement;
+			const openBtn = document.getElementById(`${curveId}-details`) as HTMLButtonElement | null;
+			const closeBtn = dialog.querySelector("[data-curve-close-btn]") as HTMLButtonElement;
+			const copyBtn = dialog.querySelector("[data-curve-copy-btn]") as HTMLButtonElement;
+
+			initCurveModal({
+				curveId,
+				dialog,
+				canvas,
+				openBtn,
+				closeBtn,
+				copyBtn,
+				sarmal: null,
+				initialized: false
+			});
+		}
+	});
+</script>

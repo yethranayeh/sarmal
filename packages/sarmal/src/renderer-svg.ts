@@ -1,8 +1,10 @@
-import type { CurveDef, Engine, MorphOptions, Point, SarmalInstance } from "./types";
+import type { CurveDef, MorphOptions, Point, SarmalInstance } from "./types";
+import { computeNormal } from "./renderer";
 import { createEngine } from "./engine";
 
 const DEFAULT_MORPH_DURATION_MS = 300;
-const TRAIL_BATCH_COUNT = 12;
+/** Maximum number of trail segment paths pre-created for the ribbon */
+const MAX_TRAIL_SEGMENTS = 200;
 /** Higher values = sharper fade near the tail */
 const TRAIL_FADE_CURVE = 1.5;
 const TRAIL_MAX_OPACITY = 0.88;
@@ -11,35 +13,8 @@ const TRAIL_MIN_WIDTH = 0.5;
 /** Stroke width at the head */
 const TRAIL_MAX_WIDTH = 2.5;
 const DEFAULT_SKELETON_OPACITY = 0.15;
-const DEFAULT_GLOW_INNER_STOP = 0.4;
-const DEFAULT_GLOW_FALLOFF_OPACITY = 0.53;
 /** Fraction of the bounding box added as padding when auto-fitting the curve */
 const FIT_PADDING = 0.1;
-
-let instanceCount = 0;
-
-export interface SVGRendererOptions {
-  /** Container element that will contain the SVG */
-  container: Element;
-  engine: Engine;
-  /** @default '#ffffff' */
-  skeletonColor?: string;
-  /** @default '#ffffff' */
-  trailColor?: string;
-  /** @default '#ffffff' */
-  headColor?: string;
-  /** @default 4 */
-  headRadius?: number;
-  /** @default 20 */
-  glowSize?: number;
-  /** @default 'Loading' */
-  ariaLabel?: string;
-}
-
-export interface SVGSarmalOptions extends Omit<SVGRendererOptions, "container" | "engine"> {
-  /** @default 120 */
-  trailLength?: number;
-}
 
 function el(tag: string): SVGElement {
   return document.createElementNS("http://www.w3.org/2000/svg", tag);
@@ -56,13 +31,8 @@ export function createSVGRenderer(options: SVGRendererOptions): SarmalInstance {
     trailColor: options.trailColor ?? "#ffffff",
     headColor: options.headColor ?? "#ffffff",
     headRadius: options.headRadius ?? 4,
-    glowSize: options.glowSize ?? 20,
     ariaLabel: options.ariaLabel ?? "Loading",
   };
-
-  // Unique per-instance ID prevents ID collisions of multiple instances
-  const uid = ++instanceCount;
-  const gradientId = `sarmal-glow-${uid}`;
 
   const rect = container.getBoundingClientRect();
   const width = rect.width || 200;
@@ -78,28 +48,6 @@ export function createSVGRenderer(options: SVGRendererOptions): SarmalInstance {
   const titleEl = el("title");
   titleEl.textContent = opts.ariaLabel;
   svg.appendChild(titleEl);
-
-  const defs = el("defs");
-  const gradient = el("radialGradient") as SVGRadialGradientElement;
-  gradient.id = gradientId;
-  gradient.setAttribute("cx", "50%");
-  gradient.setAttribute("cy", "50%");
-  gradient.setAttribute("r", "50%");
-  const stop0 = el("stop");
-  stop0.setAttribute("offset", "0%");
-  stop0.setAttribute("stop-color", opts.headColor);
-  stop0.setAttribute("stop-opacity", "1");
-  const stopMid = el("stop");
-  stopMid.setAttribute("offset", `${DEFAULT_GLOW_INNER_STOP * 100}%`);
-  stopMid.setAttribute("stop-color", opts.headColor);
-  stopMid.setAttribute("stop-opacity", String(DEFAULT_GLOW_FALLOFF_OPACITY));
-  const stop1 = el("stop");
-  stop1.setAttribute("offset", "100%");
-  stop1.setAttribute("stop-color", opts.headColor);
-  stop1.setAttribute("stop-opacity", "0");
-  gradient.append(stop0, stopMid, stop1);
-  defs.appendChild(gradient);
-  svg.appendChild(defs);
 
   const skeletonPath = el("path") as SVGPathElement;
   skeletonPath.setAttribute("fill", "none");
@@ -126,20 +74,12 @@ export function createSVGRenderer(options: SVGRendererOptions): SarmalInstance {
   let morphPathBBuilt = "";
 
   const trailPaths: SVGPathElement[] = [];
-  for (let i = 0; i < TRAIL_BATCH_COUNT; i++) {
+  for (let i = 0; i < MAX_TRAIL_SEGMENTS; i++) {
     const path = el("path") as SVGPathElement;
-    path.setAttribute("fill", "none");
-    path.setAttribute("stroke", opts.trailColor);
-    path.setAttribute("stroke-linecap", "round");
-    path.setAttribute("stroke-linejoin", "round");
+    path.setAttribute("fill", opts.trailColor);
     svg.appendChild(path);
     trailPaths.push(path);
   }
-
-  const glowCircle = el("circle") as SVGCircleElement;
-  glowCircle.setAttribute("fill", `url(#${gradientId})`);
-  glowCircle.setAttribute("r", String(opts.glowSize));
-  svg.appendChild(glowCircle);
 
   const headCircle = el("circle") as SVGCircleElement;
   headCircle.setAttribute("fill", opts.headColor);
@@ -227,30 +167,47 @@ export function createSVGRenderer(options: SVGRendererOptions): SarmalInstance {
       for (const p of trailPaths) {
         p.setAttribute("d", "");
       }
-
       return;
     }
-    const batchSize = Math.ceil(trailCount / TRAIL_BATCH_COUNT);
 
-    for (let b = 0; b < TRAIL_BATCH_COUNT; b++) {
-      const start = b * batchSize;
-      const end = Math.min(start + batchSize, trailCount - 1);
-      if (start >= trailCount - 1) {
-        trailPaths[b]!.setAttribute("d", "");
-        continue;
-      }
-      const progress = (start + end) / 2 / (trailCount - 1);
+    /**
+     * Ribbon approach: each segment is a filled quad with its own opacity.
+     * Quads are drawn from tail to head, with later quads overlaying earlier ones.
+     */
+    for (let i = 0; i < trailCount - 1; i++) {
+      const progress = i / (trailCount - 1);
+      const nextProgress = (i + 1) / (trailCount - 1);
       const opacity = Math.pow(progress, TRAIL_FADE_CURVE) * TRAIL_MAX_OPACITY;
-      const strokeWidth = TRAIL_MIN_WIDTH + progress * (TRAIL_MAX_WIDTH - TRAIL_MIN_WIDTH);
+      const width = TRAIL_MIN_WIDTH + progress * (TRAIL_MAX_WIDTH - TRAIL_MIN_WIDTH);
+      const nextWidth = TRAIL_MIN_WIDTH + nextProgress * (TRAIL_MAX_WIDTH - TRAIL_MIN_WIDTH);
 
-      let d = `M${px(trail[start]!)} ${py(trail[start]!)}`;
-      for (let i = start + 1; i <= end; i++) {
-        d += ` L${px(trail[i]!)} ${py(trail[i]!)}`;
-      }
+      const curr = trail[i]!;
+      const next = trail[i + 1]!;
+      const n0 = computeNormal(trail, i);
+      const n1 = computeNormal(trail, i + 1);
 
-      trailPaths[b]!.setAttribute("d", d);
-      trailPaths[b]!.setAttribute("stroke-opacity", opacity.toFixed(3));
-      trailPaths[b]!.setAttribute("stroke-width", strokeWidth.toFixed(2));
+      const halfW0 = width / 2;
+      const halfW1 = nextWidth / 2;
+
+      // Four corners of the quad: left0, left1, right1, right0
+      const l0x = px(curr) + n0.x * halfW0;
+      const l0y = py(curr) + n0.y * halfW0;
+      const r0x = px(curr) - n0.x * halfW0;
+      const r0y = py(curr) - n0.y * halfW0;
+      const l1x = px(next) + n1.x * halfW1;
+      const l1y = py(next) + n1.y * halfW1;
+      const r1x = px(next) - n1.x * halfW1;
+      const r1y = py(next) - n1.y * halfW1;
+
+      const d = `M${l0x.toFixed(2)} ${l0y.toFixed(2)} L${l1x.toFixed(2)} ${l1y.toFixed(2)} L${r1x.toFixed(2)} ${r1y.toFixed(2)} L${r0x.toFixed(2)} ${r0y.toFixed(2)} Z`;
+
+      trailPaths[i]!.setAttribute("d", d);
+      trailPaths[i]!.setAttribute("fill-opacity", opacity.toFixed(3));
+    }
+
+    // Hide unused paths
+    for (let i = trailCount - 1; i < trailPaths.length; i++) {
+      trailPaths[i]!.setAttribute("d", "");
     }
   }
 
@@ -263,8 +220,6 @@ export function createSVGRenderer(options: SVGRendererOptions): SarmalInstance {
     const x = px(head);
     const y = py(head);
 
-    glowCircle.setAttribute("cx", x);
-    glowCircle.setAttribute("cy", y);
     headCircle.setAttribute("cx", x);
     headCircle.setAttribute("cy", y);
   }
