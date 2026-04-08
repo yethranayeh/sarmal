@@ -271,3 +271,43 @@ describe("computeNormal", () => {
     expect(normal.y).toBeGreaterThan(0);
   });
 });
+
+describe("type safety guards (prevent silent JS coercion bugs)", () => {
+  it("computeNormal returns numbers, not strings", () => {
+    const trail = [
+      { x: 0, y: 0 },
+      { x: 1, y: 0 },
+      { x: 2, y: 0 },
+    ];
+    const normal = computeNormal(trail, 1);
+    // These would pass with "0.00" + "1" === "0.001" if we had string concatenation bugs
+    expect(typeof normal.x).toBe("number");
+    expect(typeof normal.y).toBe("number");
+    expect(normal.x).toBeCloseTo(0, 5);
+    expect(normal.y).toBeCloseTo(1, 5);
+  });
+
+  it("computeTangent returns unit vector with numeric components", () => {
+    const trail = [
+      { x: 0, y: 0 },
+      { x: 3, y: 4 },
+    ];
+    const tangent = computeTangent(trail, 0);
+    expect(typeof tangent.x).toBe("number");
+    expect(typeof tangent.y).toBe("number");
+    // Verify it's actually a unit vector (not concatenated strings like "0.600.80")
+    const length = Math.sqrt(tangent.x ** 2 + tangent.y ** 2);
+    expect(length).toBeCloseTo(1, 5);
+  });
+
+  it("hexToRgbComponents returns string but with numeric content", () => {
+    const result = hexToRgbComponents("#ff0000");
+    expect(typeof result).toBe("string");
+    // Split and verify each component is parseable as a number
+    const parts = result.split(",").map((s) => parseInt(s, 10));
+    expect(parts.length).toBe(3);
+    expect(parts[0]).toBe(255);
+    expect(parts[1]).toBe(0);
+    expect(parts[2]).toBe(0);
+  });
+});

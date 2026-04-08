@@ -1,8 +1,29 @@
-import type { CurveDef, MorphOptions, Point, SarmalInstance } from "./types";
+import type { CurveDef, Engine, MorphOptions, Point, SarmalInstance } from "./types";
 import { computeNormal } from "./renderer";
 import { createEngine } from "./engine";
 
 const DEFAULT_MORPH_DURATION_MS = 300;
+
+export interface SVGRendererOptions {
+  /** Container element that will contain the SVG */
+  container: Element;
+  engine: Engine;
+  /** @default '#ffffff' */
+  skeletonColor?: string;
+  /** @default '#ffffff' */
+  trailColor?: string;
+  /** @default '#ffffff' */
+  headColor?: string;
+  /** @default 4 */
+  headRadius?: number;
+  /** @default 'Loading' */
+  ariaLabel?: string;
+}
+
+export interface SVGSarmalOptions extends Omit<SVGRendererOptions, "container" | "engine"> {
+  /** @default 120 */
+  trailLength?: number;
+}
 /** Maximum number of trail segment paths pre-created for the ribbon */
 const MAX_TRAIL_SEGMENTS = 200;
 /** Higher values = sharper fade near the tail */
@@ -131,12 +152,18 @@ export function createSVGRenderer(options: SVGRendererOptions): SarmalInstance {
     offsetY = (height - h * scale) / 2 - minY * scale;
   }
 
-  // TODO: might avoid code repetition
-  function px(p: Point) {
-    return (p.x * scale + offsetX).toFixed(2);
+  // Coordinate transform helpers: numeric (for math) and string (for path strings)
+  function px(p: Point): number {
+    return p.x * scale + offsetX;
   }
-  function py(p: Point) {
-    return (p.y * scale + offsetY).toFixed(2);
+  function py(p: Point): number {
+    return p.y * scale + offsetY;
+  }
+  function pxStr(p: Point): string {
+    return px(p).toFixed(2);
+  }
+  function pyStr(p: Point): string {
+    return py(p).toFixed(2);
   }
 
   function updateSkeleton(skeleton: Point[]) {
@@ -145,10 +172,10 @@ export function createSVGRenderer(options: SVGRendererOptions): SarmalInstance {
       return;
     }
 
-    let d = `M${px(skeleton[0]!)} ${py(skeleton[0]!)}`;
+    let d = `M${pxStr(skeleton[0]!)} ${pyStr(skeleton[0]!)}`;
 
     for (let i = 1; i < skeleton.length; i++) {
-      d += ` L${px(skeleton[i]!)} ${py(skeleton[i]!)}`;
+      d += ` L${pxStr(skeleton[i]!)} ${pyStr(skeleton[i]!)}`;
     }
     d += " Z";
 
@@ -220,8 +247,8 @@ export function createSVGRenderer(options: SVGRendererOptions): SarmalInstance {
     const x = px(head);
     const y = py(head);
 
-    headCircle.setAttribute("cx", x);
-    headCircle.setAttribute("cy", y);
+    headCircle.setAttribute("cx", String(x));
+    headCircle.setAttribute("cy", String(y));
   }
 
   let animationId: number | null = null;
