@@ -43,6 +43,16 @@
       "import": "./dist/index.js",
       "require": "./dist/index.cjs"
     },
+    "./curves": {
+      "types": "./dist/curves/index.d.ts",
+      "import": "./dist/curves/index.js",
+      "require": "./dist/curves/index.cjs"
+    },
+    "./curves/*": {
+      "types": "./dist/curves/*.d.ts",
+      "import": "./dist/curves/*.js",
+      "require": "./dist/curves/*.cjs"
+    },
     "./auto": {
       "import": "./dist/auto-init.js",
       "require": "./dist/auto-init.cjs"

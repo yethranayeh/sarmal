@@ -9,18 +9,17 @@ describe("curves regression suite", () => {
   const curveNames = Object.keys(curves);
 
   it("all expected curves are exported", () => {
-    expect(curveNames).toEqual([
-      "artemis2",
-      "epitrochoid7",
-      "astroid",
-      "deltoid",
-      "rose5",
-      "rose3",
-      "lissajous32",
-      "lissajous43",
-      "epicycloid3",
-      "lame",
-    ]);
+    expect(curveNames).toHaveLength(10);
+    expect(curveNames).toContain("artemis2");
+    expect(curveNames).toContain("epitrochoid7");
+    expect(curveNames).toContain("astroid");
+    expect(curveNames).toContain("deltoid");
+    expect(curveNames).toContain("rose5");
+    expect(curveNames).toContain("rose3");
+    expect(curveNames).toContain("lissajous32");
+    expect(curveNames).toContain("lissajous43");
+    expect(curveNames).toContain("epicycloid3");
+    expect(curveNames).toContain("lame");
   });
 
   for (const name of curveNames) {

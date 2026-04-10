@@ -16,6 +16,18 @@ export { createEngine } from "./engine";
 export { createRenderer } from "./renderer";
 export { createSVGRenderer, createSarmalSVG } from "./renderer-svg";
 export { curves } from "./curves";
+export {
+  artemis2,
+  epitrochoid7,
+  astroid,
+  deltoid,
+  rose5,
+  rose3,
+  lissajous32,
+  lissajous43,
+  epicycloid3,
+  lame,
+} from "./curves";
 
 import type { CurveDef, SarmalInstance, SarmalOptions } from "./types";
 import { createEngine } from "./engine";
