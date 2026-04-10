@@ -1,5 +1,14 @@
 import { describe, it, expect } from "vitest";
-import { hexToRgbComponents, computeTangent, computeNormal, applyDprSizing } from "./renderer";
+import {
+  hexToRgbComponents,
+  computeTangent,
+  computeNormal,
+  applyDprSizing,
+  hexToRgb,
+  lerpRgb,
+  getPaletteColor,
+  resolvePalette,
+} from "./renderer";
 
 describe("hexToRgbComponents", () => {
   it("parses valid 6-digit hex colors", () => {
@@ -309,5 +318,119 @@ describe("type safety guards (prevent silent JS coercion bugs)", () => {
     expect(parts[0]).toBe(255);
     expect(parts[1]).toBe(0);
     expect(parts[2]).toBe(0);
+  });
+});
+
+describe("hexToRgb", () => {
+  it("converts hex colors to RGB components", () => {
+    expect(hexToRgb("#ff0000")).toEqual({ r: 255, g: 0, b: 0 });
+    expect(hexToRgb("#00ff00")).toEqual({ r: 0, g: 255, b: 0 });
+    expect(hexToRgb("#0000ff")).toEqual({ r: 0, g: 0, b: 255 });
+    expect(hexToRgb("#ffffff")).toEqual({ r: 255, g: 255, b: 255 });
+    expect(hexToRgb("#000000")).toEqual({ r: 0, g: 0, b: 0 });
+  });
+});
+
+describe("lerpRgb", () => {
+  it("interpolates between two RGB colors", () => {
+    const red = { r: 255, g: 0, b: 0 };
+    const blue = { r: 0, g: 0, b: 255 };
+
+    expect(lerpRgb(red, blue, 0)).toEqual({ r: 255, g: 0, b: 0 });
+    expect(lerpRgb(red, blue, 1)).toEqual({ r: 0, g: 0, b: 255 });
+    expect(lerpRgb(red, blue, 0.5)).toEqual({ r: 128, g: 0, b: 128 });
+  });
+});
+
+describe("getPaletteColor", () => {
+  it("returns white for empty palette", () => {
+    expect(getPaletteColor([], 0)).toEqual({ r: 255, g: 255, b: 255 });
+  });
+
+  it("returns single color for single-entry palette", () => {
+    expect(getPaletteColor(["#ff0000"], 0)).toEqual({ r: 255, g: 0, b: 0 });
+    expect(getPaletteColor(["#ff0000"], 0.5)).toEqual({ r: 255, g: 0, b: 0 });
+  });
+
+  it("cycles through palette based on position", () => {
+    const palette = ["#ff0000", "#0000ff"]; // Red to blue
+
+    // Position 0 = first color
+    expect(getPaletteColor(palette, 0)).toEqual({ r: 255, g: 0, b: 0 });
+
+    // Position 1 = first color again (wraps)
+    expect(getPaletteColor(palette, 1)).toEqual({ r: 255, g: 0, b: 0 });
+
+    // Position 0.25 = interpolated (25% through the cycle)
+    expect(getPaletteColor(palette, 0.25)).toEqual({ r: 128, g: 0, b: 128 });
+
+    // Position 0.5 = second color (end of first segment)
+    expect(getPaletteColor(palette, 0.5)).toEqual({ r: 0, g: 0, b: 255 });
+  });
+
+  it("cycles through multi-color palette", () => {
+    const palette = ["#ff0000", "#00ff00", "#0000ff"];
+
+    // Position 0 = red
+    expect(getPaletteColor(palette, 0)).toEqual({ r: 255, g: 0, b: 0 });
+
+    // Position 0.33 = greenish (between red and green)
+    const result = getPaletteColor(palette, 1 / 3);
+    expect(result.r).toBe(0);
+    expect(result.g).toBe(255);
+    expect(result.b).toBe(0);
+
+    // Position 0.67 = blueish (between green and blue)
+    const result2 = getPaletteColor(palette, 2 / 3);
+    expect(result2.r).toBe(0);
+    expect(result2.g).toBe(0);
+    expect(result2.b).toBe(255);
+  });
+
+  it("respects time offset for animation", () => {
+    const palette = ["#ff0000", "#00ff00", "#0000ff"]; // Red, Green, Blue
+
+    // Position 0 with offset 0 = first color (red)
+    const staticResult = getPaletteColor(palette, 0, 0);
+    expect(staticResult).toEqual({ r: 255, g: 0, b: 0 });
+
+    // Position 0 with offset 0.33 = second color (green)
+    const animatedResult = getPaletteColor(palette, 0, 1 / 3);
+    expect(animatedResult).toEqual({ r: 0, g: 255, b: 0 });
+
+    // Should be different due to time offset
+    expect(animatedResult).not.toEqual(staticResult);
+  });
+});
+
+describe("resolvePalette", () => {
+  it("returns custom array as-is", () => {
+    const custom = ["#ff0000", "#00ff00"];
+    expect(resolvePalette(custom, "gradient-static")).toBe(custom);
+  });
+
+  it("resolves preset names to palettes", () => {
+    const bard = resolvePalette("bard", "gradient-animated");
+    expect(bard.length).toBe(4);
+    expect(bard[0]).toBe("#a855f7");
+
+    const ice = resolvePalette("ice", "gradient-static");
+    expect(ice.length).toBe(2);
+    expect(ice[0]).toBe("#1e3a8a");
+  });
+
+  it("defaults to Bard for animated style", () => {
+    const result = resolvePalette(undefined, "gradient-animated");
+    expect(result[0]).toBe("#a855f7"); // Bard's first color
+  });
+
+  it("defaults to Ice for static style", () => {
+    const result = resolvePalette(undefined, "gradient-static");
+    expect(result[0]).toBe("#1e3a8a"); // Ice's first color
+  });
+
+  it("defaults to Ice for default style", () => {
+    const result = resolvePalette(undefined, "default");
+    expect(result[0]).toBe("#1e3a8a"); // Ice's first color
   });
 });

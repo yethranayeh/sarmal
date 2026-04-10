@@ -8,6 +8,8 @@ export type {
   SeekWithTrailOptions,
   RendererOptions,
   SarmalOptions,
+  TrailStyle,
+  PalettePreset,
 } from "./types";
 
 export { createEngine } from "./engine";

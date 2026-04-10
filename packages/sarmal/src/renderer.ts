@@ -1,4 +1,12 @@
-import type { CurveDef, MorphOptions, Point, RendererOptions, SarmalInstance } from "./types";
+import type {
+  CurveDef,
+  MorphOptions,
+  PalettePreset,
+  Point,
+  RendererOptions,
+  SarmalInstance,
+  TrailStyle,
+} from "./types";
 
 const DEFAULT_MORPH_DURATION_MS = 300;
 const DEFAULT_HEAD_RADIUS = 4;
@@ -16,7 +24,74 @@ const TRAIL_MIN_WIDTH = 0.5;
 /** Line width of head */
 const TRAIL_MAX_WIDTH = 2.5;
 
-/** Parses a hex color into its "r,g,b" string for use in rgba() — called once at init */
+const GRADIENT = {
+  bard: ["#a855f7", "#3b82f6", "#14b8a6", "#ec4899"],
+  sunset: ["#f97316", "#dc2626", "#9333ea", "#f472b6"],
+  ocean: ["#1e3a8a", "#06b6d4", "#22d3ee", "#e0f2fe"],
+  ice: ["#1e3a8a", "#67e8f9"],
+  fire: ["#7f1d1d", "#fbbf24"],
+  forest: ["#14532d", "#86efac"],
+};
+
+const PRESETS: Record<PalettePreset, string[]> = {
+  bard: GRADIENT.bard,
+  sunset: GRADIENT.sunset,
+  ocean: GRADIENT.ocean,
+  ice: GRADIENT.ice,
+  fire: GRADIENT.fire,
+  forest: GRADIENT.forest,
+};
+
+// ? exported for testing
+export interface Rgb {
+  r: number;
+  g: number;
+  b: number;
+}
+
+// ? exported for testing
+export function hexToRgb(hex: string): Rgb {
+  const n = parseInt(hex.slice(1), 16);
+  return { r: n >> 16, g: (n >> 8) & 255, b: n & 255 };
+}
+
+// ? exported for testing
+export const lerpRgb = (a: Rgb, b: Rgb, t: number) => ({
+  r: Math.round(a.r + (b.r - a.r) * t),
+  g: Math.round(a.g + (b.g - a.g) * t),
+  b: Math.round(a.b + (b.b - a.b) * t),
+});
+
+/**
+ * Gets a color from a palette based on position (0-1) with optional time-based cycling
+ * ? Exported for testing.
+ */
+export function getPaletteColor(palette: string[], position: number, timeOffset: number = 0): Rgb {
+  if (palette.length === 0) return { r: 255, g: 255, b: 255 };
+  if (palette.length === 1) return hexToRgb(palette[0]!);
+
+  const cyclePos = (position + timeOffset) % 1;
+  const scaled = cyclePos * palette.length;
+  const idx = Math.floor(scaled);
+  const t = scaled - idx;
+
+  const c1 = hexToRgb(palette[idx % palette.length]!);
+  const c2 = hexToRgb(palette[(idx + 1) % palette.length]!);
+
+  return lerpRgb(c1, c2, t);
+}
+
+// ? exported for testing
+export function resolvePalette(
+  palette: PalettePreset | string[] | undefined,
+  trailStyle: TrailStyle,
+): string[] {
+  if (Array.isArray(palette)) return palette;
+  if (palette && palette in PRESETS) return PRESETS[palette as PalettePreset]!;
+  return trailStyle === "gradient-animated" ? GRADIENT.bard : GRADIENT.ice;
+}
+
+// TODO: accept rgb(a)
 export function hexToRgbComponents(hex: string): string {
   const n = parseInt(hex.slice(1), 16);
   return `${n >> 16},${(n >> 8) & 255},${n & 255}`;
@@ -28,12 +103,12 @@ export interface TrailPoint {
 }
 
 /**
- * Computes the unit tangent vector at a point on the trail.
- * For interior points, uses central difference (previous → next).
- * For endpoints, uses forward/backward difference.
+ * Computes the unit tangent vector at a point on the trail
+ * - For interior points, uses central difference (previous -> next)
+ * - For endpoints, uses forward/backward difference
  *
- * @param trail - Array of trail points
- * @param i - Index of the point to compute tangent for
+ * @param trail Array of trail points
+ * @param i Index of the point to compute tangent for
  * @returns Unit vector in the direction of travel at that point
  */
 export function computeTangent(trail: TrailPoint[], i: number): TrailPoint {
@@ -63,12 +138,12 @@ export function computeTangent(trail: TrailPoint[], i: number): TrailPoint {
 }
 
 /**
- * Computes the unit normal vector at a point on the trail.
+ * Computes the unit normal vector at a point on the trail
  * The normal is perpendicular to the tangent, rotated 90° counter-clockwise.
  * This gives the "left" direction relative to the direction of travel.
  *
- * @param trail - Array of trail points
- * @param i - Index of the point to compute normal for
+ * @param trail Array of trail points
+ * @param i Index of the point to compute normal for
  * @returns Unit vector perpendicular to the trail at that point
  */
 export function computeNormal(trail: TrailPoint[], i: number): TrailPoint {
@@ -143,6 +218,8 @@ export function createRenderer(options: RendererOptions): SarmalInstance {
     headRadius: options.headRadius ?? DEFAULT_HEAD_RADIUS,
   };
 
+  const trailStyle: TrailStyle = options.trailStyle ?? "default";
+  const palette = resolvePalette(options.palette, trailStyle);
   const trailRgb = hexToRgbComponents(opts.trailColor);
 
   /**
@@ -182,6 +259,9 @@ export function createRenderer(options: RendererOptions): SarmalInstance {
   let morphResolve: (() => void) | null = null;
   let morphDurationMs = DEFAULT_MORPH_DURATION_MS;
   let morphAlpha = 0;
+
+  /** Accumulated time for "gradient-animated" trail style */
+  let gradientAnimTime = 0;
 
   /**
    * Computes how to map engine coordinates to canvas pixels.
@@ -361,7 +441,15 @@ export function createRenderer(options: RendererOptions): SarmalInstance {
       const r1x = next.x * scale + offsetX - n1.x * halfW1;
       const r1y = next.y * scale + offsetY - n1.y * halfW1;
 
-      ctx.fillStyle = `rgba(${trailRgb},${alpha})`;
+      // Determine fill color based on trail style
+      if (trailStyle === "default") {
+        ctx.fillStyle = `rgba(${trailRgb},${alpha})`;
+      } else {
+        const timeOffset = trailStyle === "gradient-animated" ? gradientAnimTime * 0.0005 : 0;
+        const color = getPaletteColor(palette, progress, timeOffset);
+        ctx.fillStyle = `rgba(${color.r},${color.g},${color.b},${alpha})`;
+      }
+
       ctx.beginPath();
       ctx.moveTo(l0x, l0y);
       ctx.lineTo(l1x, l1y);
@@ -390,6 +478,11 @@ export function createRenderer(options: RendererOptions): SarmalInstance {
     const now = performance.now();
     const deltaTime = Math.min((now - lastTime) / 1000, 1 / 30);
     lastTime = now;
+
+    // Update gradient animation time for animated trail style
+    if (trailStyle === "gradient-animated") {
+      gradientAnimTime += deltaTime * 1000; // Convert to ms for consistent speed
+    }
 
     if (engine.morphAlpha !== null) {
       morphAlpha = Math.min(1, morphAlpha + deltaTime / (morphDurationMs / 1000));

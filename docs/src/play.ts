@@ -41,21 +41,43 @@ const trailSlider = document.getElementById("trail-slider") as HTMLInputElement;
 const trailValue = document.getElementById("trail-value") as HTMLElement;
 const colorInput = document.getElementById("color-input") as HTMLInputElement;
 const headColorInput = document.getElementById("head-color-input") as HTMLInputElement;
+const trailStyleSelect = document.getElementById("trail-style-select") as HTMLSelectElement;
+const paletteSelect = document.getElementById("palette-select") as HTMLSelectElement;
 
-function encodeHash(code: string): string {
-  return btoa(encodeURIComponent(code));
+interface SharedState {
+  code: string;
+  trailStyle?: string;
+  palette?: string;
 }
 
-function decodeHash(hash: string): string | null {
+function encodeHash(code: string, trailStyle?: string, palette?: string): string {
+  const state: SharedState = { code };
+  if (trailStyle && trailStyle !== "default") {
+    state.trailStyle = trailStyle;
+  }
+  if (palette && palette !== "bard") {
+    state.palette = palette;
+  }
+  return btoa(encodeURIComponent(JSON.stringify(state)));
+}
+
+function decodeHash(hash: string): SharedState | null {
   try {
-    return decodeURIComponent(atob(hash));
+    const decoded = decodeURIComponent(atob(hash));
+    const parsed = JSON.parse(decoded) as unknown;
+
+    if (typeof parsed === "object" && parsed !== null && "code" in parsed) {
+      return parsed as SharedState;
+    }
+
+    return null;
   } catch {
     return null;
   }
 }
 
-function updateHash(code: string): void {
-  history.replaceState(null, "", "#" + encodeHash(code));
+function updateHash(code: string, trailStyle?: string, palette?: string): void {
+  history.replaceState(null, "", "#" + encodeHash(code, trailStyle, palette));
 }
 
 function showError(msg: string): void {
@@ -98,6 +120,8 @@ function getParams() {
     headColor: headColorInput.value,
     trailLength: parseInt(trailSlider.value, 10),
     speed: parseFloat(speedSlider.value),
+    trailStyle: trailStyleSelect.value as "default" | "gradient-static" | "gradient-animated",
+    palette: paletteSelect.value as "bard" | "sunset" | "ocean" | "ice" | "fire" | "forest",
   };
 }
 
@@ -125,6 +149,8 @@ function createInstance(
     trailColor: params.trailColor,
     skeletonColor: params.skeletonColor,
     headColor: params.headColor,
+    trailStyle: params.trailStyle,
+    palette: params.palette,
   });
   currentInstance.start();
 }
@@ -132,7 +158,8 @@ function createInstance(
 function handleCodeChange(): void {
   clearError();
   currentCode = codeInput.value;
-  updateHash(currentCode);
+  const params = getParams();
+  updateHash(currentCode, params.trailStyle, params.palette);
 
   if (debounceTimer) {
     clearTimeout(debounceTimer);
@@ -141,7 +168,7 @@ function handleCodeChange(): void {
   debounceTimer = setTimeout(() => {
     const fn = buildCurveFn(currentCode);
     if (fn) {
-      createInstance(fn, getParams());
+      createInstance(fn, params);
     }
   }, 150);
 }
@@ -169,12 +196,13 @@ function loadPreset(curveId: string): void {
   const body = extractBody(fnStr);
   codeInput.value = body;
   currentCode = body;
-  updateHash(body);
+  const params = getParams();
+  updateHash(body, params.trailStyle, params.palette);
   clearError();
 
   const fn = buildCurveFn(body);
   if (fn) {
-    createInstance(fn, getParams());
+    createInstance(fn, params);
   }
 }
 
@@ -248,6 +276,18 @@ colorInput.addEventListener("input", updateInstance);
 
 headColorInput.addEventListener("input", updateInstance);
 
+trailStyleSelect.addEventListener("change", () => {
+  const params = getParams();
+  updateHash(currentCode, params.trailStyle, params.palette);
+  updateInstance();
+});
+
+paletteSelect.addEventListener("change", () => {
+  const params = getParams();
+  updateHash(currentCode, params.trailStyle, params.palette);
+  updateInstance();
+});
+
 function init(): void {
   const hash = window.location.hash.slice(1);
 
@@ -255,10 +295,18 @@ function init(): void {
     const decoded = decodeHash(hash);
 
     if (decoded) {
-      codeInput.value = decoded;
-      currentCode = decoded;
+      codeInput.value = decoded.code;
+      currentCode = decoded.code;
 
-      const fn = buildCurveFn(decoded);
+      // Restore style settings from URL if present
+      if (decoded.trailStyle) {
+        trailStyleSelect.value = decoded.trailStyle;
+      }
+      if (decoded.palette) {
+        paletteSelect.value = decoded.palette;
+      }
+
+      const fn = buildCurveFn(decoded.code);
       if (fn) {
         createInstance(fn, getParams());
         return;

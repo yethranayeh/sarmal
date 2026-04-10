@@ -182,6 +182,12 @@ export interface SarmalInstance {
   morphTo(target: CurveDef, options?: MorphOptions): Promise<void>;
 }
 
+/**
+ * With 'gradient-animated' the colors cycle along the trail over time
+ */
+export type TrailStyle = "default" | "gradient-static" | "gradient-animated";
+export type PalettePreset = "bard" | "sunset" | "ocean" | "ice" | "fire" | "forest";
+
 export interface RendererOptions {
   /** Target canvas element that will contain the Sarmal */
   canvas: HTMLCanvasElement;
@@ -200,6 +206,17 @@ export interface RendererOptions {
   headColor?: string;
   /** @default 4 */
   headRadius?: number;
+  /**
+   * Trail rendering style
+   * @default 'default'
+   */
+  trailStyle?: TrailStyle;
+  /**
+   * Color palette for gradient trails
+   * Can be a preset name or custom array of hex colors.
+   * @default 'bard' for animated, 'ice' for static
+   */
+  palette?: PalettePreset | string[];
 }
 
 export interface SarmalOptions extends Omit<RendererOptions, "canvas" | "engine"> {
