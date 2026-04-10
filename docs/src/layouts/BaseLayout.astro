@@ -1,5 +1,7 @@
 ---
 import "../styles/globals.css";
+import Navbar from "../components/Navbar.astro";
+import Footer from "../components/Footer.astro";
 
 const SITE_NAME = "Sarmal";
 const SITE_URL = "https://sarmal.art";
@@ -32,7 +34,6 @@ const canonicalUrl = canonical ?? new URL(Astro.url.pathname, SITE_URL).href;
 	<head>
 		<meta charset='utf-8' />
 		<link rel='icon' type='image/svg+xml' href='/favicon.svg' />
-		<link rel='icon' href='/favicon.ico' />
 		<meta name='viewport' content='width=device-width' />
 		<meta name='generator' content={Astro.generator} />
 
@@ -58,7 +59,13 @@ const canonicalUrl = canonical ?? new URL(Astro.url.pathname, SITE_URL).href;
 
 		<slot name='head' />
 	</head>
-	<body class='min-h-screen'>
+	<body class='min-h-screen flex flex-col'>
+		<slot name='navbar'>
+			<Navbar />
+		</slot>
 		<slot />
+		<slot name='footer'>
+			<Footer />
+		</slot>
 	</body>
 </html>

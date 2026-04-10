@@ -2,7 +2,7 @@
 
 > Parametric curve renderer for loading indicators. Beautiful spinners from two lines of math.
 
-Sarmal is a tiny (2.86 KB gzipped), zero-dependency JavaScript library that renders animated
+Sarmal is a tiny, zero-dependency JavaScript library that renders animated
 loading indicators by tracing parametric curves on an HTML canvas element.
 
 ## Quick start

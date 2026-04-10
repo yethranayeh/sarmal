@@ -1,0 +1,47 @@
+---
+import Link from "./Link.astro";
+
+interface NavLink {
+	href: string;
+	label: string;
+	external?: boolean;
+	active?: boolean;
+}
+
+interface Props {
+	links?: NavLink[];
+}
+
+const { links = [] } = Astro.props;
+
+const defaultLinks: NavLink[] = [
+	{ href: "/play", label: "Play" },
+	{ href: "https://github.com/yethranayeh/sarmal", label: "GitHub", external: true }
+];
+
+const navLinks = links.length > 0 ? links : defaultLinks;
+const currentPath = Astro.url.pathname;
+---
+
+<header class='w-full px-4 py-2 flex items-center justify-between border-b border-border'>
+	<a href='/' class='font-heading text-lg text-foreground hover:text-primary transition-colors'>
+		<span class='text-primary'>sarmal</span>.art
+	</a>
+	<nav class='flex items-center gap-4'>
+		{
+			navLinks.map((link) => {
+				const isActive = link.active ?? (link.href === currentPath);
+				const colorClass = isActive ? "text-primary" : "text-muted";
+				return (
+					<a
+						href={link.href}
+						target={link.external ? "_blank" : undefined}
+						rel={link.external ? "noopener noreferrer" : undefined}
+						class={`font-mono text-xs tracking-wider uppercase ${colorClass} hover:text-foreground transition-colors`}>
+						{link.label}
+					</a>
+				);
+			})
+		}
+	</nav>
+</header>

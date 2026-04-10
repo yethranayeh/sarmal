@@ -14,7 +14,7 @@ import SectionLabel from "../components/SectionLabel.astro";
 import sarmalTheme from "../themes/sarmal-editorial.json";
 import sarmalDarkTheme from "../themes/sarmal-editorial-dark.json";
 
-import { SEPARATOR_DOT } from "../variables";
+import { PACKAGE_SIZE, SEPARATOR_DOT } from "../variables";
 
 const sarmals = [
 	{ id: "rose3", name: "Rose (n=3)", color: "#e879f9" },
@@ -35,28 +35,8 @@ const morphPairs = [
 
 <BaseLayout
 	title='Sarmal'
-	description='Beautiful loading spinners from two lines of math. 2.86 KB, zero dependencies. Drop in a canvas, pick a curve.'
+	description={`Beautiful loading indicators from two lines of math. ${PACKAGE_SIZE}KB, zero dependencies. Drop in a canvas, pick a curve.`}
 	ogTitle='Sarmal | Loading indicators from parametric curves'>
-	<header class='w-full px-4 py-2 flex items-center justify-between border-b border-border'>
-		<a href='/' class='font-heading text-lg text-foreground hover:text-primary transition-colors'>
-			<span class='text-primary'>sarmal</span>.art
-		</a>
-		<div class='flex items-center gap-4'>
-			<a
-				href='/play'
-				class='font-mono text-xs tracking-wider uppercase text-muted hover:text-foreground transition-colors'>
-				Play
-			</a>
-			<a
-				href='https://github.com/yethranayeh/sarmal'
-				target='_blank'
-				rel='noopener noreferrer'
-				class='font-mono text-xs tracking-wider uppercase text-muted hover:text-foreground transition-colors'>
-				GitHub
-			</a>
-		</div>
-	</header>
-
 	<main class='max-w-3xl mx-auto p-4 mb-4'>
 		<section class='text-center mb-16'>
 			<div class='flex flex-col items-center mb-6 gap-2'>
@@ -148,11 +128,6 @@ const morphPairs = [
 		</div>
 	</main>
 
-	<footer class='w-full p-2 border-t border-border text-center'>
-		<p class='font-mono text-[10px] tracking-wider text-muted'>
-			0.0000028 GB gzipped {SEPARATOR_DOT} MIT License {SEPARATOR_DOT} © 2026
-		</p>
-	</footer>
 	<Artemis2Modal />
 	{sarmals.map((curve) => <CurveDetailModal curveId={curve.id} />)}
 	{morphPairs.map((pair) => <MorphDetailModal fromId={pair.from} toId={pair.to} />)}

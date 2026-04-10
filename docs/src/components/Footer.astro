@@ -1,0 +1,13 @@
+---
+import { SEPARATOR_DOT, PACKAGE_SIZE } from "../variables";
+
+const sizeInGB = (PACKAGE_SIZE / 1024 / 1024).toFixed(7);
+---
+
+<footer class='w-full p-2 border-t border-border text-center'>
+	<p class='font-mono text-[10px] tracking-wider text-muted'>
+		<span class='font-mono'>{sizeInGB}</span>GB gzipped {SEPARATOR_DOT} MIT License {SEPARATOR_DOT} © <span
+			class='font-mono'>2026</span
+		>
+	</p>
+</footer>
