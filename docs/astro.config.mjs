@@ -1,5 +1,5 @@
 // @ts-check
-import { defineConfig } from "astro/config";
+import { defineConfig, fontProviders } from "astro/config";
 import tailwindcss from "@tailwindcss/vite";
 import sitemap from "@astrojs/sitemap";
 
@@ -25,4 +25,13 @@ export default defineConfig({
       wrap: true,
     },
   },
+  fonts: [
+    {
+      provider: fontProviders.google(),
+      name: "Newsreader",
+      cssVariable: "--font-heading",
+      weights: ["200", "300", "400", "500", "600", "700", "800"],
+      styles: ["normal", "italic"],
+    },
+  ],
 });
