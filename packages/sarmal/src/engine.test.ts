@@ -689,6 +689,46 @@ describe("tick() during morph", () => {
     expect(p.x).toBeCloseTo(3, 3);
   });
 
+  it("morph between curves with different speeds produces finite, non-NaN output at every frame", () => {
+    const slowCurve: CurveDef = {
+      name: "slow",
+      fn: (t) => ({ x: Math.cos(t), y: Math.sin(t) }),
+      period: TWO_PI,
+      speed: 0.5,
+    };
+    const fastCurve: CurveDef = {
+      name: "fast",
+      fn: (t) => ({ x: Math.cos(t), y: Math.sin(t) }),
+      period: TWO_PI,
+      speed: 3.0,
+    };
+
+    const engine = createEngine(slowCurve, 60);
+    engine.tick(1 / 60); // establish some trail
+
+    engine.startMorph(fastCurve);
+
+    // Simulate morph over 18 frames (300ms at 60fps)
+    for (let frame = 0; frame < 18; frame++) {
+      const alpha = frame / 17;
+      engine.setMorphAlpha(alpha);
+      const trail = engine.tick(1 / 60);
+      const count = engine.trailCount;
+
+      for (let i = 0; i < count; i++) {
+        expect(Number.isFinite(trail[i]!.x)).toBe(true);
+        expect(Number.isFinite(trail[i]!.y)).toBe(true);
+      }
+    }
+
+    engine.setMorphAlpha(1);
+    engine.completeMorph();
+
+    // After morph, trail should still be finite
+    const trail = engine.tick(1 / 60);
+    expect(Number.isFinite(trail[engine.trailCount - 1]!.x)).toBe(true);
+  });
+
   it("setMorphAlpha(0) → tick output matches curveA", () => {
     const engine = createEngine(xCurve);
     engine.tick(5); // t=5, actualTime=5
