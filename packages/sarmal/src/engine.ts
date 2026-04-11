@@ -10,6 +10,11 @@ import type {
 const TWO_PI = Math.PI * 2;
 const POINTS_PER_PERIOD_UNIT = 50;
 
+/** Linearly interpolate from start to end by factor t (0→1) */
+function lerp(start: number, end: number, t: number): number {
+  return start + (end - start) * t;
+}
+
 /** Reused across all curve fn calls — params is never populated, allocation is wasteful */
 const EMPTY_PARAMS: Record<string, number> = {};
 
@@ -131,7 +136,11 @@ export function createEngine(curveDef: CurveDef, trailLength: number = 120): Eng
 
   return {
     tick(deltaTime: number): Array<Point> {
-      t = (t + curve.speed * deltaTime) % curve.period;
+      let effectiveSpeed = curve.speed;
+      if (morphCurveB !== null && _morphAlpha !== null) {
+        effectiveSpeed = lerp(curve.speed, morphCurveB.speed, _morphAlpha);
+      }
+      t = (t + effectiveSpeed * deltaTime) % curve.period;
       actualTime += deltaTime;
 
       if (morphCurveB !== null && _morphAlpha !== null) {

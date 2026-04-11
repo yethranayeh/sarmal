@@ -623,6 +623,53 @@ describe("tick() during morph", () => {
     speed: 1,
   };
 
+  it("lerps speed from curveA to curveB during morph", () => {
+    const slowCurve: CurveDef = {
+      name: "slow",
+      fn: (t) => ({ x: t, y: 0 }),
+      period: 10,
+      speed: 1,
+    };
+    const fastCurve: CurveDef = {
+      name: "fast",
+      fn: (t) => ({ x: t, y: 0 }),
+      period: 10,
+      speed: 3,
+    };
+    const engine = createEngine(slowCurve);
+    engine.startMorph(fastCurve);
+    engine.setMorphAlpha(0.5);
+    // At alpha=0.5, effective speed = 1 + (3-1)*0.5 = 2
+    // After tick(1), t should advance by approximately 2
+    const trail = engine.tick(1);
+    const p = lastPoint(trail, engine.trailCount);
+    // t started at 0, advanced by effectiveSpeed * dt = 2 * 1 = 2
+    expect(p.x).toBeCloseTo(2, 3);
+  });
+
+  it("speed matches curveB exactly when morphAlpha reaches 1 (before completeMorph)", () => {
+    const slowCurve: CurveDef = {
+      name: "slow",
+      fn: (t) => ({ x: t, y: 0 }),
+      period: 10,
+      speed: 1,
+    };
+    const fastCurve: CurveDef = {
+      name: "fast",
+      fn: (t) => ({ x: t, y: 0 }),
+      period: 10,
+      speed: 3,
+    };
+    const engine = createEngine(slowCurve);
+    engine.startMorph(fastCurve);
+    engine.setMorphAlpha(1.0);
+    // At alpha=1, effective speed = curveB.speed = 3
+    const trail = engine.tick(1);
+    const p = lastPoint(trail, engine.trailCount);
+    // t started at 0, advanced by 3 * 1 = 3
+    expect(p.x).toBeCloseTo(3, 3);
+  });
+
   it("setMorphAlpha(0) → tick output matches curveA", () => {
     const engine = createEngine(xCurve);
     engine.tick(5); // t=5, actualTime=5
