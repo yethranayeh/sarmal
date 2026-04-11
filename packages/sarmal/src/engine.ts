@@ -189,7 +189,7 @@ export function createEngine(curveDef: CurveDef, trailLength: number = 120): Eng
 
       for (let i = count - 1; i >= 0; i--) {
         const sampleT = target - i * advance;
-        const wrappedT = sampleT < 0 ? sampleT + curve.period : sampleT;
+        const wrappedT = ((sampleT % curve.period) + curve.period) % curve.period;
         const time = targetTime - i * step;
         const point = curve.fn(wrappedT, time, EMPTY_PARAMS);
 

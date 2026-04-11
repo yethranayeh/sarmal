@@ -363,24 +363,32 @@ describe("edge cases", () => {
     expect(skeleton[0]!.y).toBeNaN();
   });
 
-  it("KNOWN: seekWithTrail with wrap:true passes negative t to curve fn when trail reaches back beyond -period", () => {
-    // With period=2 and step=0.15, going back 20 steps from t=0.1:
-    // sampleT = 0.1 - 19*0.15 = -2.75 which is < -period (-2)
-    // The single +period correction gives -0.75 (still negative) — bug
+  it("seekWithTrail with wrap:true wraps negative t into [0, period) using double-modulo", () => {
+    // With period=10, target=1, and a large step that causes sampleT = -12:
+    // Double-modulo: ((-12 % 10) + 10) % 10 = (-2 + 10) % 10 = 8
+    // The wrapped value should be in [0, period), not a broken negative value.
     const captured: number[] = [];
-    const short: CurveDef = {
-      name: "capture",
+    const identity10: CurveDef = {
+      name: "identity-10",
       fn: (t, time) => {
         captured.push(t);
         return { x: t, y: time };
       },
-      period: 2,
+      period: 10,
       speed: 1,
     };
-    const engine = createEngine(short, 20);
-    engine.seekWithTrail(0.1, { wrap: true, step: 0.15 });
+    const engine = createEngine(identity10, 20);
+    // step = 0.65, advance = 0.65. Going back 20 steps from t=1:
+    // i=19: sampleT = 1 - 19*0.65 = 1 - 12.35 = -11.35
+    // Double-modulo: ((-11.35 % 10) + 10) % 10 = (-1.35 + 10) % 10 = 8.65
+    engine.seekWithTrail(1, { wrap: true, step: 0.65 });
     // captured[0] is the t value for the oldest trail point (i=19 in the loop)
-    expect(captured[0]).toBeCloseTo(-0.75);
+    expect(captured[0]).toBeCloseTo(8.65);
+    // Verify all captured values are in [0, 10)
+    for (const t of captured) {
+      expect(t).toBeGreaterThanOrEqual(0);
+      expect(t).toBeLessThan(10);
+    }
   });
 
   it("KNOWN: tick(-1) produces negative t (JS modulo returns sign of dividend)", () => {
