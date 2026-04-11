@@ -795,6 +795,49 @@ describe("tick() during morph", () => {
     expect(p.x).toBe(2.5);
     expect(p.y).toBe(2.5);
   });
+
+  it("handles three sequential morph interrupts without NaN or errors", () => {
+    const curveA: CurveDef = {
+      name: "a",
+      fn: (t) => ({ x: Math.cos(t), y: Math.sin(t) }),
+      period: TWO_PI,
+      speed: 1,
+    };
+    const curveB: CurveDef = { ...curveA, name: "b", speed: 1.2 };
+    const curveC: CurveDef = { ...curveA, name: "c", speed: 0.8 };
+    const curveD: CurveDef = { ...curveA, name: "d", speed: 1.5 };
+
+    const engine = createEngine(curveA, 30);
+    for (let i = 0; i < 5; i++) engine.tick(1 / 60);
+
+    // Interrupt 1
+    engine.startMorph(curveB);
+    engine.setMorphAlpha(0.3);
+    engine.tick(1 / 60);
+
+    // Interrupt 2
+    engine.startMorph(curveC);
+    engine.setMorphAlpha(0.5);
+    engine.tick(1 / 60);
+
+    // Interrupt 3
+    engine.startMorph(curveD);
+    engine.setMorphAlpha(0.7);
+    const trail = engine.tick(1 / 60);
+
+    const count = engine.trailCount;
+    for (let i = 0; i < count; i++) {
+      expect(Number.isFinite(trail[i]!.x)).toBe(true);
+      expect(Number.isFinite(trail[i]!.y)).toBe(true);
+    }
+
+    // Complete the final morph cleanly
+    engine.setMorphAlpha(1);
+    engine.completeMorph();
+    const finalTrail = engine.tick(1 / 60);
+    expect(Number.isFinite(finalTrail[engine.trailCount - 1]!.x)).toBe(true);
+    expect(engine.morphAlpha).toBe(null);
+  });
 });
 
 describe("getSarmalSkeleton() during morph", () => {
