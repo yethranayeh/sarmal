@@ -3,6 +3,7 @@ import BaseLayout from "../layouts/BaseLayout.astro";
 
 import DemoSection from "../components/feature/DemoSection.astro";
 import HeroSection from "../components/feature/HeroSection.astro";
+import LiveDemoSection from "../components/feature/LiveDemoSection.astro";
 
 import { PACKAGE_SIZE } from "../variables";
 ---
@@ -11,8 +12,10 @@ import { PACKAGE_SIZE } from "../variables";
 	title='Sarmal'
 	description={`Beautiful parametric loading indicators. ${PACKAGE_SIZE}KB, zero dependencies. A curve, a color, two lines of HTML.`}
 	ogTitle='Sarmal | Parametric loading indicators'>
-	<main class='w-full p-2 md:p-4 space-y-16'>
+	<main class='w-full space-y-4 md:space-y-16'>
 		<HeroSection />
+
+		<LiveDemoSection />
 
 		<DemoSection />
 	</main>

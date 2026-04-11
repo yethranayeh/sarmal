@@ -1,6 +1,5 @@
 ---
 import Branding from "./Branding.astro";
-import Link from "./Link.astro";
 
 interface NavLink {
 	href: string;
@@ -15,16 +14,13 @@ interface Props {
 
 const { links = [] } = Astro.props;
 
-const defaultLinks: NavLink[] = [
-	{ href: "/play", label: "Play" },
-	{ href: "https://github.com/yethranayeh/sarmal", label: "GitHub", external: true }
-];
+const defaultLinks: NavLink[] = [{ href: "/play", label: "Playground" }];
 
 const navLinks = links.length > 0 ? links : defaultLinks;
 const currentPath = Astro.url.pathname;
 ---
 
-<header class='w-full px-4 py-2 flex items-center justify-between border-b border-border'>
+<header class='bg-surface-raised w-full px-4 py-2 flex items-center justify-between border-b border-border'>
 	<Branding />
 	<nav class='flex items-center gap-4'>
 		{
@@ -36,8 +32,10 @@ const currentPath = Astro.url.pathname;
 						href={link.href}
 						target={link.external ? "_blank" : undefined}
 						rel={link.external ? "noopener noreferrer" : undefined}
-						class={`font-mono text-xs tracking-wider uppercase ${colorClass} hover:text-foreground transition-colors`}>
-						{link.label}
+						class={`group font-mono text-xs tracking-wider uppercase ${colorClass} hover:text-foreground transition-colors`}>
+						<span class='opacity-20 group-hover:opacity-100 transition-opacity'>{"["}</span>
+						<span>{link.label}</span>
+						<span class='opacity-20 group-hover:opacity-100 transition-opacity'>{"]"}</span>
 					</a>
 				);
 			})

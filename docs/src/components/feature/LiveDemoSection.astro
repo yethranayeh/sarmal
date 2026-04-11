@@ -1,8 +1,8 @@
 ---
-import { curves } from "@sarmal/core";
+
 ---
 
-<section class='w-full bg-foreground mt-16 py-20'>
+<section class='w-full bg-foreground py-6 md:py-12 lg:py-20'>
 	<div class='max-w-3xl mx-auto px-4 flex flex-col items-center gap-10'>
 		<div class='flex items-center gap-4 w-full'>
 			<div class='flex-1 h-px bg-white/10'></div>
@@ -15,14 +15,15 @@ import { curves } from "@sarmal/core";
 				id='live-demo-card'
 				class='relative w-full bg-[#232420] border border-white/[0.07] rounded-xl overflow-hidden'
 				style='min-height: 200px'>
-
 				<!-- Loading panel -->
 				<div
 					id='live-demo-loading'
 					class='absolute inset-0 flex flex-col items-center justify-center gap-3 p-8 transition-opacity duration-500'>
-					<canvas id='live-demo-canvas' width='72' height='72' class='w-[72px] h-[72px]'></canvas>
-					<p id='live-demo-name' class='font-mono text-[9px] tracking-[0.25em] uppercase transition-colors duration-300'
-					></p>
+					<canvas id='live-demo-canvas' width='72' height='72' class='w-18 h-18'></canvas>
+					<p
+						id='live-demo-name'
+						class='font-mono text-[9px] tracking-[0.25em] uppercase transition-colors duration-300'>
+					</p>
 					<p class='font-body text-[13px] text-white/25'>Loading…</p>
 				</div>
 
@@ -64,21 +65,21 @@ import { curves } from "@sarmal/core";
 			color: "#a78bfa",
 			heading: "Dashboard ready",
 			body: "Your workspace synced with all recent changes.",
-			meta: "6 charts loaded",
+			meta: "6 charts loaded"
 		},
 		{
 			curveId: "rose5",
 			color: "#f472b6",
 			heading: "Analysis complete",
 			body: "Pattern detection finished across the dataset.",
-			meta: "3 results found",
+			meta: "3 results found"
 		},
 		{
 			curveId: "epitrochoid7",
 			color: "#38bdf8",
 			heading: "Connection live",
 			body: "Real-time sync established with the data source.",
-			meta: "12 ms latency",
+			meta: "12 ms latency"
 		},
 		{
 			curveId: "astroid",
@@ -87,22 +88,22 @@ import { curves } from "@sarmal/core";
 			body: "Static resources compressed and ready to serve.",
 			meta: "Expires in 24h",
 			trailStyle: "gradient-animated",
-			palette: "bard",
+			palette: "bard"
 		},
 		{
 			curveId: "rose3",
 			color: "#e879f9",
 			heading: "Report ready",
 			body: "Your monthly summary has been compiled.",
-			meta: "March 2026",
+			meta: "March 2026"
 		},
 		{
 			curveId: "deltoid",
 			color: "#fb923c",
 			heading: "Build complete",
 			body: "All modules bundled and optimized for production.",
-			meta: "2.1 KB gzipped",
-		},
+			meta: "2.1 KB gzipped"
+		}
 	];
 
 	const canvas = document.getElementById("live-demo-canvas") as HTMLCanvasElement;
@@ -167,7 +168,7 @@ import { curves } from "@sarmal/core";
 			headColor: slide.color,
 			trailLength: 80,
 			...(slide.trailStyle && { trailStyle: slide.trailStyle }),
-			...(slide.palette && { palette: slide.palette }),
+			...(slide.palette && { palette: slide.palette })
 		});
 		currentSarmal.start();
 		setActiveDot(i);
@@ -199,5 +200,15 @@ import { curves } from "@sarmal/core";
 		}, CONTENT_MS);
 	}
 
-	showLoading(0);
+	const section = document.getElementById("live-demo-card")!;
+	const observer = new IntersectionObserver(
+		(entries) => {
+			if (entries[0]?.isIntersecting) {
+				observer.disconnect();
+				showLoading(0);
+			}
+		},
+		{ threshold: 0.1 }
+	);
+	observer.observe(section);
 </script>

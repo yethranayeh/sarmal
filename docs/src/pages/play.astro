@@ -33,7 +33,7 @@ const presetsJson = JSON.stringify(
 	<Navbar
 		slot='navbar'
 		links={[
-			{ href: '/play', label: 'Play', active: true },
+			{ href: '/play', label: 'Playground', active: true },
 			{ href: '/', label: 'Back' }
 		]}
 	/>
@@ -191,7 +191,7 @@ const presetsJson = JSON.stringify(
 			</div>
 		</section>
 
-		<script type='application/json' id='presets-data' set:html={presetsJson}>
+		<script is:inline type='application/json' id='presets-data' set:html={presetsJson}>
 		</script>
 		<script src='../play.ts'></script>
 	</main>

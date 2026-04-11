@@ -8,6 +8,7 @@ interface Props extends SarmalOptions {
 	height?: number;
 	trailStyle?: TrailStyle;
 	palette?: PalettePreset;
+	lazy?: boolean;
 }
 
 const defaultTrailColor = "#1b1c1a";
@@ -23,7 +24,8 @@ const {
 	headRadius = 2.5,
 	trailLength = defaultTrailLength,
 	trailStyle,
-	palette
+	palette,
+	lazy = false
 } = Astro.props;
 
 const curveId = `sarmal-${Math.random().toString(36).slice(2, 8)}`;
@@ -34,7 +36,8 @@ const resolvedHeadColor = headColor ?? trailColor;
 	id={curveId}
 	width={width}
 	height={height}
-	data-sarmal={curve}
+	data-sarmal={lazy ? undefined : curve}
+	data-sarmal-lazy={lazy ? curve : undefined}
 	data-skeleton-color={skeletonColor}
 	data-trail-color={trailColor}
 	data-head-color={resolvedHeadColor}

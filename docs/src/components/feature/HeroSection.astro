@@ -7,6 +7,7 @@ import CopyButton from "../CopyButton.astro";
 
 import sarmalTheme from "../../themes/sarmal-editorial.json";
 import sarmalDarkTheme from "../../themes/sarmal-editorial-dark.json";
+import DotGrid from "../DotGrid.astro";
 
 const codeSnippet = `<script src="https://unpkg.com/@sarmal/core/dist/auto-init.js"></script>
 <canvas
@@ -15,16 +16,20 @@ const codeSnippet = `<script src="https://unpkg.com/@sarmal/core/dist/auto-init.
 ---
 
 <section class='grid grid-cols-1 md:grid-cols-2 gap-10 items-center p-2 md:p-6 lg:p-12 xl:p-16'>
-	<div class='flex flex-col gap-5 min-w-0'>
-		<h1 class='inline-flex flex-col font-heading text-4xl md:text-5xl leading-tight tracking-tight text-foreground'>
-			<span>Elegant by <span class='text-primary'>math</span>,</span>
-			<em class='text-primary'>Simple by <span class='text-foreground font-bold'>design</span>.</em>
-		</h1>
+	<div class='flex flex-col gap-5 min-w-0 max-w-lg'>
+		<div class='flex flex-col gap-2 md:gap-5'>
+			<h1 class='inline-flex flex-col font-heading text-4xl md:text-5xl leading-tight tracking-tight text-foreground'>
+				<span>Elegant by <span class='text-primary font-bold'>math</span>,</span>
+				<em class='pl-8 md:pl-2'><span class='text-primary font-bold'>Simple</span> by <span>design</span>.</em>
+			</h1>
 
-		<p class='font-body text-base text-muted w-full md:max-w-lg leading-relaxed'>
-			These curves come from real geometry — but you don't need to be a mathematician to use them. Pick a shape, set a
-			color. Two attributes, one beautiful result.
-		</p>
+			<p class='font-body text-base text-muted w-full md:max-w-lg leading-tight'>
+				You don't need to know math to have good looking <span class='underline decoration-wavy decoration-primary'
+					>curves</span
+				>. It's as simple as choosing a
+				<em>shape</em> and picking a <span class='text-primary'>color</span>.
+			</p>
+		</div>
 
 		<div class='flex flex-col gap-2 w-full md:max-w-lg'>
 			<SectionLabel variant='info' label='Two lines of HTML' />
@@ -40,18 +45,16 @@ const codeSnippet = `<script src="https://unpkg.com/@sarmal/core/dist/auto-init.
 					defaultColor={false}
 					code={codeSnippet}
 				/>
-				<div class='w-full flex justify-end pr-4'>
-					<CopyButton code={codeSnippet} />
-				</div>
+			</div>
+			<div class='w-full flex justify-end pr-4'>
+				<CopyButton code={codeSnippet} />
 			</div>
 		</div>
 	</div>
 
 	<div class='hidden md:flex flex-col gap-2 items-center justify-center h-full'>
 		<div class='relative h-full w-full flex flex-col justify-center items-center gap-5'>
-			<div
-				class='absolute inset-0 bg-[radial-gradient(#d0cec9_1.5px,transparent_1.5px)] bg-size-[24px_24px] opacity-20'>
-			</div>
+			<DotGrid />
 
 			<Sarmal
 				curve='lissajous43'
@@ -63,6 +66,6 @@ const codeSnippet = `<script src="https://unpkg.com/@sarmal/core/dist/auto-init.
 				trailLength={150}
 			/>
 		</div>
-		<span class='font-mono text-[9px] tracking-[0.25em] uppercase text-muted opacity-50'> lissajous 4:3 </span>
+		<span class='font-mono text-[9px] tracking-[0.25em] uppercase text-muted'> lissajous 4:3 </span>
 	</div>
 </section>

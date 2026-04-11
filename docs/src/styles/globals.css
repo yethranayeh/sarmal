@@ -41,7 +41,7 @@ body {
   text-rendering: geometricPrecision;
 }
 
-.demo-card {
+@utility content-auto {
   content-visibility: auto;
   contain-intrinsic-size: 100px 100px;
 }

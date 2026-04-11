@@ -1,4 +1,5 @@
 ---
+import type { TrailStyle, PalettePreset } from "@sarmal/core";
 import { curves } from "@sarmal/core";
 import { codeToHtml } from "shiki";
 
@@ -11,15 +12,63 @@ import InfoCard from "../InfoCard.astro";
 import sarmalTheme from "../../themes/sarmal-editorial.json";
 import sarmalDarkTheme from "../../themes/sarmal-editorial-dark.json";
 import { curveMetadata } from "../../data/curveMetadata";
+import DotGrid from "../DotGrid.astro";
 
-const sarmalCurves = [
+interface CurveConfig {
+	id: keyof typeof curves;
+	name: string;
+	color: string;
+	trailStyle?: TrailStyle;
+	palette?: PalettePreset;
+	trailLength?: number;
+	headColor?: string;
+}
+
+const sarmalCurves: CurveConfig[] = [
 	{ id: "rose3", name: "Rose (n=3)", color: "#e879f9" },
-	{ id: "deltoid", name: "Deltoid", color: "#fb923c" },
-	{ id: "astroid", name: "Astroid", color: "#38bdf8" },
-	{ id: "epitrochoid7", name: "Epitrochoid", color: "#a78bfa" },
-	{ id: "rose5", name: "Rose (n=5)", color: "#f472b6" },
-	{ id: "lissajous43", name: "Lissajous 4:3", color: "#2dd4bf" }
-] as const;
+	{
+		id: "deltoid",
+		name: "Deltoid",
+		color: "#fb923c",
+		trailStyle: "gradient-animated",
+		palette: "ocean",
+		trailLength: 200,
+		headColor: "#22d3ee"
+	},
+	{
+		id: "astroid",
+		name: "Astroid",
+		color: "#38bdf8",
+		trailStyle: "gradient-animated",
+		palette: "bard",
+		trailLength: 200,
+		headColor: "#a855f7"
+	},
+	{
+		id: "epitrochoid7",
+		name: "Epitrochoid",
+		color: "#a78bfa",
+		trailStyle: "gradient-static",
+		palette: "fire",
+		headColor: "#fbbf24"
+	},
+	{
+		id: "rose5",
+		name: "Rose (n=5)",
+		color: "#f472b6",
+		trailStyle: "gradient-static",
+		palette: "sunset",
+		headColor: "#f472b6"
+	},
+	{
+		id: "lissajous43",
+		name: "Lissajous 4:3",
+		color: "#2dd4bf",
+		trailStyle: "gradient-static",
+		palette: "forest",
+		headColor: "#86efac"
+	}
+];
 
 const morphPairs = [
 	{ from: "astroid", to: "deltoid", color: "#38bdf8" },
@@ -64,18 +113,25 @@ const curveDataWithHighlight = await Promise.all(
 );
 ---
 
-{morphPairs.map((pair) => <MorphDetailModal fromId={pair.from} toId={pair.to} />)}
-
-<div class='space-y-8'>
+<div id='demo-section' class='flex flex-col md:flex-row justify-center gap-4 md:gap-8 lg:gap-12 p-2 sm:p-6 mx-auto'>
 	<InfoCard label='Standard Sarmals'>
-		<div class='grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-4'>
+		<div class='grid grid-cols-2 sm:grid-cols-3 gap-4'>
 			{
 				curveDataWithHighlight.map((curve) => (
 					<div class='flex flex-col items-center'>
-						<div
-							title={curve.id}
-							class='demo-card bg-surface-raised border border-border-subtle rounded-lg p-4 mb-2 overflow-visible shadow-sm'>
-							<Sarmal curve={curve.id} width={80} height={80} trailColor={curve.color} />
+						<div title={curve.id} class='relative content-auto rounded-lg p-4 mb-2 overflow-visible'>
+						<Sarmal
+							curve={curve.id}
+							width={80}
+							height={80}
+							trailColor={curve.color}
+							lazy
+							trailStyle={curve.trailStyle}
+							palette={curve.palette}
+							trailLength={curve.trailLength}
+							headColor={curve.headColor}
+						/>
+							<DotGrid />
 						</div>
 						<span title={curve.id} class='font-mono text-[10px] tracking-wider uppercase text-muted'>
 							{curve.name}
@@ -102,21 +158,24 @@ const curveDataWithHighlight = await Promise.all(
 		</div>
 	</InfoCard>
 
-	<UnifiedCurveDialog />
-
 	<InfoCard label='Morphing Sarmals'>
-		<div class='grid grid-cols-2 md:grid-cols-4 gap-4'>
+		<div class='grid grid-cols-2 sm:grid-cols-4 md:grid-cols-2 gap-4'>
 			{
 				morphPairs.map((pair) => (
 					<div class='flex flex-col items-center'>
-						<div
-							id={`morph-${pair.from}-${pair.to}`}
-							title={`${pair.from} -> ${pair.to}`}
-							class='demo-card bg-surface-raised border border-border-subtle rounded-lg p-4 mb-2 overflow-visible shadow-sm'>
-							<Sarmal curve={pair.from as keyof typeof curves} width={80} height={80} trailColor={pair.color} />
+						<div class='relative'>
+							<div
+								id={`morph-${pair.from}-${pair.to}`}
+								data-color={pair.color}
+								title={`${pair.from} -> ${pair.to}`}
+								class=' content-auto rounded-lg p-4 mb-2 overflow-visible'
+							/>
+							<DotGrid />
 						</div>
 						<span class='font-mono text-[10px] tracking-wider uppercase text-muted'>
-							{pair.from} {"->"} {pair.to}
+							{pair.from}
+							{"->"}
+							{pair.to}
 						</span>
 						<Button id={`morph-${pair.from}-${pair.to}-details`} variant='ghost' class='text-[9px] mt-1'>
 							Details
@@ -128,7 +187,11 @@ const curveDataWithHighlight = await Promise.all(
 	</InfoCard>
 </div>
 
+{morphPairs.map((pair) => <MorphDetailModal fromId={pair.from} toId={pair.to} />)}
+<UnifiedCurveDialog />
+
 <script>
+	import type { TrailStyle, PalettePreset } from "@sarmal/core";
 	import { createSarmal, curves } from "@sarmal/core";
 
 	const MORPH_DURATION = 800;
@@ -167,25 +230,59 @@ const curveDataWithHighlight = await Promise.all(
 		}
 	}
 
-	const morphContainers = document.querySelectorAll<HTMLDivElement>("div[id^='morph-']");
-	morphContainers.forEach((container) => {
-		const idMatch = container.id.match(/^morph-(.+)-(.+)$/);
-		if (!idMatch) {
-			return;
-		}
+	function initDemoSection(section: Element): void {
+		// lazy sarmals are not picked up by auto-init
+		section.querySelectorAll<HTMLCanvasElement>("canvas[data-sarmal-lazy]").forEach((canvas) => {
+			const curveName = canvas.dataset.sarmalLazy;
+			if (!curveName) {
+				return;
+			}
+			const curve = curves[curveName as keyof typeof curves];
+			if (!curve) {
+				return;
+			}
+			const sarmal = createSarmal(canvas, curve, {
+				...(canvas.dataset.trailColor && { trailColor: canvas.dataset.trailColor }),
+				...(canvas.dataset.skeletonColor && { skeletonColor: canvas.dataset.skeletonColor }),
+				...(canvas.dataset.headColor && { headColor: canvas.dataset.headColor }),
+				...(canvas.dataset.headRadius && { headRadius: parseFloat(canvas.dataset.headRadius) }),
+				...(canvas.dataset.trailLength && { trailLength: parseInt(canvas.dataset.trailLength, 10) }),
+				...(canvas.dataset.trailStyle && { trailStyle: canvas.dataset.trailStyle as TrailStyle }),
+				...(canvas.dataset.palette && { palette: canvas.dataset.palette as PalettePreset })
+			});
+			sarmal.start();
+		});
 
-		const fromId = idMatch[1]!;
-		const toId = idMatch[2]!;
-		const color = container.querySelector("canvas")?.getAttribute("data-trail-color") ?? "#c0143c";
+		section.querySelectorAll<HTMLDivElement>("div[id^='morph-']").forEach((container) => {
+			const idMatch = container.id.match(/^morph-(.+)-(.+)$/);
+			if (!idMatch) {
+				return;
+			}
 
-		const canvas = document.createElement("canvas");
-		canvas.width = 80;
-		canvas.height = 80;
-		canvas.className = "w-[80px] h-[80px]";
-		container.innerHTML = "";
-		container.appendChild(canvas);
+			const fromId = idMatch[1]!;
+			const toId = idMatch[2]!;
+			const color = container.dataset.color ?? "#c0143c";
 
-		const pair = { from: fromId, to: toId, color };
-		runMorphLoop(canvas, pair).catch(() => {});
-	});
+			const canvas = document.createElement("canvas");
+			canvas.width = 80;
+			canvas.height = 80;
+			canvas.className = "w-[80px] h-[80px]";
+			container.innerHTML = "";
+			container.appendChild(canvas);
+
+			runMorphLoop(canvas, { from: fromId, to: toId, color }).catch(() => {});
+		});
+	}
+
+	const section = document.getElementById("demo-section")!;
+	const observer = new IntersectionObserver(
+		(entries) => {
+			if (entries[0]?.isIntersecting) {
+				observer.disconnect();
+				initDemoSection(section);
+			}
+		},
+		{ threshold: 0.1 }
+	);
+	observer.observe(section);
 </script>
