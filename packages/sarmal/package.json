@@ -1,6 +1,6 @@
 {
   "name": "@sarmal/core",
-  "version": "0.9.4",
+  "version": "0.9.5",
   "description": "Curve path based loading indicators and their renderer",
   "keywords": [
     "animation",
@@ -65,7 +65,8 @@
     "lint": "oxlint",
     "format": "oxfmt",
     "test": "vitest",
-    "test:watch": "vitest --watch"
+    "test:watch": "vitest --watch",
+    "bench": "vitest bench"
   },
   "devDependencies": {
     "@types/node": "^25.5.2",
