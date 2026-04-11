@@ -1,25 +1,30 @@
 ---
 interface Item {
+	id?: string;
 	label: string;
 	value: string;
 	highlight?: boolean;
-	id?: string;
+	dataAttr?: string;
 }
 
 interface Props {
+	id?: string;
 	items: Item[];
 }
 
-const { items } = Astro.props;
+const { id, items } = Astro.props;
 ---
 
-<div class="grid grid-cols-[80px_12px_1fr] gap-y-1.5 leading-snug">
+<div id={id} class='grid grid-cols-[80px_12px_1fr] gap-y-1.5 leading-snug'>
 	{
 		items.map((item) => (
 			<>
-				<span class="text-muted/70 uppercase tracking-wider">{item.label}</span>
-				<span class="text-muted/40">&gt;</span>
-				<span id={item.id} class={item.highlight ? "text-primary uppercase tracking-wider" : "text-foreground/90"}>
+				<span class='text-muted/70 uppercase tracking-wider'>{item.label}</span>
+				<span class='text-muted/40'>&gt;</span>
+				<span
+					id={item.id}
+					data-info-value={item.dataAttr}
+					class={item.highlight ? "text-primary uppercase tracking-wider" : "text-foreground/90"}>
 					{item.value}
 				</span>
 			</>

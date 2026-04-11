@@ -1,14 +1,18 @@
 ---
 import { curves } from "@sarmal/core";
+import { codeToHtml } from "shiki";
 
 import Button from "../Button.astro";
 import Sarmal from "../Sarmal.astro";
-import CurveDetailModal from "../CurveDetailModal.astro";
+import UnifiedCurveDialog from "../UnifiedCurveDialog.astro";
 import MorphDetailModal from "../MorphDetailModal.astro";
-import SectionLabel from "../SectionLabel.astro";
 import InfoCard from "../InfoCard.astro";
 
-const sarmals = [
+import sarmalTheme from "../../themes/sarmal-editorial.json";
+import sarmalDarkTheme from "../../themes/sarmal-editorial-dark.json";
+import { curveMetadata } from "../../data/curveMetadata";
+
+const sarmalCurves = [
 	{ id: "rose3", name: "Rose (n=3)", color: "#e879f9" },
 	{ id: "deltoid", name: "Deltoid", color: "#fb923c" },
 	{ id: "astroid", name: "Astroid", color: "#38bdf8" },
@@ -23,16 +27,50 @@ const morphPairs = [
 	{ from: "lissajous32", to: "rose5", color: "#fb923c" },
 	{ from: "lame", to: "astroid", color: "#a78bfa" }
 ] as const;
+
+const curveDataWithHighlight = await Promise.all(
+	sarmalCurves.map(async (curve) => {
+		const metadata = curveMetadata[curve.id];
+		const curveDef = curves[curve.id];
+
+		const period =
+			typeof curveDef.period === "number"
+				? curveDef.period === Math.PI * 2
+					? "2π"
+					: curveDef.period.toFixed(2)
+				: "2π";
+
+		const codeText = `<canvas data-sarmal="${curve.id}"></canvas>`;
+
+		const codeHtml = await codeToHtml(codeText, {
+			lang: "html",
+			themes: {
+				light: sarmalTheme as { name: string },
+				dark: sarmalDarkTheme as { name: string }
+			}
+		});
+
+		return {
+			...curve,
+			name: metadata.name,
+			family: metadata.family,
+			period,
+			equation: metadata.equation,
+			description: metadata.description,
+			codeText,
+			codeHtml
+		};
+	})
+);
 ---
 
-{sarmals.map((curve) => <CurveDetailModal curveId={curve.id} />)}
 {morphPairs.map((pair) => <MorphDetailModal fromId={pair.from} toId={pair.to} />)}
 
 <div class='space-y-8'>
 	<InfoCard label='Standard Sarmals'>
 		<div class='grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-4'>
 			{
-				sarmals.map((curve) => (
+				curveDataWithHighlight.map((curve) => (
 					<div class='flex flex-col items-center'>
 						<div
 							title={curve.id}
@@ -42,14 +80,29 @@ const morphPairs = [
 						<span title={curve.id} class='font-mono text-[10px] tracking-wider uppercase text-muted'>
 							{curve.name}
 						</span>
-						<Button id={`${curve.id}-details`} variant='ghost' class='text-[9px] mt-1'>
+						<button
+							data-curve-trigger
+							data-curve-id={curve.id}
+							data-code-text={curve.codeText}
+							data-code-html={curve.codeHtml}
+							data-metadata-json={JSON.stringify({
+								name: curve.name,
+								family: curve.family,
+								period: curve.period,
+								equation: curve.equation,
+								description: curve.description,
+								color: curve.color
+							})}
+							class='font-mono text-[9px] tracking-widest uppercase text-muted hover:text-foreground transition-colors cursor-pointer mt-1'>
 							Details
-						</Button>
+						</button>
 					</div>
 				))
 			}
 		</div>
 	</InfoCard>
+
+	<UnifiedCurveDialog />
 
 	<InfoCard label='Morphing Sarmals'>
 		<div class='grid grid-cols-2 md:grid-cols-4 gap-4'>
@@ -89,28 +142,14 @@ const morphPairs = [
 	}
 
 	async function runMorphLoop(canvas: HTMLCanvasElement, pair: MorphPair): Promise<void> {
-		const fromCurve = (
-			curves as Record<
-				string,
-				{
-					fn: (t: number, time: number, params: Record<string, number>) => { x: number; y: number };
-					period?: number;
-					speed?: number;
-				}
-			>
-		)[pair.from];
-		const toCurve = (
-			curves as Record<
-				string,
-				{ fn: (t: number, time: number, params: Record<string, number>) => { period?: number; speed?: number } }
-			>
-		)[pair.to];
+		const fromCurve = curves[pair.from as keyof typeof curves];
+		const toCurve = curves[pair.to as keyof typeof curves];
 
 		if (!fromCurve || !toCurve) {
 			return;
 		}
 
-		const sarmal = createSarmal(canvas, fromCurve as Parameters<typeof createSarmal>[1], {
+		const sarmal = createSarmal(canvas, fromCurve, {
 			trailColor: pair.color,
 			skeletonColor: pair.color,
 			headColor: pair.color,
@@ -121,9 +160,9 @@ const morphPairs = [
 		await new Promise((resolve) => setTimeout(resolve, WARMUP_DURATION));
 
 		while (true) {
-			await sarmal.morphTo(toCurve as Parameters<typeof createSarmal>[1], { duration: MORPH_DURATION });
+			await sarmal.morphTo(toCurve, { duration: MORPH_DURATION });
 			await new Promise((resolve) => setTimeout(resolve, HOLD_DURATION));
-			await sarmal.morphTo(fromCurve as Parameters<typeof createSarmal>[1], { duration: MORPH_DURATION });
+			await sarmal.morphTo(fromCurve, { duration: MORPH_DURATION });
 			await new Promise((resolve) => setTimeout(resolve, HOLD_DURATION));
 		}
 	}
