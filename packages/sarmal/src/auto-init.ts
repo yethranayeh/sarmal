@@ -28,7 +28,7 @@ function init(): void {
   canvases.forEach((canvas) => {
     const curveName = canvas.getAttribute("data-sarmal");
     if (curveName == null) {
-      return console.warn("[sarmal] curveName isrequried");
+      return console.warn("[sarmal] curveName is required");
     }
 
     const curveDef = curves[curveName];

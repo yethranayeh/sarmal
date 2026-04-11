@@ -10,6 +10,9 @@ import type {
 const TWO_PI = Math.PI * 2;
 const POINTS_PER_PERIOD_UNIT = 50;
 
+/** Reused across all curve fn calls — params is never populated, allocation is wasteful */
+const EMPTY_PARAMS: Record<string, number> = {};
+
 /**
  * A fixed-size list of points with first in, last out method
  * The oldest entry is automatically discarded when the list is at capacity
@@ -121,9 +124,9 @@ export function createEngine(curveDef: CurveDef, trailLength: number = 120): Eng
       return c.skeletonFn(sampleT);
     }
     if (c.skeleton === "live") {
-      return c.fn(sampleT, actualTime, {});
+      return c.fn(sampleT, actualTime, EMPTY_PARAMS);
     }
-    return c.fn(sampleT, 0, {});
+    return c.fn(sampleT, 0, EMPTY_PARAMS);
   }
 
   return {
@@ -132,12 +135,12 @@ export function createEngine(curveDef: CurveDef, trailLength: number = 120): Eng
       actualTime += deltaTime;
 
       if (morphCurveB !== null && _morphAlpha !== null) {
-        const a = curve.fn(t, actualTime, {});
+        const a = curve.fn(t, actualTime, EMPTY_PARAMS);
         const tB = _morphStrategy === "normalized" ? (t / curve.period) * morphCurveB.period : t;
-        const b = morphCurveB.fn(tB, actualTime, {});
+        const b = morphCurveB.fn(tB, actualTime, EMPTY_PARAMS);
         trail.push(a.x + (b.x - a.x) * _morphAlpha, a.y + (b.y - a.y) * _morphAlpha);
       } else {
-        const point = curve.fn(t, actualTime, {});
+        const point = curve.fn(t, actualTime, EMPTY_PARAMS);
         trail.push(point.x, point.y);
       }
 
@@ -188,7 +191,7 @@ export function createEngine(curveDef: CurveDef, trailLength: number = 120): Eng
         const sampleT = target - i * advance;
         const wrappedT = sampleT < 0 ? sampleT + curve.period : sampleT;
         const time = targetTime - i * step;
-        const point = curve.fn(wrappedT, time, {});
+        const point = curve.fn(wrappedT, time, EMPTY_PARAMS);
 
         trail.push(point.x, point.y);
       }

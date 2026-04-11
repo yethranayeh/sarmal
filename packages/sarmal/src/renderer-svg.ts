@@ -37,6 +37,8 @@ const DEFAULT_SKELETON_OPACITY = 0.15;
 /** Fraction of the bounding box added as padding when auto-fitting the curve */
 const FIT_PADDING = 0.1;
 
+const EMPTY_PARAMS: Record<string, number> = {};
+
 function el(tag: string): SVGElement {
   return document.createElementNS("http://www.w3.org/2000/svg", tag);
 }
@@ -273,7 +275,7 @@ export function createSVGRenderer(options: SVGRendererOptions): SarmalInstance {
 
     for (let i = 0; i <= samples; i++) {
       const t = (i / samples) * period;
-      const p = target.fn(t, 0, {});
+      const p = target.fn(t, 0, EMPTY_PARAMS);
       points.push(p);
     }
 
