@@ -1,4 +1,5 @@
 ---
+import Branding from "./Branding.astro";
 import Link from "./Link.astro";
 
 interface NavLink {
@@ -24,11 +25,7 @@ const currentPath = Astro.url.pathname;
 ---
 
 <header class='w-full px-4 py-2 flex items-center justify-between border-b border-border'>
-	<a href='/' class='font-heading text-lg text-foreground transition-colors group'>
-		<span class='text-primary group-hover:text-foreground transition-colors duration-300'>sarmal</span><span
-			class='[--wght:350] group-hover:[--wght:650] [font-variation-settings:"wght"_var(--wght)] transition-all duration-300 group-hover:text-primary'>.art</span
-		>
-	</a>
+	<Branding />
 	<nav class='flex items-center gap-4'>
 		{
 			navLinks.map((link) => {

@@ -1,0 +1,19 @@
+---
+import Button from "./Button.astro";
+import Sarmal from "./Sarmal.astro";
+import SectionLabel from "./SectionLabel.astro";
+
+interface Props {
+	label: string;
+}
+
+const { label } = Astro.props;
+---
+
+<section class='space-y-6 rounded-2xl p-2 overflow-hidden bg-surface-raised'>
+	<div class='border-b border-surface p-2 w-full'>
+		<SectionLabel label={label} />
+	</div>
+
+	<slot />
+</section>

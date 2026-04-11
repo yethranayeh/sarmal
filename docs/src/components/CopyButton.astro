@@ -1,0 +1,31 @@
+---
+interface Props {
+	code: string;
+	label?: string;
+	"data-copy-btn"?: string;
+}
+
+const { code, label = "Copy", "data-copy-btn": dataAttr } = Astro.props;
+---
+
+<button
+	data-copy-btn={dataAttr ?? ""}
+	data-code={code}
+	class='font-mono text-[9px] tracking-widest uppercase text-muted hover:text-foreground transition-colors cursor-pointer'>
+	{label}
+</button>
+
+<script>
+	document.querySelectorAll("[data-copy-btn]").forEach((btn) => {
+		btn.addEventListener("click", async () => {
+			const code = btn.getAttribute("data-code");
+			if (code) {
+				await navigator.clipboard.writeText(code);
+				btn.textContent = "Copied!";
+				setTimeout(() => {
+					btn.textContent = "Copy";
+				}, 2000);
+			}
+		});
+	});
+</script>

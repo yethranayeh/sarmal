@@ -1,0 +1,68 @@
+---
+import { Code } from "astro:components";
+
+import SectionLabel from "../SectionLabel.astro";
+import Sarmal from "../Sarmal.astro";
+import CopyButton from "../CopyButton.astro";
+
+import sarmalTheme from "../../themes/sarmal-editorial.json";
+import sarmalDarkTheme from "../../themes/sarmal-editorial-dark.json";
+
+const codeSnippet = `<script src="https://unpkg.com/@sarmal/core/dist/auto-init.js"></script>
+<canvas
+  data-sarmal="lissajous43"
+  data-trail-color="#a78bfa"></canvas>`;
+---
+
+<section class='grid grid-cols-1 md:grid-cols-2 gap-10 items-center p-2 md:p-6 lg:p-12 xl:p-16'>
+	<div class='flex flex-col gap-5 min-w-0'>
+		<h1 class='inline-flex flex-col font-heading text-4xl md:text-5xl leading-tight tracking-tight text-foreground'>
+			<span>Elegant by <span class='text-primary'>math</span>,</span>
+			<em class='text-primary'>Simple by <span class='text-foreground font-bold'>design</span>.</em>
+		</h1>
+
+		<p class='font-body text-base text-muted w-full md:max-w-lg leading-relaxed'>
+			These curves come from real geometry — but you don't need to be a mathematician to use them. Pick a shape, set a
+			color. Two attributes, one beautiful result.
+		</p>
+
+		<div class='flex flex-col gap-2 w-full md:max-w-lg'>
+			<SectionLabel variant='info' label='Two lines of HTML' />
+			<div class='space-y-2 rounded-md text-left overflow-x-auto'>
+				<Code
+					class='p-2 rounded-md'
+					lang='html'
+					theme={undefined}
+					themes={{
+						light: sarmalTheme as unknown as { name: string },
+						dark: sarmalDarkTheme as unknown as { name: string }
+					} as Parameters<typeof Code>[0]["themes"]}
+					defaultColor={false}
+					code={codeSnippet}
+				/>
+				<div class='w-full flex justify-end pr-4'>
+					<CopyButton code={codeSnippet} />
+				</div>
+			</div>
+		</div>
+	</div>
+
+	<div class='hidden md:flex flex-col gap-2 items-center justify-center h-full'>
+		<div class='relative h-full w-full flex flex-col justify-center items-center gap-5'>
+			<div
+				class='absolute inset-0 bg-[radial-gradient(#d0cec9_1.5px,transparent_1.5px)] bg-size-[24px_24px] opacity-20'>
+			</div>
+
+			<Sarmal
+				curve='lissajous43'
+				width={360}
+				height={360}
+				skeletonColor='#c8c5c0'
+				trailStyle='gradient-animated'
+				palette='bard'
+				trailLength={150}
+			/>
+		</div>
+		<span class='font-mono text-[9px] tracking-[0.25em] uppercase text-muted opacity-50'> lissajous 4:3 </span>
+	</div>
+</section>

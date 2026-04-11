@@ -5,6 +5,7 @@ import { Code } from "astro:components";
 import Dialog from "./Dialog/Dialog.astro";
 import DialogShowcase from "./Dialog/DialogShowcase.astro";
 import DialogInfoGrid from "./Dialog/DialogInfoGrid.astro";
+import CopyButton from "./CopyButton.astro";
 
 import sarmalTheme from "../themes/sarmal-editorial.json";
 import sarmalDarkTheme from "../themes/sarmal-editorial-dark.json";
@@ -48,11 +49,7 @@ const morphSnippet = `sarmal.morphTo(curves.${toId});`;
 		<div class='mb-4'>
 			<div class='flex items-center justify-between mb-2'>
 				<span class='text-muted/50 uppercase tracking-wider text-[9px]'>Code</span>
-				<button
-					data-morph-copy-btn
-					class='font-mono text-[9px] tracking-widest uppercase text-muted hover:text-foreground transition-colors cursor-pointer'>
-					Copy
-				</button>
+				<CopyButton code={morphSnippet} />
 			</div>
 			<div class='bg-surface border border-border rounded-md'>
 				<Code
@@ -99,7 +96,6 @@ const morphSnippet = `sarmal.morphTo(curves.${toId});`;
 		canvas: HTMLCanvasElement;
 		openBtn: HTMLButtonElement | null;
 		closeBtn: HTMLButtonElement;
-		copyBtn: HTMLButtonElement;
 		sarmal: ReturnType<typeof createSarmal> | null;
 		initialized: boolean;
 	}
@@ -117,7 +113,7 @@ const morphSnippet = `sarmal.morphTo(curves.${toId});`;
 	const MORPH_DURATION = 800;
 
 	async function initMorphModal(modal: MorphModal) {
-		const { fromId, toId, dialog, canvas, closeBtn, copyBtn } = modal;
+		const { fromId, toId, dialog, canvas, closeBtn } = modal;
 
 		modal.openBtn?.addEventListener("click", async () => {
 			dialog.showModal();
@@ -162,14 +158,7 @@ const morphSnippet = `sarmal.morphTo(curves.${toId});`;
 			}
 		});
 
-		copyBtn.addEventListener("click", async () => {
-			const morphSnippet = `sarmal.morphTo(curves.${toId});`;
-			await navigator.clipboard.writeText(morphSnippet);
-			copyBtn.textContent = "Copied!";
-			setTimeout(() => {
-				copyBtn.textContent = "Copy";
-			}, 2000);
-		});
+
 	}
 
 	document.querySelectorAll<HTMLDialogElement>("[id^='morph-'][id$='-modal']").forEach((dialog) => {
@@ -181,7 +170,6 @@ const morphSnippet = `sarmal.morphTo(curves.${toId});`;
 		const canvas = document.getElementById(`morph-${fromId}-${toId}-modal-canvas`) as HTMLCanvasElement;
 		const openBtn = document.getElementById(`morph-${fromId}-${toId}-details`) as HTMLButtonElement | null;
 		const closeBtn = dialog.querySelector("[data-morph-close-btn]") as HTMLButtonElement;
-		const copyBtn = dialog.querySelector("[data-morph-copy-btn]") as HTMLButtonElement;
 
 		initMorphModal({
 			fromId,
@@ -190,7 +178,6 @@ const morphSnippet = `sarmal.morphTo(curves.${toId});`;
 			canvas,
 			openBtn,
 			closeBtn,
-			copyBtn,
 			sarmal: null,
 			initialized: false
 		});

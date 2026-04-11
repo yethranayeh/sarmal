@@ -4,6 +4,23 @@
  */
 import { createSarmal } from "./index";
 import { curves } from "./curves";
+import type { PalettePreset } from "./types";
+
+/**
+ * Parses a palette value from a data attribute.
+ * Tries to parse as JSON array first, falls back to preset name.
+ */
+function parsePalette(value: string): PalettePreset | string[] {
+  try {
+    const parsed = JSON.parse(value);
+    if (Array.isArray(parsed)) {
+      return parsed as string[];
+    }
+  } catch {
+    // Not a valid JSON array, treat as preset name
+  }
+  return value as PalettePreset;
+}
 
 function init(): void {
   const canvases = document.querySelectorAll<HTMLCanvasElement>("canvas[data-sarmal]");
@@ -25,13 +42,22 @@ function init(): void {
       ...(canvas.dataset.headColor && { headColor: canvas.dataset.headColor }),
       ...(canvas.dataset.headRadius && { headRadius: parseFloat(canvas.dataset.headRadius) }),
       ...(canvas.dataset.trailLength && { trailLength: parseInt(canvas.dataset.trailLength, 10) }),
+      ...(canvas.dataset.trailStyle && {
+        trailStyle: canvas.dataset.trailStyle as
+          | "default"
+          | "gradient-static"
+          | "gradient-animated",
+      }),
+      ...(canvas.dataset.palette && { palette: parsePalette(canvas.dataset.palette) }),
     });
     sarmal.start();
   });
 }
 
 if (document.readyState === "loading") {
-  document.addEventListener("DOMContentLoaded", init);
+  document.addEventListener("DOMContentLoaded", () => {
+    requestAnimationFrame(init);
+  });
 } else {
-  init();
+  requestAnimationFrame(init);
 }

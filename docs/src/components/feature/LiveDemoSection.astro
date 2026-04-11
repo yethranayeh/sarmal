@@ -1,0 +1,203 @@
+---
+import { curves } from "@sarmal/core";
+---
+
+<section class='w-full bg-foreground mt-16 py-20'>
+	<div class='max-w-3xl mx-auto px-4 flex flex-col items-center gap-10'>
+		<div class='flex items-center gap-4 w-full'>
+			<div class='flex-1 h-px bg-white/10'></div>
+			<span class='font-mono text-[10px] tracking-[0.25em] uppercase text-background/30'>Live demo</span>
+			<div class='flex-1 h-px bg-white/10'></div>
+		</div>
+
+		<div class='w-full max-w-sm flex flex-col items-center gap-4'>
+			<div
+				id='live-demo-card'
+				class='relative w-full bg-[#232420] border border-white/[0.07] rounded-xl overflow-hidden'
+				style='min-height: 200px'>
+
+				<!-- Loading panel -->
+				<div
+					id='live-demo-loading'
+					class='absolute inset-0 flex flex-col items-center justify-center gap-3 p-8 transition-opacity duration-500'>
+					<canvas id='live-demo-canvas' width='72' height='72' class='w-[72px] h-[72px]'></canvas>
+					<p id='live-demo-name' class='font-mono text-[9px] tracking-[0.25em] uppercase transition-colors duration-300'
+					></p>
+					<p class='font-body text-[13px] text-white/25'>Loading…</p>
+				</div>
+
+				<!-- Content panel -->
+				<div
+					id='live-demo-content'
+					class='absolute inset-0 flex flex-col justify-center p-8 opacity-0 transition-opacity duration-500 pointer-events-none'>
+					<h3 id='live-demo-heading' class='font-heading text-[22px] text-background mb-2 leading-tight'></h3>
+					<p id='live-demo-body' class='font-body text-[13px] text-background/50 mb-5 leading-relaxed'></p>
+					<span id='live-demo-meta' class='font-mono text-[9px] tracking-[0.2em] uppercase text-background/25'></span>
+				</div>
+			</div>
+
+			<!-- Pagination dots -->
+			<div id='live-demo-dots' class='flex gap-2'></div>
+		</div>
+	</div>
+</section>
+
+<script>
+	import { createSarmal, curves } from "@sarmal/core";
+
+	const LOAD_MS = 2600;
+	const CONTENT_MS = 2900;
+
+	type CurveId = keyof typeof curves;
+
+	const SLIDES: Array<{
+		curveId: CurveId;
+		color: string;
+		heading: string;
+		body: string;
+		meta: string;
+		trailStyle?: "default" | "gradient-static" | "gradient-animated";
+		palette?: "bard" | "sunset" | "ocean" | "ice" | "fire" | "forest";
+	}> = [
+		{
+			curveId: "lissajous43",
+			color: "#a78bfa",
+			heading: "Dashboard ready",
+			body: "Your workspace synced with all recent changes.",
+			meta: "6 charts loaded",
+		},
+		{
+			curveId: "rose5",
+			color: "#f472b6",
+			heading: "Analysis complete",
+			body: "Pattern detection finished across the dataset.",
+			meta: "3 results found",
+		},
+		{
+			curveId: "epitrochoid7",
+			color: "#38bdf8",
+			heading: "Connection live",
+			body: "Real-time sync established with the data source.",
+			meta: "12 ms latency",
+		},
+		{
+			curveId: "astroid",
+			color: "#2dd4bf",
+			heading: "Assets cached",
+			body: "Static resources compressed and ready to serve.",
+			meta: "Expires in 24h",
+			trailStyle: "gradient-animated",
+			palette: "bard",
+		},
+		{
+			curveId: "rose3",
+			color: "#e879f9",
+			heading: "Report ready",
+			body: "Your monthly summary has been compiled.",
+			meta: "March 2026",
+		},
+		{
+			curveId: "deltoid",
+			color: "#fb923c",
+			heading: "Build complete",
+			body: "All modules bundled and optimized for production.",
+			meta: "2.1 KB gzipped",
+		},
+	];
+
+	const canvas = document.getElementById("live-demo-canvas") as HTMLCanvasElement;
+	const loadingEl = document.getElementById("live-demo-loading") as HTMLElement;
+	const contentEl = document.getElementById("live-demo-content") as HTMLElement;
+	const nameEl = document.getElementById("live-demo-name") as HTMLElement;
+	const headingEl = document.getElementById("live-demo-heading") as HTMLElement;
+	const bodyEl = document.getElementById("live-demo-body") as HTMLElement;
+	const metaEl = document.getElementById("live-demo-meta") as HTMLElement;
+	const dotsEl = document.getElementById("live-demo-dots") as HTMLElement;
+
+	SLIDES.forEach(() => {
+		const dot = document.createElement("span");
+		dot.className = "w-1.5 h-1.5 rounded-full transition-all duration-300";
+		dot.style.backgroundColor = "rgba(255,255,255,0.15)";
+		dotsEl.appendChild(dot);
+	});
+	const dots = Array.from(dotsEl.querySelectorAll("span")) as HTMLElement[];
+
+	function setActiveDot(i: number) {
+		dots.forEach((d, j) => {
+			const slide = SLIDES[j]!;
+			if (j === i) {
+				d.style.backgroundColor = slide.color;
+				d.style.transform = "scale(1.4)";
+				d.style.opacity = "0.85";
+			} else {
+				d.style.backgroundColor = "rgba(255,255,255,0.15)";
+				d.style.transform = "scale(1)";
+				d.style.opacity = "1";
+			}
+		});
+	}
+
+	let currentSarmal: ReturnType<typeof createSarmal> | null = null;
+	let timer: ReturnType<typeof setTimeout> | null = null;
+	let idx = 0;
+
+	function showLoading(i: number) {
+		const slide = SLIDES[i]!;
+
+		if (currentSarmal) {
+			currentSarmal.stop();
+			currentSarmal = null;
+		}
+		if (timer) clearTimeout(timer);
+
+		canvas.getContext("2d")?.clearRect(0, 0, canvas.width, canvas.height);
+
+		nameEl.textContent = slide.curveId;
+		nameEl.style.color = slide.color + "99";
+
+		loadingEl.style.opacity = "1";
+		loadingEl.style.pointerEvents = "auto";
+		contentEl.style.opacity = "0";
+		contentEl.style.pointerEvents = "none";
+
+		const curve = curves[slide.curveId];
+		currentSarmal = createSarmal(canvas, curve, {
+			trailColor: slide.color,
+			skeletonColor: slide.color,
+			headColor: slide.color,
+			trailLength: 80,
+			...(slide.trailStyle && { trailStyle: slide.trailStyle }),
+			...(slide.palette && { palette: slide.palette }),
+		});
+		currentSarmal.start();
+		setActiveDot(i);
+
+		timer = setTimeout(() => showContent(i), LOAD_MS);
+	}
+
+	function showContent(i: number) {
+		const slide = SLIDES[i]!;
+
+		if (currentSarmal) {
+			currentSarmal.stop();
+			currentSarmal = null;
+		}
+		if (timer) clearTimeout(timer);
+
+		headingEl.textContent = slide.heading;
+		bodyEl.textContent = slide.body;
+		metaEl.textContent = slide.meta;
+
+		loadingEl.style.opacity = "0";
+		loadingEl.style.pointerEvents = "none";
+		contentEl.style.opacity = "1";
+		contentEl.style.pointerEvents = "auto";
+
+		timer = setTimeout(() => {
+			idx = (idx + 1) % SLIDES.length;
+			showLoading(idx);
+		}, CONTENT_MS);
+	}
+
+	showLoading(0);
+</script>

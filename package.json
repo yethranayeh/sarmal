@@ -8,7 +8,7 @@
     "test:e2e:update": "pnpm --filter e2e exec playwright test --update-snapshots",
     "lint": "pnpm -r lint",
     "format": "pnpm -r format",
-    "fix": "pnpm -r format && pnpm -r lint"
+    "fix": "pnpm -r format && pnpm -r lint && pnpm -r typecheck"
   },
   "packageManager": "pnpm@9.15.0"
 }

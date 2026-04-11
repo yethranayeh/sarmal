@@ -1,11 +1,13 @@
 ---
-import type { SarmalOptions } from "@sarmal/core";
+import type { SarmalOptions, TrailStyle, PalettePreset } from "@sarmal/core";
 import { curves } from "@sarmal/core";
 
 interface Props extends SarmalOptions {
 	curve?: keyof typeof curves;
 	width?: number;
 	height?: number;
+	trailStyle?: TrailStyle;
+	palette?: PalettePreset;
 }
 
 const defaultTrailColor = "#1b1c1a";
@@ -20,6 +22,8 @@ const {
 	headColor,
 	headRadius = 2.5,
 	trailLength = defaultTrailLength,
+	trailStyle,
+	palette
 } = Astro.props;
 
 const curveId = `sarmal-${Math.random().toString(36).slice(2, 8)}`;
@@ -35,7 +39,9 @@ const resolvedHeadColor = headColor ?? trailColor;
 	data-trail-color={trailColor}
 	data-head-color={resolvedHeadColor}
 	data-head-radius={headRadius}
-	data-trail-length={trailLength}></canvas>
+	data-trail-length={trailLength}
+	data-trail-style={trailStyle}
+	data-palette={palette}></canvas>
 
 <script>
 	import "@sarmal/core/auto";
