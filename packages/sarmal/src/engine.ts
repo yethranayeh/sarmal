@@ -102,17 +102,35 @@ type ResolvedCurve = {
 };
 
 function resolveCurve(curveDef: CurveDef): ResolvedCurve {
+  const period = curveDef.period ?? TWO_PI;
+
+  if (!Number.isFinite(period) || period <= 0) {
+    throw new RangeError(`[sarmal] period must be a positive finite number, got ${period}`);
+  }
+
+  const speed = curveDef.speed ?? 1;
+
+  if (!Number.isFinite(speed)) {
+    throw new RangeError(`[sarmal] speed must be a finite number, got ${speed}`);
+  }
+
   return {
     name: curveDef.name,
     fn: curveDef.fn,
-    period: curveDef.period ?? TWO_PI,
-    speed: curveDef.speed ?? 1,
+    period,
+    speed,
     skeleton: curveDef.skeleton,
     skeletonFn: curveDef.skeletonFn,
   };
 }
 
 export function createEngine(curveDef: CurveDef, trailLength: number = 120): Engine {
+  if (!Number.isFinite(trailLength) || trailLength <= 0) {
+    throw new RangeError(
+      `[sarmal] trailLength must be a positive finite number, got ${trailLength}`,
+    );
+  }
+
   let curve = resolveCurve(curveDef);
   const trail = new CircularBuffer(trailLength);
   let t = 0;

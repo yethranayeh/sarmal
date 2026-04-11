@@ -342,11 +342,18 @@ describe("seekWithTrail(t, options)", () => {
 // ─── Edge cases ──────────────────────────────────────────────────────────────
 
 describe("edge cases", () => {
-  it("KNOWN: createEngine(curve, 0) throws when tick() is called", () => {
-    // CircularBuffer(0) allocates an empty data array. push() immediately dereferences
-    // data[0] which is undefined, throwing a TypeError at runtime.
-    const engine = createEngine(identity, 0);
-    expect(() => engine.tick(1)).toThrow();
+  it("throws RangeError for trailLength = 0", () => {
+    expect(() => createEngine(circle, 0)).toThrow(RangeError);
+    expect(() => createEngine(circle, 0)).toThrow("trailLength");
+  });
+
+  it("throws RangeError for negative trailLength", () => {
+    expect(() => createEngine(circle, -1)).toThrow(RangeError);
+  });
+
+  it("throws RangeError for non-finite trailLength", () => {
+    expect(() => createEngine(circle, Infinity)).toThrow(RangeError);
+    expect(() => createEngine(circle, NaN)).toThrow(RangeError);
   });
 
   it("KNOWN: getSarmalSkeleton with period < 0.02 produces NaN points", () => {
@@ -399,31 +406,43 @@ describe("edge cases", () => {
     expect(p.x).toBe(-1); // x = t = -1
   });
 
-  it("KNOWN: period: 0 causes NaN in tick() output", () => {
-    // t = (0 + 1*1) % 0 = NaN — any modulo by zero is NaN in JS
-    const zeroPeriod: CurveDef = {
-      name: "zero",
-      fn: (t) => ({ x: t, y: t }),
-      period: 0,
-    };
-    const engine = createEngine(zeroPeriod);
-    const trail = engine.tick(1);
-    const p = lastPoint(trail, engine.trailCount);
-    expect(p.x).toBeNaN();
-    expect(p.y).toBeNaN();
+  it("throws RangeError for period = 0", () => {
+    const curve: CurveDef = { ...circle, period: 0 };
+    expect(() => createEngine(curve)).toThrow(RangeError);
+    expect(() => createEngine(curve)).toThrow("period");
   });
 
-  it("KNOWN: period: 0 in seekWithTrail silently produces 0 trail points", () => {
-    // step=0, advance=0, target=NaN → pointsFromStart=NaN → count=NaN
-    // Loop condition NaN >= 0 is false — loop never runs, trail stays empty
-    const zeroPeriod: CurveDef = {
-      name: "zero",
-      fn: (t) => ({ x: t, y: t }),
-      period: 0,
-    };
-    const engine = createEngine(zeroPeriod);
-    engine.seekWithTrail(0);
-    expect(engine.trailCount).toBe(0);
+  it("throws RangeError for negative period", () => {
+    const curve: CurveDef = { ...circle, period: -1 };
+    expect(() => createEngine(curve)).toThrow(RangeError);
+  });
+
+  it("throws RangeError for non-finite period", () => {
+    const curve: CurveDef = { ...circle, period: Infinity };
+    expect(() => createEngine(curve)).toThrow(RangeError);
+    const curve2: CurveDef = { ...circle, period: NaN };
+    expect(() => createEngine(curve2)).toThrow(RangeError);
+  });
+
+  it("throws RangeError for speed = NaN", () => {
+    const curve: CurveDef = { ...circle, speed: NaN };
+    expect(() => createEngine(curve)).toThrow(RangeError);
+    expect(() => createEngine(curve)).toThrow("speed");
+  });
+
+  it("throws RangeError for speed = Infinity", () => {
+    const curve: CurveDef = { ...circle, speed: Infinity };
+    expect(() => createEngine(curve)).toThrow(RangeError);
+  });
+
+  it("accepts speed = 0 (valid: curve does not advance)", () => {
+    const curve: CurveDef = { ...circle, speed: 0 };
+    expect(() => createEngine(curve)).not.toThrow();
+  });
+
+  it("accepts negative speed (valid: reverses traversal)", () => {
+    const curve: CurveDef = { ...circle, speed: -1 };
+    expect(() => createEngine(curve)).not.toThrow();
   });
 });
 
