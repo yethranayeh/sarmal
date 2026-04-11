@@ -1,19 +1,34 @@
-# Design System: Editorial Warmth
+# Design System: Editorial Warmth of Ink & Ember
+
+> **Bijin-yokai editorial**: the restraint of Shiseido's three-tone structure, the emotional weight of Visual Kei ink work.
+> Crimson as wound, not brand color. Grain as texture, not noise. Negative space as tension, not emptiness.
 
 ## Inspiration
 
-Visual reference: **Shiseido magazine design from 1929–1938** (Taishō/early Shōwa era). The key principles:
+**Two layers, one system:**
 
-1. **Three tones** — not a binary cream-to-black jump. Warm mid-gray lets the crimson pop as a true accent.
-2. **One dominant element per section** — the spinner IS that dominant element. Everything else is subordinate and floats lightly.
-3. **Scattered organic composition** — multiple small elements floating on cream ground, connected by thin lines. Think botanical diagram, not data table.
-4. **The curved line as layout element** — consider SVG curves as decorative elements between sections.
+**Structure**: Shiseido magazine design, 1929–1938 (Taishō/early Shōwa era).
+The technical vocabulary:
+1. **Three tones only**: not a binary cream-to-black jump. Warm mid-gray lets the crimson pop as a true accent.
+2. **One dominant element per section**: the spinner IS that dominant element. Everything else is subordinate and floats lightly.
+3. **Scattered organic composition**: multiple small elements floating on cream ground, connected by thin lines. Think botanical diagram, not data table.
+4. **The curved line as layout element**: consider SVG curves as decorative elements between sections.
+
+**Spirit**: Bijin-yokai illustration and Visual Kei art.
+The emotional vocabulary:
+- The crimson is a mark, not a brand color. It appears once per composition.
+- Negative space carries weight — it is tension, not emptiness.
+- Grain and texture connect the digital surface to ink and paper traditions.
+- The curves sarmal draws are brushstrokes. This is not a metaphor — a trail thinning as it lifts is exactly what a brush does.
 
 ---
 
 ## Colors: Warm Editorial Palette
 
-### Core Palette
+> **Note:** The light and dark modes are not opposites. They are the same three-tone system (black / white / crimson) in different light.
+> Light mode is the Shiseido layer. Dark mode is the bijin-yokai layer.
+
+### Core Palette (Light Mode)
 
 | Token | Hex | Role |
 |-------|-----|------|
@@ -30,7 +45,7 @@ Visual reference: **Shiseido magazine design from 1929–1938** (Taishō/early S
 | `primary-foreground` | `#ffffff` | Text on primary |
 | `accent` | `#97002a` | Deeper red — "Calligrapher's seal" use sparingly |
 
-### Supporting Colors
+### Supporting Colors (Light Mode)
 
 | Token | Hex | Role |
 |-------|-----|------|
@@ -39,6 +54,24 @@ Visual reference: **Shiseido magazine design from 1929–1938** (Taishō/early S
 | `muted` | `#888888` | Secondary text |
 | `muted-foreground` | `#5b4041` | Warm gray for body secondary text |
 | `error` | `#ba1a1a` | Error states |
+
+### Dark Mode Palette
+
+Warm blacks with a faint red undertone — like concentrated ink, not a darkened UI. Bone white, never pure white. The crimson glows rather than cuts.
+
+| Token | Hex | Role |
+|-------|-----|------|
+| `background` | `#0e0808` | Warm black — slight red undertone, like spilled ink |
+| `foreground` | `#ede8e0` | Bone white — off-neutral warm, not pure white |
+| `surface` | `#1a1010` | Raised surfaces — one step off background |
+| `surface-raised` | `#2a1a1a` | Elevated elements |
+| `primary` | `#cc001a` | Blood crimson — glows on dark; slightly brighter than light-mode red |
+| `accent` | `#8b0010` | Deep ember — shadow/depth effects |
+| `border` | `#2a1818` | Barely-there border in dark context |
+| `border-subtle` | `#1e1010` | Near-invisible separation |
+| `muted` | `#6b5555` | Warm desaturated — secondary text |
+| `muted-foreground` | `#a09090` | Slightly lighter warm gray |
+| `error` | `#cc001a` | Same as primary in dark mode — red is red |
 
 ---
 
@@ -102,6 +135,27 @@ In markup, compose with Tailwind utilities:
 
 ---
 
+## Grain & Texture
+
+Grain is structural, not decorative. It connects the digital surface to the physical tradition of ink, charcoal, and aged print reproduction — and it unifies the three tones into a single material.
+
+### Where to Apply
+
+- Large background panels (headers, section backgrounds, hero areas)
+- Borders and separators — grain on a 1px line reads as an ink stroke
+- Non-blocking decorative elements (the motifs page is a natural home for this)
+
+### Where Not to Apply
+
+- Interactive elements (buttons, inputs, toggles) — grain muddies affordance signals
+- Text — grain must never sit on type
+
+### Implementation Note
+
+A subtle SVG `feTurbulence` filter or a static noise PNG at `opacity: 0.03–0.06` with `blend-mode: multiply` (light) or `blend-mode: overlay` (dark). The effect should be visible up close but not dominant. Test in both modes — grain behaves differently on cream vs. on warm black.
+
+---
+
 ## What to Avoid
 
 - **No Material Design token naming** (`primary_container`, `on_primary_container`) — feels too systematic
@@ -113,4 +167,4 @@ In markup, compose with Tailwind utilities:
 
 ## Feel, Not Rules
 
-This is not a rigid system. The goal is **warmth and elegance** — the feeling of opening a well-designed book or magazine. Keep it restrained, keep it refined, let the content breathe.
+This is not a rigid system. The goal is **ink and ember** — the feeling of an illustrated page that has been in a dark room for a long time. Warm, restrained, with one thing that glows. Keep it restrained, keep it refined, let the content breathe. The curves are the decoration.
