@@ -32,6 +32,28 @@ const MAX_TRAIL_SEGMENTS = 200;
 
 const EMPTY_PARAMS: Record<string, number> = {};
 
+function pointsToPathString(pts: Point[], scale: number, offsetX: number, offsetY: number): string {
+  if (pts.length < 2) return "";
+  const px = (p: Point) => (p.x * scale + offsetX).toFixed(2);
+  const py = (p: Point) => (p.y * scale + offsetY).toFixed(2);
+  let d = `M${px(pts[0]!)} ${py(pts[0]!)}`;
+  for (let i = 1; i < pts.length; i++) {
+    d += ` L${px(pts[i]!)} ${py(pts[i]!)}`;
+  }
+  return d + " Z";
+}
+
+function sampleCurveSkeleton(curveDef: CurveDef): Point[] {
+  const period = curveDef.period ?? Math.PI * 2;
+  const samples = Math.ceil(period * 50); // match engine's POINTS_PER_PERIOD_UNIT
+  const pts: Point[] = Array.from({ length: samples });
+  for (let i = 0; i < samples; i++) {
+    const t = (i / (samples - 1)) * period;
+    pts[i] = curveDef.skeletonFn ? curveDef.skeletonFn(t) : curveDef.fn(t, 0, EMPTY_PARAMS);
+  }
+  return pts;
+}
+
 function el(tag: string): SVGElement {
   return document.createElementNS("http://www.w3.org/2000/svg", tag);
 }
@@ -117,34 +139,16 @@ export function createSVGRenderer(options: SVGRendererOptions): SarmalInstance {
     }
   }
 
-  // Coordinate transform helpers: numeric (for math) and string (for path strings)
+  // Coordinate transform helpers: numeric (for math)
   function px(p: Point): number {
     return p.x * scale + offsetX;
   }
   function py(p: Point): number {
     return p.y * scale + offsetY;
   }
-  function pxStr(p: Point): string {
-    return px(p).toFixed(2);
-  }
-  function pyStr(p: Point): string {
-    return py(p).toFixed(2);
-  }
 
   function updateSkeleton(skeleton: Point[]) {
-    if (skeleton.length < 2) {
-      skeletonPath.setAttribute("d", "");
-      return;
-    }
-
-    let d = `M${pxStr(skeleton[0]!)} ${pyStr(skeleton[0]!)}`;
-
-    for (let i = 1; i < skeleton.length; i++) {
-      d += ` L${pxStr(skeleton[i]!)} ${pyStr(skeleton[i]!)}`;
-    }
-    d += " Z";
-
-    skeletonPath.setAttribute("d", d);
+    skeletonPath.setAttribute("d", pointsToPathString(skeleton, scale, offsetX, offsetY));
   }
 
   const skeleton = engine.getSarmalSkeleton();
@@ -209,38 +213,6 @@ export function createSVGRenderer(options: SVGRendererOptions): SarmalInstance {
   let morphDurationMs = DEFAULT_MORPH_DURATION_MS;
   let morphTarget: CurveDef | null = null;
   let morphAlpha = 0;
-
-  function buildSkeletonPath(
-    target: CurveDef,
-    scale: number,
-    offsetX: number,
-    offsetY: number,
-  ): string {
-    const period = target.period ?? Math.PI * 2;
-    const samples = Math.max(50, Math.round(period * 20));
-    const points: Point[] = [];
-
-    for (let i = 0; i <= samples; i++) {
-      const t = (i / samples) * period;
-      const p = target.fn(t, 0, EMPTY_PARAMS);
-      points.push(p);
-    }
-
-    if (points.length < 2) {
-      return "";
-    }
-
-    const px = (p: Point) => (p.x * scale + offsetX).toFixed(2);
-    const py = (p: Point) => (p.y * scale + offsetY).toFixed(2);
-    let d = `M${px(points[0]!)} ${py(points[0]!)}`;
-
-    for (let i = 1; i < points.length; i++) {
-      d += ` L${px(points[i]!)} ${py(points[i]!)}`;
-    }
-    d += " Z";
-
-    return d;
-  }
 
   function renderFrame() {
     const now = performance.now();
@@ -352,22 +324,13 @@ export function createSVGRenderer(options: SVGRendererOptions): SarmalInstance {
       morphAlpha = 0;
 
       const currentSkeleton = engine.getSarmalSkeleton();
-      if (currentSkeleton.length >= 2) {
-        const px = (p: Point) => (p.x * scale + offsetX).toFixed(2);
-        const py = (p: Point) => (p.y * scale + offsetY).toFixed(2);
-        morphPathABuilt = `M${px(currentSkeleton[0]!)} ${py(currentSkeleton[0]!)}`;
-        for (let i = 1; i < currentSkeleton.length; i++) {
-          morphPathABuilt += ` L${px(currentSkeleton[i]!)} ${py(currentSkeleton[i]!)}`;
-        }
-        morphPathABuilt += " Z";
-      } else {
-        morphPathABuilt = "";
-      }
+      morphPathABuilt = pointsToPathString(currentSkeleton, scale, offsetX, offsetY);
 
       engine.startMorph(target, options?.morphStrategy);
 
       if (morphTarget) {
-        morphPathBBuilt = buildSkeletonPath(morphTarget, scale, offsetX, offsetY);
+        const targetSkeleton = sampleCurveSkeleton(target);
+        morphPathBBuilt = pointsToPathString(targetSkeleton, scale, offsetX, offsetY);
       }
 
       return new Promise<void>((resolve) => {
