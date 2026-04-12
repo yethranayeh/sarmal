@@ -7,8 +7,7 @@ import DialogShowcase from "./Dialog/DialogShowcase.astro";
 import DialogInfoGrid from "./Dialog/DialogInfoGrid.astro";
 import CopyButton from "./CopyButton.astro";
 
-import sarmalTheme from "../themes/sarmal-editorial.json";
-import sarmalDarkTheme from "../themes/sarmal-editorial-dark.json";
+import { codeThemes } from "../lib/shiki";
 
 interface Props {
 	fromId: string;
@@ -56,10 +55,7 @@ const morphSnippet = `sarmal.morphTo(curves.${toId});`;
 					class='p-2 rounded-md'
 					lang='javascript'
 					theme={undefined}
-					themes={{
-						light: sarmalTheme as unknown as { name: string },
-						dark: sarmalDarkTheme as unknown as { name: string }
-					} as Parameters<typeof Code>[0]["themes"]}
+					themes={codeThemes}
 					defaultColor={false}
 					code={morphSnippet}
 				/>
@@ -124,7 +120,7 @@ const morphSnippet = `sarmal.morphTo(curves.${toId});`;
 					trailColor: colorMap[fromId] || "#60a5fa",
 					skeletonColor: colorMap[fromId] || "#60a5fa",
 					headColor: colorMap[fromId] || "#60a5fa",
-					trailLength: 60,
+					trailLength: 60
 				});
 				modal.initialized = true;
 			}
@@ -157,8 +153,6 @@ const morphSnippet = `sarmal.morphTo(curves.${toId});`;
 				modal.sarmal?.stop();
 			}
 		});
-
-
 	}
 
 	document.querySelectorAll<HTMLDialogElement>("[id^='morph-'][id$='-modal']").forEach((dialog) => {

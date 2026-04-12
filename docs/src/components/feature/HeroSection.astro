@@ -4,10 +4,9 @@ import { Code } from "astro:components";
 import SectionLabel from "../SectionLabel.astro";
 import Sarmal from "../Sarmal.astro";
 import CopyButton from "../CopyButton.astro";
-
-import sarmalTheme from "../../themes/sarmal-editorial.json";
-import sarmalDarkTheme from "../../themes/sarmal-editorial-dark.json";
 import DotGrid from "../DotGrid.astro";
+
+import { codeThemes } from "../../lib/shiki";
 
 const codeSnippet = `<script src="https://unpkg.com/@sarmal/core/dist/auto-init.js"></script>
 <canvas
@@ -38,10 +37,7 @@ const codeSnippet = `<script src="https://unpkg.com/@sarmal/core/dist/auto-init.
 					class='p-2 rounded-md'
 					lang='html'
 					theme={undefined}
-					themes={{
-						light: sarmalTheme as unknown as { name: string },
-						dark: sarmalDarkTheme as unknown as { name: string }
-					} as Parameters<typeof Code>[0]["themes"]}
+					themes={codeThemes}
 					defaultColor={false}
 					code={codeSnippet}
 				/>
