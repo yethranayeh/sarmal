@@ -58,28 +58,6 @@ interface SharedState {
   showSkeleton: boolean;
 }
 
-// Legacy hash-only state (for decoding old shared links).
-interface LegacyHashState {
-  code: string;
-  trailStyle?: string;
-  palette?: string;
-}
-
-function decodeLegacyHash(hash: string): LegacyHashState | null {
-  try {
-    const decoded = decodeURIComponent(atob(hash));
-    const parsed = JSON.parse(decoded) as unknown;
-
-    if (typeof parsed === "object" && parsed !== null && "code" in parsed) {
-      return parsed as LegacyHashState;
-    }
-
-    return null;
-  } catch {
-    return null;
-  }
-}
-
 function showError(msg: string): void {
   errorDisplay.textContent = msg;
   errorDisplay.classList.remove("hidden");
@@ -352,7 +330,6 @@ trailStyleSelect.addEventListener("change", updateInstance);
 paletteSelect.addEventListener("change", updateInstance);
 
 async function init(): Promise<void> {
-  // Check for a KV share ID in the query string first.
   const searchParams = new URLSearchParams(window.location.search);
   const shareId = searchParams.get("s");
 
@@ -365,26 +342,7 @@ async function init(): Promise<void> {
         return;
       }
     } catch {
-      // fall through to hash / default
-    }
-  }
-
-  // Fall back to legacy hash links.
-  const hash = window.location.hash.slice(1);
-  if (hash) {
-    const decoded = decodeLegacyHash(hash);
-    if (decoded) {
-      codeInput.value = decoded.code;
-      currentCode = decoded.code;
-
-      if (decoded.trailStyle) trailStyleSelect.value = decoded.trailStyle;
-      if (decoded.palette) paletteSelect.value = decoded.palette;
-
-      const fn = buildCurveFn(decoded.code);
-      if (fn) {
-        createInstance(fn, getParams());
-        return;
-      }
+      // fall through to default
     }
   }
 
