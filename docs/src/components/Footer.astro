@@ -4,7 +4,8 @@ import { SEPARATOR_DOT, PACKAGE_SIZE } from "../variables";
 const sizeInGB = (PACKAGE_SIZE / 1024 / 1024).toFixed(7);
 ---
 
-<footer class='flex justify-between bg-surface-raised w-full px-4 py-2 border-t border-border text-center'>
+<footer
+	class='flex flex-col items-center md:flex-row justify-between bg-surface-raised w-full px-4 py-2 border-t border-border text-center'>
 	<p class='font-mono text-[10px] tracking-wider text-muted'>
 		<span class='font-mono'>{sizeInGB}</span>GB gzipped {SEPARATOR_DOT} MIT License {SEPARATOR_DOT} © <span
 			class='font-mono'>2026</span
@@ -17,14 +18,14 @@ const sizeInGB = (PACKAGE_SIZE / 1024 / 1024).toFixed(7);
 			target='_blank'
 			rel='noopener noreferrer'
 			class='font-mono text-xs tracking-wider uppercase text-muted hover:text-foreground transition-colors'>
-				NPM
-			</a>
+			NPM
+		</a>
 		<a
 			href='https://github.com/yethranayeh/sarmal'
 			target='_blank'
 			rel='noopener noreferrer'
 			class='font-mono text-xs tracking-wider uppercase text-muted hover:text-foreground transition-colors'>
-				GitHub
-			</a>
+			GitHub
+		</a>
 	</div>
 </footer>
