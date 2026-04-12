@@ -284,14 +284,29 @@ export function createRenderer(options: RendererOptions): SarmalInstance {
       minY = first.y,
       maxY = first.y;
     for (const p of pts) {
-      if (p.x < minX) minX = p.x;
-      if (p.x > maxX) maxX = p.x;
-      if (p.y < minY) minY = p.y;
-      if (p.y > maxY) maxY = p.y;
+      if (p.x < minX) {
+        minX = p.x;
+      }
+      if (p.x > maxX) {
+        maxX = p.x;
+      }
+      if (p.y < minY) {
+        minY = p.y;
+      }
+      if (p.y > maxY) {
+        maxY = p.y;
+      }
     }
 
     const width = maxX - minX;
     const height = maxY - minY;
+
+    if (width === 0 && height === 0) {
+      throw new Error(
+        "[sarmal] Degenerate curve: all skeleton points are identical. " +
+          "Check that your curve fn returns distinct points for different values of t.",
+      );
+    }
 
     const scaleX = logicalWidth / (width * (1 + FIT_PADDING * 2));
     const scaleY = logicalHeight / (height * (1 + FIT_PADDING * 2));

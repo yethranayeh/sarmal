@@ -146,6 +146,13 @@ export function createSVGRenderer(options: SVGRendererOptions): SarmalInstance {
 
     const w = maxX - minX;
     const h = maxY - minY;
+
+    if (w === 0 && h === 0) {
+      throw new Error(
+        "[sarmal] All skeleton points are identical. Check that your curve fn returns distinct points for different values of t.",
+      );
+    }
+
     const scaleX = width / (w * (1 + FIT_PADDING * 2));
     const scaleY = height / (h * (1 + FIT_PADDING * 2));
 

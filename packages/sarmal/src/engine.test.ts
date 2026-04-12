@@ -448,6 +448,24 @@ describe("edge cases", () => {
 
 //getSarmalSkeleton() ─────────────────────────────────────────────────────
 
+describe("getSarmalSkeleton() edge-case", () => {
+  it("returns all-zero points for a degenerate curve (does not throw)", () => {
+    const degenerate: CurveDef = {
+      name: "degenerate",
+      fn: () => ({ x: 0, y: 0 }),
+      period: TWO_PI,
+      speed: 1,
+    };
+    const engine = createEngine(degenerate);
+    const skeleton = engine.getSarmalSkeleton();
+    expect(skeleton.length).toBeGreaterThan(0);
+    for (const pt of skeleton) {
+      expect(pt.x).toBe(0);
+      expect(pt.y).toBe(0);
+    }
+  });
+});
+
 describe("getSarmalSkeleton()", () => {
   it("returns Math.ceil(period * 50) points", () => {
     const engine = createEngine(circle);
