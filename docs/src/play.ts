@@ -33,6 +33,8 @@ const errorDisplay = document.getElementById("error-display") as HTMLElement;
 const previewCanvas = document.getElementById("preview-canvas") as HTMLCanvasElement;
 const presetSelect = document.getElementById("preset-select") as HTMLSelectElement;
 const clearBtn = document.getElementById("clear-btn") as HTMLButtonElement;
+const shareBtn = document.getElementById("share-btn") as HTMLButtonElement;
+const shareStatus = document.getElementById("share-status") as HTMLElement;
 const skeletonToggle = document.getElementById("skeleton-toggle") as HTMLButtonElement;
 const speedSlider = document.getElementById("speed-slider") as HTMLInputElement;
 const speedValue = document.getElementById("speed-value") as HTMLElement;
@@ -43,40 +45,39 @@ const headColorInput = document.getElementById("head-color-input") as HTMLInputE
 const trailStyleSelect = document.getElementById("trail-style-select") as HTMLSelectElement;
 const paletteSelect = document.getElementById("palette-select") as HTMLSelectElement;
 
+// Full state shared via the KV API.
 interface SharedState {
+  v: 1;
+  code: string;
+  trailStyle: string;
+  palette: string;
+  trailColor: string;
+  headColor: string;
+  trailLength: number;
+  speed: number;
+  showSkeleton: boolean;
+}
+
+// Legacy hash-only state (for decoding old shared links).
+interface LegacyHashState {
   code: string;
   trailStyle?: string;
   palette?: string;
 }
 
-function encodeHash(code: string, trailStyle?: string, palette?: string): string {
-  const state: SharedState = { code };
-  if (trailStyle && trailStyle !== "default") {
-    state.trailStyle = trailStyle;
-  }
-  if (palette && palette !== "bard") {
-    state.palette = palette;
-  }
-  return btoa(encodeURIComponent(JSON.stringify(state)));
-}
-
-function decodeHash(hash: string): SharedState | null {
+function decodeLegacyHash(hash: string): LegacyHashState | null {
   try {
     const decoded = decodeURIComponent(atob(hash));
     const parsed = JSON.parse(decoded) as unknown;
 
     if (typeof parsed === "object" && parsed !== null && "code" in parsed) {
-      return parsed as SharedState;
+      return parsed as LegacyHashState;
     }
 
     return null;
   } catch {
     return null;
   }
-}
-
-function updateHash(code: string, trailStyle?: string, palette?: string): void {
-  history.replaceState(null, "", "#" + encodeHash(code, trailStyle, palette));
 }
 
 function showError(msg: string): void {
@@ -157,8 +158,6 @@ function createInstance(
 function handleCodeChange(): void {
   clearError();
   currentCode = codeInput.value;
-  const params = getParams();
-  updateHash(currentCode, params.trailStyle, params.palette);
 
   if (debounceTimer) {
     clearTimeout(debounceTimer);
@@ -167,7 +166,7 @@ function handleCodeChange(): void {
   debounceTimer = setTimeout(() => {
     const fn = buildCurveFn(currentCode);
     if (fn) {
-      createInstance(fn, params);
+      createInstance(fn, getParams());
     }
   }, 150);
 }
@@ -195,13 +194,11 @@ function loadPreset(curveId: string): void {
   const body = extractBody(fnStr);
   codeInput.value = body;
   currentCode = body;
-  const params = getParams();
-  updateHash(body, params.trailStyle, params.palette);
   clearError();
 
   const fn = buildCurveFn(body);
   if (fn) {
-    createInstance(fn, params);
+    createInstance(fn, getParams());
   }
 }
 
@@ -247,6 +244,83 @@ function updateInstance(): void {
   }
 }
 
+function setShareStatus(text: string): void {
+  shareStatus.textContent = text;
+  shareStatus.classList.toggle("hidden", text === "");
+}
+
+async function handleShare(): Promise<void> {
+  if (!currentCode) return;
+
+  const params = getParams();
+  const state: SharedState = {
+    v: 1,
+    code: currentCode,
+    trailStyle: params.trailStyle,
+    palette: params.palette,
+    trailColor: params.trailColor,
+    headColor: params.headColor,
+    trailLength: params.trailLength,
+    speed: params.speed,
+    showSkeleton,
+  };
+
+  shareBtn.disabled = true;
+  setShareStatus("");
+
+  try {
+    const res = await fetch("/api/share", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(state),
+    });
+
+    if (!res.ok) throw new Error(`${res.status}`);
+
+    const { id } = (await res.json()) as { id: string };
+    const url = `${window.location.origin}/play?s=${id}`;
+
+    await navigator.clipboard.writeText(url);
+
+    setShareStatus("Link copied. Expires in 90 days.");
+    setTimeout(() => {
+      shareBtn.disabled = false;
+      setShareStatus("");
+    }, 3000);
+  } catch {
+    shareBtn.disabled = false;
+    setShareStatus("Couldn't create link. Try again.");
+    setTimeout(() => setShareStatus(""), 4000);
+  }
+}
+
+function restoreState(state: SharedState): void {
+  codeInput.value = state.code;
+  currentCode = state.code;
+
+  if (state.trailStyle) trailStyleSelect.value = state.trailStyle;
+  if (state.palette) paletteSelect.value = state.palette;
+  if (state.trailColor) colorInput.value = state.trailColor;
+  if (state.headColor) headColorInput.value = state.headColor;
+  if (typeof state.trailLength === "number") {
+    trailSlider.value = String(state.trailLength);
+    trailValue.textContent = String(state.trailLength);
+  }
+  if (typeof state.speed === "number") {
+    speedSlider.value = String(state.speed);
+    speedValue.textContent = state.speed.toFixed(1);
+  }
+  if (typeof state.showSkeleton === "boolean" && state.showSkeleton !== showSkeleton) {
+    handleSkeletonToggle();
+  }
+
+  clearError();
+  const fn = buildCurveFn(state.code);
+  if (fn) {
+    createInstance(fn, getParams());
+  }
+}
+
 presetSelect.addEventListener("change", (e) => {
   const target = e.target as HTMLSelectElement;
 
@@ -256,6 +330,7 @@ presetSelect.addEventListener("change", (e) => {
 });
 
 clearBtn.addEventListener("click", handleClear);
+shareBtn.addEventListener("click", () => void handleShare());
 codeInput.addEventListener("input", handleCodeChange);
 skeletonToggle.addEventListener("click", handleSkeletonToggle);
 
@@ -272,38 +347,38 @@ trailSlider.addEventListener("input", (e) => {
 });
 
 colorInput.addEventListener("input", updateInstance);
-
 headColorInput.addEventListener("input", updateInstance);
+trailStyleSelect.addEventListener("change", updateInstance);
+paletteSelect.addEventListener("change", updateInstance);
 
-trailStyleSelect.addEventListener("change", () => {
-  const params = getParams();
-  updateHash(currentCode, params.trailStyle, params.palette);
-  updateInstance();
-});
+async function init(): Promise<void> {
+  // Check for a KV share ID in the query string first.
+  const searchParams = new URLSearchParams(window.location.search);
+  const shareId = searchParams.get("s");
 
-paletteSelect.addEventListener("change", () => {
-  const params = getParams();
-  updateHash(currentCode, params.trailStyle, params.palette);
-  updateInstance();
-});
+  if (shareId) {
+    try {
+      const res = await fetch(`/api/share?id=${encodeURIComponent(shareId)}`);
+      if (res.ok) {
+        const { state } = (await res.json()) as { state: SharedState };
+        restoreState(state);
+        return;
+      }
+    } catch {
+      // fall through to hash / default
+    }
+  }
 
-function init(): void {
+  // Fall back to legacy hash links.
   const hash = window.location.hash.slice(1);
-
   if (hash) {
-    const decoded = decodeHash(hash);
-
+    const decoded = decodeLegacyHash(hash);
     if (decoded) {
       codeInput.value = decoded.code;
       currentCode = decoded.code;
 
-      // Restore style settings from URL if present
-      if (decoded.trailStyle) {
-        trailStyleSelect.value = decoded.trailStyle;
-      }
-      if (decoded.palette) {
-        paletteSelect.value = decoded.palette;
-      }
+      if (decoded.trailStyle) trailStyleSelect.value = decoded.trailStyle;
+      if (decoded.palette) paletteSelect.value = decoded.palette;
 
       const fn = buildCurveFn(decoded.code);
       if (fn) {
@@ -319,4 +394,4 @@ function init(): void {
   }
 }
 
-init();
+void init();

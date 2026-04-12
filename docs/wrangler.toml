@@ -1,0 +1,7 @@
+name = "sarmal"
+pages_build_output_dir = "dist"
+compatibility_date = "2025-01-01"
+
+[[kv_namespaces]]
+binding = "SARMAL_SHARES"
+id = "33148dc5e3874da7a8bc42b075453e0a"

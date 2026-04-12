@@ -1,9 +1,11 @@
 ---
 import { curves } from "@sarmal/core";
+import { Share2, Trash2 } from "@lucide/astro";
 
 import BaseLayout from "../layouts/BaseLayout.astro";
 import Navbar from "../components/Navbar.astro";
 import Toggle from "../components/Toggle.astro";
+import Button from "../components/Button.astro";
 
 import { SEPARATOR_DOT } from "../variables";
 
@@ -43,11 +45,22 @@ const presetsJson = JSON.stringify(
 						{curveEntries.map((curve) => <option value={curve.id}>{curve.name}</option>)}
 					</select>
 				</div>
-				<button
-					id='clear-btn'
-					class='font-mono text-xs tracking-wider uppercase text-muted hover:text-error transition-colors'>
-					Clear
-				</button>
+				<div class='flex items-center gap-3'>
+					<div class='relative'>
+					<Button id='share-btn' variant="ghost">
+						<Share2 slot='icon' class='w-3.5 h-3.5' />
+						Share
+					</Button>
+						<span
+							id='share-status'
+							class='hidden absolute right-0 top-6 whitespace-nowrap font-mono text-[10px] text-muted bg-surface border border-border rounded px-2 py-1 z-10'>
+						</span>
+					</div>
+					<Button id='clear-btn' variant='primary' hoverColor='error'>
+						<Trash2 slot='icon' class='w-3.5 h-3.5' />
+						Clear
+					</Button>
+				</div>
 			</div>
 
 			<div class='flex-1 p-4 overflow-auto'>
