@@ -1,0 +1,356 @@
+---
+layout: ../../layouts/DocsLayout.astro
+title: API Reference
+sidebarLabel: API
+order: 3
+description: Complete reference for all public methods, options, and the curve definition schema.
+---
+
+import Alert from "../../components/Alert.astro";
+import Link from "../../components/Link.astro";
+
+# API Reference
+
+The "look it up" page for all public methods, options, and the curve definition schema.
+
+<Alert variant="tip">This reference assumes familiarity with the core concepts. See <Link href="#gotchas">Gotchas</Link> for common pitfalls</Alert>
+
+## `createSarmal(canvas, curveDef, options?)`
+
+Creates a canvas-based sarmal instance. Returns `SarmalInstance`.
+
+```ts
+import { createSarmal, curves } from "@sarmal/core";
+
+const canvas = document.getElementById("loading-indicator") as HTMLCanvasElement;
+const sarmal = createSarmal(canvas, curves.artemis2);
+sarmal.start();
+```
+
+### Options
+
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `trailLength` | `number` | `120` | Number of points in trail |
+| `skeletonColor` | `string` | `'#ffffff'` | Hex color string for the skeleton path |
+| `trailColor` | `string` | `'#ffffff'` | Hex color string for the trail |
+| `headColor` | `string` | `'#ffffff'` | Hex color string for the head dot |
+| `headRadius` | `number` | `4` | Radius of the head dot in pixels |
+| `trailStyle` | `TrailStyle` | `'default'` | `'default'` \| `'gradient-static'` \| `'gradient-animated'` |
+| `palette` | `PalettePreset \| string[]` | - | Built-in preset name or custom hex array |
+
+### Built-in palettes
+
+`'bard'`, `'sunset'`, `'ocean'`, `'ice'`, `'fire'`, `'forest'`
+
+---
+
+## `createSarmalSVG(container, curveDef, options?)`
+
+Same API as `createSarmal`. First argument is any container element (typically a `<div>`). Outputs animated SVG elements.
+
+```ts
+import { createSarmalSVG, curves } from "@sarmal/core";
+
+const container = document.getElementById("loading-indicator-container")!;
+const sarmal = createSarmalSVG(container, curves.lissajous32);
+sarmal.start();
+```
+
+<Alert variant="warning">
+  `trailStyle` and `palette` options are not yet supported in SVG renderer.
+</Alert>
+
+---
+
+## Instance Methods
+
+### `start()`
+
+Begins the animation loop.
+
+```ts
+sarmal.start();
+```
+
+### `stop()`
+
+Cancels the **requestAnimationFrame** loop entirely.
+
+<Alert variant="warning">
+This is distinct from pausing
+</Alert>
+
+```ts
+sarmal.stop();
+```
+
+### `destroy()`
+
+Stops the animation and cleans up resources. Call in component unmount / cleanup handlers.
+
+```ts
+// React example
+useEffect(() => {
+  const sarmal = createSarmal(canvas, curves.artemis2);
+  sarmal.start();
+
+  return () => {
+    sarmal.destroy(); // Cleanup on unmount
+  };
+}, []);
+```
+
+### `reset()`
+
+Resets the engine and clears the trail. The next frame will start fresh from the *beginning* of the curve.
+
+```ts
+sarmal.reset();
+```
+
+---
+
+## Engine Control
+
+### `jump(t, options?)`
+
+Instantly moves the head to position `t`. Does not update `actualTime`. Trail is left *untouched* by default, but you can use `clearTrail: true` to wipe it.
+
+Use `jump` when you need a raw position override: morphing mid-flight, scrubbing, or situations where the existing trail context should stay intact.
+
+```ts
+// Teleport to halfway through the curve
+sarmal.jump(Math.PI);
+
+// Teleport and clear the trail for a blank start
+sarmal.jump(0, { clearTrail: true });
+```
+
+**Options:**
+
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `clearTrail` | `boolean` | `false` | Clear the trail on jump |
+
+### `seek(t, options?)`
+
+Moves to `t` **and** reconstructs the trail as if the animation naturally arrived there from `t=0`. Also updates `actualTime` to match.
+
+Use `seek` when you want the trail to look *meaningful* after the move, like making a jump where keeping the trail context matters.
+
+```ts
+// Seek to t=2 with a natural-looking trail
+sarmal.seek(2);
+
+// Wrap trail around period boundary for a full trail near t=0
+sarmal.seek(0.5, { wrap: true });
+
+// Custom step size (default: period / trailLength)
+sarmal.seek(1, { step: 0.1 });
+```
+
+**Options:**
+
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `wrap` | `boolean` | `false` | Trail wraps around period boundary for a full trail everywhere |
+| `step` | `number` | `period / trailLength` | Time gap between trail points (deterministic, FPS-independent) |
+
+---
+
+## Morphing
+
+### `morphTo(targetCurve, options?)`
+
+Smooth transition between curves. Returns `Promise<void>` that resolves when morph completes.
+
+```ts
+// Basic morph over default duration (300ms)
+await sarmal.morphTo(curves.deltoid);
+
+// Morph with custom duration
+await sarmal.morphTo(curves.rose3, { duration: 500 });
+
+// Use 'raw' strategy for different period handling
+await sarmal.morphTo(curves.lissajous32, { morphStrategy: "raw" });
+
+// Chain morphs
+await sarmal.morphTo(curves.astroid);
+await sarmal.morphTo(curves.rose5);
+await sarmal.morphTo(curves.artemis2);
+```
+
+**Options:**
+
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `duration` | `number` | `300` | Duration of the morph transition in milliseconds |
+| `morphStrategy` | `'normalized' \| 'raw'` | `'normalized'` | Strategy for lerping between curves with different periods |
+
+**Morph strategies:**
+
+- `'normalized'` (default): `tB = (t / periodA) * periodB` smooth for all period ratios
+- `'raw'`: Same `t` for both curves, which can produce chaotic results with mismatched periods
+
+**Behavior notes:**
+
+- Calling `morphTo()` mid-morph resolves the previous Promise *immediately*. The current interpolated state becomes `curveA` for the new morph while avoiding a visual jump
+- The transition flow for speed and morph run *independently*
+
+---
+
+## Curve Definition Schema
+
+```ts
+interface CurveDef {
+  name: string;                      // Required: identifier for the curve
+  fn: (t, time, params) => Point;    // Required: parametric function
+  period?: number;                   // Default: 2π
+  speed?: number;                    // Default: 1 (radians per second)
+  skeleton?: 'static' | 'live';      // Default: 'static'
+  skeletonFn?: (t: number) => Point; // Optional stable-shape override
+}
+```
+
+### `fn(t, time, params)` function details:
+
+- **`t`**: Position along curve (0 -> period)
+- **`time`**: Actual elapsed seconds
+- **`params`**: Animated parameters object
+
+<Alert variant="warning">
+`params` is reserved for future implementations and currently **always** uses `{}` internally
+</Alert>
+
+```ts
+const myCurve: CurveDef = {
+  name: "circle",
+  fn: (t, time, params) => ({
+    x: Math.cos(t),
+    y: Math.sin(t),
+  }),
+  period: Math.PI * 2,
+  speed: 1,
+};
+```
+
+### Skeleton modes
+
+| Mode | Description |
+|------|-------------|
+| `'static'` | Skeleton is computed once at initialization from `fn(t, 0)` and cached. Use for curves with fixed shapes. |
+| `'live'` | Skeleton is recomputed *each frame* using `fn(t, actualTime)`. Use for curves whose shape drifts over time. |
+| `skeletonFn` | Override function for computing a skeleton *independent* of `fn`. |
+
+<Alert variant="info">
+  See <Link href="/docs/concepts#skeleton-modes">Concepts</Link> for detailed explanation of skeleton modes and when to use each.
+</Alert>
+
+**Not in the schema:** Color, trail style, rendering options, `trailLength`, and `scale` are renderer concerns, not curve concerns.
+
+---
+
+## Trail Styles
+
+| Style | Description |
+|-------|-------------|
+| `'default'` | White trail with opacity fade |
+| `'gradient-static'` | Head-to-tail color transition, fixed |
+| `'gradient-animated'` | Colors flow along trail continuously |
+
+```ts
+// Static gradient from head to tail
+const sarmal = createSarmal(canvas, curves.artemis2, {
+  trailStyle: "gradient-static",
+  palette: "ice",
+});
+
+// Animated flowing colors
+const sarmal = createSarmal(canvas, curves.artemis2, {
+  trailStyle: "gradient-animated",
+  palette: "bard",
+});
+```
+
+---
+
+## Built-in Palettes
+
+| Preset | Colors | Best For |
+|--------|--------|----------|
+| `bard` | Purple → blue → teal → pink | Animated gradient |
+| `sunset` | Orange → red → purple → pink | Warm, energetic |
+| `ocean` | Deep blue → cyan → aqua → white | Cool, calm |
+| `ice` | Deep blue → ice cyan | Static gradient |
+| `fire` | Deep red → amber | Bold, attention-grabbing |
+| `forest` | Deep green → mint | Natural, organic |
+
+```ts
+// Use a preset
+const sarmal = createSarmal(canvas, curves.artemis2, {
+  trailStyle: "gradient-animated",
+  palette: "sunset",
+});
+
+// Custom palette
+const sarmal = createSarmal(canvas, curves.artemis2, {
+  trailStyle: "gradient-static",
+  palette: ["#ff6b6b", "#ffd93d", "#6bcb77"],
+});
+```
+
+---
+
+## Gotchas
+
+1. **Mutable trail buffer**: The internal trail array is reused each frame. If you need to keep previous frame values, copy with `[...trail]`.
+
+2. **`jump()` is position-only**: Updates `t` but NOT `actualTime`. Clock time only advances with the internal animation loop. Use `seek()` if you need `actualTime` to match.
+
+3. **`seek` step**: Default is `period / trailLength`, which is deterministic and FPS-independent. Pass explicit `step` to match your actual render loop delta.
+
+4. **Live skeleton drift**: Curves with `skeleton: 'live'` drift based on `actualTime`. At speed ≠ 1, skeleton and trail may misalign: This is a known limitation of Sarmal's current implementation.
+
+5. **Trail bunching/spreading**: Speed changes affect point spacing immediately. This is an intentional behavior, not a bug.
+
+6. **Canvas sizing is fixed at init**: `createSarmal()` captures canvas dimensions at creation. If the canvas is resized after init, you will need to call `destroy()` and re-create. May be internally handled in the future by the library.
+
+7. **Negative speed**: Reverses `t` traversal. Trail extends in the opposite direction. This behavior is supported but not polished.
+
+---
+
+## TypeScript Types
+
+```ts
+// Core types
+interface Point {
+  x: number;
+  y: number;
+}
+
+interface CurveDef {
+  name: string;
+  fn: (t: number, time: number, params: Record<string, number>) => Point;
+  period?: number;
+  speed?: number;
+  skeleton?: "static" | "live";
+  skeletonFn?: (t: number) => Point;
+}
+
+interface SarmalInstance {
+  start(): void;
+  stop(): void;
+  reset(): void;
+  destroy(): void;
+  jump(t: number, options?: { clearTrail?: boolean }): void;
+  seek(t: number, options?: { wrap?: boolean; step?: number }): void;
+  morphTo(target: CurveDef, options?: {
+    duration?: number;
+    morphStrategy?: "normalized" | "raw";
+  }): Promise<void>;
+}
+
+type TrailStyle = "default" | "gradient-static" | "gradient-animated";
+type PalettePreset = "bard" | "sunset" | "ocean" | "ice" | "fire" | "forest";
+```
