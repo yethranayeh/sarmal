@@ -175,6 +175,7 @@ export function createRenderer(options: RendererOptions): SarmalInstance {
    * Sets up the canvas for DPR scaling
    */
   function setupCanvas() {
+    // TODO: attach a ResizeObserver so this function can be called again for the right scale of canvas
     const rect = canvas.getBoundingClientRect();
     const lw = rect.width || 200;
     const lh = rect.height || 200;

@@ -1,8 +1,11 @@
 // @vitest-environment jsdom
+import type { CurveDef } from "./types";
+
 import { describe, it, expect, vi } from "vitest";
+
 import { createEngine } from "./engine";
 import { createRenderer } from "./renderer";
-import type { CurveDef } from "./types";
+import { createSarmal } from "./index";
 import {
   hexToRgbComponents,
   computeTangent,
@@ -606,6 +609,41 @@ describe("createRenderer() lifecycle", () => {
     renderer.destroy();
 
     expect(cancelled).toContain(99);
+
+    vi.restoreAllMocks();
+  });
+});
+
+describe("createSarmal() integration", () => {
+  it("returns a SarmalInstance with all required methods", () => {
+    const instance = createSarmal(makeCanvas(), testCircle);
+    expect(typeof instance.start).toBe("function");
+    expect(typeof instance.stop).toBe("function");
+    expect(typeof instance.destroy).toBe("function");
+    expect(typeof instance.reset).toBe("function");
+    expect(typeof instance.seek).toBe("function");
+    expect(typeof instance.seekWithTrail).toBe("function");
+    expect(typeof instance.morphTo).toBe("function");
+  });
+
+  it("seek() delegates to the engine without throwing", () => {
+    const instance = createSarmal(makeCanvas(), testCircle);
+    expect(() => instance.seek(Math.PI)).not.toThrow();
+  });
+
+  it("morphTo() returns a Promise", () => {
+    vi.spyOn(globalThis, "requestAnimationFrame").mockImplementation(() => 1);
+    vi.spyOn(globalThis, "cancelAnimationFrame").mockImplementation(() => {});
+
+    const anotherCurve: CurveDef = {
+      name: "other",
+      fn: (t) => ({ x: Math.sin(t), y: Math.cos(t) }),
+      period: Math.PI * 2,
+      speed: 1,
+    };
+    const instance = createSarmal(makeCanvas(), testCircle);
+    const result = instance.morphTo(anotherCurve);
+    expect(result).toBeInstanceOf(Promise);
 
     vi.restoreAllMocks();
   });
