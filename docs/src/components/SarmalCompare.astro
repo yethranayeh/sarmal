@@ -1,0 +1,42 @@
+---
+const id = `sarmal-compare-${Math.random().toString(36).slice(2, 8)}`;
+const canvasId = `${id}-canvas`;
+const svgId = `${id}-svg`;
+---
+
+<div class='sarmal-compare not-prose my-8' data-canvas-id={canvasId} data-svg-id={svgId}>
+	<div class='flex gap-30 justify-center items-end'>
+		<div class='flex flex-col items-center gap-3'>
+			<canvas id={canvasId} width={200} height={200}></canvas>
+			<span class='font-mono text-[10px] tracking-[0.25em] uppercase text-muted'>Canvas</span>
+		</div>
+		<div class='flex flex-col items-center gap-3'>
+			<div id={svgId} style='width: 200px; height: 200px;'></div>
+			<span class='font-mono text-[10px] tracking-[0.25em] uppercase text-muted'>SVG</span>
+		</div>
+	</div>
+</div>
+
+<script>
+	import { createSarmal, createSarmalSVG, curves } from "@sarmal/core";
+
+	document.querySelectorAll<HTMLElement>(".sarmal-compare").forEach((wrapper) => {
+		const canvasId = wrapper.dataset.canvasId!;
+		const svgId = wrapper.dataset.svgId!;
+
+		const canvas = document.getElementById(canvasId) as HTMLCanvasElement;
+		const svgContainer = document.getElementById(svgId) as HTMLElement;
+
+		if (!canvas || !svgContainer) return;
+
+		const opts = {
+			trailColor: "#c0143c",
+			skeletonColor: "#d4cfc8",
+			headColor: "#c0143c",
+			trailLength: 120
+		};
+
+		createSarmal(canvas, curves.lissajous43, opts).start();
+		createSarmalSVG(svgContainer, curves.lissajous43, opts).start();
+	});
+</script>

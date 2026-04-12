@@ -1,0 +1,131 @@
+---
+layout: ../../layouts/DocsLayout.astro
+title: Canvas vs SVG
+sidebarLabel: Canvas vs SVG
+order: 4
+description: Choose the right renderer for your use case.
+---
+
+import Alert from "../../components/Alert.astro";
+import Link from "../../components/Link.astro";
+import SarmalCompare from "../../components/SarmalCompare.astro";
+
+# Canvas vs SVG
+
+Choose the right renderer for your use case.
+
+<Alert variant="warning">
+	Both renderers require a **DOM**. You may need to guard initialization in SSR frameworks. See <Link href="/docs/getting-started#frameworks-and-ssr">Getting Started → Frameworks and SSR</Link>.
+</Alert>
+
+<SarmalCompare />
+
+Same curve. Same options. Two renderers — pick based on what your context needs.
+
+## Canvas Renderer
+
+The Canvas renderer is the default and most feature-complete option. It uses the HTML5 Canvas 2D API for rendering.
+
+**How it works:**
+
+- Renders to a `<canvas>` element you provide
+- Uses an **OffscreenCanvas** to cache the skeleton path for performance
+- Handles **device pixel ratio (DPR)** automatically for crisp rendering on high-DPI displays
+- Supports all trail styles including animated gradients
+
+**Best for:**
+
+- Most use cases, especially when you need animated gradient trails
+- Fixed-size loading indicators where dimensions are known upfront
+- Performance-critical scenarios (cached skeleton, efficient trail rendering)
+
+```ts
+import { createSarmal, curves } from "@sarmal/core";
+
+const canvas = document.getElementById("spinner") as HTMLCanvasElement;
+const sarmal = createSarmal(canvas, curves.artemis2, {
+  trailStyle: "gradient-animated",
+  palette: "bard",
+});
+sarmal.start();
+```
+
+<Alert variant="warning">
+  In current implementation, canvas dimensions are captured at initialization. If the canvas is resized after creation, call `destroy()` and re-create the instance. This may be automatically handled in a future update.
+</Alert>
+
+---
+
+## SVG Renderer
+
+The SVG renderer generates DOM elements and updates them via `requestAnimationFrame`. It is ideal when you need vector graphics that are *independent* of resolution.
+
+**How it works:**
+
+- Appends an `<svg>` element into a container you provide
+- Updates path data and attributes each frame
+- Automatically scales to fit the container. Unlike canvas, does not require DPR handling
+- Includes built-in accessibility features (`role="img"`, `<title>`)
+
+**Best for:**
+
+- Resolution-independent graphics that need to scale smoothly
+- Containers with fluid or responsive dimensions
+- Situations where accessibility is a priority
+
+```ts
+import { createSarmalSVG, curves } from "@sarmal/core";
+
+const container = document.getElementById("spinner-container")!;
+const sarmal = createSarmalSVG(container, curves.lissajous32, {
+  ariaLabel: "Loading data...",
+});
+sarmal.start();
+```
+
+<Alert variant="warning">
+  `trailStyle` and `palette` options are not yet supported in the SVG renderer.
+</Alert>
+
+---
+
+## When to Use Which
+
+| Feature | Canvas | SVG |
+|---------|--------|-----|
+| **Animated gradients** | Yes | Not yet |
+| **Custom palettes** | Yes | Not yet |
+| **Responsive scaling** | Manual | Automatic |
+| **Accessibility** | Manual | Built-in |
+| **Performance** | Excellent (cached skeleton) | Good |
+| **SSR-friendly** | No | No |
+| **Export to image** | Native | Requires conversion |
+
+### Choose Canvas when:
+
+- You want gradient trail effects (`gradient-static` or `gradient-animated`)
+  - Though this is only a current limitiation.
+- You need to export frames as images
+- You have fixed dimensions and want maximum performance
+- You're building a game or canvas-heavy application
+
+### Choose SVG when:
+
+- The spinner lives in a responsive container
+- You need it to scale crisply at any size
+- Accessibility is a priority
+- You want to style or inspect the output with CSS or DevTools
+
+### Same API, different first argument
+
+Both renderers share the *same* instance methods (`start`, `stop`, `morphTo`, `seek`, etc.). The only differences are the creation function and the first argument type:
+
+```ts
+// Canvas: pass a canvas element
+const canvasSarmal = createSarmal(canvasElement, curve, options);
+
+// SVG: pass a container element
+const svgSarmal = createSarmalSVG(containerElement, curve, options);
+```
+
+See the <Link href="/docs/api">API Reference</Link> for the complete list of options and methods available to both renderers.
