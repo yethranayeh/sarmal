@@ -1,4 +1,8 @@
-import { describe, it, expect } from "vitest";
+// @vitest-environment jsdom
+import { describe, it, expect, vi } from "vitest";
+import { createEngine } from "./engine";
+import { createRenderer } from "./renderer";
+import type { CurveDef } from "./types";
 import {
   hexToRgbComponents,
   computeTangent,
@@ -9,6 +13,93 @@ import {
   getPaletteColor,
   resolvePalette,
 } from "./renderer";
+
+// Mock OffscreenCanvas for jsdom environment
+class MockOffscreenCanvas {
+  width: number;
+  height: number;
+  constructor(width: number, height: number) {
+    this.width = width;
+    this.height = height;
+  }
+  getContext(_contextId: string) {
+    return {
+      save: () => {},
+      restore: () => {},
+      clearRect: () => {},
+      fillRect: () => {},
+      stroke: () => {},
+      fill: () => {},
+      beginPath: () => {},
+      moveTo: () => {},
+      lineTo: () => {},
+      closePath: () => {},
+      setTransform: () => {},
+      fillStyle: "",
+      strokeStyle: "",
+      lineWidth: 1,
+      globalAlpha: 1,
+      drawImage: () => {},
+      arc: () => {},
+    } as unknown as OffscreenCanvasRenderingContext2D;
+  }
+}
+// @ts-ignore - adding to global for jsdom
+globalThis.OffscreenCanvas = MockOffscreenCanvas;
+
+// Test fixture for renderer lifecycle tests
+const testCircle: CurveDef = {
+  name: "test-circle",
+  fn: (t) => ({ x: Math.cos(t), y: Math.sin(t) }),
+  period: Math.PI * 2,
+  speed: 1,
+};
+
+function makeCanvas(): HTMLCanvasElement {
+  const canvas = document.createElement("canvas");
+  canvas.width = 200;
+  canvas.height = 200;
+  // jsdom does not implement getBoundingClientRect layout —
+  // mock it to return a stable 200×200 rect
+  canvas.getBoundingClientRect = () => ({
+    width: 200,
+    height: 200,
+    top: 0,
+    left: 0,
+    bottom: 200,
+    right: 200,
+    x: 0,
+    y: 0,
+    toJSON: () => {},
+  });
+  // jsdom does not implement canvas 2d context — mock a minimal one
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  (canvas as any).getContext = (contextId: string) => {
+    if (contextId === "2d") {
+      return {
+        save: () => {},
+        restore: () => {},
+        clearRect: () => {},
+        fillRect: () => {},
+        stroke: () => {},
+        fill: () => {},
+        beginPath: () => {},
+        moveTo: () => {},
+        lineTo: () => {},
+        closePath: () => {},
+        setTransform: () => {},
+        fillStyle: "",
+        strokeStyle: "",
+        lineWidth: 1,
+        globalAlpha: 1,
+        drawImage: () => {},
+        arc: () => {},
+      };
+    }
+    return null;
+  };
+  return canvas;
+}
 
 describe("hexToRgbComponents", () => {
   it("parses valid 6-digit hex colors", () => {
@@ -432,5 +523,90 @@ describe("resolvePalette", () => {
   it("defaults to Ice for default style", () => {
     const result = resolvePalette(undefined, "default");
     expect(result[0]).toBe("#1e3a8a"); // Ice's first color
+  });
+});
+
+describe("createRenderer() lifecycle", () => {
+  it("start() begins the animation loop (animationId is set)", () => {
+    const rafIds: number[] = [];
+    vi.spyOn(globalThis, "requestAnimationFrame").mockImplementation((_cb) => {
+      const id = rafIds.length + 1;
+      rafIds.push(id);
+      return id;
+    });
+    vi.spyOn(globalThis, "cancelAnimationFrame").mockImplementation(() => {});
+
+    const engine = createEngine(testCircle);
+    const renderer = createRenderer({ canvas: makeCanvas(), engine });
+    renderer.start();
+
+    expect(rafIds.length).toBeGreaterThan(0);
+
+    vi.restoreAllMocks();
+  });
+
+  it("start() called twice does not double-schedule", () => {
+    let callCount = 0;
+    vi.spyOn(globalThis, "requestAnimationFrame").mockImplementation(() => {
+      callCount++;
+      return callCount;
+    });
+    vi.spyOn(globalThis, "cancelAnimationFrame").mockImplementation(() => {});
+
+    const engine = createEngine(testCircle);
+    const renderer = createRenderer({ canvas: makeCanvas(), engine });
+    renderer.start();
+    const firstCount = callCount;
+    renderer.start(); // second call should be a no-op
+    expect(callCount).toBe(firstCount);
+
+    vi.restoreAllMocks();
+  });
+
+  it("stop() cancels the animation frame", () => {
+    const cancelled: number[] = [];
+    vi.spyOn(globalThis, "requestAnimationFrame").mockImplementation(() => 42);
+    vi.spyOn(globalThis, "cancelAnimationFrame").mockImplementation((id) => {
+      cancelled.push(id);
+    });
+
+    const engine = createEngine(testCircle);
+    const renderer = createRenderer({ canvas: makeCanvas(), engine });
+    renderer.start();
+    renderer.stop();
+
+    expect(cancelled).toContain(42);
+
+    vi.restoreAllMocks();
+  });
+
+  it("stop() called twice does not throw", () => {
+    vi.spyOn(globalThis, "requestAnimationFrame").mockImplementation(() => 1);
+    vi.spyOn(globalThis, "cancelAnimationFrame").mockImplementation(() => {});
+
+    const engine = createEngine(testCircle);
+    const renderer = createRenderer({ canvas: makeCanvas(), engine });
+    renderer.start();
+    renderer.stop();
+    expect(() => renderer.stop()).not.toThrow();
+
+    vi.restoreAllMocks();
+  });
+
+  it("destroy() cancels the animation frame and cleans up", () => {
+    const cancelled: number[] = [];
+    vi.spyOn(globalThis, "requestAnimationFrame").mockImplementation(() => 99);
+    vi.spyOn(globalThis, "cancelAnimationFrame").mockImplementation((id) => {
+      cancelled.push(id);
+    });
+
+    const engine = createEngine(testCircle);
+    const renderer = createRenderer({ canvas: makeCanvas(), engine });
+    renderer.start();
+    renderer.destroy();
+
+    expect(cancelled).toContain(99);
+
+    vi.restoreAllMocks();
   });
 });
