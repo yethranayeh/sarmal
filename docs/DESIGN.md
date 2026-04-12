@@ -73,6 +73,25 @@ Warm blacks with a faint red undertone — like concentrated ink, not a darkened
 | `muted-foreground` | `#a09090` | Slightly lighter warm gray |
 | `error` | `#cc001a` | Same as primary in dark mode — red is red |
 
+### Dark Mode Contrast Audit
+
+Contrast ratios against the three dark surfaces (WCAG AA requires 4.5:1 for normal text, 3:1 for large text):
+
+| Text token | `background` | `surface` | `surface-raised` | Usable as text? |
+|---|---|---|---|---|
+| `foreground` `#ede8e0` | 16.3:1 | 15.3:1 | 13.7:1 | ✓ all surfaces |
+| `muted-foreground` `#a09090` | 6.5:1 | 6.1:1 | 5.5:1 | ✓ all surfaces |
+| `muted` `#6b5555` | 2.9:1 | 2.7:1 | 2.4:1 | ✗ fails everywhere |
+| `primary` `#cc001a` (as text) | 3.4:1 | 3.2:1 | 2.8:1 | ✗ decorative/bg only |
+| `accent` `#8b0010` | 2.0:1 | — | — | ✗ depth/shadow only |
+
+**Key findings:**
+
+- `foreground` and `muted-foreground` are the only two tokens that work as readable text. The bone white / warm mid-gray tier is solid.
+- `muted` (`#6b5555`) fails as secondary text on every dark surface. It was chosen for warmth, not legibility. When dark mode is implemented, `muted` needs to be lightened to at least `#8a7070` to clear 4.5:1 on `background`, or repurposed as a border/decorative token with `muted-foreground` taking the secondary-text role.
+- `primary` red cannot serve as text on dark surfaces (reds are low-luminance by nature). It works as a background — `foreground` text on `primary` clears AA at 4.8:1. Use it decoratively or as a button background, not as colored label text.
+- `foreground` on `primary` is 4.8:1 — passes AA but barely. Avoid very small text in this combination.
+
 ---
 
 ## Typography
