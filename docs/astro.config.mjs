@@ -2,6 +2,7 @@
 import { defineConfig, fontProviders } from "astro/config";
 import tailwindcss from "@tailwindcss/vite";
 import sitemap from "@astrojs/sitemap";
+import mdx from "@astrojs/mdx";
 
 import sarmalLight from "./src/themes/sarmal-editorial.json";
 import sarmalDark from "./src/themes/sarmal-editorial-dark.json";
@@ -9,7 +10,7 @@ import sarmalDark from "./src/themes/sarmal-editorial-dark.json";
 // https://astro.build/config
 export default defineConfig({
   site: "https://sarmal.art",
-  integrations: [sitemap()],
+  integrations: [sitemap(), mdx()],
   vite: {
     // @ts-ignore | can't really be bothered as to why it's giving type errors. It's the literal official way to set it up...
     plugins: [tailwindcss()],

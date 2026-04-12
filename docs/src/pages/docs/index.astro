@@ -1,0 +1,69 @@
+---
+import DocsLayout from "../../layouts/DocsLayout.astro";
+import Link from "../../components/Link.astro";
+
+import { SEPARATOR_DOT } from "../../variables";
+
+interface DocModule {
+	frontmatter: {
+		title: string;
+		description: string;
+		order: number;
+	};
+}
+
+const docModules = import.meta.glob<DocModule>("./*.mdx", { eager: true });
+
+const docLinks = Object.entries(docModules)
+	.map(([path, mod]) => {
+		const slug = path.replace("./", "").replace(".mdx", "");
+		return {
+			href: `/docs/${slug}`,
+			label: mod.frontmatter.title,
+			description: mod.frontmatter.description,
+			order: mod.frontmatter.order
+		};
+	})
+	.sort((a, b) => a.order - b.order);
+---
+
+<DocsLayout
+	title={`Documentation ${SEPARATOR_DOT} Sarmal`}
+	description='Installation guides, API reference, and curve catalog for Sarmal'>
+	<h1>Documentation</h1>
+	<p class='lead'>
+		Welcome to the Sarmal documentation. Here you'll find everything you need to get started with parametric loading
+		spinners, from installation to advanced customization.
+	</p>
+	<!--
+	<h2>Getting Started</h2>
+	<p>
+		New to Sarmal? Start with the <Link href='/docs/getting-started'>Getting Started</Link> guide to install
+		<code>@sarmal/core</code> and render your first spinner in minutes.
+	</p>
+
+	<h2>Explore</h2>
+	<ul>
+		{
+			docLinks.map((link) => (
+				<li>
+					<Link href={link.href}>{link.label}</Link> — {link.description}
+				</li>
+			))
+		}
+	</ul> -->
+
+	<hr />
+
+	<p>
+		Can't find what you're looking for? Check the <Link href='/play'>Playground</Link> to experiment live, or visit the
+		<Link href='https://github.com/yethranayeh/sarmal' external>GitHub repository</Link> for the source code.
+	</p>
+</DocsLayout>
+
+<style>
+	.lead {
+		font-size: 1.125rem;
+		color: var(--color-muted);
+	}
+</style>

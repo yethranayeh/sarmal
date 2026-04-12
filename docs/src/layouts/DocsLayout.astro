@@ -1,0 +1,136 @@
+---
+import BaseLayout from "./BaseLayout.astro";
+import { Menu, X } from "@lucide/astro";
+
+interface DocModule {
+	frontmatter: {
+		sidebarLabel: string;
+		order: number;
+	};
+}
+
+interface NavItem {
+	href: string;
+	label: string;
+	order: number;
+}
+
+interface Props {
+	title: string;
+	description: string;
+	sidebarLabel?: string;
+	order?: number;
+}
+
+const { title, description } = Astro.props;
+const currentPath = Astro.url.pathname;
+
+const docModules = import.meta.glob<DocModule>("../pages/docs/*.mdx", { eager: true });
+
+const navItems: NavItem[] = Object.entries(docModules)
+	.map(([path, mod]) => {
+		const slug = path.replace("../pages/docs/", "").replace(".mdx", "");
+		return {
+			href: `/docs/${slug}`,
+			label: mod.frontmatter.sidebarLabel,
+			order: mod.frontmatter.order
+		};
+	})
+	.sort((a, b) => a.order - b.order);
+
+const isActive = (href: string) => {
+	if (href === "/docs") {
+		return currentPath === "/docs" || currentPath === "/docs/";
+	}
+	return currentPath.startsWith(href);
+};
+---
+
+<BaseLayout title={title} description={description}>
+	<div class='flex flex-1'>
+		<button
+			id='mobile-menu-btn'
+			class='lg:hidden fixed top-16 left-4 z-50 flex items-center gap-2 px-3 py-2 bg-surface-raised border border-border rounded-md text-sm font-mono'
+			aria-label='Toggle navigation menu'
+			aria-expanded='false'
+			aria-controls='sidebar-nav'>
+			<Menu size={16} />
+			<span>Menu</span>
+		</button>
+
+		<aside
+			id='sidebar-nav'
+			class='fixed lg:sticky top-0 left-0 z-40 w-64 h-screen bg-surface border-r border-border transform -translate-x-full lg:translate-x-0 transition-transform duration-200 ease-out'
+			aria-label='Documentation navigation'>
+			<div class='flex flex-col h-full'>
+				<div class='lg:hidden flex items-center justify-between p-4 border-b border-border'>
+					<span class='font-heading font-medium'>Documentation</span>
+					<button
+						id='mobile-menu-close'
+						class='p-2 hover:bg-surface-raised rounded-md transition-colors'
+						aria-label='Close navigation menu'>
+						<X size={16} />
+					</button>
+				</div>
+
+				<nav class='flex-1 overflow-y-auto p-4' aria-label='Documentation sections'>
+					<ul class='space-y-1' role='list'>
+						<li>
+							<a
+								href='/docs'
+								class:list={[
+									"block px-3 py-2 text-sm rounded-md transition-colors",
+									isActive("/docs") && !currentPath.startsWith("/docs/")
+										? "text-primary border-l-2 border-primary bg-surface-raised font-medium"
+										: "text-muted hover:text-foreground hover:bg-surface-raised border-l-2 border-transparent"
+								]}>
+								Introduction
+							</a>
+						</li>
+					</ul>
+				</nav>
+			</div>
+		</aside>
+
+		<div id='sidebar-overlay' class='fixed inset-0 bg-black/20 z-30 hidden lg:hidden' aria-hidden='true'></div>
+
+		<main class='flex-1 min-w-0 p-4 md:p-8'>
+			<article class='prose max-w-3xl mx-auto lg:mx-0 prose-headings:font-medium'>
+				<slot />
+			</article>
+		</main>
+	</div>
+</BaseLayout>
+
+<script>
+	const menuBtn = document.getElementById("mobile-menu-btn");
+	const closeBtn = document.getElementById("mobile-menu-close");
+	const sidebar = document.getElementById("sidebar-nav");
+	const overlay = document.getElementById("sidebar-overlay");
+
+	function openMenu() {
+		sidebar?.classList.remove("-translate-x-full");
+		overlay?.classList.remove("hidden");
+		menuBtn?.setAttribute("aria-expanded", "true");
+		document.body.style.overflow = "hidden";
+	}
+
+	function closeMenu() {
+		sidebar?.classList.add("-translate-x-full");
+		overlay?.classList.add("hidden");
+		menuBtn?.setAttribute("aria-expanded", "false");
+		document.body.style.overflow = "";
+	}
+
+	menuBtn?.addEventListener("click", openMenu);
+	closeBtn?.addEventListener("click", closeMenu);
+	overlay?.addEventListener("click", closeMenu);
+
+	document.addEventListener("keydown", (e) => {
+		if (e.key === "Escape") closeMenu();
+	});
+
+	sidebar?.querySelectorAll("a").forEach((link) => {
+		link.addEventListener("click", closeMenu);
+	});
+</script>

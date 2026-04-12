@@ -14,7 +14,10 @@ interface Props {
 
 const { links = [] } = Astro.props;
 
-const defaultLinks: NavLink[] = [{ href: "/play", label: "Playground" }];
+const defaultLinks: NavLink[] = [
+	{ href: "/docs", label: "Docs" },
+	{ href: "/play", label: "Playground" }
+];
 
 const navLinks = links.length > 0 ? links : defaultLinks;
 const currentPath = Astro.url.pathname;
