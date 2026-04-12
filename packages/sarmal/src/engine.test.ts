@@ -160,12 +160,12 @@ describe("reset()", () => {
   });
 });
 
-// ─── seek(t, options) ────────────────────────────────────────────────────────
+// ─── jump(t, options) ────────────────────────────────────────────────────────
 
-describe("seek(t, options)", () => {
+describe("jump(t, options)", () => {
   it("updates t to the given value", () => {
     const engine = createEngine(identity);
-    engine.seek(7);
+    engine.jump(7);
     const trail = engine.tick(0); // t stays at 7 (dt=0), observe x = t
     const p = lastPoint(trail, engine.trailCount);
     expect(p.x).toBe(7);
@@ -173,7 +173,7 @@ describe("seek(t, options)", () => {
 
   it("wraps t for values >= period", () => {
     const engine = createEngine(identity); // period=10
-    engine.seek(13); // 13 % 10 = 3
+    engine.jump(13); // 13 % 10 = 3
     const trail = engine.tick(0);
     const p = lastPoint(trail, engine.trailCount);
     expect(p.x).toBe(3);
@@ -181,19 +181,19 @@ describe("seek(t, options)", () => {
 
   it("wraps negative t correctly into [0, period)", () => {
     const engine = createEngine(identity); // period=10
-    engine.seek(-3); // ((-3 % 10) + 10) % 10 = 7
+    engine.jump(-3); // ((-3 % 10) + 10) % 10 = 7
     const trail = engine.tick(0);
     const p = lastPoint(trail, engine.trailCount);
     expect(p.x).toBe(7);
   });
 
-  it("does NOT modify actualTime — seek is position-only", () => {
+  it("does NOT modify actualTime — jump is position-only", () => {
     const engine = createEngine(identity);
     engine.tick(5); // actualTime = 5
-    engine.seek(2); // position-only — actualTime must remain 5
+    engine.jump(2); // position-only — actualTime must remain 5
     const trail = engine.tick(0);
     const p = lastPoint(trail, engine.trailCount);
-    expect(p.y).toBe(5); // y = actualTime — unchanged by seek
+    expect(p.y).toBe(5); // y = actualTime — unchanged by jump
   });
 
   it("preserves the trail by default", () => {
@@ -201,7 +201,7 @@ describe("seek(t, options)", () => {
     engine.tick(1);
     engine.tick(1);
     const countBefore = engine.trailCount;
-    engine.seek(7);
+    engine.jump(7);
     expect(engine.trailCount).toBe(countBefore);
   });
 
@@ -209,37 +209,37 @@ describe("seek(t, options)", () => {
     const engine = createEngine(identity);
     engine.tick(1);
     engine.tick(1);
-    engine.seek(7, { clearTrail: true });
+    engine.jump(7, { clearTrail: true });
     expect(engine.trailCount).toBe(0);
   });
 
-  it("next tick after seek advances t from the seeked position", () => {
+  it("next tick after jump advances t from the jumped position", () => {
     const engine = createEngine(identity); // period=10
-    engine.seek(6);
+    engine.jump(6);
     const trail = engine.tick(3); // t = (6+3) % 10 = 9
     const p = lastPoint(trail, engine.trailCount);
     expect(p.x).toBe(9);
   });
 
-  it("next tick after seek wraps t correctly when it crosses period", () => {
+  it("next tick after jump wraps t correctly when it crosses period", () => {
     const engine = createEngine(identity); // period=10
-    engine.seek(8);
+    engine.jump(8);
     const trail = engine.tick(5); // t = (8+5) % 10 = 3
     const p = lastPoint(trail, engine.trailCount);
     expect(p.x).toBe(3);
   });
 });
 
-// ─── seekWithTrail(t, options) ───────────────────────────────────────────────
+// ─── seek(t, options) ────────────────────────────────────────────────────────
 
-describe("seekWithTrail(t, options)", () => {
+describe("seek(t, options)", () => {
   // All tests use identity (period=10, speed=1) with trailLength=10.
   // Default step = 10/10 = 1. All arithmetic is exact whole numbers.
   const TRAIL = 10;
 
   it("sets t to the target value", () => {
     const engine = createEngine(identity, TRAIL);
-    engine.seekWithTrail(5);
+    engine.seek(5);
     const trail = engine.tick(0);
     const p = lastPoint(trail, engine.trailCount);
     expect(p.x).toBe(5); // x = t = 5
@@ -247,7 +247,7 @@ describe("seekWithTrail(t, options)", () => {
 
   it("sets actualTime to target / speed", () => {
     const engine = createEngine(identity, TRAIL); // speed=1
-    engine.seekWithTrail(5); // targetTime = 5 / 1 = 5
+    engine.seek(5); // targetTime = 5 / 1 = 5
     const trail = engine.tick(0);
     const p = lastPoint(trail, engine.trailCount);
     expect(p.y).toBe(5); // y = actualTime = 5
@@ -256,7 +256,7 @@ describe("seekWithTrail(t, options)", () => {
   it("sets actualTime to target / speed (speed > 1)", () => {
     const fast: CurveDef = { ...identity, speed: 2 };
     const engine = createEngine(fast, TRAIL);
-    engine.seekWithTrail(4); // targetTime = 4 / 2 = 2
+    engine.seek(4); // targetTime = 4 / 2 = 2
     const trail = engine.tick(0);
     const p = lastPoint(trail, engine.trailCount);
     expect(p.y).toBe(2); // y = actualTime = 2
@@ -264,7 +264,7 @@ describe("seekWithTrail(t, options)", () => {
 
   it("wraps targetT >= period into [0, period)", () => {
     const engine = createEngine(identity, TRAIL); // period=10
-    engine.seekWithTrail(15); // 15 % 10 = 5
+    engine.seek(15); // 15 % 10 = 5
     const trail = engine.tick(0);
     const p = lastPoint(trail, engine.trailCount);
     expect(p.x).toBe(5);
@@ -272,66 +272,66 @@ describe("seekWithTrail(t, options)", () => {
 
   it("clears the previous trail before rebuilding", () => {
     const engine = createEngine(identity, TRAIL);
-    engine.seekWithTrail(9); // full trail (10 points)
-    engine.seekWithTrail(5); // partial trail — old points must not leak through
+    engine.seek(9); // full trail (10 points)
+    engine.seek(5); // partial trail — old points must not leak through
     expect(engine.trailCount).toBe(6);
   });
 
   it("trail count is min(trailLength, pointsFromStart) with default step", () => {
-    // step=1, advance=1. seekWithTrail(5): pointsFromStart = floor(5/1)+1 = 6
+    // step=1, advance=1. seek(5): pointsFromStart = floor(5/1)+1 = 6
     const engine = createEngine(identity, TRAIL);
-    engine.seekWithTrail(5);
+    engine.seek(5);
     expect(engine.trailCount).toBe(6);
   });
 
   it("trail count equals trailLength when target is at period * (trailLength-1)/trailLength", () => {
-    // seekWithTrail(9): pointsFromStart = floor(9/1)+1 = 10 = trailLength
+    // seek(9): pointsFromStart = floor(9/1)+1 = 10 = trailLength
     const engine = createEngine(identity, TRAIL);
-    engine.seekWithTrail(9);
+    engine.seek(9);
     expect(engine.trailCount).toBe(TRAIL);
   });
 
   it("trail count is 1 when targetT = 0 (no prior history to reconstruct)", () => {
     const engine = createEngine(identity, TRAIL);
-    engine.seekWithTrail(0);
+    engine.seek(0);
     expect(engine.trailCount).toBe(1);
   });
 
   it("trail is full with wrap: true regardless of target position", () => {
     const engine = createEngine(identity, TRAIL);
-    engine.seekWithTrail(2, { wrap: true }); // near start — would be 3 without wrap
+    engine.seek(2, { wrap: true }); // near start — would be 3 without wrap
     expect(engine.trailCount).toBe(TRAIL);
   });
 
   it("custom step produces a deterministic point count", () => {
     const engine = createEngine(identity, TRAIL); // period=10
-    // step=2, advance=2. seekWithTrail(6): pointsFromStart = floor(6/2)+1 = 4
-    engine.seekWithTrail(6, { step: 2 });
+    // step=2, advance=2. seek(6): pointsFromStart = floor(6/2)+1 = 4
+    engine.seek(6, { step: 2 });
     expect(engine.trailCount).toBe(4);
   });
 
   it("reconstructed trail oldest point matches first sample", () => {
-    // seekWithTrail(5): 6 points. Oldest: sampleT = 5-(5*1)=0, time=0 → fn(0,0)={x:0,y:0}
+    // seek(5): 6 points. Oldest: sampleT = 5-(5*1)=0, time=0 → fn(0,0)={x:0,y:0}
     const engine = createEngine(identity, TRAIL);
-    engine.seekWithTrail(5);
+    engine.seek(5);
     const trail = engine.tick(0); // peek: adds one more, oldest stays at [0]
     expect(trail[0]!.x).toBe(0);
     expect(trail[0]!.y).toBe(0);
   });
 
   it("reconstructed trail newest point matches target", () => {
-    // seekWithTrail(5): newest = fn(5, 5) = {x:5, y:5}
+    // seek(5): newest = fn(5, 5) = {x:5, y:5}
     // After tick(1): trail[5] is still the reconstructed newest, trail[6] is the tick point
     const engine = createEngine(identity, TRAIL);
-    engine.seekWithTrail(5);
+    engine.seek(5);
     const trail = engine.tick(1); // t=6, actualTime=6 — adds trail[6]
     expect(trail[5]!.x).toBe(5); // last reconstructed point, untouched
     expect(trail[5]!.y).toBe(5);
   });
 
-  it("tick after seekWithTrail continues from the reconstructed position", () => {
+  it("tick after seek continues from the reconstructed position", () => {
     const engine = createEngine(identity, TRAIL);
-    engine.seekWithTrail(5); // t=5, actualTime=5
+    engine.seek(5); // t=5, actualTime=5
     const trail = engine.tick(2); // t=(5+2)%10=7, actualTime=7
     const p = lastPoint(trail, engine.trailCount);
     expect(p.x).toBe(7);
@@ -370,7 +370,7 @@ describe("edge cases", () => {
     expect(skeleton[0]!.y).toBeNaN();
   });
 
-  it("seekWithTrail with wrap:true wraps negative t into [0, period) using double-modulo", () => {
+  it("seek with wrap:true wraps negative t into [0, period) using double-modulo", () => {
     // With period=10, target=1, and a large step that causes sampleT = -12:
     // Double-modulo: ((-12 % 10) + 10) % 10 = (-2 + 10) % 10 = 8
     // The wrapped value should be in [0, period), not a broken negative value.
@@ -388,7 +388,7 @@ describe("edge cases", () => {
     // step = 0.65, advance = 0.65. Going back 20 steps from t=1:
     // i=19: sampleT = 1 - 19*0.65 = 1 - 12.35 = -11.35
     // Double-modulo: ((-11.35 % 10) + 10) % 10 = (-1.35 + 10) % 10 = 8.65
-    engine.seekWithTrail(1, { wrap: true, step: 0.65 });
+    engine.seek(1, { wrap: true, step: 0.65 });
     // captured[0] is the t value for the oldest trail point (i=19 in the loop)
     expect(captured[0]).toBeCloseTo(8.65);
     // Verify all captured values are in [0, 10)
@@ -914,7 +914,7 @@ describe("getSarmalSkeleton() during morph", () => {
       speed: 1,
     };
     const engine = createEngine(circleA);
-    engine.seek(Math.PI / 2); // t = π/2, curveA head = (0, 1)
+    engine.jump(Math.PI / 2); // t = π/2, curveA head = (0, 1)
     engine.startMorph(curveB, "normalized");
     engine.setMorphAlpha(1);
     // Last morph point: curveB.fn(tB) = curveB.fn(2*(π/2)) = curveB.fn(π) = (-1, 0)
@@ -943,7 +943,7 @@ describe("getSarmalSkeleton() during morph", () => {
       speed: 1,
     };
     const engine = createEngine(halfCircle);
-    engine.seek(Math.PI / 2); // t = π/2
+    engine.jump(Math.PI / 2); // t = π/2
     engine.startMorph(fullCircle, "raw");
     engine.setMorphAlpha(1);
     engine.completeMorph();

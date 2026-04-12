@@ -195,7 +195,7 @@ describe("morphTo type shape", () => {
       reset: () => {},
       destroy: () => {},
       seek: () => {},
-      seekWithTrail: () => {},
+      jump: () => {},
       morphTo: () => Promise.resolve(),
     };
     expect(shape.morphTo).toBeDefined();
@@ -622,7 +622,7 @@ describe("createSarmal() integration", () => {
     expect(typeof instance.destroy).toBe("function");
     expect(typeof instance.reset).toBe("function");
     expect(typeof instance.seek).toBe("function");
-    expect(typeof instance.seekWithTrail).toBe("function");
+    expect(typeof instance.jump).toBe("function");
     expect(typeof instance.morphTo).toBe("function");
   });
 

@@ -1,11 +1,4 @@
-import type {
-  CurveDef,
-  Engine,
-  MorpStrategy,
-  Point,
-  SeekOptions,
-  SeekWithTrailOptions,
-} from "./types";
+import type { CurveDef, Engine, JumpOptions, MorpStrategy, Point, SeekOptions } from "./types";
 
 const TWO_PI = Math.PI * 2;
 const POINTS_PER_PERIOD_UNIT = 50;
@@ -192,17 +185,14 @@ export function createEngine(curveDef: CurveDef, trailLength: number = 120): Eng
       trail.clear();
     },
 
-    seek(newT: number, { clearTrail = false }: SeekOptions = {}) {
+    jump(newT: number, { clearTrail = false }: JumpOptions = {}) {
       t = ((newT % curve.period) + curve.period) % curve.period;
       if (clearTrail) {
         trail.clear();
       }
     },
 
-    seekWithTrail(
-      targetT: number,
-      { wrap = false, step = curve.period / trailLength }: SeekWithTrailOptions = {},
-    ) {
+    seek(targetT: number, { wrap = false, step = curve.period / trailLength }: SeekOptions = {}) {
       const advance = curve.speed * step;
       const target = ((targetT % curve.period) + curve.period) % curve.period;
       const targetTime = target / curve.speed;

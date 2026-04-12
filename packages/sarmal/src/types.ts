@@ -44,14 +44,15 @@ export interface CurveDef {
   skeletonFn?: (t: number) => Point;
 }
 
-export type SeekOptions = {
+export type JumpOptions = {
   /**
-   * Decides whether the sarmal trail should be cleared when `seek` is called
+   * When true, clears the trail on jump. When false (default), the trail is left as-is.
+   * @default false
    */
   clearTrail?: boolean;
 };
 
-export type SeekWithTrailOptions = {
+export type SeekOptions = {
   /**
    * When true, the trail wraps around the period boundary,
    *  which results in a full trail even near `t=0`
@@ -119,16 +120,19 @@ export interface Engine {
   getSarmalSkeleton(): Array<Point>;
   readonly isLiveSkeleton: boolean;
   /**
-   * Sets the simulation time `t` directly to the specified value.
-   * By default, the trail is preserved
-   * @param t The time value to seek to (will be wrapped into [0, period))
+   * Instantly moves the head to position `t`. Does NOT update `actualTime`.
+   * Trail is left untouched by default — pass `clearTrail: true` to wipe it.
+   * Use for morphing mid-flight, raw scrubbing, or any time you don't need trail context.
+   * @param t The position to jump to (will be wrapped into [0, period))
+   */
+  jump(t: number, options?: JumpOptions): void;
+  /**
+   * Moves to `t` AND reconstructs the trail as if the animation naturally arrived there from `t=0`.
+   * Also updates `actualTime` to match. Trail is always rebuilt from scratch.
+   * Use for initialisation or any jump where you want the trail to look meaningful.
+   * @param t The position to seek to (will be wrapped into [0, period))
    */
   seek(t: number, options?: SeekOptions): void;
-  /**
-   * Seeks to `t` and rebuilds the trail as if the animation naturally arrived there from `t=0`
-   * @param t The time value to seek to (will be wrapped into [0, period))
-   */
-  seekWithTrail(t: number, options?: SeekWithTrailOptions): void;
   /**
    * Begins a smooth transition from the current curve to `target`
    * Saves the current curve as `curveA`, registers `target` as `curveB`, and resets `morphAlpha` to `0`
@@ -168,17 +172,20 @@ export interface SarmalInstance {
   destroy(): void;
   // FIXME: JSDoc repetition of proxied functions (maybe use `extend`?)
   /**
-   * Sets the simulation time `t` directly to the specified value.
-   * By default, the trail is preserved
-   * @param t The time value to seek to (will be wrapped into [0, period))
+   * Instantly moves the head to position `t`. Does NOT update `actualTime`.
+   * Trail is left untouched by default — pass `clearTrail: true` to wipe it.
+   * Use for morphing mid-flight, raw scrubbing, or any time you don't need trail context.
+   * @param t The position to jump to (will be wrapped into [0, period))
    */
-  seek(t: number, options?: SeekOptions): void;
+  jump(t: number, options?: JumpOptions): void;
   // FIXME: JSDoc repetition of proxied functions (maybe use `extend`?)
   /**
-   * Seeks to `t` and rebuilds the trail as if the animation naturally arrived there from `t=0`
-   * @param t The time value to seek to (will be wrapped into [0, period))
+   * Moves to `t` AND reconstructs the trail as if the animation naturally arrived there from `t=0`.
+   * Also updates `actualTime` to match. Trail is always rebuilt from scratch.
+   * Use for initialisation or any jump where you want the trail to look meaningful.
+   * @param t The position to seek to (will be wrapped into [0, period))
    */
-  seekWithTrail(t: number, options?: SeekWithTrailOptions): void;
+  seek(t: number, options?: SeekOptions): void;
   /**
    * Smoothly transitions from the current curve to `target`.
    * The trail naturally reflects the new curve as new points are added.

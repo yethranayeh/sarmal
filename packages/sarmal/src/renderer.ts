@@ -452,12 +452,12 @@ export function createRenderer(options: RendererOptions): SarmalInstance {
       }
     },
 
-    seek(t, options) {
-      engine.seek(t, options);
+    jump(t, options) {
+      engine.jump(t, options);
     },
 
-    seekWithTrail(t) {
-      engine.seekWithTrail(t);
+    seek(t, options) {
+      engine.seek(t, options);
     },
 
     morphTo(target: CurveDef, options?: MorphOptions): Promise<void> {

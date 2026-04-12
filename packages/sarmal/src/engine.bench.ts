@@ -36,19 +36,19 @@ describe("getSarmalSkeleton() throughput", () => {
   });
 });
 
-describe("seekWithTrail() throughput (trail reconstruction)", () => {
+describe("seek() throughput (trail reconstruction)", () => {
   bench("trailLength=120, seek to midpoint", () => {
     const engine = createEngine(circle, 120);
-    engine.seekWithTrail(Math.PI);
+    engine.seek(Math.PI);
   });
 
   bench("trailLength=500, seek to midpoint", () => {
     const engine = createEngine(circle, 500);
-    engine.seekWithTrail(Math.PI);
+    engine.seek(Math.PI);
   });
 
   bench("trailLength=500 with wrap:true", () => {
     const engine = createEngine(circle, 500);
-    engine.seekWithTrail(0.1, { wrap: true });
+    engine.seek(0.1, { wrap: true });
   });
 });
