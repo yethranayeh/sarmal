@@ -1,0 +1,121 @@
+---
+layout: ../../layouts/DocsLayout.astro
+title: Concepts
+sidebarLabel: Concepts
+order: 2
+description: Understand parametric curves, the skeleton, and the engine.
+---
+
+import Link from "../../components/Link.astro";
+import Alert from "../../components/Alert.astro";
+
+# Concepts
+
+Understand parametric curves, the skeleton, and the engine.
+
+## The Name
+
+**Sarmal** /sɑːrˈmɑːl/ (*sar-MAHL*): From the Turkish word for *spiral*, *coil*. To define a path traced by a point moving through space.
+
+> *Word formation:* The Turkish **sarmal** is built from the verb **sarmak** (to wrap, to coil) with the suffix `-al`, which forms nouns for the result of an action. So *sarmal* is literally 'that which is coiled' or 'the thing formed by winding.'
+
+## Parametric Curves
+
+A parametric curve is a path drawn by a point moving through space. Instead of describing the shape directly, you describe how the point moves: where it is at each moment in time.
+
+Imagine a dot moving across a piece of paper. At any instant, the dot has an exact position: an `x` coordinate and a `y` coordinate. As time passes, the dot traces a path. A parametric curve is simply the *record* of that path.
+
+The key idea is that you control _when_ the dot is at each position. You can speed up, slow down, or even run time backwards. The same geometric shape can be traced at different speeds, producing different animations.
+
+**How the spinner works:** The trail you see is just the last few positions of the dot. Each frame, time advances slightly, the dot moves to its new position, and the oldest point in the trail fades away. The result is a tail that follows the curve.
+
+<div class="my-2 flex justify-center">
+  <svg viewBox="0 0 230 162" class="w-full max-w-md" aria-label="Diagram of a parametric curve showing the skeleton, trail, and head dot">
+
+    {/* Skeleton: full lissajous figure-8, dashed */}
+    <path
+      d="M 85 82 C 95 109 123 99 123 82 C 123 65 95 55 85 82 C 75 55 47 65 47 82 C 47 99 75 109 85 82 Z"
+      fill="none" stroke="currentColor" stroke-width="1" stroke-dasharray="3 3" opacity="0.35"
+    />
+
+    {/* Trail: first portion of right lobe, lower arc */}
+    <path
+      d="M 85 82 C 90 95, 100 100, 109 99"
+      fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" opacity="0.7"
+    />
+
+    {/* Head: dot at the current position */}
+    <circle cx="109" cy="99" r="5" fill="currentColor" />
+
+    {/* Label: skeleton */}
+    <line x1="133" y1="50" x2="103" y2="64" stroke="currentColor" stroke-width="0.75" opacity="0.4" />
+    <text x="136" y="54" font-size="10" fill="currentColor" opacity="0.6">skeleton</text>
+
+    {/* Label: trail */}
+    <line x1="72" y1="110" x2="88" y2="93" stroke="currentColor" stroke-width="0.75" opacity="0.4" />
+    <text x="55" y="115" font-size="10" fill="currentColor" opacity="0.6">trail</text>
+
+    {/* Label: head */}
+    <line x1="133" y1="118" x2="113" y2="101" stroke="currentColor" stroke-width="0.75" opacity="0.4" />
+    <text x="136" y="122" font-size="10" fill="currentColor" opacity="0.6">head</text>
+
+  </svg>
+</div>
+
+You can <Link href='/play'>try it in the playground</Link> to see how it works
+
+## The Skeleton
+
+The skeleton is the **complete path** the curve traces during one full cycle, shown as a faint background behind the animated trail. It acts as a reference as to where the curve will go.
+
+The skeleton is computed when the sarmal is created. It samples the curve function across one complete period, capturing every point the trail will eventually visit. Because it is a snapshot, it represents the curve at its starting moment, before any time has elapsed.
+
+### Skeleton Modes
+
+Most curves have a fixed shape. For example, the geometry of a **rose** curve or an **astroid** curve never changes. For these, the skeleton can be computed once and reused. This is the default mode: `'static'`.
+
+Some curves change shape over time. For example, the **Lamé** curve morphs continuously, as its corners are rounding and sharpening over time. For these, a static skeleton quickly becomes wrong, as the background stops matching the trail after some time.
+
+The `'live'` mode fixes this. Each frame, the skeleton is redrawn using the current time, so it always matches the shape the trail is tracing.
+
+A third option exists for curves that animate but still have a natural reference shape. The `skeletonFn` option accepts an explicit function that returns the canonical form, drawn the same way regardless of elapsed time.
+
+| Mode                 | When to use                                                            |
+| -------------------- | ---------------------------------------------------------------------- |
+| `'static'` (default) | Shape does not change                                                  |
+| `'live'`             | Shape changes with time                                                |
+| `skeletonFn`         | Curve animates but has a stable reference shape                        |
+
+## Engine
+
+The engine owns time, state, and math. It does not know about pixels, colors, or rendering.
+
+**The pipeline:**
+
+```js
+// You write the math
+const fn = (t, time, params) => ({
+	x: Math.cos(t),
+	y: Math.sin(t)
+});
+
+// The engine advances t, manages the trail buffer, handles morphing
+const engine = createEngine(curveDef);
+const points = engine.tick(dt); // math-space coordinates
+
+// Then, the renderer handles sizing, color, DPR, canvas/SVG
+renderer.render(points, skeleton);
+```
+
+The renderer *automatically* fits the curve to its container by using the skeleton's bounding box. So, you don't really have to set a scale or size on the curve itself.
+
+**What the engine manages:**
+
+- **t**: position along the curve (advances via `tick(dt)`, overridden with `seek(t)` or `seekWithTrail(t)`)
+- **actualTime**: actual elapsed seconds (only advances with `tick()`, never with `seek()`)
+- Trail buffer: the last `N` points. It is a mutable, same array reference each tick
+- Morphing state: when transitioning between curves
+
+<Alert variant="info">
+The engine never touches pixels, canvas, SVG elements, colors, opacity, DPR, container dimensions.
+</Alert>
