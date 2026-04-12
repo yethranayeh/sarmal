@@ -1,8 +1,11 @@
 import type { CurveDef, Engine, MorphOptions, Point, SarmalInstance } from "./types";
-import { computeNormal } from "./renderer";
+import {
+  DEFAULT_MORPH_DURATION_MS,
+  DEFAULT_SKELETON_OPACITY,
+  computeBoundaries,
+  computeTrailQuad,
+} from "./renderer-shared";
 import { createEngine } from "./engine";
-
-const DEFAULT_MORPH_DURATION_MS = 300;
 
 export interface SVGRendererOptions {
   /** Container element that will contain the SVG */
@@ -26,16 +29,6 @@ export interface SVGSarmalOptions extends Omit<SVGRendererOptions, "container" |
 }
 /** Maximum number of trail segment paths pre-created for the ribbon */
 const MAX_TRAIL_SEGMENTS = 200;
-/** Higher values = sharper fade near the tail */
-const TRAIL_FADE_CURVE = 1.5;
-const TRAIL_MAX_OPACITY = 0.88;
-/** Stroke width at the tail */
-const TRAIL_MIN_WIDTH = 0.5;
-/** Stroke width at the head */
-const TRAIL_MAX_WIDTH = 2.5;
-const DEFAULT_SKELETON_OPACITY = 0.15;
-/** Fraction of the bounding box added as padding when auto-fitting the curve */
-const FIT_PADDING = 0.1;
 
 const EMPTY_PARAMS: Record<string, number> = {};
 
@@ -115,50 +108,13 @@ export function createSVGRenderer(options: SVGRendererOptions): SarmalInstance {
   let offsetX = 0;
   let offsetY = 0;
 
-  function calculateBoundaries(skeleton: Point[]) {
-    if (skeleton.length === 0) {
-      return;
+  function applyBoundaries(skeleton: Point[]) {
+    const b = computeBoundaries(skeleton, width, height);
+    if (b) {
+      scale = b.scale;
+      offsetX = b.offsetX;
+      offsetY = b.offsetY;
     }
-
-    const first = skeleton[0]!;
-    let minX = first.x,
-      maxX = first.x,
-      minY = first.y,
-      maxY = first.y;
-
-    for (const p of skeleton) {
-      if (p.x < minX) {
-        minX = p.x;
-      }
-
-      if (p.x > maxX) {
-        maxX = p.x;
-      }
-
-      if (p.y < minY) {
-        minY = p.y;
-      }
-
-      if (p.y > maxY) {
-        maxY = p.y;
-      }
-    }
-
-    const w = maxX - minX;
-    const h = maxY - minY;
-
-    if (w === 0 && h === 0) {
-      throw new Error(
-        "[sarmal] All skeleton points are identical. Check that your curve fn returns distinct points for different values of t.",
-      );
-    }
-
-    const scaleX = width / (w * (1 + FIT_PADDING * 2));
-    const scaleY = height / (h * (1 + FIT_PADDING * 2));
-
-    scale = Math.min(scaleX, scaleY);
-    offsetX = (width - w * scale) / 2 - minX * scale;
-    offsetY = (height - h * scale) / 2 - minY * scale;
   }
 
   // Coordinate transform helpers: numeric (for math) and string (for path strings)
@@ -192,7 +148,7 @@ export function createSVGRenderer(options: SVGRendererOptions): SarmalInstance {
   }
 
   const skeleton = engine.getSarmalSkeleton();
-  calculateBoundaries(skeleton);
+  applyBoundaries(skeleton);
 
   if (!engine.isLiveSkeleton) {
     updateSkeleton(skeleton);
@@ -211,29 +167,13 @@ export function createSVGRenderer(options: SVGRendererOptions): SarmalInstance {
      * Quads are drawn from tail to head, with later quads overlaying earlier ones.
      */
     for (let i = 0; i < trailCount - 1; i++) {
-      const progress = i / (trailCount - 1);
-      const nextProgress = (i + 1) / (trailCount - 1);
-      const opacity = Math.pow(progress, TRAIL_FADE_CURVE) * TRAIL_MAX_OPACITY;
-      const width = TRAIL_MIN_WIDTH + progress * (TRAIL_MAX_WIDTH - TRAIL_MIN_WIDTH);
-      const nextWidth = TRAIL_MIN_WIDTH + nextProgress * (TRAIL_MAX_WIDTH - TRAIL_MIN_WIDTH);
-
-      const curr = trail[i]!;
-      const next = trail[i + 1]!;
-      const n0 = computeNormal(trail, i);
-      const n1 = computeNormal(trail, i + 1);
-
-      const halfW0 = width / 2;
-      const halfW1 = nextWidth / 2;
-
-      // Four corners of the quad: left0, left1, right1, right0
-      const l0x = px(curr) + n0.x * halfW0;
-      const l0y = py(curr) + n0.y * halfW0;
-      const r0x = px(curr) - n0.x * halfW0;
-      const r0y = py(curr) - n0.y * halfW0;
-      const l1x = px(next) + n1.x * halfW1;
-      const l1y = py(next) + n1.y * halfW1;
-      const r1x = px(next) - n1.x * halfW1;
-      const r1y = py(next) - n1.y * halfW1;
+      const { l0x, l0y, r0x, r0y, l1x, l1y, r1x, r1y, opacity } = computeTrailQuad(
+        trail,
+        i,
+        trailCount,
+        px,
+        py,
+      );
 
       const d = `M${l0x.toFixed(2)} ${l0y.toFixed(2)} L${l1x.toFixed(2)} ${l1y.toFixed(2)} L${r1x.toFixed(2)} ${r1y.toFixed(2)} L${r0x.toFixed(2)} ${r0y.toFixed(2)} Z`;
 
@@ -338,7 +278,7 @@ export function createSVGRenderer(options: SVGRendererOptions): SarmalInstance {
         skeletonPathB.setAttribute("visibility", "hidden");
         // Snap coordinate space to `curveB` and update skeleton path
         const newSkeleton = engine.getSarmalSkeleton();
-        calculateBoundaries(newSkeleton);
+        applyBoundaries(newSkeleton);
         updateSkeleton(newSkeleton);
       }
     }
@@ -348,7 +288,7 @@ export function createSVGRenderer(options: SVGRendererOptions): SarmalInstance {
 
     if (engine.isLiveSkeleton && engine.morphAlpha === null) {
       const liveSkeleton = engine.getSarmalSkeleton();
-      calculateBoundaries(liveSkeleton);
+      applyBoundaries(liveSkeleton);
       updateSkeleton(liveSkeleton);
     }
 

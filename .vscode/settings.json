@@ -33,5 +33,5 @@
   "oxc.lint.enable": true,
   "oxc.format.enable": true,
   "editor.formatOnSave": true,
-  "oxc.path.oxfmt": "${workspaceFolder}/packages/sarmal/node_modules/.bin/oxfmt"
+  "oxc.path.oxfmt": "/opt/homebrew/bin/oxfmt"
 }

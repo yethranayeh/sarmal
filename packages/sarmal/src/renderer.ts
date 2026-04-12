@@ -7,22 +7,19 @@ import type {
   SarmalInstance,
   TrailStyle,
 } from "./types";
+import {
+  DEFAULT_MORPH_DURATION_MS,
+  DEFAULT_SKELETON_OPACITY,
+  computeBoundaries,
+  computeNormal,
+  computeTrailQuad,
+} from "./renderer-shared";
 
-const DEFAULT_MORPH_DURATION_MS = 300;
+// Re-exported so existing test imports (renderer.test.ts) keep working
+export { computeTangent, computeNormal, TrailPoint } from "./renderer-shared";
+
 const DEFAULT_HEAD_RADIUS = 4;
 const DEFAULT_SKELETON_COLOR = "#ffffff";
-const DEFAULT_SKELETON_OPACITY = 0.15;
-
-/** Fraction of the bounding box added as padding when fitting the curve to the canvas */
-const FIT_PADDING = 0.1;
-
-/** Higher values = sharper fade near the tail, more of the trail appears faint */
-const TRAIL_FADE_CURVE = 1.5;
-const TRAIL_MAX_OPACITY = 0.88;
-/** Line width of tail */
-const TRAIL_MIN_WIDTH = 0.5;
-/** Line width of head */
-const TRAIL_MAX_WIDTH = 2.5;
 
 const GRADIENT = {
   bard: ["#a855f7", "#3b82f6", "#14b8a6", "#ec4899"],
@@ -95,60 +92,6 @@ export function resolvePalette(
 export function hexToRgbComponents(hex: string): string {
   const n = parseInt(hex.slice(1), 16);
   return `${n >> 16},${(n >> 8) & 255},${n & 255}`;
-}
-
-export interface TrailPoint {
-  x: number;
-  y: number;
-}
-
-/**
- * Computes the unit tangent vector at a point on the trail
- * - For interior points, uses central difference (previous -> next)
- * - For endpoints, uses forward/backward difference
- *
- * @param trail Array of trail points
- * @param i Index of the point to compute tangent for
- * @returns Unit vector in the direction of travel at that point
- */
-export function computeTangent(trail: TrailPoint[], i: number): TrailPoint {
-  const count = trail.length;
-  if (count < 2) {
-    return { x: 1, y: 0 };
-  }
-
-  if (i === 0) {
-    const dx = trail[1]!.x - trail[0]!.x;
-    const dy = trail[1]!.y - trail[0]!.y;
-    const len = Math.sqrt(dx * dx + dy * dy) || 1;
-    return { x: dx / len, y: dy / len };
-  }
-
-  if (i === count - 1) {
-    const dx = trail[count - 1]!.x - trail[count - 2]!.x;
-    const dy = trail[count - 1]!.y - trail[count - 2]!.y;
-    const len = Math.sqrt(dx * dx + dy * dy) || 1;
-    return { x: dx / len, y: dy / len };
-  }
-
-  const dx = trail[i + 1]!.x - trail[i - 1]!.x;
-  const dy = trail[i + 1]!.y - trail[i - 1]!.y;
-  const len = Math.sqrt(dx * dx + dy * dy) || 1;
-  return { x: dx / len, y: dy / len };
-}
-
-/**
- * Computes the unit normal vector at a point on the trail
- * The normal is perpendicular to the tangent, rotated 90° counter-clockwise.
- * This gives the "left" direction relative to the direction of travel.
- *
- * @param trail Array of trail points
- * @param i Index of the point to compute normal for
- * @returns Unit vector perpendicular to the trail at that point
- */
-export function computeNormal(trail: TrailPoint[], i: number): TrailPoint {
-  const tangent = computeTangent(trail, i);
-  return { x: -tangent.y, y: tangent.x };
 }
 
 /**
@@ -263,65 +206,8 @@ export function createRenderer(options: RendererOptions): SarmalInstance {
   /** Accumulated time for "gradient-animated" trail style */
   let gradientAnimTime = 0;
 
-  /**
-   * Computes how to map engine coordinates to canvas pixels.
-   * Returns the transform values without mutating renderer state.
-   *
-   * Steps are roughly: curve fn -> coordinate point -> (scale + offset) -> pixel
-   *
-   * 1. Find the bounding box of the skeleton (min/max x/y in coordinates)
-   * 2. Compute a scale factor within the bounds into the canvas with padding
-   * 3. Compute offsets to center the curve in the canvas
-   */
-  function computeBoundaries(
-    pts: Array<Point>,
-  ): { scale: number; offsetX: number; offsetY: number } | null {
-    if (pts.length === 0) return null;
-
-    const first = pts[0]!;
-    let minX = first.x,
-      maxX = first.x,
-      minY = first.y,
-      maxY = first.y;
-    for (const p of pts) {
-      if (p.x < minX) {
-        minX = p.x;
-      }
-      if (p.x > maxX) {
-        maxX = p.x;
-      }
-      if (p.y < minY) {
-        minY = p.y;
-      }
-      if (p.y > maxY) {
-        maxY = p.y;
-      }
-    }
-
-    const width = maxX - minX;
-    const height = maxY - minY;
-
-    if (width === 0 && height === 0) {
-      throw new Error(
-        "[sarmal] Degenerate curve: all skeleton points are identical. " +
-          "Check that your curve fn returns distinct points for different values of t.",
-      );
-    }
-
-    const scaleX = logicalWidth / (width * (1 + FIT_PADDING * 2));
-    const scaleY = logicalHeight / (height * (1 + FIT_PADDING * 2));
-    const s = Math.min(scaleX, scaleY);
-    const boundsWidth = width * s;
-    const boundsHeight = height * s;
-    return {
-      scale: s,
-      offsetX: (logicalWidth - boundsWidth) / 2 - minX * s,
-      offsetY: (logicalHeight - boundsHeight) / 2 - minY * s,
-    };
-  }
-
   function calculateBoundaries() {
-    const b = computeBoundaries(skeleton);
+    const b = computeBoundaries(skeleton, logicalWidth, logicalHeight);
     if (b) {
       scale = b.scale;
       offsetX = b.offsetX;
@@ -414,55 +300,33 @@ export function createRenderer(options: RendererOptions): SarmalInstance {
     }
 
     /**
-     * ! Claude's fix for the chopped looking curve trail
-     *
      * Ribbon approach: draw the trail as a sequence of filled quads.
      * Each quad connects two consecutive trail points with left/right offsets
      * based on the width at that position. Quads are drawn from tail to head
      * so later quads naturally overlay earlier ones.
      *
-     * @see https://mattdesl.svbtle.com/drawing-lines-is-hard
-     *      DesLauriers: "Triangulated Lines" — expand points outward by half
-     *      the thickness on either side using normals to create thick lines.
-     *
      * @see https://cesium.com/blog/2013/04/22/robust-polyline-rendering-with-webgl
      *      Cesium: "draw a screen-aligned quad for each segment... extrude them
      *      in screen space in the direction normal to the line."
      */
+    const toX = (p: { x: number }) => p.x * scale + offsetX;
+    const toY = (p: { y: number }) => p.y * scale + offsetY;
     for (let i = 0; i < trailCount - 1; i++) {
-      const progress = i / (trailCount - 1);
-      const nextProgress = (i + 1) / (trailCount - 1);
-      const alpha = Math.pow(progress, TRAIL_FADE_CURVE) * TRAIL_MAX_OPACITY;
-      const width = TRAIL_MIN_WIDTH + progress * (TRAIL_MAX_WIDTH - TRAIL_MIN_WIDTH);
-      const nextWidth = TRAIL_MIN_WIDTH + nextProgress * (TRAIL_MAX_WIDTH - TRAIL_MIN_WIDTH);
-
-      const curr = trail[i]!;
-      const next = trail[i + 1]!;
-      const n0 = computeNormal(trail, i);
-      const n1 = computeNormal(trail, i + 1);
-
-      const halfW0 = width / 2;
-      const halfW1 = nextWidth / 2;
-
-      // Four corners of the quad: left0, left1, right1, right0
-      // Left = +normal direction, Right = -normal direction
-      const l0x = curr.x * scale + offsetX + n0.x * halfW0;
-      const l0y = curr.y * scale + offsetY + n0.y * halfW0;
-      const r0x = curr.x * scale + offsetX - n0.x * halfW0;
-      const r0y = curr.y * scale + offsetY - n0.y * halfW0;
-
-      const l1x = next.x * scale + offsetX + n1.x * halfW1;
-      const l1y = next.y * scale + offsetY + n1.y * halfW1;
-      const r1x = next.x * scale + offsetX - n1.x * halfW1;
-      const r1y = next.y * scale + offsetY - n1.y * halfW1;
+      const { l0x, l0y, r0x, r0y, l1x, l1y, r1x, r1y, opacity, progress } = computeTrailQuad(
+        trail,
+        i,
+        trailCount,
+        toX,
+        toY,
+      );
 
       // Determine fill color based on trail style
       if (trailStyle === "default") {
-        ctx.fillStyle = `rgba(${trailRgb},${alpha})`;
+        ctx.fillStyle = `rgba(${trailRgb},${opacity})`;
       } else {
         const timeOffset = trailStyle === "gradient-animated" ? gradientAnimTime * 0.0005 : 0;
         const color = getPaletteColor(palette, progress, timeOffset);
-        ctx.fillStyle = `rgba(${color.r},${color.g},${color.b},${alpha})`;
+        ctx.fillStyle = `rgba(${color.r},${color.g},${color.b},${opacity})`;
       }
 
       ctx.beginPath();
@@ -508,7 +372,7 @@ export function createRenderer(options: RendererOptions): SarmalInstance {
        * ! This ensures the curve stays properly centered and scaled
        */
       const interpolatedSkeleton = engine.getSarmalSkeleton();
-      const bounds = computeBoundaries(interpolatedSkeleton);
+      const bounds = computeBoundaries(interpolatedSkeleton, logicalWidth, logicalHeight);
 
       if (bounds) {
         scale = bounds.scale;
