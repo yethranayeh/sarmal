@@ -23,6 +23,7 @@ export default defineConfig({
         // @ts-ignore | Shiki too hard to please
         dark: sarmalDark,
       },
+      defaultColor: false,
       wrap: true,
     },
   },

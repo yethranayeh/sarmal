@@ -1,0 +1,31 @@
+---
+import SectionLabel from "./SectionLabel.astro";
+
+interface Props {
+	variant?: "info" | "tip" | "warning" | "error" | "success";
+	label?: string;
+}
+
+const variantConfig: Record<string, { label: string; accent: string; bg: string }> = {
+	info: { label: "Info", accent: "#1d6fa4", bg: "color-mix(in srgb, #1d6fa4 6%, transparent)" },
+	tip: { label: "Tip", accent: "#2d6a4f", bg: "color-mix(in srgb, #2d6a4f 6%, transparent)" },
+	warning: { label: "Warning", accent: "#b45309", bg: "color-mix(in srgb, #b45309 6%, transparent)" },
+	error: { label: "Error", accent: "#ba1a1a", bg: "color-mix(in srgb, #ba1a1a 6%, transparent)" },
+	success: { label: "Success", accent: "#2d6a4f", bg: "color-mix(in srgb, #2d6a4f 6%, transparent)" }
+};
+
+const { variant = "info", label } = Astro.props;
+const config = variantConfig[variant] ?? variantConfig.info;
+const resolvedLabel = label ?? config.label;
+---
+
+<div
+	class='not-prose my-6 overflow-hidden rounded-sm border border-border'
+	style={`border-left: 3px solid ${config.accent}; background-color: ${config.bg};`}>
+	<div class='border-b border-border-subtle px-4 py-2.5'>
+		<SectionLabel label={resolvedLabel} variant={variant} template='kanji' />
+	</div>
+	<div class='prose prose-sm px-4 py-3 *:first:mt-0 *:last:mb-0 max-w-none'>
+		<slot />
+	</div>
+</div>

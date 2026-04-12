@@ -1,0 +1,154 @@
+---
+layout: ../../layouts/DocsLayout.astro
+title: Getting Started
+sidebarLabel: Getting Started
+order: 1
+description: Install @sarmal/core and animate your first spinner.
+---
+
+import Alert from "../../components/Alert.astro";
+import Link from "../../components/Link.astro";
+
+# Getting Started
+
+Install `@sarmal/core` and animate your first spinner.
+
+## Installation
+
+```bash
+npm install @sarmal/core
+```
+
+<Alert variant='tip'>Types are bundled in `@sarmal/core`. No separate `@types` package needed.</Alert>
+
+## CDN Quick Start
+
+No build step? Drop in the auto-init script and add `data-sarmal` to any canvas:
+
+```html
+<script src="https://unpkg.com/@sarmal/core/dist/auto-init.js"></script>
+<canvas data-sarmal="artemis2" width="200" height="200"></canvas>
+```
+
+The script scans for `canvas[data-sarmal]` on page load and starts a spinner for each one. Use any built-in curve name as the attribute value.
+
+## Your first spinner
+
+`createSarmal` is the fastest way to get a spinner on screen. Give it a canvas element and a curve, then call `start()`.
+
+```html
+<canvas id="spinner" width="200" height="200"></canvas>
+```
+
+```ts
+import { createSarmal, curves } from "@sarmal/core";
+
+const canvas = document.getElementById("spinner") as HTMLCanvasElement;
+const sarmal = createSarmal(canvas, curves.artemis2);
+sarmal.start();
+```
+
+That's it. The canvas will now be animating. Call `sarmal.stop()` to pause and `sarmal.destroy()` when you're done (unmount, navigation, etc.).
+
+## Choosing a curve
+
+`curves` is an object with <Link href="/docs/curves">all the built-in curves</Link>:
+
+```ts
+import { curves } from "@sarmal/core";
+
+curves.rose3; // 3-petal rose
+curves.astroid; // 4-pointed star
+// ...
+```
+
+### Tree-shakable imports
+
+Import curves individually for smaller bundles:
+
+```ts
+import { rose3 } from "@sarmal/core/curves/rose3";
+
+const sarmal = createSarmal(canvas, rose3);
+```
+
+<Alert variant='tip'>
+	You can also pass your own curve definition! See the <Link href='/docs/api'>API Reference</Link>.
+</Alert>
+
+## Styling options
+
+Pass an optional custom object as the third argument to `createSarmal`:
+
+```ts
+const sarmal = createSarmal(canvas, curves.rose3, {
+	trailColor: "#a78bfa", // trail color (default: '#ffffff')
+	headColor: "#ffffff", // dot at the tip (default: '#ffffff')
+	skeletonColor: "#ffffff", // ghost path of the full curve (default: '#ffffff')
+	trailLength: 120 // number of trail points (default: 120)
+});
+```
+
+### Gradient trails
+
+Set `trailStyle` to render a color-cycling gradient along the trail:
+
+```ts
+const sarmal = createSarmal(canvas, curves.astroid, {
+	trailStyle: "gradient-animated", // cycles colors over time
+	palette: "bard" // or a custom array of hex colors: e.g. `['#ff6b6b', '#ffd93d', '#6bcb77']`
+});
+```
+
+## SVG renderer
+
+If you need the spinner to scale freely (no fixed pixel dimensions), use the SVG renderer instead:
+
+```html
+<div id="spinner" style="width: 200px; height: 200px;"></div>
+```
+
+```ts
+import { createSarmalSVG, curves } from "@sarmal/core";
+
+const container = document.getElementById("spinner")!;
+const sarmal = createSarmalSVG(container, curves.lissajous32);
+sarmal.start();
+```
+
+`createSarmalSVG` appends an `<svg>` into the container and animates it. It accepts the same styling options as `createSarmal`.
+
+<Alert variant='warning'>
+	`trailStyle` and `palette` properties are not yet supported, because it hasn't been implemented yet.
+</Alert>
+
+## Morphing between curves
+
+Call `morphTo` to smoothly transition from one curve to another:
+
+```ts
+const sarmal = createSarmal(canvas, curves.astroid);
+sarmal.start();
+
+// at any point you want, transition to another curve over 500ms
+await sarmal.morphTo(curves.deltoid, { duration: 500 });
+```
+
+The trail and skeleton crossfade during the transition. `morphTo` returns a `Promise` that resolves when the morph is complete, so you can chain them.
+
+## Frameworks and SSR
+
+The engine is pure math and works _anywhere_, but the renderers need the **DOM**. If you're using Next.js, Remix, or another SSR framework, you may need to guard the import and initialization:
+
+```ts
+import { createSarmal, curves } from "@sarmal/core";
+
+if (typeof window !== "undefined") {
+	const canvas = document.getElementById("spinner") as HTMLCanvasElement;
+	const sarmal = createSarmal(canvas, curves.artemis2);
+	sarmal.start();
+}
+```
+
+{/* TODO: Replace this with actual compoents once they are ready */}
+Or use a `useEffect` (React) / `onMount` (Svelte) / `mounted` hook (Vue) to ensure the code only runs client-side.

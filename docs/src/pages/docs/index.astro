@@ -24,7 +24,8 @@ const docLinks = Object.entries(docModules)
 			order: mod.frontmatter.order
 		};
 	})
-	.sort((a, b) => a.order - b.order);
+	.sort((a, b) => a.order - b.order)
+	.slice(0, 1);
 ---
 
 <DocsLayout
@@ -35,7 +36,7 @@ const docLinks = Object.entries(docModules)
 		Welcome to the Sarmal documentation. Here you'll find everything you need to get started with parametric loading
 		spinners, from installation to advanced customization.
 	</p>
-	<!--
+
 	<h2>Getting Started</h2>
 	<p>
 		New to Sarmal? Start with the <Link href='/docs/getting-started'>Getting Started</Link> guide to install
@@ -47,11 +48,11 @@ const docLinks = Object.entries(docModules)
 		{
 			docLinks.map((link) => (
 				<li>
-					<Link href={link.href}>{link.label}</Link> — {link.description}
+					<Link href={link.href}>{link.label}</Link>: {link.description}
 				</li>
 			))
 		}
-	</ul> -->
+	</ul>
 
 	<hr />
 

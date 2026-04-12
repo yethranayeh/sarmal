@@ -36,7 +36,8 @@ const navItems: NavItem[] = Object.entries(docModules)
 			order: mod.frontmatter.order
 		};
 	})
-	.sort((a, b) => a.order - b.order);
+	.sort((a, b) => a.order - b.order)
+	.slice(0, 1);
 
 const isActive = (href: string) => {
 	if (href === "/docs") {
@@ -87,6 +88,26 @@ const isActive = (href: string) => {
 								Introduction
 							</a>
 						</li>
+						{
+							navItems.map((item) => {
+								const active = isActive(item.href);
+								return (
+									<li>
+										<a
+											href={item.href}
+											class:list={[
+												"block px-3 py-2 text-sm rounded-md transition-colors",
+												active
+													? "text-primary border-l-2 border-primary bg-surface-raised font-medium"
+													: "text-muted hover:text-foreground hover:bg-surface-raised border-l-2 border-transparent"
+											]}
+											aria-current={active ? "page" : undefined}>
+											{item.label}
+										</a>
+									</li>
+								);
+							})
+						}
 					</ul>
 				</nav>
 			</div>
