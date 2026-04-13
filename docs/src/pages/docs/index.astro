@@ -1,4 +1,6 @@
 ---
+import { Minus } from "@lucide/astro";
+
 import DocsLayout from "../../layouts/DocsLayout.astro";
 import Link from "../../components/Link.astro";
 
@@ -38,8 +40,11 @@ const docLinks = Object.entries(docModules)
 	</p>
 
 	<p>
-		<strong>Sarmal</strong> /sɑːrˈmɑːl/ (<em>sar-MAHL</em>): From the Turkish word for <em>spiral</em>, <em>coil</em>.
-		To define a path traced by a point moving through space.
+		<strong>Sarmal</strong>
+		<span class='text-primary'>{"/"}</span>sɑ<span class='text-primary'>ː</span>rˈmɑ<span class='text-primary'>ː</span
+		>l<span class='text-primary'>{"/"}</span>
+		<Minus class='inline' size={16} /> From the Turkish word for <em>spiral</em>, <em>coil</em>. To define a path traced
+		by a point moving through space.
 	</p>
 	<blockquote>
 		The Turkish <strong>sarmal</strong> is built from the verb <strong>sarmak</strong> (to wrap, to coil) with the suffix
@@ -60,7 +65,11 @@ const docLinks = Object.entries(docModules)
 		{
 			docLinks.map((link) => (
 				<li>
-					<Link href={link.href}>{link.label}</Link>: {link.description}
+					<>
+						<Link href={link.href}>{link.label}</Link>
+						<Minus class='inline' size={16} />
+					</>{" "}
+					{link.description}
 				</li>
 			))
 		}

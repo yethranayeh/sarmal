@@ -27,17 +27,20 @@ const currentPath = Astro.url.pathname;
 
 const docModules = import.meta.glob<DocModule>("../pages/docs/*.mdx", { eager: true });
 
-const navItems: NavItem[] = Object.entries(docModules)
-	.map(([path, mod]) => {
-		const slug = path.replace("../pages/docs/", "").replace(".mdx", "");
-		return {
-			href: `/docs/${slug}`,
-			label: mod.frontmatter.sidebarLabel,
-			order: mod.frontmatter.order
-		};
-	})
-	.sort((a, b) => a.order - b.order)
-	.slice(0, 5);
+const navItems: NavItem[] = [
+	{ href: "/docs", label: "Introduction", order: -1 },
+	...Object.entries(docModules)
+		.map(([path, mod]) => {
+			const slug = path.replace("../pages/docs/", "").replace(".mdx", "");
+			return {
+				href: `/docs/${slug}`,
+				label: mod.frontmatter.sidebarLabel,
+				order: mod.frontmatter.order
+			};
+		})
+		.sort((a, b) => a.order - b.order)
+		.slice(0, 5)
+];
 
 const isActive = (href: string) => {
 	if (href === "/docs") {
@@ -76,18 +79,6 @@ const isActive = (href: string) => {
 
 				<nav class='flex-1 overflow-y-auto p-4' aria-label='Documentation sections'>
 					<ul class='space-y-1' role='list'>
-						<li>
-							<a
-								href='/docs'
-								class:list={[
-									"block px-3 py-2 text-sm rounded-md transition-colors",
-									isActive("/docs") && !currentPath.startsWith("/docs/")
-										? "text-primary border-l-2 border-primary bg-surface-raised font-medium"
-										: "text-muted hover:text-foreground hover:bg-surface-raised border-l-2 border-transparent"
-								]}>
-								Introduction
-							</a>
-						</li>
 						{
 							navItems.map((item) => {
 								const active = isActive(item.href);
@@ -96,20 +87,22 @@ const isActive = (href: string) => {
 										<a
 											href={item.href}
 											class:list={[
-												"block px-3 py-2 text-sm rounded-md transition-colors",
-												active
-													? "text-primary border-l-2 border-primary bg-surface-raised font-medium"
-													: "text-muted hover:text-foreground hover:bg-surface-raised border-l-2 border-transparent"
+												'block px-3 py-2 text-sm rounded-md duration-300 transition-all [font-variation-settings:"wght"_var(--wght)]',
+												{
+													"text-primary border-l-2 border-primary bg-surface-raised font-medium [--wght:650]": active,
+													"text-muted hover:text-foreground hover:bg-surface-raised border-l-2 border-transparent [--wght:350] hover:[--wght:650]":
+														!active
+												}
 											]}
 											aria-current={active ? "page" : undefined}>
 											{item.label}
 										</a>
 									</li>
 								);
-							})
-						}
-					</ul>
-				</nav>
+								})
+							}
+						</ul>
+					</nav>
 			</div>
 		</aside>
 
