@@ -1,18 +1,83 @@
 ---
-import Button from "./Button.astro";
-
 interface Props {
 	code: string;
-	label?: string;
 	"data-copy-btn"?: string;
+	variant?: "ghost" | "ghost-inverted";
+	class?: string;
 }
 
-const { code, label = "Copy", "data-copy-btn": dataAttr } = Astro.props;
+const { code, "data-copy-btn": dataAttr, variant = "ghost-inverted", class: className } = Astro.props;
+
+const colorClass = variant === "ghost-inverted" ? "text-white/50 hover:text-white" : "text-muted hover:text-foreground";
 ---
 
-<Button data-copy-btn={dataAttr ?? ""} data-code={code} variant='ghost'>
-	{label}
-</Button>
+<button
+	data-copy-btn={dataAttr ?? ""}
+	data-code={code}
+	title='Copy'
+	class:list={["copy-btn relative cursor-pointer transition-colors p-1 size-5.5", colorClass, className]}>
+	<svg
+		xmlns='http://www.w3.org/2000/svg'
+		width='14'
+		height='14'
+		viewBox='0 0 24 24'
+		fill='none'
+		stroke='currentColor'
+		stroke-width='2'
+		stroke-linecap='round'
+		stroke-linejoin='round'
+		class='copy-icon absolute inset-0 m-auto'>
+		<rect x='9' y='9' width='13' height='13' rx='2' ry='2'></rect>
+		<path d='M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1'></path>
+	</svg>
+	<svg
+		xmlns='http://www.w3.org/2000/svg'
+		width='14'
+		height='14'
+		viewBox='0 0 24 24'
+		fill='none'
+		stroke='currentColor'
+		stroke-width='2.5'
+		stroke-linecap='round'
+		stroke-linejoin='round'
+		class='check-icon absolute inset-0 m-auto'>
+		<polyline points='20 6 9 17 4 12'></polyline>
+	</svg>
+</button>
+
+<style>
+	.copy-icon,
+	.check-icon {
+		transition:
+			opacity 0.2s ease,
+			transform 0.2s ease,
+			filter 0.2s ease;
+	}
+
+	.copy-icon {
+		opacity: 1;
+		transform: scale(1);
+		filter: blur(0px);
+	}
+
+	.check-icon {
+		opacity: 0;
+		transform: scale(0.6);
+		filter: blur(4px);
+	}
+
+	.copy-btn[data-copied] .copy-icon {
+		opacity: 0;
+		transform: scale(0.6);
+		filter: blur(4px);
+	}
+
+	.copy-btn[data-copied] .check-icon {
+		opacity: 1;
+		transform: scale(1);
+		filter: blur(0px);
+	}
+</style>
 
 <script>
 	document.querySelectorAll("[data-copy-btn]").forEach((btn) => {
@@ -20,10 +85,8 @@ const { code, label = "Copy", "data-copy-btn": dataAttr } = Astro.props;
 			const code = btn.getAttribute("data-code");
 			if (code) {
 				await navigator.clipboard.writeText(code);
-				btn.textContent = "Copied";
-				setTimeout(() => {
-					btn.textContent = "Copy";
-				}, 2000);
+				btn.setAttribute("data-copied", "");
+				setTimeout(() => btn.removeAttribute("data-copied"), 2000);
 			}
 		});
 	});

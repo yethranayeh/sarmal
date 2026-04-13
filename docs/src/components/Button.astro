@@ -3,12 +3,20 @@ interface Props {
 	id?: string;
 	type?: "button" | "submit" | "reset";
 	class?: string;
-	variant?: "primary" | "ghost";
+	variant?: "primary" | "ghost" | "ghost-inverted";
 	active?: boolean;
 	hoverColor?: "foreground" | "error";
 }
 
-const { id, type = "button", class: className, variant = "primary", active = false, hoverColor = "foreground", ...props } = Astro.props;
+const {
+	id,
+	type = "button",
+	class: className,
+	variant = "primary",
+	active = false,
+	hoverColor = "foreground",
+	...props
+} = Astro.props;
 ---
 
 <button
@@ -21,8 +29,9 @@ const { id, type = "button", class: className, variant = "primary", active = fal
 		variant === "ghost" && active && "text-primary",
 		variant === "ghost" && !active && hoverColor === "foreground" && "text-muted hover:text-foreground",
 		variant === "ghost" && !active && hoverColor === "error" && "text-muted hover:text-error",
+		variant === "ghost-inverted" && "text-white/50 hover:text-white",
 		className
 	]}>
-	<slot name="icon" />
+	<slot name='icon' />
 	<slot />
 </button>

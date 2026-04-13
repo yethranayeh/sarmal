@@ -247,7 +247,7 @@ const trailColor = colorMap[id] || "#60a5fa";
 	<h1>{curve.name}</h1>
 	<div class='flex flex-col space-y-1'>
 		<h2 class='m-0!'>Import</h2>
-		<div class='relative'>
+		<div class='relative group'>
 			<Code
 				lang='ts'
 				theme={undefined}
@@ -256,7 +256,7 @@ const trailColor = colorMap[id] || "#60a5fa";
 				code={`import { ${curve.curveKey === "epitrochoid7" ? "epitrochoid7" : curve.curveKey} } from "${curve.importPath}";`}
 				class='mb-0'
 			/>
-			<div class='absolute top-2 right-2'>
+			<div class='absolute top-8 right-2 opacity-0 group-hover:opacity-100 transition-opacity'>
 				<CopyButton
 					code={`import { ${curve.curveKey === "epitrochoid7" ? "epitrochoid7" : curve.curveKey} } from "${curve.importPath}";`}
 				/>
@@ -311,9 +311,9 @@ const trailColor = colorMap[id] || "#60a5fa";
 	</ul>
 
 	<h2>Usage</h2>
-	<div class='relative'>
+	<div class='relative group'>
 		<Code lang='ts' theme={undefined} themes={codeThemes} defaultColor={false} code={usageSnippet} />
-		<div class='absolute top-2 right-2'>
+		<div class='absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity'>
 			<CopyButton code={usageSnippet} />
 		</div>
 	</div>

@@ -32,7 +32,7 @@ const codeSnippet = `<script src="https://unpkg.com/@sarmal/core/dist/auto-init.
 
 		<div class='flex flex-col gap-2 w-full md:max-w-lg'>
 			<SectionLabel variant='info' label='Two lines of HTML' />
-			<div class='space-y-2 rounded-md text-left overflow-x-auto'>
+			<div class='relative group rounded-md text-left overflow-x-auto'>
 				<Code
 					class='p-2 rounded-md'
 					lang='html'
@@ -42,8 +42,8 @@ const codeSnippet = `<script src="https://unpkg.com/@sarmal/core/dist/auto-init.
 					code={codeSnippet}
 				/>
 			</div>
-			<div class='w-full flex justify-end pr-4'>
-				<CopyButton code={codeSnippet} />
+			<div class='w-full flex justify-end'>
+				<CopyButton class='text-primary!' code={codeSnippet} />
 			</div>
 		</div>
 	</div>
