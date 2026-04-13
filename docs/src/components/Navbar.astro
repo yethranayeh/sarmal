@@ -20,7 +20,7 @@ const defaultLinks: NavLink[] = [
 ];
 
 const navLinks = links.length > 0 ? links : defaultLinks;
-const currentPath = Astro.url.pathname;
+const currentPath = Astro.url.pathname.replace(/\/$/, "") || "/";
 ---
 
 <header class='bg-surface-raised w-full px-4 py-2 flex items-center justify-between border-b border-border'>
@@ -36,9 +36,7 @@ const currentPath = Astro.url.pathname;
 						target={link.external ? "_blank" : undefined}
 						rel={link.external ? "noopener noreferrer" : undefined}
 						class={`group font-mono text-xs tracking-wider uppercase ${colorClass} hover:text-foreground transition-colors`}>
-						<span class='opacity-20 group-hover:opacity-100 transition-opacity'>{"["}</span>
 						<span>{link.label}</span>
-						<span class='opacity-20 group-hover:opacity-100 transition-opacity'>{"]"}</span>
 					</a>
 				);
 			})

@@ -37,7 +37,7 @@ const navItems: NavItem[] = Object.entries(docModules)
 		};
 	})
 	.sort((a, b) => a.order - b.order)
-	.slice(0, 4);
+	.slice(0, 5);
 
 const isActive = (href: string) => {
 	if (href === "/docs") {
@@ -116,6 +116,7 @@ const isActive = (href: string) => {
 		<div id='sidebar-overlay' class='fixed inset-0 bg-black/20 z-30 hidden lg:hidden' aria-hidden='true'></div>
 
 		<main class='flex-1 min-w-0 p-4 md:p-8'>
+			<slot name='article-header' />
 			<article class='prose max-w-3xl mx-auto lg:mx-0 prose-headings:font-medium'>
 				<slot />
 			</article>
