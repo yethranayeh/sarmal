@@ -1,6 +1,7 @@
 ---
 import BaseLayout from "./BaseLayout.astro";
-import { Menu, X } from "@lucide/astro";
+import Branding from "../components/Branding.astro";
+import { Menu, X, BookText, FlaskConical } from "@lucide/astro";
 
 interface DocModule {
 	frontmatter: {
@@ -48,65 +49,159 @@ const isActive = (href: string) => {
 	}
 	return currentPath.startsWith(href);
 };
+
+const topNavLinks = [
+	{ href: "/docs", label: "Docs", icon: BookText },
+	{ href: "/play", label: "Playground", icon: FlaskConical }
+];
 ---
 
 <BaseLayout title={title} description={description}>
+	<header
+		slot='navbar'
+		class='bg-surface-raised w-full px-4 py-2 flex items-center justify-between border-b border-border'>
+		<Branding />
+
+		<div class='flex items-center gap-4'>
+			<!-- Desktop nav links -->
+			<nav class='hidden lg:flex items-center gap-4'>
+				{
+					topNavLinks.map((link) => {
+						const isLinkActive =
+							link.href === "/docs" ? currentPath.startsWith("/docs") : currentPath.startsWith(link.href);
+						const Icon = link.icon;
+						return (
+							<a
+								href={link.href}
+								class:list={[
+									"inline-flex items-center gap-1 font-mono text-xs tracking-wider uppercase hover:text-foreground transition-colors",
+									isLinkActive ? "text-primary" : "text-muted"
+								]}>
+								<Icon size={16} />
+								<span>{link.label}</span>
+							</a>
+						);
+					})
+				}
+			</nav>
+
+			<!-- Mobile hamburger -->
+			<button
+				id='mobile-menu-btn'
+				class='lg:hidden flex items-center justify-center w-9 h-9 rounded-md hover:bg-surface transition-colors'
+				aria-label='Open navigation menu'
+				aria-expanded='false'
+				aria-controls='mobile-drawer'>
+				<Menu size={20} />
+			</button>
+		</div>
+	</header>
+
 	<div class='flex flex-1'>
-		<button
-			id='mobile-menu-btn'
-			class='lg:hidden fixed top-16 left-4 z-50 flex items-center gap-2 px-3 py-2 bg-surface-raised border border-border rounded-md text-sm font-mono'
-			aria-label='Toggle navigation menu'
-			aria-expanded='false'
-			aria-controls='sidebar-nav'>
-			<Menu size={16} />
-			<span>Menu</span>
-		</button>
-
+		<!-- Desktop sidebar -->
 		<aside
-			id='sidebar-nav'
-			class='fixed lg:sticky top-0 left-0 z-40 w-64 h-screen bg-surface border-r border-border transform -translate-x-full lg:translate-x-0 transition-transform duration-200 ease-out'
+			class='hidden lg:block sticky top-0 w-64 shrink-0 h-screen bg-surface border-r border-border'
 			aria-label='Documentation navigation'>
-			<div class='flex flex-col h-full'>
-				<div class='lg:hidden flex items-center justify-between p-4 border-b border-border'>
-					<span class='font-heading font-medium'>Documentation</span>
-					<button
-						id='mobile-menu-close'
-						class='p-2 hover:bg-surface-raised rounded-md transition-colors'
-						aria-label='Close navigation menu'>
-						<X size={16} />
-					</button>
-				</div>
-
-				<nav class='flex-1 overflow-y-auto p-4' aria-label='Documentation sections'>
-					<ul class='space-y-1' role='list'>
-						{
-							navItems.map((item) => {
-								const active = isActive(item.href);
-								return (
-									<li>
-										<a
-											href={item.href}
-											class:list={[
-												'block px-3 py-2 text-sm rounded-md duration-300 transition-all [font-variation-settings:"wght"_var(--wght)]',
-												{
-													"text-primary border-l-2 border-primary bg-surface-raised font-medium [--wght:650]": active,
-													"text-muted hover:text-foreground hover:bg-surface-raised border-l-2 border-transparent [--wght:350] hover:[--wght:650]":
-														!active
-												}
-											]}
-											aria-current={active ? "page" : undefined}>
-											{item.label}
-										</a>
-									</li>
-								);
-								})
-							}
-						</ul>
-					</nav>
-			</div>
+			<nav class='p-4' aria-label='Documentation sections'>
+				<ul class='space-y-1' role='list'>
+					{
+						navItems.map((item) => {
+							const active = isActive(item.href);
+							return (
+								<li>
+									<a
+										href={item.href}
+										class:list={[
+											'block px-3 py-2 text-sm rounded-md duration-300 transition-all [font-variation-settings:"wght"_var(--wght)]',
+											{
+												"text-primary border-l-2 border-primary bg-surface-raised font-medium [--wght:650]": active,
+												"text-muted hover:text-foreground hover:bg-surface-raised border-l-2 border-transparent [--wght:350] hover:[--wght:650]":
+													!active
+											}
+										]}
+										aria-current={active ? "page" : undefined}>
+										{item.label}
+									</a>
+								</li>
+							);
+						})
+					}
+				</ul>
+			</nav>
 		</aside>
 
-		<div id='sidebar-overlay' class='fixed inset-0 bg-black/20 z-30 hidden lg:hidden' aria-hidden='true'></div>
+		<!-- Mobile drawer (slides in from the right) -->
+		<div
+			id='mobile-drawer'
+			class='lg:hidden fixed inset-y-0 right-0 z-50 w-72 bg-surface border-l border-border transform translate-x-full transition-transform duration-200 ease-out flex flex-col'
+			aria-label='Navigation menu'>
+			<!-- Drawer header -->
+			<div class='flex items-center justify-between px-4 py-2 border-b border-border shrink-0 bg-surface-raised'>
+				<h2>Menu</h2>
+				<button
+					id='mobile-menu-close'
+					class='flex items-center justify-center w-9 h-9 rounded-md hover:bg-surface transition-colors'
+					aria-label='Close navigation menu'>
+					<X size={20} />
+				</button>
+			</div>
+
+			<!-- Top nav links -->
+			<div class='px-4 py-3 border-b border-border shrink-0'>
+				<nav class='flex flex-col gap-1'>
+					{
+						topNavLinks.map((link) => {
+							const isLinkActive =
+								link.href === "/docs" ? currentPath.startsWith("/docs") : currentPath.startsWith(link.href);
+							const Icon = link.icon;
+							return (
+								<a
+									href={link.href}
+									class:list={[
+										"inline-flex items-center gap-2 px-3 py-2 rounded-md font-mono text-xs tracking-wider uppercase transition-colors hover:bg-surface-raised hover:text-foreground",
+										isLinkActive ? "text-primary" : "text-muted"
+									]}>
+									<Icon size={16} />
+									<span>{link.label}</span>
+								</a>
+							);
+						})
+					}
+				</nav>
+			</div>
+
+			<!-- Sidebar doc links -->
+			<nav class='flex-1 overflow-y-auto p-4' aria-label='Documentation sections'>
+				<p class='px-3 pb-2 text-xs font-mono tracking-widest uppercase text-muted'>Documentation</p>
+				<ul class='space-y-1' role='list'>
+					{
+						navItems.map((item) => {
+							const active = isActive(item.href);
+							return (
+								<li>
+									<a
+										href={item.href}
+										class:list={[
+											'block px-3 py-2 text-sm rounded-md duration-300 transition-all [font-variation-settings:"wght"_var(--wght)]',
+											{
+												"text-primary border-l-2 border-primary bg-surface-raised font-medium [--wght:650]": active,
+												"text-muted hover:text-foreground hover:bg-surface-raised border-l-2 border-transparent [--wght:350] hover:[--wght:650]":
+													!active
+											}
+										]}
+										aria-current={active ? "page" : undefined}>
+										{item.label}
+									</a>
+								</li>
+							);
+						})
+					}
+				</ul>
+			</nav>
+		</div>
+
+		<!-- Overlay -->
+		<div id='sidebar-overlay' class='fixed inset-0 bg-black/60 z-40 hidden lg:hidden' aria-hidden='true'></div>
 
 		<main class='flex-1 min-w-0 p-4 md:p-8'>
 			<slot name='article-header' />
@@ -120,18 +215,18 @@ const isActive = (href: string) => {
 <script>
 	const menuBtn = document.getElementById("mobile-menu-btn");
 	const closeBtn = document.getElementById("mobile-menu-close");
-	const sidebar = document.getElementById("sidebar-nav");
+	const drawer = document.getElementById("mobile-drawer");
 	const overlay = document.getElementById("sidebar-overlay");
 
 	function openMenu() {
-		sidebar?.classList.remove("-translate-x-full");
+		drawer?.classList.remove("translate-x-full");
 		overlay?.classList.remove("hidden");
 		menuBtn?.setAttribute("aria-expanded", "true");
 		document.body.style.overflow = "hidden";
 	}
 
 	function closeMenu() {
-		sidebar?.classList.add("-translate-x-full");
+		drawer?.classList.add("translate-x-full");
 		overlay?.classList.add("hidden");
 		menuBtn?.setAttribute("aria-expanded", "false");
 		document.body.style.overflow = "";
@@ -145,7 +240,7 @@ const isActive = (href: string) => {
 		if (e.key === "Escape") closeMenu();
 	});
 
-	sidebar?.querySelectorAll("a").forEach((link) => {
+	drawer?.querySelectorAll("a").forEach((link) => {
 		link.addEventListener("click", closeMenu);
 	});
 </script>
