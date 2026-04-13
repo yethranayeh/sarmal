@@ -3,6 +3,8 @@ import { Code } from "astro:components";
 import { ChevronsLeft } from "@lucide/astro";
 
 import DocsLayout from "../../../layouts/DocsLayout.astro";
+
+import MathEquation from "../../../components/MathEquation.astro";
 import Sarmal from "../../../components/Sarmal.astro";
 import CopyButton from "../../../components/CopyButton.astro";
 import DotGrid from "../../../components/DotGrid.astro";
@@ -10,6 +12,19 @@ import Link from "../../../components/Link.astro";
 
 import { codeThemes } from "../../../lib/shiki";
 import { SEPARATOR_DOT } from "../../../variables";
+
+export type CurveData = {
+	name: string;
+	curveKey: string;
+	family: string;
+	equation: string;
+	period: string;
+	speed: number;
+	skeleton: string;
+	description: string;
+	features: string[];
+	importPath: string;
+};
 
 export function getStaticPaths() {
 	return [
@@ -28,27 +43,13 @@ export function getStaticPaths() {
 
 const { id } = Astro.params;
 
-const CURVE_DATA: Record<
-	string,
-	{
-		name: string;
-		curveKey: string;
-		family: string;
-		equation: string;
-		period: string;
-		speed: number;
-		skeleton: string;
-		description: string;
-		features: string[];
-		importPath: string;
-	}
-> = {
+const CURVE_DATA: Record<string, CurveData> = {
 	artemis2: {
 		name: "Artemis II",
 		curveKey: "artemis2",
 		family: "Free-return trajectory",
 		equation:
-			"x = (cos(t) * (1 + 0.35 * cos(t))) / (1 + sin²(t)) - 0.175\ny = (sin(t) * cos(t) * (1 + 0.15 * cos(t))) / (1 + sin²(t))",
+			"x = \\frac{\\cos(t)\\,(1 + 0.35\\cos(t))}{1 + \\sin^2(t)} - 0.175 \\\\ y = \\frac{\\sin(t)\\cos(t)\\,(1 + 0.15\\cos(t))}{1 + \\sin^2(t)}",
 		period: "2π",
 		speed: 0.7,
 		skeleton: "static",
@@ -65,7 +66,8 @@ const CURVE_DATA: Record<
 		name: "Epitrochoid",
 		curveKey: "epitrochoid7",
 		family: "Roulette",
-		equation: "x = 7cos(t) - d·cos(7t)\ny = 7sin(t) - d·sin(7t)\nwhere d = 1.0 + 0.55·sin(t·0.5)",
+		equation:
+			"x = 7\\cos(t) - d\\cos(7t) \\\\ y = 7\\sin(t) - d\\sin(7t) \\\\ \\text{where } d = 1.0 + 0.55\\sin(0.5t)",
 		period: "2π",
 		speed: 1.4,
 		skeleton: "custom (stabilized)",
@@ -82,7 +84,7 @@ const CURVE_DATA: Record<
 		name: "Astroid",
 		curveKey: "astroid",
 		family: "Hypocycloid",
-		equation: "x = cos³(t)\ny = sin³(t)",
+		equation: "x = \\cos^3(t) \\\\ y = \\sin^3(t)",
 		period: "2π",
 		speed: 1.1,
 		skeleton: "static",
@@ -98,7 +100,7 @@ const CURVE_DATA: Record<
 		name: "Deltoid",
 		curveKey: "deltoid",
 		family: "Hypocycloid",
-		equation: "x = 2cos(t) + cos(2t)\ny = 2sin(t) - sin(2t)",
+		equation: "x = 2\\cos(t) + \\cos(2t) \\\\ y = 2\\sin(t) - \\sin(2t)",
 		period: "2π",
 		speed: 0.9,
 		skeleton: "static",
@@ -110,7 +112,7 @@ const CURVE_DATA: Record<
 		name: "Rose (n=3)",
 		curveKey: "rose3",
 		family: "Rose",
-		equation: "r = cos(3t)\nx = r·cos(t)\ny = r·sin(t)",
+		equation: "r = \\cos(3t) \\\\ x = r\\cos(t) \\\\ y = r\\sin(t)",
 		period: "2π",
 		speed: 1.15,
 		skeleton: "static",
@@ -122,7 +124,7 @@ const CURVE_DATA: Record<
 		name: "Rose (n=5)",
 		curveKey: "rose5",
 		family: "Rose",
-		equation: "r = cos(5t)\nx = r·cos(t)\ny = r·sin(t)",
+		equation: "r = \\cos(5t) \\\\ x = r\\cos(t) \\\\ y = r\\sin(t)",
 		period: "2π",
 		speed: 1.0,
 		skeleton: "static",
@@ -134,7 +136,7 @@ const CURVE_DATA: Record<
 		name: "Lissajous 3:2",
 		curveKey: "lissajous32",
 		family: "Lissajous",
-		equation: "x = sin(3t + φ)\ny = sin(2t)\nwhere φ = time * 0.45",
+		equation: "x = \\sin(3t + \\varphi) \\\\ y = \\sin(2t) \\\\ \\text{where } \\varphi = t_{\\text{time}} \\cdot 0.45",
 		period: "2π",
 		speed: 2.0,
 		skeleton: "live",
@@ -151,7 +153,7 @@ const CURVE_DATA: Record<
 		name: "Lissajous 4:3",
 		curveKey: "lissajous43",
 		family: "Lissajous",
-		equation: "x = sin(4t + φ)\ny = sin(3t)\nwhere φ = time * 0.38",
+		equation: "x = \\sin(4t + \\varphi) \\\\ y = \\sin(3t) \\\\ \\text{where } \\varphi = t_{\\text{time}} \\cdot 0.38",
 		period: "2π",
 		speed: 1.8,
 		skeleton: "live",
@@ -168,7 +170,7 @@ const CURVE_DATA: Record<
 		name: "Epicycloid (n=3)",
 		curveKey: "epicycloid3",
 		family: "Roulette",
-		equation: "x = 4cos(t) - cos(4t)\ny = 4sin(t) - sin(4t)",
+		equation: "x = 4\\cos(t) - \\cos(4t) \\\\ y = 4\\sin(t) - \\sin(4t)",
 		period: "2π",
 		speed: 0.75,
 		skeleton: "static",
@@ -180,7 +182,8 @@ const CURVE_DATA: Record<
 		name: "Lamé Curve",
 		curveKey: "lame",
 		family: "Superellipse",
-		equation: "x = sign(cos t)·|cos t|^p\ny = sign(sin t)·|sin t|^p\nwhere p = 1.75 + 1.25·sin(time * 0.48)",
+		equation:
+			"x = \\operatorname{sgn}(\\cos t)\\,|\\cos t|^{p} \\\\ y = \\operatorname{sgn}(\\sin t)\\,|\\sin t|^{p} \\\\ \\text{where } p = 1.75 + 1.25\\sin(t_{\\text{time}} \\cdot 0.48)",
 		period: "2π",
 		speed: 1.0,
 		skeleton: "live",
@@ -278,7 +281,7 @@ const trailColor = colorMap[id] || "#60a5fa";
 	</div>
 
 	<h2>Equation</h2>
-	<Code lang='ts' theme={undefined} themes={codeThemes} defaultColor={false} code={curve.equation} />
+	<MathEquation equation={curve.equation} />
 
 	<h2>Parameters</h2>
 	<table class='w-full text-sm'>
