@@ -4,6 +4,7 @@ import {
   DEFAULT_SKELETON_OPACITY,
   computeBoundaries,
   computeTrailQuad,
+  enginePassthroughs,
 } from "./renderer-shared";
 import { createEngine } from "./engine";
 
@@ -303,13 +304,7 @@ export function createSVGRenderer(options: SVGRendererOptions): SarmalInstance {
       svg.remove();
     },
 
-    jump(t, options) {
-      engine.jump(t, options);
-    },
-
-    seek(t, options) {
-      engine.seek(t, options);
-    },
+    ...enginePassthroughs(engine),
 
     morphTo(target: CurveDef, options?: MorphOptions): Promise<void> {
       if (morphResolve !== null) {

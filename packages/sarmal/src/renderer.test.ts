@@ -202,6 +202,15 @@ describe("morphTo type shape", () => {
   });
 });
 
+describe("speed API", () => {
+  it("createSarmal exposes setSpeed, getSpeed, and resetSpeed", () => {
+    const instance = createSarmal(makeCanvas(), testCircle);
+    expect(typeof instance.setSpeed).toBe("function");
+    expect(typeof instance.getSpeed).toBe("function");
+    expect(typeof instance.resetSpeed).toBe("function");
+  });
+});
+
 describe("computeTangent", () => {
   it("returns unit vector for a horizontal line", () => {
     const trail = [

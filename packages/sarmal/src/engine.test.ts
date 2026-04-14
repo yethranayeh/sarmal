@@ -974,3 +974,209 @@ describe("getSarmalSkeleton() during morph", () => {
     expect(s1[s1.length - 1]?.x).not.toBeCloseTo(s2[s2.length - 1]?.x ?? 0);
   });
 });
+
+// ─── Phase 1: Runtime Speed Control ──────────────────────────────────────────
+// Fixtures: identity (period=10, speed=1), fast (period=10, speed=3)
+
+const fast: CurveDef = { ...identity, speed: 3 };
+
+// ─── Suite 1: Basic set / get / reset ────────────────────────────────────────
+
+describe("setSpeed(speed)", () => {
+  it("setSpeed(2.0) → subsequent tick advances t by 2× expected amount", () => {
+    const engine = createEngine(identity);
+    engine.setSpeed(2.0);
+    const trail = engine.tick(1); // t should advance by 2*1 = 2
+    const p = lastPoint(trail, engine.trailCount);
+    expect(p.x).toBe(2);
+  });
+
+  it("getSpeed() returns the override when set", () => {
+    const engine = createEngine(identity);
+    engine.setSpeed(2.5);
+    expect(engine.getSpeed()).toBe(2.5);
+  });
+
+  it("getSpeed() returns curve.speed when no override is set", () => {
+    const engine = createEngine(identity); // speed=1
+    expect(engine.getSpeed()).toBe(1);
+  });
+
+  it("setSpeed() called twice → getSpeed() returns the second value", () => {
+    const engine = createEngine(identity);
+    engine.setSpeed(0.5);
+    engine.setSpeed(3.0);
+    expect(engine.getSpeed()).toBe(3.0);
+  });
+
+  it("resetSpeed() after setSpeed(2.0) → getSpeed() returns curve.speed (not 0, not 2.0)", () => {
+    const engine = createEngine(fast); // speed=3
+    engine.setSpeed(2.0);
+    engine.resetSpeed();
+    expect(engine.getSpeed()).toBe(3); // falls back to curve.speed
+  });
+
+  it("resetSpeed() with no prior setSpeed() → no-op; getSpeed() returns curve.speed (does not throw)", () => {
+    const engine = createEngine(fast);
+    expect(() => engine.resetSpeed()).not.toThrow();
+    expect(engine.getSpeed()).toBe(3);
+  });
+
+  it("resetSpeed() does not set userSpeedOverride to 0 — it removes the override entirely", () => {
+    const engine = createEngine(identity); // speed=1
+    engine.setSpeed(0); // freeze
+    engine.resetSpeed();
+    expect(engine.getSpeed()).toBe(1); // back to curve.speed, NOT 0
+  });
+});
+
+// ─── Suite 2: Tick behavior ───────────────────────────────────────────────────
+
+describe("tick() with speed overrides", () => {
+  it("speed = 0 → tick(dt) does not advance t; trail head position unchanged", () => {
+    const engine = createEngine(identity);
+    engine.tick(5); // t=5
+    engine.setSpeed(0);
+    const trail = engine.tick(1); // t should stay at 5
+    const p = lastPoint(trail, engine.trailCount);
+    expect(p.x).toBe(5);
+  });
+
+  it("speed = 2 → tick(dt) advances t by 2 * dt (not 1 * dt)", () => {
+    const engine = createEngine(identity);
+    engine.setSpeed(2);
+    const trail = engine.tick(1); // t should be 2, not 1
+    const p = lastPoint(trail, engine.trailCount);
+    expect(p.x).toBe(2);
+  });
+
+  it("speed = -1 → tick(dt) decrements t by dt", () => {
+    const engine = createEngine(identity); // period=10
+    engine.tick(5); // t=5
+    engine.setSpeed(-1);
+    const trail = engine.tick(1); // t = (5 - 1) % 10 = 4
+    const p = lastPoint(trail, engine.trailCount);
+    expect(p.x).toBe(4);
+  });
+
+  it("speed change mid-sequence → next tick immediately uses new speed, not previous", () => {
+    const engine = createEngine(identity);
+    engine.tick(2); // t=2 at speed=1
+    engine.setSpeed(3);
+    const trail = engine.tick(1); // t = 2 + 3*1 = 5
+    const p = lastPoint(trail, engine.trailCount);
+    expect(p.x).toBe(5);
+  });
+});
+
+// ─── Suite 3: Validation ──────────────────────────────────────────────────────
+
+describe("setSpeed() validation", () => {
+  it("setSpeed(NaN) → throws", () => {
+    const engine = createEngine(identity);
+    expect(() => engine.setSpeed(NaN)).toThrow();
+  });
+
+  it("setSpeed(Infinity) → throws", () => {
+    const engine = createEngine(identity);
+    expect(() => engine.setSpeed(Infinity)).toThrow();
+  });
+
+  it("setSpeed(-Infinity) → throws", () => {
+    const engine = createEngine(identity);
+    expect(() => engine.setSpeed(-Infinity)).toThrow();
+  });
+
+  it("setSpeed(0) → does not throw (0 is valid)", () => {
+    const engine = createEngine(identity);
+    expect(() => engine.setSpeed(0)).not.toThrow();
+  });
+
+  it("setSpeed(-1) → does not throw (negative is valid)", () => {
+    const engine = createEngine(identity);
+    expect(() => engine.setSpeed(-1)).not.toThrow();
+  });
+
+  it("setSpeed(100) → does not throw (no upper bound)", () => {
+    const engine = createEngine(identity);
+    expect(() => engine.setSpeed(100)).not.toThrow();
+  });
+});
+
+// ─── Suite 4: Morph persistence ───────────────────────────────────────────────
+
+describe("setSpeed() persistence across morph", () => {
+  const xCurve: CurveDef = {
+    name: "x-curve",
+    fn: (t) => ({ x: t, y: 0 }),
+    period: 10,
+    speed: 1,
+  };
+
+  const yCurve: CurveDef = {
+    name: "y-curve",
+    fn: (t) => ({ x: 0, y: t }),
+    period: 10,
+    speed: 1,
+  };
+
+  it("setSpeed(0.5) then morphTo(curveB) → getSpeed() still returns 0.5 after morph", () => {
+    const engine = createEngine(xCurve);
+    engine.setSpeed(0.5);
+    engine.startMorph(yCurve);
+    engine.setMorphAlpha(1);
+    engine.completeMorph();
+    expect(engine.getSpeed()).toBe(0.5);
+  });
+
+  it("morph does not read or write userSpeedOverride", () => {
+    const engine = createEngine(xCurve);
+    engine.setSpeed(2.0);
+    engine.startMorph(yCurve);
+    engine.setMorphAlpha(0.5);
+    // override still in effect
+    expect(engine.getSpeed()).toBe(2.0);
+  });
+});
+
+// ─── Suite 7: Gotchas ─────────────────────────────────────────────────────────
+
+describe("Gotchas", () => {
+  it("Gotcha: setSpeed(0) freezes t but does NOT stop the loop", () => {
+    const engine = createEngine(identity);
+    engine.tick(5); // t=5
+    engine.setSpeed(0);
+    engine.tick(1); // t should still be 5
+    const p = lastPoint(engine.tick(1), engine.trailCount);
+    expect(p.x).toBe(5);
+  });
+
+  it("Gotcha: trail bunching is correct, not a bug", () => {
+    const engine = createEngine(identity);
+    engine.tick(1);
+    engine.tick(1);
+    engine.tick(1);
+    engine.tick(1);
+    engine.tick(1); // 5 points accumulated
+    engine.setSpeed(0.1);
+    engine.tick(1);
+    engine.tick(1);
+    engine.tick(1);
+    // After slowing, points bunch up (3 more ticks at 0.1 each)
+    const trail = engine.tick(1);
+    // The last few points should be very close in x due to low speed
+    const last = lastPoint(trail, engine.trailCount);
+    const secondLast = trail[engine.trailCount - 2]!;
+    const diff = Math.abs(last.x - secondLast.x);
+    expect(diff).toBeCloseTo(0.1, 1);
+  });
+
+  it("Gotcha: negative speed reverses t traversal, does not break engine", () => {
+    const engine = createEngine(identity); // period=10
+    engine.tick(5); // t=5
+    engine.setSpeed(-1);
+    const trail = engine.tick(1); // t = 5 - 1 = 4
+    const p = lastPoint(trail, engine.trailCount);
+    expect(p.x).toBe(4); // confirms reversal without needing to reason about JS modulo
+  });
+});

@@ -128,6 +128,7 @@ export function createEngine(curveDef: CurveDef, trailLength: number = 120): Eng
   const trail = new CircularBuffer(trailLength);
   let t = 0;
   let actualTime = 0;
+  let userSpeedOverride: number | null = null;
 
   // Morph state which is `null` when not morphing
   let morphCurveB: ResolvedCurve | null = null;
@@ -147,9 +148,9 @@ export function createEngine(curveDef: CurveDef, trailLength: number = 120): Eng
 
   return {
     tick(deltaTime: number): Array<Point> {
-      let effectiveSpeed = curve.speed;
+      let effectiveSpeed = userSpeedOverride ?? curve.speed;
       if (morphCurveB !== null && _morphAlpha !== null) {
-        effectiveSpeed = lerp(curve.speed, morphCurveB.speed, _morphAlpha);
+        effectiveSpeed = lerp(effectiveSpeed, morphCurveB.speed, _morphAlpha);
       }
       t = (t + effectiveSpeed * deltaTime) % curve.period;
       actualTime += deltaTime;
@@ -292,6 +293,21 @@ export function createEngine(curveDef: CurveDef, trailLength: number = 120): Eng
       }
 
       return points;
+    },
+
+    setSpeed(speed: number): void {
+      if (!Number.isFinite(speed)) {
+        throw new Error("speed must be a finite number");
+      }
+      userSpeedOverride = speed;
+    },
+
+    getSpeed(): number {
+      return userSpeedOverride ?? curve.speed;
+    },
+
+    resetSpeed(): void {
+      userSpeedOverride = null;
     },
   };
 }

@@ -11,8 +11,8 @@ import {
   DEFAULT_MORPH_DURATION_MS,
   DEFAULT_SKELETON_OPACITY,
   computeBoundaries,
-  computeNormal,
   computeTrailQuad,
+  enginePassthroughs,
 } from "./renderer-shared";
 
 // Re-exported so existing test imports (renderer.test.ts) keep working
@@ -462,13 +462,7 @@ export function createRenderer(options: RendererOptions): SarmalInstance {
       }
     },
 
-    jump(t, options) {
-      engine.jump(t, options);
-    },
-
-    seek(t, options) {
-      engine.seek(t, options);
-    },
+    ...enginePassthroughs(engine),
 
     morphTo(target: CurveDef, options?: MorphOptions): Promise<void> {
       if (morphResolve !== null) {

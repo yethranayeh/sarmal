@@ -1,4 +1,4 @@
-import type { Point } from "./types";
+import type { Engine, Point } from "./types";
 
 export const DEFAULT_MORPH_DURATION_MS = 300;
 export const DEFAULT_SKELETON_OPACITY = 0.15;
@@ -186,5 +186,19 @@ export function computeBoundaries(
     scale,
     offsetX: (logicalWidth - w * scale) / 2 - minX * scale,
     offsetY: (logicalHeight - h * scale) / 2 - minY * scale,
+  };
+}
+
+/**
+ * Returns the engine methods that are pure pass-throughs on both renderers
+ * The engine does not use `this`, so direct assignment is safe
+ */
+export function enginePassthroughs(engine: Engine) {
+  return {
+    jump: engine.jump,
+    seek: engine.seek,
+    setSpeed: engine.setSpeed,
+    getSpeed: engine.getSpeed,
+    resetSpeed: engine.resetSpeed,
   };
 }

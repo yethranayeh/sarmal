@@ -70,6 +70,56 @@ export type SeekOptions = {
 
 export type MorpStrategy = "raw" | "normalized";
 
+/**
+ * The shared animation state types
+ * Both `Engine` and `SarmalInstance` extend this
+ * In the renderer, these are passthroughs
+ */
+export interface AnimationControls {
+  /**
+   * Resets the simulation state, clearing the trail and reverting internal time `t` to 0
+   * The next call to `tick` will start fresh from the beginning of the curve
+   */
+  reset(): void;
+  /**
+   * Instantly moves the head to position `t`.
+   *
+   * ! Does NOT update `actualTime`.
+   *
+   * Trail is left untouched by default. You can pass `clearTrail: true` to wipe it.
+   * Use for morphing mid-flight or any time you don't need trail context.
+   * @param t The position to jump to (will be wrapped into [0, period))
+   */
+  jump(t: number, options?: JumpOptions): void;
+  /**
+   * Moves to `t` AND reconstructs the trail as if the animation naturally arrived there from `t=0`
+   * Also updates `actualTime` to match. Trail is always rebuilt from scratch
+   * Use for initialisation or any jump where you want the trail to look meaningful
+   * @param t The position to seek to (will be wrapped into [0, period))
+   */
+  seek(t: number, options?: SeekOptions): void;
+  /**
+   * Overrides the animation speed at runtime
+   * `0` freezes `t` but the loop keeps running
+   * Negative values reverse traversal.
+   *
+   * ! Does NOT affect a curve's inherent speed given in CurveDef
+   * @param speed 0 = freeze, negative = reverse, no upper bound
+   */
+  setSpeed(speed: number): void;
+  /**
+   * Returns the *effective speed* the engine is currently using:
+   * `userSpeedOverride` if set, otherwise the curve's default speed.
+   * This is what `tick()` actually uses
+   */
+  getSpeed(): number;
+  /**
+   * Drops the speed override and defers back to the curve's inherent default speed.
+   * ! Sets `userSpeedOverride` to `null`
+   */
+  resetSpeed(): void;
+}
+
 export type MorphOptions = {
   /**
    * Duration of the morph transition in milliseconds
@@ -85,7 +135,7 @@ export type MorphOptions = {
   morphStrategy?: MorpStrategy;
 };
 
-export interface Engine {
+export interface Engine extends AnimationControls {
   /**
    * Advances the Sarmal simulation by the given delta time (dt) in seconds.
    * Internally, this increases the simulation time `t` by `speed * dt`,
@@ -102,11 +152,6 @@ export interface Engine {
    */
   readonly trailCount: number;
   /**
-   * Resets the simulation state, by clearing the trail and reverting internal time `t` to 0.
-   * The next call to `tick` will start fresh from the beginning of the curve.
-   */
-  reset(): void;
-  /**
    * Returns the *skeleton* of the curve.
    * In technicality, it just represents the complete traversal of the curve over one full period,
    *  which is sampled at points from `t=0` to `t=period`
@@ -119,20 +164,6 @@ export interface Engine {
    */
   getSarmalSkeleton(): Array<Point>;
   readonly isLiveSkeleton: boolean;
-  /**
-   * Instantly moves the head to position `t`. Does NOT update `actualTime`.
-   * Trail is left untouched by default — pass `clearTrail: true` to wipe it.
-   * Use for morphing mid-flight, raw scrubbing, or any time you don't need trail context.
-   * @param t The position to jump to (will be wrapped into [0, period))
-   */
-  jump(t: number, options?: JumpOptions): void;
-  /**
-   * Moves to `t` AND reconstructs the trail as if the animation naturally arrived there from `t=0`.
-   * Also updates `actualTime` to match. Trail is always rebuilt from scratch.
-   * Use for initialisation or any jump where you want the trail to look meaningful.
-   * @param t The position to seek to (will be wrapped into [0, period))
-   */
-  seek(t: number, options?: SeekOptions): void;
   /**
    * Begins a smooth transition from the current curve to `target`
    * Saves the current curve as `curveA`, registers `target` as `curveB`, and resets `morphAlpha` to `0`
@@ -163,29 +194,11 @@ export interface Engine {
   readonly morphAlpha: number | null;
 }
 
-export interface SarmalInstance {
+export interface SarmalInstance extends AnimationControls {
   start(): void;
   stop(): void;
-  /** Resets the engine and clears the trail */
-  reset(): void;
   /** Stops the animation and cleans up resources */
   destroy(): void;
-  // FIXME: JSDoc repetition of proxied functions (maybe use `extend`?)
-  /**
-   * Instantly moves the head to position `t`. Does NOT update `actualTime`.
-   * Trail is left untouched by default — pass `clearTrail: true` to wipe it.
-   * Use for morphing mid-flight, raw scrubbing, or any time you don't need trail context.
-   * @param t The position to jump to (will be wrapped into [0, period))
-   */
-  jump(t: number, options?: JumpOptions): void;
-  // FIXME: JSDoc repetition of proxied functions (maybe use `extend`?)
-  /**
-   * Moves to `t` AND reconstructs the trail as if the animation naturally arrived there from `t=0`.
-   * Also updates `actualTime` to match. Trail is always rebuilt from scratch.
-   * Use for initialisation or any jump where you want the trail to look meaningful.
-   * @param t The position to seek to (will be wrapped into [0, period))
-   */
-  seek(t: number, options?: SeekOptions): void;
   /**
    * Smoothly transitions from the current curve to `target`.
    * The trail naturally reflects the new curve as new points are added.
