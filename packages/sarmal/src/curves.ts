@@ -1,4 +1,5 @@
 // Re-export all curves from the curves/ directory
+export type { CurveName } from "./curves/index";
 export { curves } from "./curves/index";
 export {
   artemis2,

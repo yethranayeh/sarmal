@@ -1,4 +1,6 @@
 ---
+import type { CurveName } from "@sarmal/core";
+
 import { curves } from "@sarmal/core";
 import { Code } from "astro:components";
 
@@ -10,13 +12,13 @@ import CopyButton from "./CopyButton.astro";
 import { codeThemes } from "../lib/shiki";
 
 interface Props {
-	fromId: string;
-	toId: string;
+	fromId: CurveName;
+	toId: CurveName;
 }
 
 const { fromId, toId } = Astro.props;
-const fromCurve = curves[fromId];
-const toCurve = curves[toId];
+const fromCurve = curves[fromId as CurveName];
+const toCurve = curves[toId as CurveName];
 
 if (!fromCurve || !toCurve) {
 	throw new Error(`Unknown curve pair: ${fromId} -> ${toId}`);
@@ -83,6 +85,7 @@ const morphSnippet = `sarmal.morphTo(curves.${toId});`;
 </Dialog>
 
 <script>
+	import type { CurveName } from "@sarmal/core";
 	import { createSarmal, curves } from "@sarmal/core";
 
 	interface MorphModal {
@@ -115,7 +118,7 @@ const morphSnippet = `sarmal.morphTo(curves.${toId});`;
 			dialog.showModal();
 
 			if (!modal.initialized) {
-				const fromCurve = curves[fromId];
+				const fromCurve = curves[fromId as CurveName];
 				modal.sarmal = createSarmal(canvas, fromCurve, {
 					trailColor: colorMap[fromId] || "#60a5fa",
 					skeletonColor: colorMap[fromId] || "#60a5fa",
@@ -132,9 +135,9 @@ const morphSnippet = `sarmal.morphTo(curves.${toId});`;
 
 			async function runMorphLoop() {
 				while (dialog.open) {
-					await modal.sarmal!.morphTo(curves[toId], { duration: MORPH_DURATION });
+					await modal.sarmal!.morphTo(curves[toId as CurveName], { duration: MORPH_DURATION });
 					await new Promise((resolve) => setTimeout(resolve, HOLD_DURATION));
-					await modal.sarmal!.morphTo(curves[fromId], { duration: MORPH_DURATION });
+					await modal.sarmal!.morphTo(curves[fromId as CurveName], { duration: MORPH_DURATION });
 					await new Promise((resolve) => setTimeout(resolve, HOLD_DURATION));
 				}
 			}

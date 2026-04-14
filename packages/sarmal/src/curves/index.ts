@@ -11,8 +11,9 @@ export { rose3 } from "./rose3";
 export { rose5 } from "./rose5";
 
 // Bulk export for convenience
-import type { CurveDef } from "../types";
-import { artemis2 } from "./artemis2";
+// >> Standard
+import { rose3 } from "./rose3";
+import { rose5 } from "./rose5";
 import { astroid } from "./astroid";
 import { deltoid } from "./deltoid";
 import { epicycloid3 } from "./epicycloid3";
@@ -20,14 +21,14 @@ import { epitrochoid7 } from "./epitrochoid7";
 import { lissajous32 } from "./lissajous32";
 import { lissajous43 } from "./lissajous43";
 import { lame } from "./lame";
-import { rose3 } from "./rose3";
-import { rose5 } from "./rose5";
+// >> Iconic
+import { artemis2 } from "./artemis2";
 
 /**
  * Collection of all built-in sarmal curves
  * Import individual curves for better tree-shaking
  */
-export const curves: Record<string, CurveDef> = {
+export const curves = {
   artemis2,
   epitrochoid7,
   astroid,
@@ -38,4 +39,5 @@ export const curves: Record<string, CurveDef> = {
   lissajous43,
   epicycloid3,
   lame,
-};
+} as const;
+export type CurveName = keyof typeof curves;

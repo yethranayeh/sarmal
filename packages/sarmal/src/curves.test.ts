@@ -1,12 +1,13 @@
 import { describe, it, expect } from "vitest";
 import { curves } from "./curves";
+import type { CurveName } from "./curves";
 import { createEngine } from "./engine";
 import type { CurveDef } from "./types";
 
 const TWO_PI = Math.PI * 2;
 
 describe("curves regression suite", () => {
-  const curveNames = Object.keys(curves);
+  const curveNames = Object.keys(curves) as CurveName[];
 
   it("all expected curves are exported", () => {
     expect(curveNames).toHaveLength(10);

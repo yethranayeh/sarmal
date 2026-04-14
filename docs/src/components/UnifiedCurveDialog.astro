@@ -63,6 +63,7 @@ import DialogInfoGrid from "./Dialog/DialogInfoGrid.astro";
 </Dialog>
 
 <script>
+	import type { CurveName } from "@sarmal/core";
 	import { createSarmal, curves } from "@sarmal/core";
 
 	interface CurveMetadata {
@@ -108,7 +109,7 @@ import DialogInfoGrid from "./Dialog/DialogInfoGrid.astro";
 
 	function getOrCreateSarmal(curveId: string, color: string): ReturnType<typeof createSarmal> {
 		if (!sarmalCache.has(curveId)) {
-			const curve = curves[curveId];
+			const curve = curves[curveId as CurveName];
 			const sarmal = createSarmal(canvas, curve, {
 				trailColor: color,
 				skeletonColor: "#1b1c1a",

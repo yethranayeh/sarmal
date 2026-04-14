@@ -1,9 +1,8 @@
 ---
-import type { SarmalOptions, TrailStyle, PalettePreset } from "@sarmal/core";
-import { curves } from "@sarmal/core";
+import type { SarmalOptions, TrailStyle, PalettePreset, CurveName } from "@sarmal/core";
 
 interface Props extends SarmalOptions {
-	curve?: keyof typeof curves;
+	curve?: CurveName;
 	width?: number;
 	height?: number;
 	trailStyle?: TrailStyle;

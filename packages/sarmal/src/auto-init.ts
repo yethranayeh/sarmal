@@ -5,6 +5,7 @@
 import { createSarmal } from "./index";
 import { curves } from "./curves";
 import type { PalettePreset } from "./types";
+import type { CurveName } from "./curves";
 
 /**
  * Parses a palette value from a data attribute.
@@ -31,7 +32,7 @@ function init(): void {
       return console.warn("[sarmal] curveName is required");
     }
 
-    const curveDef = curves[curveName];
+    const curveDef = curves[curveName as CurveName]; // just assume it is the correct string, it will be runtime checked anyway
     if (!curveDef) {
       return console.error(`[sarmal] "${curveName}" is not a valid curve name`);
     }

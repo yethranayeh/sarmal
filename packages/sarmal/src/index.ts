@@ -1,3 +1,4 @@
+import type { CurveDef, SarmalInstance, SarmalOptions } from "./types";
 export type { SVGRendererOptions, SVGSarmalOptions } from "./renderer-svg";
 export type {
   Point,
@@ -11,6 +12,7 @@ export type {
   TrailStyle,
   PalettePreset,
 } from "./types";
+export type { CurveName } from "./curves";
 
 export { createEngine } from "./engine";
 export { createRenderer } from "./renderer";
@@ -29,7 +31,6 @@ export {
   lame,
 } from "./curves";
 
-import type { CurveDef, SarmalInstance, SarmalOptions } from "./types";
 import { createEngine } from "./engine";
 import { createRenderer } from "./renderer";
 

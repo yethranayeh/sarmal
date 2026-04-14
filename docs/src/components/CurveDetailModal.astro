@@ -1,4 +1,6 @@
 ---
+import type { CurveName } from "@sarmal/core";
+
 import { Code } from "astro:components";
 import { curves } from "@sarmal/core";
 
@@ -11,7 +13,7 @@ import { codeThemes } from "../lib/shiki";
 import { curveMetadata } from "../data/curveMetadata";
 
 interface Props {
-	curveId: string;
+	curveId: CurveName;
 }
 
 const { curveId } = Astro.props;
@@ -89,6 +91,7 @@ const codeSnippet = `<canvas data-sarmal="${curveId}"></canvas>`;
 </Dialog>
 
 <script>
+	import type { CurveName } from "@sarmal/core";
 	import { createSarmal, curves } from "@sarmal/core";
 
 	interface CurveDetailModal {
@@ -119,7 +122,7 @@ const codeSnippet = `<canvas data-sarmal="${curveId}"></canvas>`;
 			dialog.showModal();
 
 			if (!modal.initialized) {
-				const curve = curves[curveId];
+				const curve = curves[curveId as CurveName];
 				modal.sarmal = createSarmal(canvas, curve, {
 					trailColor: colorMap[curveId] || "#60a5fa",
 					skeletonColor: "#1b1c1a",
