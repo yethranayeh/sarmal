@@ -2,8 +2,9 @@
 import Dialog from "./Dialog/Dialog.astro";
 import DialogShowcase from "./Dialog/DialogShowcase.astro";
 import DialogInfoGrid from "./Dialog/DialogInfoGrid.astro";
-import { SEPARATOR_DOT } from "../variables";
 import Button from "./Button.astro";
+
+import { SEPARATOR_DOT } from "../variables";
 ---
 
 <Dialog id='artemis2-modal'>
@@ -177,7 +178,7 @@ import Button from "./Button.astro";
 	}
 
 	function seekAndFreeze(t: number) {
-		sarmal!.seekWithTrail(t);
+		sarmal!.seek(t);
 		sarmal!.start();
 		sarmal!.stop();
 	}

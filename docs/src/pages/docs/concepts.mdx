@@ -105,7 +105,7 @@ The renderer *automatically* fits the curve to its container by using the skelet
 
 **What the engine manages:**
 
-- **t**: position along the curve (advances via `tick(dt)`, overridden with `seek(t)` or `seekWithTrail(t)`)
+- **t**: position along the curve (advances via `tick(dt)`, overridden with `seek(t)`)
 - **actualTime**: actual elapsed seconds (only advances with `tick()`, never with `seek()`)
 - Trail buffer: the last `N` points. It is a mutable, same array reference each tick
 - Morphing state: when transitioning between curves

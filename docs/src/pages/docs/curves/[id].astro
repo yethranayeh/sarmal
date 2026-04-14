@@ -1,4 +1,6 @@
 ---
+import type { CurveName } from "@sarmal/core";
+
 import { Code } from "astro:components";
 import { ChevronsLeft } from "@lucide/astro";
 
@@ -15,7 +17,7 @@ import { SEPARATOR_DOT } from "../../../variables";
 
 export type CurveData = {
 	name: string;
-	curveKey: string;
+	curveKey: CurveName;
 	family: string;
 	equation: string;
 	period: string;
@@ -204,14 +206,12 @@ if (!curve) {
 	return Astro.redirect("/docs/curves");
 }
 
-const usageSnippet = `import { ${curve.curveKey === "epitrochoid7" ? "epitrochoid7 as epitrochoid" : curve.curveKey} } from "${curve.importPath}";
-import { createSarmal } from "@sarmal/core";
+const usageSnippet = `import { createSarmal } from "@sarmal/core";
+import { ${curve.curveKey} } from "${curve.importPath}";
 
-const sarmal = createSarmal({
-  curve: ${curve.curveKey === "epitrochoid7" ? "epitrochoid" : curve.curveKey},
-  renderer: "canvas", // or "svg"
-  speed: ${curve.speed}
-});`;
+const canvas = document.getElementById("spinner") as HTMLCanvasElement;
+const sarmal = createSarmal(canvas, ${curve.curveKey});
+sarmal.start();`;
 
 const title = `${curve.name} ${SEPARATOR_DOT} Curve Catalog ${SEPARATOR_DOT} Sarmal`;
 
