@@ -223,9 +223,13 @@ const curveDataWithHighlight = await Promise.all(
 		await new Promise((resolve) => setTimeout(resolve, WARMUP_DURATION));
 
 		while (true) {
+			await sarmal.setSpeedOver(0.3, 300);
 			await sarmal.morphTo(toCurve, { duration: MORPH_DURATION });
+			await sarmal.setSpeedOver(1.0, 400);
 			await new Promise((resolve) => setTimeout(resolve, HOLD_DURATION));
+			await sarmal.setSpeedOver(0.3, 300);
 			await sarmal.morphTo(fromCurve, { duration: MORPH_DURATION });
+			await sarmal.setSpeedOver(1.0, 400);
 			await new Promise((resolve) => setTimeout(resolve, HOLD_DURATION));
 		}
 	}

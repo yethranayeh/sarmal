@@ -2,7 +2,6 @@
 import { Code } from "astro:components";
 
 import SectionLabel from "../SectionLabel.astro";
-import Sarmal from "../Sarmal.astro";
 import CopyButton from "../CopyButton.astro";
 import DotGrid from "../DotGrid.astro";
 
@@ -51,17 +50,33 @@ const codeSnippet = `<script src="https://unpkg.com/@sarmal/core/dist/auto-init.
 	<div class='hidden md:flex flex-col gap-2 items-center justify-center h-full'>
 		<div class='relative h-full w-full flex flex-col justify-center items-center gap-5'>
 			<DotGrid />
-
-			<Sarmal
-				curve='lissajous43'
-				width={360}
-				height={360}
-				skeletonColor='#c8c5c0'
-				trailStyle='gradient-animated'
-				palette='bard'
-				trailLength={150}
-			/>
+			<canvas id='hero-sarmal' width='360' height='360'></canvas>
 		</div>
 		<span class='font-mono text-[9px] tracking-[0.25em] uppercase text-muted'> lissajous 4:3 </span>
 	</div>
 </section>
+
+<script>
+	import { createSarmal, curves } from "@sarmal/core";
+
+	const canvas = document.getElementById("hero-sarmal") as HTMLCanvasElement | null;
+	if (canvas) {
+		const sarmal = createSarmal(canvas, curves.lissajous43, {
+			skeletonColor: "#c8c5c0",
+			trailColor: "#1b1c1a",
+			headColor: "#1b1c1a",
+			headRadius: 2.5,
+			trailStyle: "gradient-animated",
+			palette: "bard",
+			trailLength: 150
+		});
+		sarmal.start();
+
+		canvas.addEventListener("mouseenter", () => {
+			sarmal.setSpeedOver(0.3, 400).catch(() => {});
+		});
+		canvas.addEventListener("mouseleave", () => {
+			sarmal.setSpeedOver(1.0, 500).catch(() => {});
+		});
+	}
+</script>

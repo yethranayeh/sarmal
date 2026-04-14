@@ -46,8 +46,13 @@
 <script>
 	import { createSarmal, curves } from "@sarmal/core";
 
-	const LOAD_MS = 2600;
-	const CONTENT_MS = 2900;
+	// Randomised durations to let some curves breathe longer
+	function loadDuration(): number {
+		return 2500 + Math.floor(Math.random() * 2500); // 2.5–5s
+	}
+	function contentDuration(): number {
+		return 2000 + Math.floor(Math.random() * 2000); // 2–4s
+	}
 
 	type CurveId = keyof typeof curves;
 
@@ -173,7 +178,20 @@
 		currentSarmal.start();
 		setActiveDot(i);
 
-		timer = setTimeout(() => showContent(i), LOAD_MS);
+		// Breathing effect
+		const thisSarmal = currentSarmal;
+		const breathStart = performance.now();
+		function breathe(): void {
+			if (currentSarmal !== thisSarmal) {
+				return;
+			}
+			const t = ((performance.now() - breathStart) / 4000) * Math.PI * 2;
+			thisSarmal.setSpeed(0.75 + 0.25 * (Math.sin(t) + 1));
+			requestAnimationFrame(breathe);
+		}
+		requestAnimationFrame(breathe);
+
+		timer = setTimeout(() => showContent(i), loadDuration());
 	}
 
 	function showContent(i: number) {
@@ -197,7 +215,7 @@
 		timer = setTimeout(() => {
 			idx = (idx + 1) % SLIDES.length;
 			showLoading(idx);
-		}, CONTENT_MS);
+		}, contentDuration());
 	}
 
 	const section = document.getElementById("live-demo-card")!;
