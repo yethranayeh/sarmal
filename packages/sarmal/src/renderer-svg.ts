@@ -64,17 +64,19 @@ function el(tag: string): SVGElement {
  */
 export function createSVGRenderer(options: SVGRendererOptions): SarmalInstance {
   const { container, engine } = options;
+  const trailColor = options.trailColor ?? "#ffffff";
   const opts = {
     skeletonColor: options.skeletonColor ?? "#ffffff",
-    trailColor: options.trailColor ?? "#ffffff",
-    headColor: options.headColor ?? "#ffffff",
-    headRadius: options.headRadius ?? 4,
+    trailColor,
+    headColor: options.headColor ?? trailColor,
     ariaLabel: options.ariaLabel ?? "Loading",
   };
 
   const rect = container.getBoundingClientRect();
   const width = rect.width || 200;
   const height = rect.height || 200;
+  const headRadius =
+    options.headRadius ?? Math.max(2, 3 * Math.sqrt(Math.min(width, height) / 160));
 
   const svg = el("svg") as SVGSVGElement;
   svg.setAttribute("width", String(width));
@@ -121,7 +123,7 @@ export function createSVGRenderer(options: SVGRendererOptions): SarmalInstance {
 
   const headCircle = el("circle") as SVGCircleElement;
   headCircle.setAttribute("fill", opts.headColor);
-  headCircle.setAttribute("r", String(opts.headRadius));
+  headCircle.setAttribute("r", String(headRadius));
   svg.appendChild(headCircle);
 
   container.appendChild(svg);

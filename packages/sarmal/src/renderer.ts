@@ -18,7 +18,6 @@ import {
 // Re-exported so existing test imports (renderer.test.ts) keep working
 export { computeTangent, computeNormal, TrailPoint } from "./renderer-shared";
 
-const DEFAULT_HEAD_RADIUS = 4;
 const DEFAULT_SKELETON_COLOR = "#ffffff";
 
 const GRADIENT = {
@@ -154,15 +153,24 @@ export function createRenderer(options: RendererOptions): SarmalInstance {
   const ctx = canvas.getContext("2d")!;
 
   const engine = options.engine;
+  const trailStyle: TrailStyle = options.trailStyle ?? "default";
+  const trailColor = options.trailColor ?? "#ffffff";
+  const palette = resolvePalette(options.palette, trailStyle);
+
+  function defaultHeadColor(): string {
+    if (trailStyle !== "default") {
+      const { r, g, b } = getPaletteColor(palette, 1.0);
+      return `rgb(${r},${g},${b})`;
+    }
+    return trailColor;
+  }
+
   const opts = {
     skeletonColor: options.skeletonColor ?? DEFAULT_SKELETON_COLOR,
-    trailColor: options.trailColor ?? "#ffffff",
-    headColor: options.headColor ?? "#ffffff",
-    headRadius: options.headRadius ?? DEFAULT_HEAD_RADIUS,
+    trailColor,
+    headColor: options.headColor ?? defaultHeadColor(),
   };
 
-  const trailStyle: TrailStyle = options.trailStyle ?? "default";
-  const palette = resolvePalette(options.palette, trailStyle);
   const trailRgb = hexToRgbComponents(opts.trailColor);
 
   /**
@@ -347,10 +355,12 @@ export function createRenderer(options: RendererOptions): SarmalInstance {
 
     const x = head.x * scale + offsetX;
     const y = head.y * scale + offsetY;
+    const r =
+      options.headRadius ?? Math.max(2, 3 * Math.sqrt(Math.min(logicalWidth, logicalHeight) / 160));
 
     ctx.fillStyle = opts.headColor;
     ctx.beginPath();
-    ctx.arc(x, y, opts.headRadius, 0, Math.PI * 2);
+    ctx.arc(x, y, r, 0, Math.PI * 2);
     ctx.fill();
   }
 
