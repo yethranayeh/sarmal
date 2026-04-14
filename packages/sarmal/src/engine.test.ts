@@ -1180,3 +1180,223 @@ describe("Gotchas", () => {
     expect(p.x).toBe(4); // confirms reversal without needing to reason about JS modulo
   });
 });
+
+// ─── Phase 4: setSpeedOver ──────────────────────────────────────────────────────
+
+// ─── Suite 5: setSpeedOver — happy path ────────────────────────────────────────
+
+describe("setSpeedOver(speed, duration) — happy path", () => {
+  it("setSpeedOver(0.2, 500) → Promise resolves after 500ms worth of ticks", async () => {
+    const engine = createEngine(identity); // speed=1, period=10
+    const promise = engine.setSpeedOver(0.2, 500);
+
+    // Simulate 500ms of ticks (50ms each, 10 ticks)
+    for (let i = 0; i < 10; i++) {
+      engine.tick(0.05); // 50ms
+    }
+
+    // Flush microtask queue to ensure promise callbacks have run
+    await Promise.resolve();
+    await promise; // should not reject
+  });
+
+  it("getSpeed() mid-transition → returns current interpolated value, not the target", () => {
+    const engine = createEngine(identity); // speed=1
+    engine.setSpeedOver(0, 100); // 100ms transition from 1 to 0
+
+    engine.tick(0.025); // 25ms elapsed (alpha = 0.25)
+    // speed = lerp(1, 0, 0.25) = 0.75
+    expect(engine.getSpeed()).toBeCloseTo(0.75);
+
+    engine.tick(0.025); // 50ms elapsed (alpha = 0.5)
+    // speed = lerp(1, 0, 0.5) = 0.5
+    expect(engine.getSpeed()).toBeCloseTo(0.5);
+  });
+
+  it("getSpeed() after resolution → returns target speed", async () => {
+    const engine = createEngine(identity);
+    const promise = engine.setSpeedOver(0.2, 100);
+
+    // Complete the transition
+    engine.tick(0.1);
+    await promise;
+
+    expect(engine.getSpeed()).toBe(0.2);
+  });
+
+  it("getSpeed() is stable after resolution — transition does not drift on subsequent ticks", async () => {
+    const engine = createEngine(identity);
+    const promise = engine.setSpeedOver(0.5, 50);
+    engine.tick(0.05); // complete the 50ms transition
+    await promise;
+
+    // After resolution, speed should be exactly 0.5 and stable
+    expect(engine.getSpeed()).toBe(0.5);
+    engine.tick(0.1); // additional ticks should not change the settled speed
+    engine.tick(0.1);
+    expect(engine.getSpeed()).toBe(0.5);
+  });
+
+  it("setSpeedOver(currentSpeed, 500) → valid; resolves after 500ms with no visible effect", async () => {
+    const engine = createEngine(identity); // speed=1
+    const promise = engine.setSpeedOver(1.0, 100); // transition to same speed
+
+    // After 100ms, should resolve
+    engine.tick(0.1);
+    await promise;
+
+    expect(engine.getSpeed()).toBe(1.0);
+  });
+});
+
+// ─── Suite 6: setSpeedOver — interruption ──────────────────────────────────────
+
+describe("setSpeedOver(speed, duration) — interruption", () => {
+  it("setSpeed() interrupts setSpeedOver → Promise rejects with 'Speed transition cancelled'; getSpeed() returns setSpeed value", async () => {
+    const engine = createEngine(identity);
+    const promise = engine.setSpeedOver(0.2, 500);
+
+    engine.tick(0.05); // mid-transition
+    engine.setSpeed(1.0); // interrupt
+
+    await expect(promise).rejects.toThrow("Speed transition cancelled");
+    expect(engine.getSpeed()).toBe(1.0); // setSpeed value, not transition target
+  });
+
+  it("setSpeed() after interruption → getSpeed() returns the setSpeed value, not the transition target", async () => {
+    const engine = createEngine(identity);
+    const promise = engine.setSpeedOver(0.2, 500);
+    engine.tick(0.05); // alpha = 0.1, speed ≈ 0.91
+    engine.setSpeed(3.0);
+
+    await expect(promise).rejects.toThrow();
+    expect(engine.getSpeed()).toBe(3.0);
+  });
+
+  it("setSpeedOver() interrupts setSpeedOver() → old Promise rejects", async () => {
+    const engine = createEngine(identity);
+    const oldPromise = engine.setSpeedOver(0.2, 500);
+
+    // Halfway through first transition
+    engine.tick(0.25); // 250ms elapsed, alpha=0.5, speed=lerp(1, 0.2, 0.5)=0.6
+
+    // New transition interrupts - this immediately rejects the old promise
+    engine.setSpeedOver(0.0, 500);
+
+    // Must flush microtask queue to ensure rejection is processed before we assert
+    await Promise.resolve();
+    await expect(oldPromise).rejects.toThrow("Speed transition cancelled");
+  });
+
+  it("setSpeedOver() interrupts setSpeedOver() → new transition starts from current interpolated speed", async () => {
+    const engine = createEngine(identity); // speed=1
+    const oldPromise = engine.setSpeedOver(0.2, 500);
+
+    engine.tick(0.25); // 250ms, alpha=0.5, speed=lerp(1, 0.2, 0.5)=0.6
+
+    engine.setSpeedOver(1.0, 500); // new transition from 0.6 to 1.0
+
+    engine.tick(0.25); // 250ms into new, alpha=0.5, speed=lerp(0.6, 1.0, 0.5)=0.8
+    expect(engine.getSpeed()).toBeCloseTo(0.8);
+
+    // Catch the rejected old promise to avoid unhandled rejection
+    await oldPromise.catch(() => {});
+  });
+
+  it("stop() interrupts setSpeedOver() → Promise rejects with 'Speed transition cancelled'", async () => {
+    const engine = createEngine(identity);
+    const promise = engine.setSpeedOver(0.2, 500);
+
+    engine.tick(0.05); // mid-transition
+    engine.cancelSpeedTransition();
+
+    await Promise.resolve(); // flush microtask queue
+    await expect(promise).rejects.toThrow("Speed transition cancelled");
+  });
+
+  it("stop() interrupts setSpeedOver() → speed is last interpolated value (NOT snapped to target)", async () => {
+    const engine = createEngine(identity); // speed=1
+    const promise = engine.setSpeedOver(0, 500); // transition from 1 to 0
+
+    engine.tick(0.1); // 100ms, alpha=0.2, speed=lerp(1, 0, 0.2)=0.8
+    engine.cancelSpeedTransition();
+
+    // Catch the rejection to avoid unhandled rejection
+    await promise.catch(() => {});
+    expect(engine.getSpeed()).toBeCloseTo(0.8);
+  });
+
+  it("start() after stop() → transition does not resume; speed stays at the cancelled value", async () => {
+    const engine = createEngine(identity);
+    const promise = engine.setSpeedOver(0, 500);
+
+    engine.tick(0.1); // 100ms elapsed, speed ≈ 0.8
+    engine.cancelSpeedTransition();
+    await promise.catch(() => {}); // catch the rejection
+
+    // Simulate stop/start cycle: ticks after cancel should use the frozen speed, not resume transition
+    expect(engine.getSpeed()).toBeCloseTo(0.8);
+    engine.tick(0.1); // these ticks should NOT advance a non-existent transition
+    engine.tick(0.1);
+    expect(engine.getSpeed()).toBeCloseTo(0.8); // speed unchanged — transition didn't resume
+  });
+
+  it("morphTo() does NOT interrupt setSpeedOver()", async () => {
+    const engine = createEngine(identity);
+    const speedPromise = engine.setSpeedOver(0.2, 500);
+
+    // engine.startMorph() is the engine-level equivalent of the renderer's morphTo().
+    // We use startMorph() directly here to test engine behavior without the Promise
+    // wrapping that morphTo() adds at the renderer level.
+    const yCurve: CurveDef = {
+      name: "y-curve",
+      fn: (t) => ({ x: 0, y: t }),
+      period: 10,
+      speed: 1,
+    };
+    engine.startMorph(yCurve);
+
+    // Complete the speed transition
+    engine.tick(0.5);
+    await speedPromise;
+
+    // Speed transition should have completed normally
+    expect(engine.getSpeed()).toBe(0.2);
+  });
+});
+
+// ─── Suite 6: setSpeedOver validation ─────────────────────────────────────────
+
+describe("setSpeedOver() validation", () => {
+  it("setSpeedOver(NaN, 500) → throws synchronously", () => {
+    const engine = createEngine(identity);
+    expect(() => engine.setSpeedOver(NaN, 500)).toThrow();
+  });
+
+  it("setSpeedOver(Infinity, 500) → throws synchronously", () => {
+    const engine = createEngine(identity);
+    expect(() => engine.setSpeedOver(Infinity, 500)).toThrow();
+  });
+
+  it("setSpeedOver(0.2, 0) → throws synchronously ('duration must be a finite number greater than 0')", () => {
+    const engine = createEngine(identity);
+    expect(() => engine.setSpeedOver(0.2, 0)).toThrow(
+      "duration must be a finite number greater than 0",
+    );
+  });
+
+  it("setSpeedOver(0.2, -100) → throws synchronously", () => {
+    const engine = createEngine(identity);
+    expect(() => engine.setSpeedOver(0.2, -100)).toThrow();
+  });
+
+  it("setSpeedOver(0.2, Infinity) → throws synchronously", () => {
+    const engine = createEngine(identity);
+    expect(() => engine.setSpeedOver(0.2, Infinity)).toThrow();
+  });
+
+  it("setSpeedOver(0.2, 500) → does not throw (valid call)", () => {
+    const engine = createEngine(identity);
+    expect(() => engine.setSpeedOver(0.2, 500)).not.toThrow();
+  });
+});

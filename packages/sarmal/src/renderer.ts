@@ -447,6 +447,7 @@ export function createRenderer(options: RendererOptions): SarmalInstance {
 
       cancelAnimationFrame(animationId);
       animationId = null;
+      engine.cancelSpeedTransition();
     },
 
     reset() {

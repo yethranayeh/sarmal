@@ -290,6 +290,7 @@ export function createSVGRenderer(options: SVGRendererOptions): SarmalInstance {
       }
       cancelAnimationFrame(animationId);
       animationId = null;
+      engine.cancelSpeedTransition();
     },
 
     reset() {

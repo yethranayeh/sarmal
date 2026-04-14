@@ -200,5 +200,6 @@ export function enginePassthroughs(engine: Engine) {
     setSpeed: engine.setSpeed,
     getSpeed: engine.getSpeed,
     resetSpeed: engine.resetSpeed,
+    setSpeedOver: engine.setSpeedOver,
   };
 }

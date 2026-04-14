@@ -3,6 +3,15 @@ import type { CurveDef, Engine, JumpOptions, MorpStrategy, Point, SeekOptions } 
 const TWO_PI = Math.PI * 2;
 const POINTS_PER_PERIOD_UNIT = 50;
 
+type SpeedTransition = {
+  from: number;
+  to: number;
+  elapsed: number;
+  duration: number;
+  resolve: () => void;
+  reject: (err: Error) => void;
+};
+
 /** Linearly interpolate from start to end by factor t (0→1) */
 function lerp(start: number, end: number, t: number): number {
   return start + (end - start) * t;
@@ -135,6 +144,9 @@ export function createEngine(curveDef: CurveDef, trailLength: number = 120): Eng
   let _morphAlpha: number | null = null;
   let _morphStrategy: MorpStrategy = "normalized";
 
+  // Speed transition state which is `null` when not transitioning
+  let _speedTransition: SpeedTransition | null = null;
+
   /** Samples a resolved curve's skeleton at position `sampleT` */
   function sampleSkeleton(c: ResolvedCurve, sampleT: number): Point {
     if (c.skeletonFn) {
@@ -148,6 +160,19 @@ export function createEngine(curveDef: CurveDef, trailLength: number = 120): Eng
 
   return {
     tick(deltaTime: number): Array<Point> {
+      if (_speedTransition !== null) {
+        // tick() receives dt in seconds, but SpeedTransition.duration is in milliseconds.
+        // Convert dt to ms so the elapsed/duration ratio is dimensionless.
+        _speedTransition.elapsed += deltaTime * 1000;
+        const alpha = Math.min(_speedTransition.elapsed / _speedTransition.duration, 1);
+        userSpeedOverride = lerp(_speedTransition.from, _speedTransition.to, alpha);
+        if (alpha >= 1) {
+          userSpeedOverride = _speedTransition.to;
+          _speedTransition.resolve();
+          _speedTransition = null;
+        }
+      }
+
       let effectiveSpeed = userSpeedOverride ?? curve.speed;
       if (morphCurveB !== null && _morphAlpha !== null) {
         effectiveSpeed = lerp(effectiveSpeed, morphCurveB.speed, _morphAlpha);
@@ -299,6 +324,10 @@ export function createEngine(curveDef: CurveDef, trailLength: number = 120): Eng
       if (!Number.isFinite(speed)) {
         throw new Error("speed must be a finite number");
       }
+      if (_speedTransition !== null) {
+        _speedTransition.reject(new Error("Speed transition cancelled"));
+        _speedTransition = null;
+      }
       userSpeedOverride = speed;
     },
 
@@ -308,6 +337,33 @@ export function createEngine(curveDef: CurveDef, trailLength: number = 120): Eng
 
     resetSpeed(): void {
       userSpeedOverride = null;
+    },
+
+    setSpeedOver(speed: number, duration: number): Promise<void> {
+      if (!Number.isFinite(speed)) {
+        throw new Error("speed must be a finite number");
+      }
+      if (!Number.isFinite(duration) || duration <= 0) {
+        throw new Error("duration must be a finite number greater than 0");
+      }
+
+      if (_speedTransition !== null) {
+        _speedTransition.reject(new Error("Speed transition cancelled"));
+        _speedTransition = null;
+      }
+
+      const from = userSpeedOverride ?? curve.speed;
+
+      return new Promise<void>((resolve, reject) => {
+        _speedTransition = { from, to: speed, elapsed: 0, duration, resolve, reject };
+      });
+    },
+
+    cancelSpeedTransition(): void {
+      if (_speedTransition !== null) {
+        _speedTransition.reject(new Error("Speed transition cancelled"));
+        _speedTransition = null;
+      }
     },
   };
 }

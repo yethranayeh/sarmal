@@ -118,6 +118,17 @@ export interface AnimationControls {
    * ! Sets `userSpeedOverride` to `null`
    */
   resetSpeed(): void;
+  /**
+   * Transitions to the target speed over `duration` milliseconds using linear interpolation.
+   * Resolves when the transition completes.
+   *
+   * Calling this while a transition is already in progress cancels the old transition
+   * (rejecting its Promise) and starts a new one from the current interpolated speed.
+   *
+   * @param speed Target speed
+   * @param duration Transition duration in milliseconds (must be > 0)
+   */
+  setSpeedOver(speed: number, duration: number): Promise<void>;
 }
 
 export type MorphOptions = {
@@ -192,6 +203,11 @@ export interface Engine extends AnimationControls {
    * `null` when no morph is in progress
    */
   readonly morphAlpha: number | null;
+  /**
+   * Cancels any in-progress speed transition initiated by `setSpeedOver()`.
+   * Called internally by the renderer's `stop()` method.
+   */
+  cancelSpeedTransition(): void;
 }
 
 export interface SarmalInstance extends AnimationControls {
