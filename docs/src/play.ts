@@ -23,7 +23,6 @@ const PRESETS: Record<string, string> = presetsData.reduce(
 );
 
 let currentInstance: ReturnType<typeof createRenderer> | null = null;
-let currentEngine: ReturnType<typeof createEngine> | null = null;
 let showSkeleton = true;
 let currentCode = DEFAULT_CODE;
 let debounceTimer: ReturnType<typeof setTimeout> | null = null;
@@ -42,8 +41,10 @@ const trailSlider = document.getElementById("trail-slider") as HTMLInputElement;
 const trailValue = document.getElementById("trail-value") as HTMLElement;
 const colorInput = document.getElementById("color-input") as HTMLInputElement;
 const headColorInput = document.getElementById("head-color-input") as HTMLInputElement;
+const headColorAutoCheckbox = document.getElementById("head-color-auto") as HTMLInputElement;
 const trailStyleSelect = document.getElementById("trail-style-select") as HTMLSelectElement;
 const paletteSelect = document.getElementById("palette-select") as HTMLSelectElement;
+const paletteContainer = document.getElementById("palette-container") as HTMLDivElement;
 
 // Full state shared via the KV API.
 interface SharedState {
@@ -53,6 +54,7 @@ interface SharedState {
   palette: string;
   trailColor: string;
   headColor: string;
+  headColorAuto: boolean;
   trailLength: number;
   speed: number;
   showSkeleton: boolean;
@@ -95,7 +97,8 @@ function getParams() {
   return {
     trailColor: colorInput.value,
     skeletonColor: showSkeleton ? colorInput.value : "transparent",
-    headColor: headColorInput.value,
+    headColor: headColorAutoCheckbox.checked ? undefined : headColorInput.value,
+    headColorAuto: headColorAutoCheckbox.checked,
     trailLength: parseInt(trailSlider.value, 10),
     speed: parseFloat(speedSlider.value),
     trailStyle: trailStyleSelect.value as "default" | "gradient-static" | "gradient-animated",
@@ -112,25 +115,32 @@ function createInstance(
     currentInstance = null;
   }
 
-  if (currentEngine) {
-    currentEngine = null;
-  }
-
-  currentEngine = createEngine(
+  const engine = createEngine(
     { name: "playground", fn, period: Math.PI * 2, speed: params.speed },
     params.trailLength,
   );
 
-  currentInstance = createRenderer({
+  const rendererOptions: Parameters<typeof createRenderer>[0] = {
     canvas: previewCanvas,
-    engine: currentEngine,
+    engine,
     trailColor: params.trailColor,
     skeletonColor: params.skeletonColor,
-    headColor: params.headColor,
     trailStyle: params.trailStyle,
     palette: params.palette,
-  });
+  };
+
+  // Only pass headColor if not in auto mode
+  if (params.headColor) {
+    rendererOptions.headColor = params.headColor;
+  }
+
+  currentInstance = createRenderer(rendererOptions);
   currentInstance.start();
+}
+
+// Update speed without recreating anything
+function updateSpeed(speed: number): void {
+  currentInstance?.setSpeed(speed);
 }
 
 function handleCodeChange(): void {
@@ -189,7 +199,6 @@ function handleClear(): void {
   if (currentInstance) {
     currentInstance.destroy();
     currentInstance = null;
-    currentEngine = null;
   }
 }
 
@@ -237,7 +246,8 @@ async function handleShare(): Promise<void> {
     trailStyle: params.trailStyle,
     palette: params.palette,
     trailColor: params.trailColor,
-    headColor: params.headColor,
+    headColor: params.headColor ?? headColorInput.value,
+    headColorAuto: params.headColorAuto,
     trailLength: params.trailLength,
     speed: params.speed,
     showSkeleton,
@@ -272,6 +282,24 @@ async function handleShare(): Promise<void> {
   }
 }
 
+function updatePaletteVisibility(): void {
+  const isGradient = trailStyleSelect.value !== "default";
+  if (isGradient) {
+    paletteContainer.classList.remove("hidden");
+  } else {
+    paletteContainer.classList.add("hidden");
+  }
+}
+
+function updateHeadColorInputState(): void {
+  headColorInput.disabled = headColorAutoCheckbox.checked;
+  if (headColorAutoCheckbox.checked) {
+    headColorInput.classList.add("opacity-50");
+  } else {
+    headColorInput.classList.remove("opacity-50");
+  }
+}
+
 function restoreState(state: SharedState): void {
   codeInput.value = state.code;
   currentCode = state.code;
@@ -280,6 +308,9 @@ function restoreState(state: SharedState): void {
   if (state.palette) paletteSelect.value = state.palette;
   if (state.trailColor) colorInput.value = state.trailColor;
   if (state.headColor) headColorInput.value = state.headColor;
+  if (typeof state.headColorAuto === "boolean") {
+    headColorAutoCheckbox.checked = state.headColorAuto;
+  }
   if (typeof state.trailLength === "number") {
     trailSlider.value = String(state.trailLength);
     trailValue.textContent = String(state.trailLength);
@@ -291,6 +322,9 @@ function restoreState(state: SharedState): void {
   if (typeof state.showSkeleton === "boolean" && state.showSkeleton !== showSkeleton) {
     handleSkeletonToggle();
   }
+
+  updatePaletteVisibility();
+  updateHeadColorInputState();
 
   clearError();
   const fn = buildCurveFn(state.code);
@@ -314,8 +348,9 @@ skeletonToggle.addEventListener("click", handleSkeletonToggle);
 
 speedSlider.addEventListener("input", (e) => {
   const target = e.target as HTMLInputElement;
-  speedValue.textContent = parseFloat(target.value).toFixed(1);
-  updateInstance();
+  const speed = parseFloat(target.value);
+  speedValue.textContent = speed.toFixed(1);
+  updateSpeed(speed);
 });
 
 trailSlider.addEventListener("input", (e) => {
@@ -326,12 +361,23 @@ trailSlider.addEventListener("input", (e) => {
 
 colorInput.addEventListener("input", updateInstance);
 headColorInput.addEventListener("input", updateInstance);
-trailStyleSelect.addEventListener("change", updateInstance);
+headColorAutoCheckbox.addEventListener("change", () => {
+  updateHeadColorInputState();
+  updateInstance();
+});
+trailStyleSelect.addEventListener("change", () => {
+  updatePaletteVisibility();
+  updateInstance();
+});
 paletteSelect.addEventListener("change", updateInstance);
 
 async function init(): Promise<void> {
   const searchParams = new URLSearchParams(window.location.search);
   const shareId = searchParams.get("s");
+
+  // Initialize UI state
+  updatePaletteVisibility();
+  updateHeadColorInputState();
 
   if (shareId) {
     try {

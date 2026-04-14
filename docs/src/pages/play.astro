@@ -143,12 +143,24 @@ const presetsJson = JSON.stringify(
 							<label for='head-color-input' class='font-mono text-xs tracking-wider uppercase text-muted'>
 								Head Color
 							</label>
-							<input
-								type='color'
-								id='head-color-input'
-								value='#c0143c'
-								class='w-8 h-5 rounded border border-border cursor-pointer'
-							/>
+							<div class='flex items-center gap-2'>
+								<label class='flex items-center gap-1 cursor-pointer'>
+									<input
+										type='checkbox'
+										id='head-color-auto'
+										checked
+										class='accent-primary'
+									/>
+									<span class='font-mono text-[10px] text-muted'>Auto</span>
+								</label>
+								<input
+									type='color'
+									id='head-color-input'
+									value='#c0143c'
+									class='w-8 h-5 rounded border border-border cursor-pointer'
+									disabled
+								/>
+							</div>
 						</div>
 					</div>
 
@@ -167,7 +179,7 @@ const presetsJson = JSON.stringify(
 						</select>
 					</div>
 
-					<div>
+					<div id='palette-container' class='hidden'>
 						<div class='flex items-center justify-between mb-1'>
 							<label for='palette-select' class='font-mono text-xs tracking-wider uppercase text-muted'>
 								Palette
