@@ -101,7 +101,6 @@ h6 {
 
 .astro-code,
 .astro-code span {
-  background-color: var(--shiki-light-bg);
   color: var(--shiki-light);
 }
 

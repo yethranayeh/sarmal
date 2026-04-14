@@ -1,4 +1,6 @@
 ---
+import { Copy, Check } from "@lucide/astro";
+
 interface Props {
 	code: string;
 	"data-copy-btn"?: string;
@@ -7,42 +9,22 @@ interface Props {
 }
 
 const { code, "data-copy-btn": dataAttr, variant = "ghost-inverted", class: className } = Astro.props;
-
-const colorClass = variant === "ghost-inverted" ? "text-white/50 hover:text-white" : "text-muted hover:text-foreground";
 ---
 
 <button
 	data-copy-btn={dataAttr ?? ""}
 	data-code={code}
 	title='Copy'
-	class:list={["copy-btn relative cursor-pointer transition-colors p-1 size-5.5", colorClass, className]}>
-	<svg
-		xmlns='http://www.w3.org/2000/svg'
-		width='14'
-		height='14'
-		viewBox='0 0 24 24'
-		fill='none'
-		stroke='currentColor'
-		stroke-width='2'
-		stroke-linecap='round'
-		stroke-linejoin='round'
-		class='copy-icon absolute inset-0 m-auto'>
-		<rect x='9' y='9' width='13' height='13' rx='2' ry='2'></rect>
-		<path d='M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1'></path>
-	</svg>
-	<svg
-		xmlns='http://www.w3.org/2000/svg'
-		width='14'
-		height='14'
-		viewBox='0 0 24 24'
-		fill='none'
-		stroke='currentColor'
-		stroke-width='2.5'
-		stroke-linecap='round'
-		stroke-linejoin='round'
-		class='check-icon absolute inset-0 m-auto'>
-		<polyline points='20 6 9 17 4 12'></polyline>
-	</svg>
+	class:list={[
+		"copy-btn relative cursor-pointer transition-colors p-1 size-5.5",
+		{
+			"text-foreground/70 hover:text-foreground dark:text-white/50 dark:hover:text-white": variant === "ghost-inverted",
+			"text-muted hover:text-foreground": variant !== "ghost-inverted"
+		},
+		className
+	]}>
+	<Copy class='copy-icon absolute inset-0 m-auto' size={14} />
+	<Check class='check-icon absolute inset-0 m-auto' size={14} stroke-width={2.5} />
 </button>
 
 <style>
