@@ -2,8 +2,9 @@ import type { Engine, Point } from "./types";
 
 export const DEFAULT_MORPH_DURATION_MS = 300;
 export const DEFAULT_SKELETON_OPACITY = 0.15;
-/** Fraction of the bounding box added as padding when fitting the curve to the viewport */
+/** Fraction of the bounding-box dimension added as proportional padding on each side when fitting the curve. */
 export const FIT_PADDING = 0.1;
+export const FIT_PADDING_MIN = 4;
 /** Higher values = sharper fade near the tail, more of the trail appears faint */
 export const TRAIL_FADE_CURVE = 1.5;
 export const TRAIL_MAX_OPACITY = 0.88;
@@ -138,7 +139,7 @@ export interface BoundaryResult {
  * ! Returns `null` if `pts` is empty
  * ! Throws if all points are identical
  *
- * Steps: find bounding box -> compute uniform scale that fits with padding -> center offsets
+ * Padding per side is `max(FIT_PADDING * dim, FIT_PADDING_MIN)`, so the stricter constraint wins
  */
 export function computeBoundaries(
   pts: Point[],
@@ -178,9 +179,18 @@ export function computeBoundaries(
     );
   }
 
-  const scaleX = logicalWidth / (w * (1 + FIT_PADDING * 2));
-  const scaleY = logicalHeight / (h * (1 + FIT_PADDING * 2));
-  const scale = Math.min(scaleX, scaleY);
+  const scaleXProportional = logicalWidth / (w * (1 + FIT_PADDING * 2));
+  const scaleYProportional = logicalHeight / (h * (1 + FIT_PADDING * 2));
+
+  const scaleXMinPadding = (logicalWidth - FIT_PADDING_MIN * 2) / w;
+  const scaleYMinPadding = (logicalHeight - FIT_PADDING_MIN * 2) / h;
+
+  const scale = Math.min(
+    scaleXProportional,
+    scaleYProportional,
+    scaleXMinPadding,
+    scaleYMinPadding,
+  );
 
   return {
     scale,

@@ -16,6 +16,7 @@ import {
   getPaletteColor,
   resolvePalette,
 } from "./renderer";
+import { computeBoundaries, FIT_PADDING, FIT_PADDING_MIN } from "./renderer-shared";
 
 // Mock OffscreenCanvas for jsdom environment
 class MockOffscreenCanvas {
@@ -184,6 +185,130 @@ describe("applyDprSizing", () => {
     expect(target.height).toBe(195);
     expect(target.style.width).toBe("200px");
     expect(target.style.height).toBe("130px");
+  });
+});
+
+describe("computeBoundaries", () => {
+  const astroidPts = (() => {
+    const pts: { x: number; y: number }[] = [];
+    const steps = 315;
+    const period = Math.PI * 2;
+    for (let i = 0; i < steps; i++) {
+      const t = (i / (steps - 1)) * period;
+      const c = Math.cos(t);
+      const s = Math.sin(t);
+      pts.push({ x: c * c * c, y: s * s * s });
+    }
+    return pts;
+  })();
+
+  it("returns null for empty points array", () => {
+    expect(computeBoundaries([], 100, 100)).toBeNull();
+  });
+
+  it("throws for degenerate curve (all identical points)", () => {
+    const pts = [
+      { x: 1, y: 1 },
+      { x: 1, y: 1 },
+      { x: 1, y: 1 },
+    ];
+    expect(() => computeBoundaries(pts, 100, 100)).toThrow(/degenerate/i);
+  });
+
+  it("centers a symmetric curve in a square viewport", () => {
+    const result = computeBoundaries(astroidPts, 100, 100)!;
+    expect(result).not.toBeNull();
+    expect(result.offsetX).toBeCloseTo(50, 1);
+    expect(result.offsetY).toBeCloseTo(50, 1);
+  });
+
+  it("applies proportional padding for large viewports", () => {
+    const result = computeBoundaries(astroidPts, 400, 400)!;
+    const cuspX = 1 * result.scale + result.offsetX;
+    const padding = 400 - cuspX;
+    const proportionalPadding = FIT_PADDING * 2;
+    expect(padding).toBeGreaterThan(400 * proportionalPadding * 0.4);
+  });
+
+  it("enforces minimum absolute padding for small viewports", () => {
+    const small = 30;
+    const result = computeBoundaries(astroidPts, small, small)!;
+    const cuspX = 1 * result.scale + result.offsetX;
+    const cuspNegX = -1 * result.scale + result.offsetX;
+    const rightPad = small - cuspX;
+    const leftPad = cuspNegX;
+    expect(rightPad).toBeGreaterThanOrEqual(FIT_PADDING_MIN);
+    expect(leftPad).toBeGreaterThanOrEqual(FIT_PADDING_MIN);
+  });
+
+  it("ensures no cusp clips at 40x40 viewport", () => {
+    const size = 40;
+    const result = computeBoundaries(astroidPts, size, size)!;
+    const rightCusp = 1 * result.scale + result.offsetX;
+    const leftCusp = -1 * result.scale + result.offsetX;
+    const topCusp = 1 * result.scale + result.offsetY;
+    const bottomCusp = -1 * result.scale + result.offsetY;
+
+    expect(size - rightCusp).toBeGreaterThanOrEqual(FIT_PADDING_MIN);
+    expect(leftCusp).toBeGreaterThanOrEqual(FIT_PADDING_MIN);
+    expect(topCusp).toBeGreaterThanOrEqual(FIT_PADDING_MIN);
+    expect(size - bottomCusp).toBeGreaterThanOrEqual(FIT_PADDING_MIN);
+  });
+
+  it("centering is symmetric for symmetric curves", () => {
+    const result = computeBoundaries(astroidPts, 200, 200)!;
+    const leftCusp = -1 * result.scale + result.offsetX;
+    const rightCusp = 1 * result.scale + result.offsetX;
+    const leftPad = leftCusp;
+    const rightPad = 200 - rightCusp;
+    expect(Math.abs(leftPad - rightPad)).toBeLessThan(0.01);
+  });
+
+  it("scales to fit the constraining dimension in a wide viewport", () => {
+    const result = computeBoundaries(astroidPts, 300, 100)!;
+    expect(result).not.toBeNull();
+    const topCusp = 1 * result.scale + result.offsetY;
+    const bottomCusp = -1 * result.scale + result.offsetY;
+    const verticalAvailable = 100;
+    const verticalUsed = topCusp - bottomCusp;
+    expect(verticalUsed).toBeLessThanOrEqual(verticalAvailable);
+    expect(verticalAvailable - topCusp).toBeGreaterThanOrEqual(FIT_PADDING_MIN);
+    expect(bottomCusp).toBeGreaterThanOrEqual(FIT_PADDING_MIN);
+  });
+
+  it("scales to fit the constraining dimension in a tall viewport", () => {
+    const result = computeBoundaries(astroidPts, 100, 300)!;
+    const rightCusp = 1 * result.scale + result.offsetX;
+    const leftCusp = -1 * result.scale + result.offsetX;
+    expect(100 - rightCusp).toBeGreaterThanOrEqual(FIT_PADDING_MIN);
+    expect(leftCusp).toBeGreaterThanOrEqual(FIT_PADDING_MIN);
+  });
+
+  it("handles curves not centered at origin", () => {
+    const offsetPts = astroidPts.map((p) => ({ x: p.x + 5, y: p.y - 3 }));
+    const result = computeBoundaries(offsetPts, 200, 200)!;
+    const rightCusp = (5 + 1) * result.scale + result.offsetX;
+    const leftCusp = (5 - 1) * result.scale + result.offsetX;
+    expect(200 - rightCusp).toBeGreaterThanOrEqual(FIT_PADDING_MIN);
+    expect(leftCusp).toBeGreaterThanOrEqual(FIT_PADDING_MIN);
+  });
+
+  it("minimum padding dominates proportional padding at small sizes", () => {
+    const tiny = 20;
+    const result = computeBoundaries(astroidPts, tiny, tiny)!;
+    const bboxW = 2;
+    const proportionalPad = FIT_PADDING * bboxW * result.scale;
+    const actualPad = tiny / 2 - 1 * result.scale + (result.offsetX - tiny / 2);
+    expect(FIT_PADDING_MIN).toBeGreaterThan(proportionalPad);
+    expect(actualPad).toBeGreaterThanOrEqual(FIT_PADDING_MIN - 0.5);
+  });
+
+  it("proportional padding dominates minimum padding at large sizes", () => {
+    const large = 800;
+    const result = computeBoundaries(astroidPts, large, large)!;
+    const rightCusp = 1 * result.scale + result.offsetX;
+    const rightPad = large - rightCusp;
+    expect(rightPad).toBeGreaterThan(FIT_PADDING_MIN);
   });
 });
 
