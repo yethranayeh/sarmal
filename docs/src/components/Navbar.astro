@@ -1,52 +1,14 @@
 ---
-import { BookText, FlaskConical } from "@lucide/astro";
+import type { NavLink } from "./Nav.astro";
+
 import Branding from "./Branding.astro";
+import Nav from "./Nav.astro";
 
-interface NavLink {
-	href: string;
-	label: string;
-	external?: boolean;
-	active?: boolean;
-	icon: typeof BookText;
-}
-
-interface Props {
-	links?: NavLink[];
-}
-
-const { links = [] } = Astro.props;
-
-const defaultLinks: NavLink[] = [
-	{ href: "/docs", label: "Docs", icon: BookText },
-	{ href: "/play", label: "Playground", icon: FlaskConical }
-];
-
-const navLinks = links.length > 0 ? links : defaultLinks;
-const currentPath = Astro.url.pathname.replace(/\/$/, "") || "/";
+interface Props extends NavLink {}
 ---
 
-<header class='bg-surface-raised w-full px-4 py-2 flex items-center justify-between border-b border-border relative z-10'>
+<header
+	class='bg-surface-raised w-full px-4 py-2 flex items-center justify-between border-b border-border relative z-10'>
 	<Branding />
-	<nav class='flex items-center gap-4'>
-		{
-			navLinks.map((link) => {
-				const isActive = link.active ?? link.href === currentPath;
-				const colorClass = isActive ? "text-primary" : "text-muted";
-				const Icon = link.icon;
-				return (
-					<a
-						href={link.href}
-						target={link.external ? "_blank" : undefined}
-						rel={link.external ? "noopener noreferrer" : undefined}
-						class:list={[
-							"inline-flex items-center gap-1 font-mono text-xs tracking-wider uppercase hover:text-foreground transition-colors",
-							colorClass
-						]}>
-						<Icon size={16} />
-						<span>{link.label}</span>
-					</a>
-				);
-			})
-		}
-	</nav>
+	<Nav />
 </header>

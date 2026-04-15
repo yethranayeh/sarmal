@@ -1,13 +1,21 @@
 ---
-import BaseLayout from "./BaseLayout.astro";
-import Branding from "../components/Branding.astro";
+import type { MarkdownLayoutProps } from "astro";
+
 import { Menu, X, BookText, FlaskConical } from "@lucide/astro";
 
+import BaseLayout from "./BaseLayout.astro";
+import Branding from "../components/Branding.astro";
+import Nav from "../components/Nav.astro";
+
+interface DocFrontmatter {
+	title: string;
+	description: string;
+	sidebarLabel: string;
+	order: number;
+}
+
 interface DocModule {
-	frontmatter: {
-		sidebarLabel: string;
-		order: number;
-	};
+	frontmatter: DocFrontmatter;
 }
 
 interface NavItem {
@@ -16,14 +24,14 @@ interface NavItem {
 	order: number;
 }
 
-interface Props {
-	title: string;
-	description: string;
-	sidebarLabel?: string;
-	order?: number;
-}
+type Props = Partial<MarkdownLayoutProps<DocFrontmatter>> & {
+	title?: string;
+	description?: string;
+};
 
-const { title, description } = Astro.props;
+const { frontmatter } = Astro.props;
+const title = frontmatter?.title ?? Astro.props.title ?? "";
+const description = frontmatter?.description ?? Astro.props.description ?? "";
 const currentPath = Astro.url.pathname;
 
 const docModules = import.meta.glob<DocModule>("../pages/docs/*.mdx", { eager: true });
@@ -50,6 +58,8 @@ const isActive = (href: string) => {
 	return currentPath.startsWith(href);
 };
 
+// TODO: should docsLayout override the navbar slot?
+// FIXME: will go stale if main Nav changes...
 const topNavLinks = [
 	{ href: "/docs", label: "Docs", icon: BookText },
 	{ href: "/play", label: "Playground", icon: FlaskConical }
@@ -64,26 +74,7 @@ const topNavLinks = [
 
 		<div class='flex items-center gap-4'>
 			<!-- Desktop nav links -->
-			<nav class='hidden lg:flex items-center gap-4'>
-				{
-					topNavLinks.map((link) => {
-						const isLinkActive =
-							link.href === "/docs" ? currentPath.startsWith("/docs") : currentPath.startsWith(link.href);
-						const Icon = link.icon;
-						return (
-							<a
-								href={link.href}
-								class:list={[
-									"inline-flex items-center gap-1 font-mono text-xs tracking-wider uppercase hover:text-foreground transition-colors",
-									isLinkActive ? "text-primary" : "text-muted"
-								]}>
-								<Icon size={16} />
-								<span>{link.label}</span>
-							</a>
-						);
-					})
-				}
-			</nav>
+			<Nav />
 
 			<!-- Mobile hamburger -->
 			<button
