@@ -62,9 +62,34 @@ curves.astroid; // 4-pointed star
 // ...
 ```
 
-### Tree-shakable imports
+### Import paths
 
-Import curves individually for smaller bundles:
+There are three ways to import curves, each with different bundle-size characteristics:
+
+**1. Convenience: `@sarmal/core`**
+
+```ts
+import { createSarmal, curves } from "@sarmal/core";
+
+const sarmal = createSarmal(canvas, curves.rose3);
+```
+
+All curves are available through the `curves` object. Modern bundlers will tree-shake unused individual curves, but the main entry point (`index.js`) is still resolved into the module graph first. This means that the engine and renderer modules are always processed by the bundler even if they end up *unused*.
+
+**2. Barrel subpath: `@sarmal/core/curves`**
+
+```ts
+import { createSarmal } from "@sarmal/core";
+import { rose3 } from "@sarmal/core/curves";
+
+const sarmal = createSarmal(canvas, rose3);
+```
+
+Directly imports the curves file. You end up only pulling in the curve files you reference, so individual named imports are still tree-shakable.
+
+This is the best balance of convenience and bundle size: you get all named exports without the engine/renderer module graph.
+
+**3. Deep import: `@sarmal/core/curves/<name>`**
 
 ```ts
 import { createSarmal } from "@sarmal/core";
@@ -72,6 +97,12 @@ import { rose3 } from "@sarmal/core/curves/rose3";
 
 const sarmal = createSarmal(canvas, rose3);
 ```
+
+Imports a single curve definition file, resulting in maximum tree-shaking. You can use this to guarantee the smallest possible bundle and already know exactly which curve you need.
+
+<Alert variant='tip'>
+	If you need both engine/renderer **and** curves, option 2 or 3 won't save much over option 1, because you're already pulling the main modules. The subpath advantage matters most when you only need curve definitions, for whatever reason *I won't judge*.
+</Alert>
 
 <Alert variant='tip'>
 	You can also pass your own curve definition! See the <Link href='/docs/api'>API Reference</Link>.
