@@ -133,18 +133,18 @@ const codeSnippet = `<canvas data-sarmal="${curveId}"></canvas>`;
 			}
 
 			modal.sarmal!.reset();
-			modal.sarmal!.start();
+			modal.sarmal!.play();
 		});
 
 		closeBtn.addEventListener("click", () => {
 			dialog.close();
-			modal.sarmal?.stop();
+			modal.sarmal?.pause();
 		});
 
 		dialog.addEventListener("click", (e) => {
 			if (e.target === dialog) {
 				dialog.close();
-				modal.sarmal?.stop();
+				modal.sarmal?.pause();
 			}
 		});
 	}

@@ -138,7 +138,7 @@ import DialogInfoGrid from "./Dialog/DialogInfoGrid.astro";
 
 				const sarmal = getOrCreateSarmal(curveId, metadata.color);
 				sarmal.reset();
-				sarmal.start();
+				sarmal.play();
 			});
 		});
 	}
@@ -164,7 +164,7 @@ import DialogInfoGrid from "./Dialog/DialogInfoGrid.astro";
 	closeBtn.addEventListener("click", () => {
 		dialog.close();
 		if (currentCurveId) {
-			sarmalCache.get(currentCurveId)?.stop();
+			sarmalCache.get(currentCurveId)?.pause();
 		}
 	});
 
@@ -172,7 +172,7 @@ import DialogInfoGrid from "./Dialog/DialogInfoGrid.astro";
 		if (e.target === dialog) {
 			dialog.close();
 			if (currentCurveId) {
-				sarmalCache.get(currentCurveId)?.stop();
+				sarmalCache.get(currentCurveId)?.pause();
 			}
 		}
 	});

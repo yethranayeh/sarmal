@@ -364,11 +364,7 @@ export function createRenderer(options: RendererOptions): SarmalInstance {
     ctx.fill();
   }
 
-  function render() {
-    const now = performance.now();
-    const deltaTime = Math.min((now - lastTime) / 1000, 1 / 30);
-    lastTime = now;
-
+  function renderFrame(deltaTime: number) {
     // Update gradient animation time for animated trail style
     if (trailStyle === "gradient-animated") {
       gradientAnimTime += deltaTime * 1000; // Convert to ms for consistent speed
@@ -418,8 +414,15 @@ export function createRenderer(options: RendererOptions): SarmalInstance {
     drawSkeleton();
     drawTrail();
     drawHead();
+  }
 
-    animationId = requestAnimationFrame(render);
+  function loop() {
+    const now = performance.now();
+    const deltaTime = Math.min((now - lastTime) / 1000, 1 / 30);
+    lastTime = now;
+
+    renderFrame(deltaTime);
+    animationId = requestAnimationFrame(loop);
   }
 
   // Initialize skeleton and offscreen canvas on creation
@@ -430,17 +433,28 @@ export function createRenderer(options: RendererOptions): SarmalInstance {
     buildSkeletonCanvas();
   }
 
-  return {
-    start() {
+  // Handle initialT option: seek to the specified position before first frame
+  if (options.initialT !== undefined) {
+    engine.seek(options.initialT);
+  }
+
+  // Draw initial frame unconditionally (shows skeleton and initial position)
+  renderFrame(0);
+
+  // Handle autoStart option: start the animation loop unless explicitly disabled
+  const shouldAutoStart = options.autoStart !== false;
+
+  const instance = {
+    play() {
       if (animationId !== null) {
         return;
       }
 
       lastTime = performance.now();
-      render();
+      loop();
     },
 
-    stop() {
+    pause() {
       if (animationId === null) {
         return;
       }
@@ -483,4 +497,10 @@ export function createRenderer(options: RendererOptions): SarmalInstance {
       });
     },
   };
+
+  if (shouldAutoStart) {
+    instance.play();
+  }
+
+  return instance;
 }

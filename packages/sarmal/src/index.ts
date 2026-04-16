@@ -1,6 +1,7 @@
 import type { CurveDef, SarmalInstance, SarmalOptions } from "./types";
 export type { SVGRendererOptions, SVGSarmalOptions } from "./renderer-svg";
 export type {
+  BaseRendererOptions,
   Point,
   CurveDef,
   Engine,
@@ -41,7 +42,11 @@ import { createRenderer } from "./renderer";
  * ```ts
  * import { createSarmal, curves } from '@sarmal/core'
  * const sarmal = createSarmal(canvas, curves.artemis2)
- * sarmal.start()
+ *
+ * // To control manually, use autoStart: false
+ * const controlled = createSarmal(canvas, curves.artemis2, { autoStart: false })
+ * controlled.play()  // Start when ready
+ * controlled.pause() // Pause later
  * ```
  */
 export function createSarmal(

@@ -211,8 +211,10 @@ export interface Engine extends AnimationControls {
 }
 
 export interface SarmalInstance extends AnimationControls {
-  start(): void;
-  stop(): void;
+  /** Starts the animation loop (requestAnimationFrame). If already running, does nothing. */
+  play(): void;
+  /** Pauses the animation loop (cancelAnimationFrame) and cancels any speed transition. Preserves state. */
+  pause(): void;
   /** Stops the animation and cleans up resources */
   destroy(): void;
   /**
@@ -232,10 +234,21 @@ export interface SarmalInstance extends AnimationControls {
 export type TrailStyle = "default" | "gradient-static" | "gradient-animated";
 export type PalettePreset = "bard" | "sunset" | "ocean" | "ice" | "fire" | "forest";
 
-export interface RendererOptions {
-  /** Target canvas element that will contain the Sarmal */
-  canvas: HTMLCanvasElement;
-  engine: Engine;
+/**
+ * Common renderer options shared between canvas and SVG renderers.
+ * Extracted to avoid duplication and ensure consistency.
+ */
+export interface BaseRendererOptions {
+  /**
+   * Whether to start the animation loop automatically on creation.
+   * @default true
+   */
+  autoStart?: boolean;
+  /**
+   * Initial position along the curve (t value). If provided, seek(initialT) is called before the first frame.
+   * @default undefined (no seek performed, starts at t=0)
+   */
+  initialT?: number;
   /**
    * @default '#ffffff'
    */
@@ -250,6 +263,12 @@ export interface RendererOptions {
   headColor?: string;
   /** @default 4 */
   headRadius?: number;
+}
+
+export interface RendererOptions extends BaseRendererOptions {
+  /** Target canvas element that will contain the Sarmal */
+  canvas: HTMLCanvasElement;
+  engine: Engine;
   /**
    * Trail rendering style
    * @default 'default'

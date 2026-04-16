@@ -47,7 +47,6 @@ const sarmal = createSarmal(canvas, curves.artemis2, {
   trailStyle: "gradient-animated",
   palette: "bard",
 });
-sarmal.start();
 ```
 
 <Alert variant="warning">
@@ -80,7 +79,6 @@ const container = document.getElementById("spinner-container")!;
 const sarmal = createSarmalSVG(container, curves.lissajous32, {
   ariaLabel: "Loading data...",
 });
-sarmal.start();
 ```
 
 <Alert variant="warning">
@@ -118,7 +116,7 @@ sarmal.start();
 
 ### Same API, different first argument
 
-Both renderers share the *same* instance methods (`start`, `stop`, `morphTo`, `seek`, etc.). The only differences are the creation function and the first argument type:
+Both renderers share the *same* instance methods (`play`, `pause`, `morphTo`, `seek`, etc.). The only differences are the creation function and the first argument type:
 
 ```ts
 // Canvas: pass a canvas element

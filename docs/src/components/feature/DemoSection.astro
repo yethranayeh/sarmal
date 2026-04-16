@@ -219,7 +219,6 @@ const curveDataWithHighlight = await Promise.all(
 			trailLength: 60
 		});
 
-		sarmal.start();
 		await new Promise((resolve) => setTimeout(resolve, WARMUP_DURATION));
 
 		while (true) {
@@ -254,7 +253,6 @@ const curveDataWithHighlight = await Promise.all(
 				...(canvas.dataset.trailStyle && { trailStyle: canvas.dataset.trailStyle as TrailStyle }),
 				...(canvas.dataset.palette && { palette: canvas.dataset.palette as PalettePreset })
 			});
-			sarmal.start();
 		});
 
 		section.querySelectorAll<HTMLDivElement>("div[id^='morph-']").forEach((container) => {

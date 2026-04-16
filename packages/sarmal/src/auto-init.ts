@@ -37,7 +37,7 @@ function init(): void {
       return console.error(`[sarmal] "${curveName}" is not a valid curve name`);
     }
 
-    const sarmal = createSarmal(canvas, curveDef, {
+    createSarmal(canvas, curveDef, {
       ...(canvas.dataset.trailColor && { trailColor: canvas.dataset.trailColor }),
       ...(canvas.dataset.skeletonColor && { skeletonColor: canvas.dataset.skeletonColor }),
       ...(canvas.dataset.headColor && { headColor: canvas.dataset.headColor }),
@@ -51,7 +51,6 @@ function init(): void {
       }),
       ...(canvas.dataset.palette && { palette: parsePalette(canvas.dataset.palette) }),
     });
-    sarmal.start();
   });
 }
 

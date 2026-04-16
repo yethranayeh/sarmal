@@ -8,6 +8,7 @@ description: Understand parametric curves, the skeleton, and the engine.
 
 import Link from "../../components/Link.astro";
 import Alert from "../../components/Alert.astro";
+import SurgicalDemo from "../../components/SurgicalDemo.astro";
 
 # Concepts
 
@@ -113,3 +114,56 @@ The renderer *automatically* fits the curve to its container by using the skelet
 <Alert variant="info">
 The engine never touches pixels, canvas, SVG elements, colors, opacity, DPR, container dimensions.
 </Alert>
+
+## Instance Lifecycle
+
+Sarmal instances are created with `createSarmal()` (canvas) or `createSarmalSVG()` (SVG). By default, they start animating immediately — you don't need to call `play()` unless you explicitly opt out.
+
+### Auto-start
+
+The `autoStart` option (default: `true`) controls whether the animation loop begins automatically:
+
+```ts
+// Starts animating immediately (default)
+const s1 = createSarmal(canvas, curves.artemis2);
+
+// Created in a dormant state, so the canvas shows skeleton at t=0
+const s2 = createSarmal(canvas, curves.artemis2, { autoStart: false });
+s2.play(); // Start when ready
+```
+
+### Initial position
+
+The `initialT` option sets the starting position along the curve. It calls `seek()` internally, so the trail is reconstructed naturally:
+
+```ts
+// Start animating from t=π
+const s3 = createSarmal(canvas, curves.artemis2, { initialT: Math.PI });
+
+// Create at a specific position and keep it there until `play()` call
+const s4 = createSarmal(canvas, curves.artemis2, {
+  autoStart: false,
+  initialT: Math.PI
+});
+// Canvas shows skeleton + trail at t=π
+s4.play(); // Animation starts from there
+```
+
+<SurgicalDemo concept="initial-t" />
+
+### Why you don't always need `play()`
+
+For simple loading indicators, the defaults work without any lifecycle calls:
+
+```ts
+// This is enough
+const spinner = createSarmal(canvas, curves.artemis2);
+
+// Cleanup when done
+spinner.destroy();
+```
+
+Use `autoStart: false` when you need precise control over when animation begins, such as:
+- Waiting for data to load
+- Coordinating multiple animations
+- Implementing play/pause controls

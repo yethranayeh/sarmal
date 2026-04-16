@@ -8,6 +8,7 @@ description: Complete reference for all public methods, options, and the curve d
 
 import Alert from "../../components/Alert.astro";
 import Link from "../../components/Link.astro";
+import SurgicalDemo from "../../components/SurgicalDemo.astro";
 
 # API Reference
 
@@ -24,7 +25,7 @@ import { createSarmal, curves } from "@sarmal/core";
 
 const canvas = document.getElementById("loading-indicator") as HTMLCanvasElement;
 const sarmal = createSarmal(canvas, curves.artemis2);
-sarmal.start();
+// Animation starts automatically (autoStart: true by default)
 ```
 
 ### Options
@@ -38,10 +39,36 @@ sarmal.start();
 | `headRadius` | `number` | `4` | Radius of the head dot in pixels |
 | `trailStyle` | `TrailStyle` | `'default'` | `'default'` \| `'gradient-static'` \| `'gradient-animated'` |
 | `palette` | `PalettePreset \| string[]` | - | Built-in preset name or custom hex array |
+| `autoStart` | `boolean` | `true` | Start the animation loop automatically on creation |
+| `initialT` | `number` | `undefined` | Initial position along the curve (t value). Calls `seek(initialT)` before first frame |
 
 ### Built-in palettes
 
 `'bard'`, `'sunset'`, `'ocean'`, `'ice'`, `'fire'`, `'forest'`
+
+### Auto-start and initial position
+
+By default, sarmal instances start animating immediately from `t=0`. You can control this behavior:
+
+```ts
+// Start automatically from t=0 (default behavior)
+const s1 = createSarmal(canvas, curves.artemis2);
+
+// Start automatically from t=Math.PI
+const s2 = createSarmal(canvas, curves.artemis2, { initialT: Math.PI });
+
+// Create dormant at t=0; call play() when ready
+const s3 = createSarmal(canvas, curves.artemis2, { autoStart: false });
+s3.play();
+
+// Create dormant at t=Math.PI
+const s4 = createSarmal(canvas, curves.artemis2, {
+  autoStart: false,
+  initialT: Math.PI
+});
+// Canvas shows skeleton + trail at t=π position
+s4.play();
+```
 
 ---
 
@@ -54,7 +81,7 @@ import { createSarmalSVG, curves } from "@sarmal/core";
 
 const container = document.getElementById("loading-indicator-container")!;
 const sarmal = createSarmalSVG(container, curves.lissajous32);
-sarmal.start();
+// Animation starts automatically
 ```
 
 <Alert variant="warning">
@@ -65,35 +92,46 @@ sarmal.start();
 
 ## Instance Methods
 
-### `start()`
+### `play()`
 
-Begins the animation loop.
+Starts the animation loop (requestAnimationFrame). If already running, does nothing.
 
 ```ts
-sarmal.start();
+sarmal.play();
 ```
 
-### `stop()`
+<SurgicalDemo concept="play-pause" />
 
-Cancels the **requestAnimationFrame** loop entirely.
+### `pause()`
 
-<Alert variant="warning">
-This is distinct from pausing
+Pauses the animation loop (cancelAnimationFrame) and cancels any speed transition. State is preserved — `t`, trail, and speed are all maintained. Call `play()` to resume.
+
+<Alert variant="info">
+`pause()` is different from `setSpeed(0)`. `pause()` stops the RAF loop entirely and saves CPU. `setSpeed(0)` freezes the animation but keeps the loop running.
 </Alert>
 
 ```ts
-sarmal.stop();
+sarmal.pause();
 ```
+
+### `reset()`
+
+Resets the engine and clears the trail. The next frame will start fresh from the *beginning* of the curve. The animation loop keeps running.
+
+```ts
+sarmal.reset();
+```
+
+<SurgicalDemo concept="reset" />
 
 ### `destroy()`
 
-Stops the animation and cleans up resources. Call in component unmount / cleanup handlers.
+Stops the animation and cleans up resources. Call in component unmount / cleanup handlers. The instance cannot be restarted after destruction.
 
 ```ts
 // React example
 useEffect(() => {
   const sarmal = createSarmal(canvas, curves.artemis2);
-  sarmal.start();
 
   return () => {
     sarmal.destroy(); // Cleanup on unmount
@@ -101,13 +139,7 @@ useEffect(() => {
 }, []);
 ```
 
-### `reset()`
-
-Resets the engine and clears the trail. The next frame will start fresh from the *beginning* of the curve.
-
-```ts
-sarmal.reset();
-```
+<SurgicalDemo concept="destroy" />
 
 ---
 
@@ -182,7 +214,7 @@ sarmal.setSpeed(-1);
 **Validation:** `speed` must be a finite number. `0` and negative values are valid.
 
 <Alert variant="warning">
-`setSpeed(0)` freezes the animation but does **not** stop the loop. Use `stop()` if you need to cancel the requestAnimationFrame entirely and save CPU.
+`setSpeed(0)` freezes the animation but does **not** stop the loop. Use `pause()` if you need to cancel the requestAnimationFrame entirely and save CPU.
 </Alert>
 
 ### `getSpeed()`
@@ -225,7 +257,7 @@ await sarmal.setSpeedOver(0.2, 500);
 await sarmal.setSpeedOver(1.0, 300);
 ```
 
-**Cancellation:** Calling `setSpeed()`, `setSpeedOver()`, or `stop()` while a transition is in progress cancels it — the Promise rejects with `Error('Speed transition cancelled')`. A subsequent `setSpeedOver()` starts from the current interpolated speed.
+**Cancellation:** Calling `setSpeed()`, `setSpeedOver()`, or `pause()` while a transition is in progress cancels it — the Promise rejects with `Error('Speed transition cancelled')`. A subsequent `setSpeedOver()` starts from the current interpolated speed.
 
 **Validation:**
 - `speed` must be a finite number
@@ -235,7 +267,7 @@ await sarmal.setSpeedOver(1.0, 300);
 The braking pattern — decelerate before stopping — is explicit:
 ```ts
 await sarmal.setSpeedOver(0, 400); // decelerate over 400ms
-sarmal.stop();                      // then kill the loop
+sarmal.pause();                     // then pause the loop
 ```
 </Alert>
 
@@ -400,10 +432,10 @@ const sarmal = createSarmal(canvas, curves.artemis2, {
 
 7. **Negative speed**: Reverses `t` traversal direction. Trail extends in the opposite direction. Supported but not polished.
 
-8. **`setSpeed(0)` vs `stop()`**: `setSpeed(0)` freezes the animation but the RAF loop keeps running — the sarmal remains reactive. `stop()` cancels the loop entirely and saves CPU. They look identical on screen but have different resource implications.
+8. **`setSpeed(0)` vs `pause()`**: `setSpeed(0)` freezes the animation but the RAF loop keeps running, during which the sarmal remains reactive. `pause()` cancels the loop entirely and saves CPU. They look identical on screen but have different resource implications.
 
-9. **`stop()` during a speed transition**: The pending `setSpeedOver()` Promise rejects with `'Speed transition cancelled'`, but `userSpeedOverride` is *not* cleared. On `start()`, the animation does not resume with curve's default, but with the interpolated speed from when it had stopped.
-  - Call `resetSpeed()` after `stop()` to return to the natural rhythm.
+9. **`pause()` during a speed transition**: The pending `setSpeedOver()` Promise rejects with `'Speed transition cancelled'`, but `userSpeedOverride` is *not* cleared. On `play()`, the animation does not resume with curve's default, but with the interpolated speed from when it had paused.
+   - Call `resetSpeed()` after `pause()` to return to the natural rhythm.
 
 ---
 
@@ -426,8 +458,8 @@ interface CurveDef {
 }
 
 interface SarmalInstance {
-  start(): void;
-  stop(): void;
+  play(): void;
+  pause(): void;
   reset(): void;
   destroy(): void;
   jump(t: number, options?: { clearTrail?: boolean }): void;

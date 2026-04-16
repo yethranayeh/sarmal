@@ -1,4 +1,12 @@
-import type { CurveDef, Engine, MorphOptions, Point, SarmalInstance } from "./types";
+import type {
+  BaseRendererOptions,
+  CurveDef,
+  Engine,
+  MorphOptions,
+  Point,
+  SarmalInstance,
+} from "./types";
+
 import {
   DEFAULT_MORPH_DURATION_MS,
   DEFAULT_SKELETON_OPACITY,
@@ -8,18 +16,10 @@ import {
 } from "./renderer-shared";
 import { createEngine } from "./engine";
 
-export interface SVGRendererOptions {
+export interface SVGRendererOptions extends BaseRendererOptions {
   /** Container element that will contain the SVG */
   container: Element;
   engine: Engine;
-  /** @default '#ffffff' */
-  skeletonColor?: string;
-  /** @default '#ffffff' */
-  trailColor?: string;
-  /** @default '#ffffff' */
-  headColor?: string;
-  /** @default 4 */
-  headRadius?: number;
   /** @default 'Loading' */
   ariaLabel?: string;
 }
@@ -217,13 +217,9 @@ export function createSVGRenderer(options: SVGRendererOptions): SarmalInstance {
   let morphTarget: CurveDef | null = null;
   let morphAlpha = 0;
 
-  function renderFrame() {
-    const now = performance.now();
-    const dt = Math.min((now - lastTime) / 1000, 1 / 30);
-    lastTime = now;
-
+  function renderFrame(deltaTime: number) {
     if (engine.morphAlpha !== null) {
-      morphAlpha = Math.min(1, morphAlpha + dt / (morphDurationMs / 1000));
+      morphAlpha = Math.min(1, morphAlpha + deltaTime / (morphDurationMs / 1000));
       engine.setMorphAlpha(morphAlpha);
 
       if (morphPathABuilt) {
@@ -258,7 +254,7 @@ export function createSVGRenderer(options: SVGRendererOptions): SarmalInstance {
       }
     }
 
-    const trail = engine.tick(dt);
+    const trail = engine.tick(deltaTime);
     const trailCount = engine.trailCount;
 
     if (engine.isLiveSkeleton && engine.morphAlpha === null) {
@@ -269,22 +265,41 @@ export function createSVGRenderer(options: SVGRendererOptions): SarmalInstance {
 
     updateTrail(trail, trailCount);
     updateHead(trail, trailCount);
+  }
+
+  function loop() {
+    const now = performance.now();
+    const deltaTime = Math.min((now - lastTime) / 1000, 1 / 30);
+    lastTime = now;
+
+    renderFrame(deltaTime);
 
     if (!prefersReducedMotion) {
-      animationId = requestAnimationFrame(renderFrame);
+      animationId = requestAnimationFrame(loop);
     }
   }
 
-  return {
-    start() {
+  // Handle initialT option: seek to the specified position before first frame
+  if (options.initialT !== undefined) {
+    engine.seek(options.initialT);
+  }
+
+  // Draw initial frame unconditionally (shows skeleton and initial position)
+  renderFrame(0);
+
+  // Handle autoStart option: start the animation loop unless explicitly disabled
+  const shouldAutoStart = options.autoStart !== false;
+
+  const instance = {
+    play() {
       if (animationId !== null) {
         return;
       }
       lastTime = performance.now();
-      renderFrame();
+      loop();
     },
 
-    stop() {
+    pause() {
       if (animationId === null) {
         return;
       }
@@ -336,6 +351,12 @@ export function createSVGRenderer(options: SVGRendererOptions): SarmalInstance {
       });
     },
   };
+
+  if (shouldAutoStart) {
+    instance.play();
+  }
+
+  return instance;
 }
 
 /**
@@ -346,7 +367,11 @@ export function createSVGRenderer(options: SVGRendererOptions): SarmalInstance {
  * ```ts
  * import { createSarmalSVG, curves } from '@sarmal/core'
  * const sarmal = createSarmalSVG(document.getElementById('spinner'), curves.epitrochoid7)
- * sarmal.start()
+ *
+ * // To control manually, use autoStart: false
+ * const controlled = createSarmalSVG(container, curves.artemis2, { autoStart: false })
+ * controlled.play()  // Start when ready
+ * controlled.pause() // Pause later
  * ```
  */
 export function createSarmalSVG(

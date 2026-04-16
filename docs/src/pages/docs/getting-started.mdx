@@ -34,7 +34,7 @@ The script scans for `canvas[data-sarmal]` on page load and starts a spinner for
 
 ## Your first spinner
 
-`createSarmal` is the fastest way to get a spinner on screen. Give it a canvas element and a curve, then call `start()`.
+`createSarmal` is the fastest way to get a spinner on screen. Give it a canvas element and a curve — the animation starts automatically:
 
 ```html
 <canvas id="spinner" width="200" height="200"></canvas>
@@ -45,10 +45,9 @@ import { createSarmal, curves } from "@sarmal/core";
 
 const canvas = document.getElementById("spinner") as HTMLCanvasElement;
 const sarmal = createSarmal(canvas, curves.artemis2);
-sarmal.start();
 ```
 
-That's it. The canvas will now be animating. Call `sarmal.stop()` to pause and `sarmal.destroy()` when you're done (unmount, navigation, etc.).
+The instance animates immediately by default. Call `sarmal.pause()` to freeze the animation in place and `sarmal.play()` to resume. Call `sarmal.destroy()` when you're done (unmount, navigation, etc.).
 
 ## Choosing a curve
 
@@ -145,7 +144,6 @@ import { createSarmalSVG, curves } from "@sarmal/core";
 
 const container = document.getElementById("spinner")!;
 const sarmal = createSarmalSVG(container, curves.lissajous32);
-sarmal.start();
 ```
 
 `createSarmalSVG` appends an `<svg>` into the container and animates it. It accepts the same styling options as `createSarmal`.
@@ -160,7 +158,6 @@ Call `morphTo` to smoothly transition from one curve to another:
 
 ```ts
 const sarmal = createSarmal(canvas, curves.astroid);
-sarmal.start();
 
 // at any point you want, transition to another curve over 500ms
 await sarmal.morphTo(curves.deltoid, { duration: 500 });
@@ -178,7 +175,6 @@ import { createSarmal, curves } from "@sarmal/core";
 if (typeof window !== "undefined") {
 	const canvas = document.getElementById("spinner") as HTMLCanvasElement;
 	const sarmal = createSarmal(canvas, curves.artemis2);
-	sarmal.start();
 }
 ```
 

@@ -129,7 +129,7 @@ const morphSnippet = `sarmal.morphTo(curves.${toId});`;
 			}
 
 			modal.sarmal!.reset();
-			modal.sarmal!.start();
+			modal.sarmal!.play();
 
 			const HOLD_DURATION = 2400;
 
@@ -147,13 +147,13 @@ const morphSnippet = `sarmal.morphTo(curves.${toId});`;
 
 		closeBtn.addEventListener("click", () => {
 			dialog.close();
-			modal.sarmal?.stop();
+			modal.sarmal?.pause();
 		});
 
 		dialog.addEventListener("click", (e) => {
 			if (e.target === dialog) {
 				dialog.close();
-				modal.sarmal?.stop();
+				modal.sarmal?.pause();
 			}
 		});
 	}

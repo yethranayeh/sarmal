@@ -1,2 +1,2 @@
 export const SEPARATOR_DOT = "·";
-export const PACKAGE_SIZE = 7.19;
+export const PACKAGE_SIZE = 7.79;

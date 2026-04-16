@@ -135,7 +135,6 @@ function createInstance(
   }
 
   currentInstance = createRenderer(rendererOptions);
-  currentInstance.start();
 }
 
 // Update speed without recreating anything

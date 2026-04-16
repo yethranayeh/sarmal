@@ -315,8 +315,8 @@ describe("computeBoundaries", () => {
 describe("morphTo type shape", () => {
   it("SarmalInstance has morphTo method that returns Promise", () => {
     const shape = {
-      start: () => {},
-      stop: () => {},
+      play: () => {},
+      pause: () => {},
       reset: () => {},
       destroy: () => {},
       seek: () => {},
@@ -664,7 +664,7 @@ describe("resolvePalette", () => {
 });
 
 describe("createRenderer() lifecycle", () => {
-  it("start() begins the animation loop (animationId is set)", () => {
+  it("play() begins the animation loop (animationId is set)", () => {
     const rafIds: number[] = [];
     vi.spyOn(globalThis, "requestAnimationFrame").mockImplementation((_cb) => {
       const id = rafIds.length + 1;
@@ -674,15 +674,15 @@ describe("createRenderer() lifecycle", () => {
     vi.spyOn(globalThis, "cancelAnimationFrame").mockImplementation(() => {});
 
     const engine = createEngine(testCircle);
-    const renderer = createRenderer({ canvas: makeCanvas(), engine });
-    renderer.start();
+    const renderer = createRenderer({ canvas: makeCanvas(), engine, autoStart: false });
+    renderer.play();
 
     expect(rafIds.length).toBeGreaterThan(0);
 
     vi.restoreAllMocks();
   });
 
-  it("start() called twice does not double-schedule", () => {
+  it("play() called twice does not double-schedule", () => {
     let callCount = 0;
     vi.spyOn(globalThis, "requestAnimationFrame").mockImplementation(() => {
       callCount++;
@@ -691,16 +691,16 @@ describe("createRenderer() lifecycle", () => {
     vi.spyOn(globalThis, "cancelAnimationFrame").mockImplementation(() => {});
 
     const engine = createEngine(testCircle);
-    const renderer = createRenderer({ canvas: makeCanvas(), engine });
-    renderer.start();
+    const renderer = createRenderer({ canvas: makeCanvas(), engine, autoStart: false });
+    renderer.play();
     const firstCount = callCount;
-    renderer.start(); // second call should be a no-op
+    renderer.play(); // second call should be a no-op
     expect(callCount).toBe(firstCount);
 
     vi.restoreAllMocks();
   });
 
-  it("stop() cancels the animation frame", () => {
+  it("pause() cancels the animation frame", () => {
     const cancelled: number[] = [];
     vi.spyOn(globalThis, "requestAnimationFrame").mockImplementation(() => 42);
     vi.spyOn(globalThis, "cancelAnimationFrame").mockImplementation((id) => {
@@ -708,24 +708,24 @@ describe("createRenderer() lifecycle", () => {
     });
 
     const engine = createEngine(testCircle);
-    const renderer = createRenderer({ canvas: makeCanvas(), engine });
-    renderer.start();
-    renderer.stop();
+    const renderer = createRenderer({ canvas: makeCanvas(), engine, autoStart: false });
+    renderer.play();
+    renderer.pause();
 
     expect(cancelled).toContain(42);
 
     vi.restoreAllMocks();
   });
 
-  it("stop() called twice does not throw", () => {
+  it("pause() called twice does not throw", () => {
     vi.spyOn(globalThis, "requestAnimationFrame").mockImplementation(() => 1);
     vi.spyOn(globalThis, "cancelAnimationFrame").mockImplementation(() => {});
 
     const engine = createEngine(testCircle);
-    const renderer = createRenderer({ canvas: makeCanvas(), engine });
-    renderer.start();
-    renderer.stop();
-    expect(() => renderer.stop()).not.toThrow();
+    const renderer = createRenderer({ canvas: makeCanvas(), engine, autoStart: false });
+    renderer.play();
+    renderer.pause();
+    expect(() => renderer.pause()).not.toThrow();
 
     vi.restoreAllMocks();
   });
@@ -738,8 +738,8 @@ describe("createRenderer() lifecycle", () => {
     });
 
     const engine = createEngine(testCircle);
-    const renderer = createRenderer({ canvas: makeCanvas(), engine });
-    renderer.start();
+    const renderer = createRenderer({ canvas: makeCanvas(), engine, autoStart: false });
+    renderer.play();
     renderer.destroy();
 
     expect(cancelled).toContain(99);
@@ -748,11 +748,142 @@ describe("createRenderer() lifecycle", () => {
   });
 });
 
+describe("autoStart option", () => {
+  it("autoStart: false - instance is created without starting the rAF loop", () => {
+    let rafCallCount = 0;
+    vi.spyOn(globalThis, "requestAnimationFrame").mockImplementation(() => {
+      rafCallCount++;
+      return rafCallCount;
+    });
+
+    const engine = createEngine(testCircle);
+    createRenderer({ canvas: makeCanvas(), engine, autoStart: false });
+
+    // RAF should not be called during creation with autoStart: false
+    expect(rafCallCount).toBe(0);
+
+    vi.restoreAllMocks();
+  });
+
+  it("autoStart: true (default) - animation loop starts automatically", () => {
+    let rafCallCount = 0;
+    vi.spyOn(globalThis, "requestAnimationFrame").mockImplementation(() => {
+      rafCallCount++;
+      return rafCallCount;
+    });
+
+    const engine = createEngine(testCircle);
+    createRenderer({ canvas: makeCanvas(), engine });
+
+    // RAF should be called during creation with autoStart: true (default)
+    expect(rafCallCount).toBeGreaterThan(0);
+
+    vi.restoreAllMocks();
+  });
+});
+
+describe("initialT option", () => {
+  it("seek is called with initialT before first frame", () => {
+    const identityCurve: CurveDef = {
+      name: "identity",
+      fn: (t, time) => ({ x: t, y: time }),
+      period: 10,
+      speed: 1,
+    };
+
+    const engine = createEngine(identityCurve);
+    const initialT = Math.PI;
+
+    // Create renderer with initialT - should seek to that position
+    createRenderer({ canvas: makeCanvas(), engine, autoStart: false, initialT });
+
+    // Verify the engine's internal state was seeked to initialT
+    // by checking that tick(0) returns the point at initialT
+    const trail = engine.tick(0);
+    const head = trail[engine.trailCount - 1]!;
+    expect(head.x).toBeCloseTo(initialT % 10, 5);
+  });
+
+  it("initialT works with autoStart: true", () => {
+    const identityCurve: CurveDef = {
+      name: "identity",
+      fn: (t, time) => ({ x: t, y: time }),
+      period: 10,
+      speed: 1,
+    };
+
+    vi.spyOn(globalThis, "requestAnimationFrame").mockImplementation(() => 1);
+
+    const engine = createEngine(identityCurve);
+    const initialT = 3.5;
+
+    // Create with both autoStart: true and initialT
+    createRenderer({ canvas: makeCanvas(), engine, initialT });
+
+    // The head should already be at initialT from the seek
+    const trail = engine.tick(0);
+    const head = trail[engine.trailCount - 1]!;
+    expect(head.x).toBeCloseTo(initialT, 5);
+
+    vi.restoreAllMocks();
+  });
+});
+
+describe("initial frame draw", () => {
+  it("canvas is not blank when autoStart: false (renderFrame(0) called on creation)", () => {
+    const canvas = makeCanvas();
+    let clearRectCalled = false;
+    let drawImageCalled = false;
+    let fillCalled = false;
+
+    // Mock the canvas context to track drawing calls
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (canvas as any).getContext = (contextId: string) => {
+      if (contextId === "2d") {
+        return {
+          save: () => {},
+          restore: () => {},
+          clearRect: () => {
+            clearRectCalled = true;
+          },
+          fillRect: () => {},
+          stroke: () => {},
+          fill: () => {
+            fillCalled = true;
+          },
+          beginPath: () => {},
+          moveTo: () => {},
+          lineTo: () => {},
+          closePath: () => {},
+          setTransform: () => {},
+          fillStyle: "",
+          strokeStyle: "",
+          lineWidth: 1,
+          globalAlpha: 1,
+          drawImage: () => {
+            drawImageCalled = true;
+          },
+          arc: () => {},
+        };
+      }
+      return null;
+    };
+
+    const engine = createEngine(testCircle);
+    createRenderer({ canvas, engine, autoStart: false });
+
+    // clearRect (canvas clear), drawImage (skeleton from offscreen), and fill (head) should have been called
+    expect(clearRectCalled).toBe(true);
+    expect(drawImageCalled).toBe(true);
+    expect(fillCalled).toBe(true);
+  });
+});
+
 describe("createSarmal() integration", () => {
   it("returns a SarmalInstance with all required methods", () => {
-    const instance = createSarmal(makeCanvas(), testCircle);
-    expect(typeof instance.start).toBe("function");
-    expect(typeof instance.stop).toBe("function");
+    const instance = createSarmal(makeCanvas(), testCircle, { autoStart: false });
+    expect(typeof instance.play).toBe("function");
+    expect(typeof instance.pause).toBe("function");
     expect(typeof instance.destroy).toBe("function");
     expect(typeof instance.reset).toBe("function");
     expect(typeof instance.seek).toBe("function");
@@ -761,7 +892,7 @@ describe("createSarmal() integration", () => {
   });
 
   it("seek() delegates to the engine without throwing", () => {
-    const instance = createSarmal(makeCanvas(), testCircle);
+    const instance = createSarmal(makeCanvas(), testCircle, { autoStart: false });
     expect(() => instance.seek(Math.PI)).not.toThrow();
   });
 
@@ -775,7 +906,7 @@ describe("createSarmal() integration", () => {
       period: Math.PI * 2,
       speed: 1,
     };
-    const instance = createSarmal(makeCanvas(), testCircle);
+    const instance = createSarmal(makeCanvas(), testCircle, { autoStart: false });
     const result = instance.morphTo(anotherCurve);
     expect(result).toBeInstanceOf(Promise);
 

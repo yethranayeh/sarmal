@@ -151,7 +151,7 @@
 		const slide = SLIDES[i]!;
 
 		if (currentSarmal) {
-			currentSarmal.stop();
+			currentSarmal.pause();
 			currentSarmal = null;
 		}
 		if (timer) clearTimeout(timer);
@@ -175,7 +175,6 @@
 			...(slide.trailStyle && { trailStyle: slide.trailStyle }),
 			...(slide.palette && { palette: slide.palette })
 		});
-		currentSarmal.start();
 		setActiveDot(i);
 
 		// Breathing effect
@@ -198,7 +197,7 @@
 		const slide = SLIDES[i]!;
 
 		if (currentSarmal) {
-			currentSarmal.stop();
+			currentSarmal.pause();
 			currentSarmal = null;
 		}
 		if (timer) clearTimeout(timer);

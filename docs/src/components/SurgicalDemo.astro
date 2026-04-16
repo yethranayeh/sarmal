@@ -1,0 +1,440 @@
+---
+interface Props {
+	concept: "play-pause" | "initial-t" | "reset" | "destroy";
+}
+
+const { concept } = Astro.props;
+
+const btnBase =
+	"py-1.5 px-3 text-[0.68rem] font-mono rounded-sm cursor-pointer transition-colors whitespace-nowrap tracking-[0.01em]";
+---
+
+<div class='my-6' data-concept={concept}>
+	{
+		concept === "play-pause" && (
+			<div class='flex max-w-150 bg-foreground border border-[#2e2f2c] rounded-lg overflow-hidden'>
+				<div class='flex-1 h-50 min-w-0'>
+					<div class='w-full h-full' data-role='sarmal' />
+				</div>
+				<div class='w-42 shrink-0 border-l border-[#242522] bg-[#131412] py-4.5 px-4 flex flex-col justify-between'>
+					<div class='flex flex-col gap-1'>
+						<span class='text-[0.58rem] uppercase tracking-widest text-muted font-mono'>state</span>
+						<div class='flex items-center gap-1.75'>
+							<div class='dot' data-role='dot' data-state='playing' />
+							<span
+								class='text-[0.82rem] text-background font-mono transition-colors duration-150'
+								data-role='state-text'>
+								playing
+							</span>
+						</div>
+					</div>
+					<button class={`${btnBase} btn-ghost`} data-role='toggle-btn'>
+						Pause
+					</button>
+				</div>
+			</div>
+		)
+	}
+
+	{
+		concept === "initial-t" && (
+			<div class='flex max-w-150 bg-foreground border border-[#2e2f2c] rounded-lg overflow-hidden'>
+				<div class='flex-1 h-50 relative min-w-0' data-role='anim-col'>
+					<div class='w-full h-full' data-role='sarmal' />
+				</div>
+				<div class='w-42 shrink-0 border-l border-[#242522] bg-[#131412] py-4.5 px-4 flex flex-col justify-between'>
+					<div class='text-[0.63rem] text-[#b3ada7] leading-[1.85] font-mono'>
+						<>
+							<code class='text-[#e0566e] bg-[#242522] px-1.25 py-px rounded-sm text-[0.6rem]'>initialT: Math.PI</code>
+							<br />
+						</>
+						<code class='text-[#e0566e] bg-[#242522] px-1.25 py-px rounded-sm text-[0.6rem]'>autoStart: false</code>
+						<>
+							<br />
+							<br />
+						</>
+						Dormant at creation. Trail pre-drawn to{" "}
+						<code class='text-[#e0566e] bg-[#242522] px-1.25 py-px rounded-sm text-[0.6rem]'>t=π</code>. Play to animate
+						from there.
+					</div>
+					<button class={`${btnBase} btn-play`} data-role='play-btn'>
+						Play
+					</button>
+				</div>
+			</div>
+		)
+	}
+
+	{
+		concept === "reset" && (
+			<div class='max-w-125 bg-foreground border border-[#2e2f2c] rounded-lg overflow-hidden'>
+				<div class='h-50' data-role='anim-window'>
+					<div class='w-full h-full' data-role='sarmal' />
+				</div>
+				<div class='border-t border-[#242522] bg-[#131412] py-2.5 px-3.5 flex items-center gap-3'>
+					<div class='flex-1 flex flex-col gap-1 min-w-0'>
+						<div class='flex items-center gap-1.75 text-[0.68rem] text-background font-mono'>
+							<div class='dot' data-role='dot' data-state='playing' />
+							<span data-role='state-text'>playing</span>
+						</div>
+						<span class='text-[0.62rem] text-[#b3ada7] leading-[1.55]'>
+							reset() clears the trail and resets t to 0. The loop keeps running.
+						</span>
+					</div>
+					<button class={`${btnBase} btn-ghost`} data-role='reset-btn'>
+						Reset
+					</button>
+				</div>
+			</div>
+		)
+	}
+
+	{
+		concept === "destroy" && (
+			<div class='max-w-125 bg-foreground border border-[#2e2f2c] rounded-lg overflow-hidden'>
+				<div class='anim-window h-50' data-role='anim-window'>
+					<div class='w-full h-full' data-role='sarmal' />
+				</div>
+				<div class='border-t border-[#242522] bg-[#131412] py-2.5 px-3.5 flex items-center gap-3'>
+					<div class='flex-1 flex flex-col gap-1 min-w-0'>
+						<div class='flex items-center gap-1.75 text-[0.68rem] text-background font-mono'>
+							<div class='dot' data-role='dot' data-state='playing' />
+							<span data-role='state-text'>playing</span>
+						</div>
+						<span class='text-[0.62rem] text-[#b3ada7] leading-[1.55]'>
+							Stops the loop and removes the SVG. The instance cannot be restarted.
+						</span>
+					</div>
+					<button class={`${btnBase} btn-danger`} data-role='destroy-btn'>
+						Destroy
+					</button>
+				</div>
+			</div>
+		)
+	}
+</div>
+
+<style>
+	.dot {
+		width: 6px;
+		height: 6px;
+		border-radius: 50%;
+		flex-shrink: 0;
+		transition:
+			background 0.3s ease,
+			box-shadow 0.3s ease;
+	}
+
+	.dot[data-state="playing"] {
+		background: #ffffff;
+		box-shadow: 0 0 7px rgb(192 20 60 / 0.5);
+	}
+
+	.dot[data-state="paused"] {
+		background: #5c5752;
+		box-shadow: none;
+	}
+
+	@media (prefers-reduced-motion: no-preference) {
+		.dot[data-state="playing"] {
+			animation: pulse-dot 2.2s ease-in-out infinite;
+		}
+	}
+
+	@keyframes pulse-dot {
+		0%,
+		100% {
+			opacity: 1;
+		}
+		50% {
+			opacity: 0.35;
+		}
+	}
+
+	.btn-ghost {
+		background: transparent;
+		color: #b3ada7;
+		border: 1px solid #2e2f2c;
+	}
+
+	.btn-ghost:hover {
+		border-color: #3e3f3b;
+		color: var(--color-background);
+	}
+
+	.btn-ghost:disabled {
+		opacity: 0.35;
+		cursor: not-allowed;
+	}
+
+	.btn-play {
+		background: var(--color-primary);
+		color: #ffffff;
+		border: 1px solid var(--color-accent);
+	}
+
+	.btn-play:hover {
+		filter: brightness(1.1);
+	}
+
+	.btn-danger {
+		background: hsl(0 45% 14%);
+		color: hsl(0 65% 62%);
+		border: 1px solid hsl(0 45% 24%);
+	}
+
+	.btn-danger:hover {
+		background: hsl(0 45% 18%);
+	}
+
+	.btn-danger:disabled {
+		opacity: 0.35;
+		cursor: not-allowed;
+	}
+
+	.anim-window {
+		transition: opacity 0.3s ease;
+	}
+
+	[data-destroyed] .anim-window {
+		opacity: 0.25;
+		pointer-events: none;
+	}
+</style>
+
+<script>
+	import { createSarmalSVG, curves } from "@sarmal/core";
+	import type { SarmalInstance } from "@sarmal/core";
+
+	const CURVE = curves.lissajous32;
+
+	const SARMAL_COLORS = {
+		skeletonColor: "#3a3b37",
+		trailColor: "#fbf9f5",
+		headColor: "#ffffff"
+	};
+
+	const ANNOT_COLORS = {
+		line: "#97002a",
+		ring: "#c0143c",
+		label: "#c0143c",
+		sub: "#7a7067"
+	};
+
+	function qs(container: HTMLElement, role: string): HTMLElement | null {
+		return container.querySelector(`[data-role="${role}"]`);
+	}
+
+	function qsBtn(container: HTMLElement, role: string): HTMLButtonElement | null {
+		return container.querySelector(`[data-role="${role}"]`);
+	}
+
+	/* ── Play/Pause ─────────────────────────────────────── */
+	function initPlayPause(container: HTMLElement) {
+		const sarmalEl = qs(container, "sarmal");
+		const btn = qsBtn(container, "toggle-btn");
+		const dot = qs(container, "dot");
+		const txt = qs(container, "state-text");
+		if (!sarmalEl || !btn) return;
+
+		const sarmal = createSarmalSVG(sarmalEl, CURVE, {
+			...SARMAL_COLORS,
+			autoStart: true
+		});
+
+		let playing = true;
+
+		btn.addEventListener("click", () => {
+			if (playing) {
+				sarmal.pause();
+			} else {
+				sarmal.play();
+			}
+			playing = !playing;
+			if (txt) txt.textContent = playing ? "playing" : "paused";
+			btn.textContent = playing ? "Pause" : "Play";
+			if (dot) dot.dataset.state = playing ? "playing" : "paused";
+		});
+	}
+
+	/* ── Initial T (with annotation overlay) ─────────────── */
+	function initInitialT(container: HTMLElement) {
+		const sarmalEl = qs(container, "sarmal");
+		const animCol = qs(container, "anim-col");
+		const btn = qsBtn(container, "play-btn");
+		if (!sarmalEl || !animCol || !btn) return;
+
+		const sarmal = createSarmalSVG(sarmalEl, CURVE, {
+			...SARMAL_COLORS,
+			autoStart: false,
+			initialT: Math.PI
+		});
+
+		requestAnimationFrame(() => {
+			const svg = sarmalEl.querySelector("svg");
+			const head = svg?.querySelector("circle");
+			if (!svg || !head) return;
+
+			const vb = svg.getAttribute("viewBox");
+			if (!vb) return;
+			const parts = vb.split(/[\s,]+/);
+			const vbWidth = parseFloat(parts[2]);
+			const vbHeight = parseFloat(parts[3]);
+
+			const hx = parseFloat(head.getAttribute("cx") ?? "0");
+			const hy = parseFloat(head.getAttribute("cy") ?? "0");
+
+			const colRect = animCol.getBoundingClientRect();
+			const scaleX = colRect.width / vbWidth;
+			const scaleY = colRect.height / vbHeight;
+			const headPxX = hx * scaleX;
+			const headPxY = hy * scaleY;
+
+			const labelOffsetX = headPxX > colRect.width * 0.6 ? -90 : 18;
+			const labelOffsetY = headPxY < colRect.height * 0.4 ? 24 : -36;
+			const labelX = headPxX + labelOffsetX;
+			const labelY = headPxY + labelOffsetY;
+
+			const annotSvg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+			annotSvg.style.cssText = "position:absolute;inset:0;width:100%;height:100%;pointer-events:none;overflow:visible;";
+
+			const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
+			line.setAttribute("x1", String(labelX + (labelOffsetX < 0 ? 85 : 5)));
+			line.setAttribute("y1", String(labelY + (labelOffsetY > 0 ? 0 : 20)));
+			line.setAttribute("x2", String(headPxX));
+			line.setAttribute("y2", String(headPxY));
+			line.setAttribute("stroke", ANNOT_COLORS.line);
+			line.setAttribute("stroke-width", "1");
+			line.setAttribute("stroke-dasharray", "3 3");
+			line.setAttribute("opacity", "0.65");
+			annotSvg.appendChild(line);
+
+			const ring = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+			ring.setAttribute("cx", String(headPxX));
+			ring.setAttribute("cy", String(headPxY));
+			ring.setAttribute("r", "8");
+			ring.setAttribute("fill", "none");
+			ring.setAttribute("stroke", ANNOT_COLORS.ring);
+			ring.setAttribute("stroke-width", "1");
+			ring.setAttribute("opacity", "0.55");
+			annotSvg.appendChild(ring);
+
+			animCol.appendChild(annotSvg);
+
+			const label = document.createElement("div");
+			label.style.cssText = [
+				"position:absolute",
+				`left:${labelX}px`,
+				`top:${labelY}px`,
+				"pointer-events:none",
+				"display:flex",
+				"flex-direction:column",
+				`align-items:${labelOffsetX < 0 ? "flex-end" : "flex-start"}`,
+				"gap:1px"
+			].join(";");
+			label.innerHTML = `
+				<span style="font-size:0.9rem;color:${ANNOT_COLORS.label};line-height:1;font-family:ui-monospace,'SF Mono',monospace;">t = π</span>
+				<span style="font-size:0.58rem;color:${ANNOT_COLORS.sub};font-family:ui-monospace,'SF Mono',monospace;">initial position</span>
+			`;
+			animCol.appendChild(label);
+		});
+
+		let started = false;
+
+		btn.addEventListener("click", () => {
+			if (!started) {
+				sarmal.play();
+				started = true;
+				btn.textContent = "Pause";
+				btn.classList.remove("btn-play");
+				btn.classList.add("btn-ghost");
+			} else {
+				const isPlaying = btn.textContent === "Pause";
+				if (isPlaying) {
+					sarmal.pause();
+					btn.textContent = "Play";
+				} else {
+					sarmal.play();
+					btn.textContent = "Pause";
+				}
+			}
+		});
+	}
+
+	/* ── Reset ──────────────────────────────────────────── */
+	function initReset(container: HTMLElement) {
+		const sarmalEl = qs(container, "sarmal");
+		const btn = qsBtn(container, "reset-btn");
+		const dot = qs(container, "dot");
+		const txt = qs(container, "state-text");
+		if (!sarmalEl || !btn) return;
+
+		const sarmal = createSarmalSVG(sarmalEl, CURVE, {
+			...SARMAL_COLORS,
+			autoStart: true
+		});
+
+		btn.addEventListener("click", () => {
+			sarmal.reset();
+			if (dot) dot.dataset.state = "paused";
+			if (txt) txt.textContent = "reset";
+			setTimeout(() => {
+				if (dot) dot.dataset.state = "playing";
+				if (txt) txt.textContent = "playing";
+			}, 600);
+		});
+	}
+
+	/* ── Destroy ────────────────────────────────────────── */
+	function initDestroy(container: HTMLElement) {
+		const sarmalEl = qs(container, "sarmal");
+		const btn = qsBtn(container, "destroy-btn");
+		const dot = qs(container, "dot");
+		const txt = qs(container, "state-text");
+		if (!sarmalEl || !btn) return;
+
+		let sarmal: SarmalInstance | null = createSarmalSVG(sarmalEl, CURVE, {
+			...SARMAL_COLORS,
+			autoStart: true
+		});
+
+		btn.addEventListener("click", () => {
+			if (!sarmal) return;
+			sarmal.destroy();
+			sarmal = null;
+			btn.disabled = true;
+			btn.textContent = "Destroyed";
+			if (dot) dot.dataset.state = "paused";
+			if (txt) txt.textContent = "destroyed";
+			container.dataset.destroyed = "";
+		});
+	}
+
+	/* ── Init ───────────────────────────────────────────── */
+	function initDemos() {
+		document.querySelectorAll("[data-concept]").forEach((el) => {
+			const container = el as HTMLElement;
+			const concept = container.dataset.concept;
+			switch (concept) {
+				case "play-pause":
+					initPlayPause(container);
+					break;
+				case "initial-t":
+					initInitialT(container);
+					break;
+				case "reset":
+					initReset(container);
+					break;
+				case "destroy":
+					initDestroy(container);
+					break;
+			}
+		});
+	}
+
+	if (document.readyState === "loading") {
+		document.addEventListener("DOMContentLoaded", initDemos);
+	} else {
+		initDemos();
+	}
+</script>

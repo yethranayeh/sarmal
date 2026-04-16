@@ -1,0 +1,54 @@
+---
+layout: ../../layouts/DocsLayout.astro
+title: Changelog
+sidebarLabel: Changelog
+order: 6
+description: Version history and migration notes.
+---
+
+import Alert from "../../components/Alert.astro";
+import { ArrowRight } from "@lucide/astro";
+
+
+# Changelog
+
+Version history notes
+
+## Versions
+
+## v0.13.0 — 2026-04-16
+
+<Alert label="Breaking" variant="error">`SarmalInstance` methods `start()` and `stop()` are renamed to `play()` and `pause()` to match similar libraries</Alert>
+
+- `start()` <ArrowRight size={16} class="inline" /> `play()`
+- `stop()` <ArrowRight size={16} class="inline" /> `pause()`
+
+---
+
+`autoStart` added: `createSarmal` and `createSarmalSVG` now default to **`autoStart: true`**, so the animation begins immediately on creation. If you were calling `.start()` right after creation, you can remove that call. If you want to defer playback, pass `autoStart: false`.
+
+```ts
+// Before
+const sarmal = createSarmal(canvas, curves.artemis2)
+sarmal.start()
+
+// After
+const sarmal = createSarmal(canvas, curves.artemis2)
+// No call needed here
+```
+
+Deferred start:
+```ts
+const sarmal = createSarmal(canvas, curves.artemis2, { autoStart: false })
+// later...
+sarmal.play()
+```
+
+---
+
+A new `initialT` option lets you seek to a specific position before the first frame, replacing the common pattern of `play()` then `seek(t)`.
+
+```ts
+// Start at a specific position
+const sarmal = createSarmal(canvas, curves.artemis2, { initialT: Math.PI })
+```

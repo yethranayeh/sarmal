@@ -179,8 +179,8 @@ import { SEPARATOR_DOT } from "../variables";
 
 	function seekAndFreeze(t: number) {
 		sarmal!.seek(t);
-		sarmal!.start();
-		sarmal!.stop();
+		sarmal!.play();
+		sarmal!.pause();
 	}
 
 	function setMode(newMode: "auto" | "explore") {
@@ -226,7 +226,7 @@ import { SEPARATOR_DOT } from "../variables";
 		setMode("auto");
 
 		sarmal!.reset();
-		sarmal!.start();
+		sarmal!.play();
 
 		const liveMissionT = LIVE_T;
 		slider.value = String(Math.round(liveMissionT * 100));
@@ -239,7 +239,7 @@ import { SEPARATOR_DOT } from "../variables";
 		setMode("auto");
 
 		sarmal!.reset();
-		sarmal!.start();
+		sarmal!.play();
 		milestoneEl.textContent = "";
 	});
 
@@ -248,7 +248,7 @@ import { SEPARATOR_DOT } from "../variables";
 			return;
 		}
 
-		sarmal!.stop();
+		sarmal!.pause();
 
 		slider.value = String(Math.round(LIVE_T * 100));
 
