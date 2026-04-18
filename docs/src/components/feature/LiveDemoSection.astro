@@ -64,13 +64,17 @@
 		meta: string;
 		trailStyle?: "default" | "gradient-static" | "gradient-animated";
 		palette?: "bard" | "sunset" | "ocean" | "ice" | "fire" | "forest";
+		trailLength?: number;
 	}> = [
 		{
-			curveId: "lissajous43",
-			color: "#a78bfa",
-			heading: "Dashboard ready",
-			body: "Your workspace synced with all recent changes.",
-			meta: "6 charts loaded"
+			curveId: "astroid",
+			color: "#2dd4bf",
+			heading: "Assets cached",
+			body: "Static resources compressed and ready to serve.",
+			meta: "Expires in 24h",
+			trailStyle: "gradient-animated",
+			palette: "bard",
+			trailLength: 200
 		},
 		{
 			curveId: "rose5",
@@ -80,20 +84,11 @@
 			meta: "3 results found"
 		},
 		{
-			curveId: "epitrochoid7",
-			color: "#38bdf8",
-			heading: "Connection live",
-			body: "Real-time sync established with the data source.",
-			meta: "12 ms latency"
-		},
-		{
-			curveId: "astroid",
-			color: "#2dd4bf",
-			heading: "Assets cached",
-			body: "Static resources compressed and ready to serve.",
-			meta: "Expires in 24h",
-			trailStyle: "gradient-animated",
-			palette: "bard"
+			curveId: "lissajous43",
+			color: "#a78bfa",
+			heading: "Dashboard ready",
+			body: "Your workspace synced with all recent changes.",
+			meta: "6 charts loaded"
 		},
 		{
 			curveId: "rose3",
@@ -108,6 +103,13 @@
 			heading: "Build complete",
 			body: "All modules bundled and optimized for production.",
 			meta: "2.1 KB gzipped"
+		},
+		{
+			curveId: "epitrochoid7",
+			color: "#38bdf8",
+			heading: "Connection live",
+			body: "Real-time sync established with the data source.",
+			meta: "12 ms latency"
 		}
 	];
 
@@ -171,7 +173,7 @@
 			trailColor: slide.color,
 			skeletonColor: slide.color,
 			headColor: slide.color,
-			trailLength: 80,
+			trailLength: slide.trailLength ?? 80,
 			...(slide.trailStyle && { trailStyle: slide.trailStyle }),
 			...(slide.palette && { palette: slide.palette })
 		});
