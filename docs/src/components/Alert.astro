@@ -20,12 +20,12 @@ const resolvedLabel = label ?? config.label;
 ---
 
 <div
-	class='not-prose my-6 overflow-hidden rounded-sm bg-surface [&_span[style*="background-color"]]:bg-(--alert-accent)!'
+	class='not-prose overflow-hidden rounded-sm bg-surface [&_span[style*="background-color"]]:bg-(--alert-accent)!'
 	style={`border: 1px solid ${config.accent}; border-left: 3px solid ${config.accent}; --alert-accent: ${config.accent};`}>
-	<div class='border-b border-border-subtle px-4 py-2.5'>
+	<div class='border-b border-border-subtle px-2 md:px-4 py-2 md:py-2.5'>
 		<SectionLabel label={resolvedLabel} variant={variant} template='kanji' />
 	</div>
-	<div class='prose prose-sm px-4 py-3 *:first:mt-0 *:last:mb-0 max-w-none'>
+	<div class='prose prose-sm px-2 md:px-4 py-2 md:py-3 *:first:mt-0 *:last:mb-0 max-w-none'>
 		<slot />
 	</div>
 </div>

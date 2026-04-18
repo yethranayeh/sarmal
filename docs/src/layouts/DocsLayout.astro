@@ -1,10 +1,10 @@
 ---
 import type { MarkdownLayoutProps } from "astro";
 
-import { Menu, X, BookText, FlaskConical, Hash } from "@lucide/astro";
+import { Menu, X, BookText, FlaskConical } from "@lucide/astro";
 
 import BaseLayout from "./BaseLayout.astro";
-import Branding from "../components/Branding.astro";
+import Navbar from "../components/Navbar.astro";
 import Nav from "../components/Nav.astro";
 
 interface DocFrontmatter {
@@ -58,8 +58,6 @@ const isActive = (href: string) => {
 	return currentPath.startsWith(href);
 };
 
-// TODO: should docsLayout override the navbar slot?
-// FIXME: will go stale if main Nav changes...
 const topNavLinks = [
 	{ href: "/docs", label: "Docs", icon: BookText },
 	{ href: "/play", label: "Playground", icon: FlaskConical }
@@ -67,26 +65,19 @@ const topNavLinks = [
 ---
 
 <BaseLayout title={title} description={description}>
-	<header
-		slot='navbar'
-		class='bg-surface-raised w-full px-4 py-2 flex items-center justify-between border-b border-border'>
-		<Branding />
-
-		<div class='flex items-center gap-4'>
-			<!-- Desktop nav links -->
+	<Navbar slot='navbar'>
+		<div slot='nav' class='hidden lg:block'>
 			<Nav />
-
-			<!-- Mobile hamburger -->
-			<button
-				id='mobile-menu-btn'
-				class='lg:hidden flex items-center justify-center w-9 h-9 rounded-md hover:bg-surface transition-colors'
-				aria-label='Open navigation menu'
-				aria-expanded='false'
-				aria-controls='mobile-drawer'>
-				<Menu size={20} />
-			</button>
 		</div>
-	</header>
+		<button
+			id='mobile-menu-btn'
+			class='lg:hidden flex items-center justify-center w-9 h-9 rounded-md hover:bg-surface transition-colors'
+			aria-label='Open navigation menu'
+			aria-expanded='false'
+			aria-controls='mobile-drawer'>
+			<Menu size={20} />
+		</button>
+	</Navbar>
 
 	<div class='flex flex-1'>
 		<!-- Desktop sidebar -->
@@ -196,29 +187,12 @@ const topNavLinks = [
 
 		<main class='flex-1 min-w-0 p-4 md:p-8'>
 			<slot name='article-header' />
-			<Hash id='anchor-icon' class='hidden' />
 			<article class='prose max-w-3xl mx-auto lg:mx-0 prose-headings:font-medium'>
 				<slot />
 			</article>
 		</main>
 	</div>
 </BaseLayout>
-
-<!-- Inject clickable heading anchors -->
-<script>
-	document.querySelectorAll(".prose :is(h1, h2, h3, h4, h5, h6)").forEach((heading) => {
-		if (!heading.id) {
-			return;
-		}
-		const anchor = document.createElement("a");
-		anchor.href = `#${heading.id}`;
-		anchor.className = "anchor-link";
-		anchor.setAttribute("aria-label", `Link to ${heading.textContent}`);
-		anchor.innerHTML =
-			'<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" id="anchor-icon" class="lucide lucide-hash"> <line x1="4" x2="20" y1="9" y2="9"></line><line x1="4" x2="20" y1="15" y2="15"></line><line x1="10" x2="8" y1="3" y2="21"></line><line x1="16" x2="14" y1="3" y2="21"></line> </svg>';
-		heading.prepend(anchor);
-	});
-</script>
 
 <script>
 	const menuBtn = document.getElementById("mobile-menu-btn");

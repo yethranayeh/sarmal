@@ -88,7 +88,7 @@ export interface TrailQuad {
  * @param toY    Convert a trail point to its pixel Y coordinate
  *
  * @see https://mattdesl.svbtle.com/drawing-lines-is-hard
- *      DesLauriers: "Triangulated Lines" — expand points outward by half
+ *      DesLauriers: "Triangulated Lines" - expand points outward by half
  *      the thickness on either side using normals to create thick lines.
  */
 export function computeTrailQuad(

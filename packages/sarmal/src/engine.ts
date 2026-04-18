@@ -17,7 +17,7 @@ function lerp(start: number, end: number, t: number): number {
   return start + (end - start) * t;
 }
 
-/** Reused across all curve fn calls — params is never populated, allocation is wasteful */
+/** Reused across all curve fn calls but params is never populated, allocation is wasteful */
 const EMPTY_PARAMS: Record<string, number> = {};
 
 /**

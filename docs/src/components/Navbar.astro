@@ -1,14 +1,15 @@
 ---
-import type { NavLink } from "./Nav.astro";
-
 import Branding from "./Branding.astro";
 import Nav from "./Nav.astro";
-
-interface Props extends NavLink {}
 ---
 
 <header
 	class='bg-surface-raised w-full px-4 py-2 flex items-center justify-between border-b border-border relative z-10'>
 	<Branding />
-	<Nav />
+	<div class='flex items-center gap-4'>
+		<slot name='nav'>
+			<Nav />
+		</slot>
+		<slot />
+	</div>
 </header>

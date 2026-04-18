@@ -8,10 +8,8 @@ export interface CurveDef {
   /**
    * The parametric function that defines the curve shape.
    * @param t Current position along the curve, in [0, period)
-   * @param time Elapsed wall-clock time in seconds — always increasing, never resets on period wrap
-   * @param params Named parameter overrides.
-   *   Always `{}` today — reserved for the upcoming parameterized-curves feature.
-   *   Do NOT remove this parameter; it is intentional forward-compatible plumbing.
+   * @param time Elapsed actual time in seconds. It is always increasing, and never resets on period wrap
+   * @param params Named parameter overrides. intentional forward-compatible parameter
    */
   fn: (t: number, time: number, params: Record<string, number>) => Point;
   /**

@@ -91,6 +91,7 @@ export function createSVGRenderer(options: SVGRendererOptions): SarmalInstance {
   svg.appendChild(titleEl);
 
   const skeletonPath = el("path") as SVGPathElement;
+  skeletonPath.setAttribute("data-sarmal-role", "skeleton");
   skeletonPath.setAttribute("fill", "none");
   skeletonPath.setAttribute("stroke", opts.skeletonColor);
   skeletonPath.setAttribute("stroke-opacity", String(DEFAULT_SKELETON_OPACITY));
@@ -123,6 +124,7 @@ export function createSVGRenderer(options: SVGRendererOptions): SarmalInstance {
   }
 
   const headCircle = el("circle") as SVGCircleElement;
+  headCircle.setAttribute("data-sarmal-role", "head");
   headCircle.setAttribute("fill", opts.headColor);
   headCircle.setAttribute("r", String(headRadius));
   svg.appendChild(headCircle);

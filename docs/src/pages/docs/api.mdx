@@ -8,7 +8,8 @@ description: Complete reference for all public methods, options, and the curve d
 
 import Alert from "../../components/Alert.astro";
 import Link from "../../components/Link.astro";
-import SurgicalDemo from "../../components/SurgicalDemo.astro";
+import SarmalBlueprint from "../../components/SarmalBlueprint.astro";
+import ConceptDemo from "../../components/ConceptDemo.astro";
 
 # API Reference
 
@@ -16,7 +17,7 @@ The "look it up" page for all public methods, options, and the curve definition 
 
 <Alert variant="tip">This reference assumes familiarity with the core concepts. See <Link href="#gotchas">Gotchas</Link> for common pitfalls</Alert>
 
-## `createSarmal(canvas, curveDef, options?)`
+## createSarmal
 
 Creates a canvas-based sarmal instance. Returns `SarmalInstance`.
 
@@ -72,7 +73,7 @@ s4.play();
 
 ---
 
-## `createSarmalSVG(container, curveDef, options?)`
+## createSarmalSVG
 
 Same API as `createSarmal`. First argument is any container element (typically a `<div>`). Outputs animated SVG elements.
 
@@ -92,7 +93,7 @@ const sarmal = createSarmalSVG(container, curves.lissajous32);
 
 ## Instance Methods
 
-### `play()`
+### play()
 
 Starts the animation loop (requestAnimationFrame). If already running, does nothing.
 
@@ -100,11 +101,21 @@ Starts the animation loop (requestAnimationFrame). If already running, does noth
 sarmal.play();
 ```
 
-<SurgicalDemo concept="play-pause" />
+<ConceptDemo>
+  <SarmalBlueprint slot="view" height={200} />
+  <div slot="info">
+    <span class="text-[0.58rem] uppercase tracking-widest text-muted font-mono">state</span>
+    <div class="flex items-center gap-1.75 mt-1">
+      <div class="cdemo-dot" data-sarmal-dot data-state="playing"></div>
+      <span class="text-[0.82rem] text-background font-mono" data-sarmal-state-text>playing</span>
+    </div>
+  </div>
+  <button slot="controls" class="cdemo-btn cdemo-btn-ghost" data-sarmal-action="toggle">Pause</button>
+</ConceptDemo>
 
-### `pause()`
+### pause()
 
-Pauses the animation loop (cancelAnimationFrame) and cancels any speed transition. State is preserved — `t`, trail, and speed are all maintained. Call `play()` to resume.
+Pauses the animation loop (cancelAnimationFrame) and cancels any speed transition. When paused, the state of `t`, trail, and speed are all preserved. Call `play()` to resume.
 
 <Alert variant="info">
 `pause()` is different from `setSpeed(0)`. `pause()` stops the RAF loop entirely and saves CPU. `setSpeed(0)` freezes the animation but keeps the loop running.
@@ -114,7 +125,7 @@ Pauses the animation loop (cancelAnimationFrame) and cancels any speed transitio
 sarmal.pause();
 ```
 
-### `reset()`
+### reset()
 
 Resets the engine and clears the trail. The next frame will start fresh from the *beginning* of the curve. The animation loop keeps running.
 
@@ -122,9 +133,19 @@ Resets the engine and clears the trail. The next frame will start fresh from the
 sarmal.reset();
 ```
 
-<SurgicalDemo concept="reset" />
+<ConceptDemo layout="bottom">
+  <SarmalBlueprint slot="view" height={200} />
+  <div slot="info">
+    <div class="flex items-center gap-1.75">
+      <div class="cdemo-dot" data-sarmal-dot data-state="playing"></div>
+      <span data-sarmal-state-text class="text-background">playing</span>
+    </div>
+    <span class="text-[0.62rem] text-[#b3ada7]">reset() clears the trail and resets t to 0. The loop keeps running.</span>
+  </div>
+  <button slot="controls" class="cdemo-btn cdemo-btn-ghost" data-sarmal-action="reset">Reset</button>
+</ConceptDemo>
 
-### `destroy()`
+### destroy()
 
 Stops the animation and cleans up resources. Call in component unmount / cleanup handlers. The instance cannot be restarted after destruction.
 
@@ -139,13 +160,23 @@ useEffect(() => {
 }, []);
 ```
 
-<SurgicalDemo concept="destroy" />
+<ConceptDemo layout="bottom">
+  <SarmalBlueprint slot="view" height={200} />
+  <div slot="info">
+    <div class="flex items-center gap-1.75">
+      <div class="cdemo-dot" data-sarmal-dot data-state="playing"></div>
+      <span data-sarmal-state-text class="text-background">playing</span>
+    </div>
+    <span class="text-[0.62rem] text-[#b3ada7]">Stops the loop and removes the SVG. The instance cannot be restarted.</span>
+  </div>
+  <button slot="controls" class="cdemo-btn cdemo-btn-danger" data-sarmal-action="destroy">Destroy</button>
+</ConceptDemo>
 
 ---
 
 ## Engine Control
 
-### `jump(t, options?)`
+### jump(t)
 
 Instantly moves the head to position `t`. Does not update `actualTime`. Trail is left *untouched* by default, but you can use `clearTrail: true` to wipe it.
 
@@ -165,7 +196,7 @@ sarmal.jump(0, { clearTrail: true });
 |--------|------|---------|-------------|
 | `clearTrail` | `boolean` | `false` | Clear the trail on jump |
 
-### `seek(t, options?)`
+### seek(t)
 
 Moves to `t` **and** reconstructs the trail as if the animation naturally arrived there from `t=0`. Also updates `actualTime` to match.
 
@@ -193,7 +224,7 @@ sarmal.seek(1, { step: 0.1 });
 
 ## Animation Control
 
-### `setSpeed(speed)`
+### setSpeed(speed)
 
 Overrides the animation speed. Returns `void`. The override persists until cleared with `resetSpeed()` or replaced with another call.
 
@@ -201,10 +232,10 @@ Overrides the animation speed. Returns `void`. The override persists until clear
 // Slow to half speed
 sarmal.setSpeed(0.5);
 
-// Speed up to 2×
+// Speed up to twice the speed
 sarmal.setSpeed(2.0);
 
-// Freeze in place — loop keeps running, t stops advancing
+// Freeze in place while keeping the loop (`t`) advancing
 sarmal.setSpeed(0);
 
 // Reverse direction
@@ -217,9 +248,9 @@ sarmal.setSpeed(-1);
 `setSpeed(0)` freezes the animation but does **not** stop the loop. Use `pause()` if you need to cancel the requestAnimationFrame entirely and save CPU.
 </Alert>
 
-### `getSpeed()`
+### getSpeed()
 
-Returns the effective speed the engine is currently using. When `setSpeed()` has been called, returns that value. Otherwise returns `curve.speed` — the curve's natural rhythm.
+Returns the effective speed the engine is currently using. When `setSpeed()` has been called, returns that value. Otherwise, returns `curve.speed`, which is the default value from the **CurveDef**.
 
 ```ts
 sarmal.setSpeed(0.5);
@@ -229,7 +260,7 @@ sarmal.resetSpeed();
 sarmal.getSpeed(); // 1 (or whatever curve.speed is)
 ```
 
-### `resetSpeed()`
+### resetSpeed()
 
 Clears the speed override, returning to the curve's default speed. This is the correct way to "undo" a speed change without knowing the curve's default.
 
@@ -245,7 +276,7 @@ sarmal.getSpeed(); // curve.speed (e.g., 1)
 `resetSpeed()` removes the override layer entirely. It defers to the curve dynamically, so future curve changes are reflected in `getSpeed()` automatically.
 </Alert>
 
-### `setSpeedOver(speed, duration)`
+### setSpeedOver(speed, duration)
 
 Transitions to a new speed over a duration, returning a `Promise<void>` that resolves when complete. Uses linear interpolation between current and target speed.
 
@@ -257,25 +288,24 @@ await sarmal.setSpeedOver(0.2, 500);
 await sarmal.setSpeedOver(1.0, 300);
 ```
 
-**Cancellation:** Calling `setSpeed()`, `setSpeedOver()`, or `pause()` while a transition is in progress cancels it — the Promise rejects with `Error('Speed transition cancelled')`. A subsequent `setSpeedOver()` starts from the current interpolated speed.
+**Cancellation:** Calling `setSpeed()`, `setSpeedOver()`, or `pause()` while a transition is in progress cancels it. The Promise rejects with `Error('Speed transition cancelled')`. A subsequent `setSpeedOver()` starts from the current interpolated speed.
+
+To stop with a graceful deceleration, you can make use of two explicit steps:
+```ts
+await sarmal.setSpeedOver(0, 400); // decelerate over 400ms
+sarmal.pause();                     // then pause the loop
+```
 
 **Validation:**
 - `speed` must be a finite number
 - `duration` must be a finite number greater than `0`
 
-<Alert variant="info">
-The braking pattern — decelerate before stopping — is explicit:
-```ts
-await sarmal.setSpeedOver(0, 400); // decelerate over 400ms
-sarmal.pause();                     // then pause the loop
-```
-</Alert>
 
 ---
 
 ## Morphing
 
-### `morphTo(targetCurve, options?)`
+### morphTo(target)
 
 Smooth transition between curves. Returns `Promise<void>` that resolves when morph completes.
 
@@ -327,7 +357,7 @@ interface CurveDef {
 }
 ```
 
-### `fn(t, time, params)` function details:
+### fn(t, time, params)
 
 - **`t`**: Position along curve (0 -> period)
 - **`time`**: Actual elapsed seconds

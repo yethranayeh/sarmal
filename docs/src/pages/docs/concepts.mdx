@@ -8,7 +8,8 @@ description: Understand parametric curves, the skeleton, and the engine.
 
 import Link from "../../components/Link.astro";
 import Alert from "../../components/Alert.astro";
-import SurgicalDemo from "../../components/SurgicalDemo.astro";
+import SarmalBlueprint from "../../components/SarmalBlueprint.astro";
+import ConceptDemo from "../../components/ConceptDemo.astro";
 
 # Concepts
 
@@ -117,7 +118,7 @@ The engine never touches pixels, canvas, SVG elements, colors, opacity, DPR, con
 
 ## Instance Lifecycle
 
-Sarmal instances are created with `createSarmal()` (canvas) or `createSarmalSVG()` (SVG). By default, they start animating immediately — you don't need to call `play()` unless you explicitly opt out.
+Sarmal instances are created with `createSarmal()` (canvas) or `createSarmalSVG()` (SVG). By default, they start animating right away. Unless you opt out of `autoStart`, you don't need to call `play()` at all.
 
 ### Auto-start
 
@@ -149,7 +150,21 @@ const s4 = createSarmal(canvas, curves.artemis2, {
 s4.play(); // Animation starts from there
 ```
 
-<SurgicalDemo concept="initial-t" />
+<ConceptDemo>
+  <SarmalBlueprint
+    slot="view"
+    autoStart={false}
+    initialT={Math.PI}
+    height={200}
+    callouts={[{ target: "head", label: "t = π", sub: "initial position" }]}
+  />
+  <div slot="info">
+    <code>initialT: Math.PI</code><br />
+    <code>autoStart: false</code><br /><br />
+    Dormant at creation. Trail pre-drawn to <code>t=π</code>. Play to animate from there.
+  </div>
+  <button slot="controls" class="cdemo-btn cdemo-btn-play" data-sarmal-action="toggle">Play</button>
+</ConceptDemo>
 
 ### Why you don't always need `play()`
 

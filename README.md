@@ -19,4 +19,4 @@ This is a monorepo of the **Sarmal** project, which aims to be a parametric curv
 
 ## License
 
-MIT — see [LICENSE](./LICENSE)
+[MIT LICENSE](./LICENSE)

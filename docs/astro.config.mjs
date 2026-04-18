@@ -3,19 +3,24 @@ import { defineConfig, fontProviders } from "astro/config";
 import tailwindcss from "@tailwindcss/vite";
 import sitemap from "@astrojs/sitemap";
 import mdx from "@astrojs/mdx";
+import { rehypeHeadingIds } from "@astrojs/markdown-remark";
 
 import sarmalLight from "./src/themes/sarmal-editorial.json";
 import sarmalDark from "./src/themes/sarmal-editorial-dark.json";
+import rehypeWrapTables from "./src/plugins/rehype-wrap-tables.mjs";
+import rehypeHeadingAnchors from "./src/plugins/rehype-heading-anchors.mjs";
 
 // https://astro.build/config
 export default defineConfig({
   site: "https://sarmal.art",
-  integrations: [sitemap(), mdx()],
-  vite: {
-    // @ts-ignore | can't really be bothered as to why it's giving type errors. It's the literal official way to set it up...
-    plugins: [tailwindcss()],
-  },
+  integrations: [
+    sitemap(),
+    mdx({
+      rehypePlugins: [rehypeWrapTables, rehypeHeadingIds, rehypeHeadingAnchors],
+    }),
+  ],
   markdown: {
+    rehypePlugins: [rehypeWrapTables],
     shikiConfig: {
       themes: {
         // @ts-ignore | Shiki too hard to please
@@ -26,6 +31,10 @@ export default defineConfig({
       defaultColor: false,
       wrap: true,
     },
+  },
+  vite: {
+    // @ts-ignore | can't really be bothered as to why it's giving type errors. It's the literal official way to set it up...
+    plugins: [tailwindcss()],
   },
   fonts: [
     {

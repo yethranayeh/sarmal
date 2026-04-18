@@ -66,7 +66,9 @@ const canonicalUrl = canonical ?? new URL(Astro.url.pathname, SITE_URL).href;
 		<slot name='navbar'>
 			<Navbar />
 		</slot>
+
 		<slot />
+
 		<slot name='footer'>
 			<Footer />
 		</slot>

@@ -1,0 +1,346 @@
+---
+import type { CurveName } from "@sarmal/core";
+
+export interface Callout {
+	target: "head" | "skeleton" | string;
+	label: string;
+	sub?: string;
+	placement?: "auto" | "top-left" | "top-right" | "bottom-left" | "bottom-right";
+}
+
+interface Props {
+	curve?: CurveName;
+	autoStart?: boolean;
+	initialT?: number;
+	trailColor?: string;
+	skeletonColor?: string;
+	headColor?: string;
+	headRadius?: number;
+	trailLength?: number;
+	width?: number;
+	height?: number;
+	callouts?: Callout[];
+}
+
+const {
+	curve = "lissajous32",
+	autoStart = true,
+	initialT,
+	trailColor = "#fbf9f5",
+	skeletonColor = "#3a3b37",
+	headColor = "#ffffff",
+	headRadius,
+	trailLength,
+	width,
+	height = 200,
+	callouts = []
+} = Astro.props;
+
+const id = `sbp-${Math.random().toString(36).slice(2, 8)}`;
+---
+
+<div
+	id={id}
+	class='sarmal-blueprint'
+	data-curve={curve}
+	data-auto-start={String(autoStart)}
+	data-initial-t={initialT !== undefined ? String(initialT) : undefined}
+	data-trail-color={trailColor}
+	data-skeleton-color={skeletonColor}
+	data-head-color={headColor}
+	data-head-radius={headRadius !== undefined ? String(headRadius) : undefined}
+	data-trail-length={trailLength !== undefined ? String(trailLength) : undefined}
+	data-callouts={JSON.stringify(callouts)}
+	style={["position:relative", `height:${height}px`, width ? `width:${width}px` : "width:100%"].join(";")}>
+</div>
+
+<style>
+	.sarmal-blueprint-label {
+		transition:
+			left 80ms linear,
+			top 80ms linear;
+	}
+
+	@media (prefers-reduced-motion: reduce) {
+		.sarmal-blueprint-label {
+			transition: none;
+		}
+	}
+</style>
+
+<script>
+	import { createSarmalSVG, curves } from "@sarmal/core";
+	import type { CurveName, SVGSarmalOptions } from "@sarmal/core";
+
+	const ANNOT_COLORS = {
+		line: "#97002a",
+		ring: "#c0143c",
+		label: "#c0143c",
+		sub: "#7a7067"
+	};
+
+	// dx/dy: label offset from target center. lx/ly: line anchor within the label box.
+	const PLACEMENTS = {
+		"top-left": { dx: -90, dy: -36, lx: 85, ly: 20 },
+		"top-right": { dx: 18, dy: -36, lx: 5, ly: 20 },
+		"bottom-left": { dx: -90, dy: 24, lx: 85, ly: 0 },
+		"bottom-right": { dx: 18, dy: 24, lx: 5, ly: 0 }
+	} as const;
+
+	type Placement = keyof typeof PLACEMENTS;
+
+	const FLIP_DWELL_MS = 400;
+
+	interface Callout {
+		target: string;
+		label: string;
+		sub?: string;
+		placement?: "auto" | Placement;
+	}
+
+	interface CalloutState {
+		callout: Callout;
+		selector: string;
+		isHead: boolean;
+		lineEl: SVGLineElement;
+		ringEl: SVGCircleElement;
+		labelDiv: HTMLDivElement;
+		currentPlacement: Placement;
+		flipCandidate: Placement | null;
+		flipCandidateSince: number;
+	}
+
+	function resolveSelector(target: string): string {
+		if (target === "head") return '[data-sarmal-role="head"]';
+		if (target === "skeleton") return '[data-sarmal-role="skeleton"]';
+		return target;
+	}
+
+	function autoPlacement(tx: number, ty: number, cw: number, ch: number): Placement {
+		const inRight = tx > cw / 2;
+		const inBottom = ty > ch / 2;
+		if (inRight && inBottom) return "top-left";
+		if (inRight) return "bottom-left";
+		if (inBottom) return "top-right";
+		return "bottom-right";
+	}
+
+	function getHeadPos(headEl: Element, svg: SVGSVGElement, wrapper: HTMLElement): { x: number; y: number } {
+		const vb = svg.getAttribute("viewBox");
+		const parts = vb ? vb.split(/[\s,]+/).map(Number) : [0, 0, 100, 100];
+		const wr = wrapper.getBoundingClientRect();
+		const scaleX = wr.width / (parts[2] ?? 100);
+		const scaleY = wr.height / (parts[3] ?? 100);
+		const cx = parseFloat((headEl as SVGCircleElement).getAttribute("cx") ?? "0");
+		const cy = parseFloat((headEl as SVGCircleElement).getAttribute("cy") ?? "0");
+		return { x: cx * scaleX, y: cy * scaleY };
+	}
+
+	function getElPos(el: Element, wrapper: HTMLElement): { x: number; y: number } {
+		const rect = el.getBoundingClientRect();
+		const wr = wrapper.getBoundingClientRect();
+		return {
+			x: rect.left - wr.left + rect.width / 2,
+			y: rect.top - wr.top + rect.height / 2
+		};
+	}
+
+	function applyCallout(state: CalloutState, pos: { x: number; y: number }, cw: number, ch: number) {
+		let p: Placement;
+
+		if (state.callout.placement && state.callout.placement !== "auto") {
+			p = state.callout.placement;
+		} else {
+			const natural = autoPlacement(pos.x, pos.y, cw, ch);
+
+			if (natural === state.currentPlacement) {
+				state.flipCandidate = null;
+				p = state.currentPlacement;
+			} else {
+				if (state.flipCandidate !== natural) {
+					state.flipCandidate = natural;
+					state.flipCandidateSince = Date.now();
+				}
+				if (Date.now() - state.flipCandidateSince >= FLIP_DWELL_MS) {
+					// Commit flip: cut position instantly so it doesn't slide across
+					state.labelDiv.style.transition = "none";
+					state.currentPlacement = natural;
+					state.flipCandidate = null;
+					state.labelDiv.style.alignItems = PLACEMENTS[natural].dx < 0 ? "flex-end" : "flex-start";
+					requestAnimationFrame(() => {
+						state.labelDiv.style.transition = "";
+					});
+				}
+				p = state.currentPlacement;
+			}
+		}
+
+		const { dx, dy, lx, ly } = PLACEMENTS[p];
+		const labelX = pos.x + dx;
+		const labelY = pos.y + dy;
+
+		// SVG elements update instantly
+		state.lineEl.setAttribute("x1", String(labelX + lx));
+		state.lineEl.setAttribute("y1", String(labelY + ly));
+		state.lineEl.setAttribute("x2", String(pos.x));
+		state.lineEl.setAttribute("y2", String(pos.y));
+		state.ringEl.setAttribute("cx", String(pos.x));
+		state.ringEl.setAttribute("cy", String(pos.y));
+
+		// Label div uses CSS transition (80ms linear via .sarmal-blueprint-label)
+		state.labelDiv.style.left = `${labelX}px`;
+		state.labelDiv.style.top = `${labelY}px`;
+	}
+
+	function initBlueprint(wrapper: HTMLElement) {
+		const curveName = (wrapper.dataset.curve ?? "lissajous32") as CurveName;
+		const autoStart = wrapper.dataset.autoStart !== "false";
+		const initialT = wrapper.dataset.initialT !== undefined ? parseFloat(wrapper.dataset.initialT) : undefined;
+		const callouts: Callout[] = JSON.parse(wrapper.dataset.callouts ?? "[]");
+
+		const opts: SVGSarmalOptions = {
+			autoStart,
+			trailColor: wrapper.dataset.trailColor,
+			skeletonColor: wrapper.dataset.skeletonColor,
+			headColor: wrapper.dataset.headColor
+		};
+		if (initialT !== undefined) opts.initialT = initialT;
+		if (wrapper.dataset.headRadius !== undefined) opts.headRadius = parseFloat(wrapper.dataset.headRadius);
+		if (wrapper.dataset.trailLength !== undefined) opts.trailLength = parseFloat(wrapper.dataset.trailLength);
+
+		const curve = curves[curveName];
+		const instance = createSarmalSVG(wrapper, curve, opts);
+
+		if (callouts.length === 0) {
+			requestAnimationFrame(() => {
+				wrapper.dispatchEvent(new CustomEvent("sarmal:ready", { bubbles: true, detail: { instance } }));
+			});
+			return;
+		}
+
+		requestAnimationFrame(() => {
+			const svg = wrapper.querySelector("svg") as SVGSVGElement | null;
+			if (!svg) return;
+
+			const annotSvg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+			annotSvg.style.cssText = "position:absolute;inset:0;width:100%;height:100%;pointer-events:none;overflow:visible;";
+			wrapper.appendChild(annotSvg);
+
+			const wr = wrapper.getBoundingClientRect();
+			const cw = wr.width;
+			const ch = wr.height;
+
+			const states: CalloutState[] = [];
+
+			for (const callout of callouts) {
+				const selector = resolveSelector(callout.target);
+				const isHead = callout.target === "head";
+
+				const targetEl = svg.querySelector(selector) ?? wrapper.querySelector(selector);
+				if (!targetEl) {
+					continue;
+				}
+
+				const pos = isHead ? getHeadPos(targetEl, svg, wrapper) : getElPos(targetEl, wrapper);
+
+				const initialP: Placement =
+					callout.placement && callout.placement !== "auto" ? callout.placement : autoPlacement(pos.x, pos.y, cw, ch);
+				const { dx, dy, lx, ly } = PLACEMENTS[initialP];
+				const labelX = pos.x + dx;
+				const labelY = pos.y + dy;
+
+				const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
+				line.setAttribute("x1", String(labelX + lx));
+				line.setAttribute("y1", String(labelY + ly));
+				line.setAttribute("x2", String(pos.x));
+				line.setAttribute("y2", String(pos.y));
+				line.setAttribute("stroke", ANNOT_COLORS.line);
+				line.setAttribute("stroke-width", "1");
+				line.setAttribute("stroke-dasharray", "3 3");
+				line.setAttribute("opacity", "0.65");
+				annotSvg.appendChild(line);
+
+				const ring = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+				ring.setAttribute("cx", String(pos.x));
+				ring.setAttribute("cy", String(pos.y));
+				ring.setAttribute("r", "8");
+				ring.setAttribute("fill", "none");
+				ring.setAttribute("stroke", ANNOT_COLORS.ring);
+				ring.setAttribute("stroke-width", "1");
+				ring.setAttribute("opacity", "0.55");
+				annotSvg.appendChild(ring);
+
+				const labelDiv = document.createElement("div");
+				labelDiv.className = "sarmal-blueprint-label";
+				labelDiv.style.cssText = [
+					"position:absolute",
+					`left:${labelX}px`,
+					`top:${labelY}px`,
+					"pointer-events:none",
+					"display:flex",
+					"flex-direction:column",
+					`align-items:${dx < 0 ? "flex-end" : "flex-start"}`,
+					"gap:1px"
+				].join(";");
+
+				const primary = document.createElement("span");
+				primary.textContent = callout.label;
+				primary.style.cssText = `font-size:0.9rem;color:${ANNOT_COLORS.label};line-height:1;font-family:ui-monospace,'SF Mono',monospace;`;
+				labelDiv.appendChild(primary);
+
+				if (callout.sub) {
+					const sub = document.createElement("span");
+					sub.textContent = callout.sub;
+					sub.style.cssText = `font-size:0.58rem;color:${ANNOT_COLORS.sub};font-family:ui-monospace,'SF Mono',monospace;`;
+					labelDiv.appendChild(sub);
+				}
+
+				wrapper.appendChild(labelDiv);
+				states.push({
+					callout,
+					selector,
+					isHead,
+					lineEl: line,
+					ringEl: ring,
+					labelDiv,
+					currentPlacement: initialP,
+					flipCandidate: null,
+					flipCandidateSince: 0
+				});
+			}
+
+			// Head tracking: MutationObserver on cx/cy attributes
+			const headStates = states.filter((s) => s.isHead);
+			if (headStates.length > 0) {
+				const headEl = svg.querySelector('[data-sarmal-role="head"]');
+				if (headEl) {
+					const obs = new MutationObserver(() => {
+						const wr = wrapper.getBoundingClientRect();
+						for (const s of headStates) {
+							applyCallout(s, getHeadPos(headEl, svg, wrapper), wr.width, wr.height);
+						}
+					});
+					obs.observe(headEl, { attributes: true, attributeFilter: ["cx", "cy"] });
+				}
+			}
+
+			// Non-head tracking: rAF loop re-reads bounding rects
+			const nonHeadStates = states.filter((s) => !s.isHead);
+			if (nonHeadStates.length > 0) {
+				function rafLoop() {
+					const wr = wrapper.getBoundingClientRect();
+					for (const s of nonHeadStates) {
+						const targetEl = svg!.querySelector(s.selector) ?? wrapper.querySelector(s.selector);
+						if (targetEl) applyCallout(s, getElPos(targetEl, wrapper), wr.width, wr.height);
+					}
+					requestAnimationFrame(rafLoop);
+				}
+				requestAnimationFrame(rafLoop);
+			}
+
+			wrapper.dispatchEvent(new CustomEvent("sarmal:ready", { bubbles: true, detail: { instance } }));
+		});
+	}
+
+	document.querySelectorAll<HTMLElement>(".sarmal-blueprint").forEach(initBlueprint);
+</script>
