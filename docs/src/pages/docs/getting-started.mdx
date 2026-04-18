@@ -34,7 +34,7 @@ The script scans for `canvas[data-sarmal]` on page load and starts a spinner for
 
 ## Your first spinner
 
-`createSarmal` is the fastest way to get a spinner on screen. Give it a canvas element and a curve — the animation starts automatically:
+`createSarmal` is the fastest way to get a spinner on screen. You point it to a canvas element and pick a curve. The animation starts automatically:
 
 ```html
 <canvas id="spinner" width="200" height="200"></canvas>
@@ -51,7 +51,7 @@ The instance animates immediately by default. Call `sarmal.pause()` to freeze th
 
 ## Choosing a curve
 
-`curves` is an object with <Link href="/docs/curves">all the built-in curves</Link>:
+While it is possible to create your very own <Link href="#custom-curves">custom curve</Link>, you might wish to skip the initial hassle. The `curves` export is an object with <Link href="/docs/curves">all the built-in curves</Link>, so you can pick from predefined curve definitions to get started right away:
 
 ```ts
 import { curves } from "@sarmal/core";
@@ -103,9 +103,30 @@ Imports a single curve definition file, resulting in maximum tree-shaking. You c
 	If you need both engine/renderer **and** curves, option 2 or 3 won't save much over option 1, because you're already pulling the main modules. The subpath advantage matters most when you only need curve definitions, for whatever reason *I won't judge*.
 </Alert>
 
-<Alert variant='tip'>
-	You can also pass your own curve definition! See the <Link href='/docs/api'>API Reference</Link>.
-</Alert>
+## Custom curves
+
+You're not limited to the built-in curves! You can pass any object that matches `CurveDef`:
+
+```ts
+import type { CurveDef } from "@sarmal/core";
+import { createSarmal } from "@sarmal/core";
+
+const myCurve: CurveDef = {
+  name: "circle",
+  fn: (t, time, params) => ({
+    x: Math.cos(t),
+    y: Math.sin(t),
+  }),
+  // period defaults to 2π, speed defaults to 1
+};
+
+const sarmal = createSarmal(canvas, myCurve);
+```
+
+Only `name` and `fn` are required.
+
+See the <Link href="/docs/api#curve-definition-schema">Curve Definition Schema</Link> for the full list of options.
+You can also prototype your curve ideas in the <Link href="/play">Playground</Link> page.
 
 ## Styling options
 
@@ -183,4 +204,4 @@ Or use a `useEffect` (React) / `onMount` (Svelte) / `mounted` hook (Vue) to ensu
 
 ## Next steps
 
-- [API Reference](/docs/api) — complete reference for every export
+- [API Reference](/docs/api) - complete reference for every export
