@@ -1,4 +1,4 @@
-import type { Engine, Point } from "./types";
+import type { Engine, PalettePreset, Point, TrailStyle } from "./types";
 
 export const DEFAULT_MORPH_DURATION_MS = 300;
 export const DEFAULT_SKELETON_OPACITY = 0.15;
@@ -212,4 +212,89 @@ export function enginePassthroughs(engine: Engine) {
     resetSpeed: engine.resetSpeed,
     setSpeedOver: engine.setSpeedOver,
   };
+}
+
+export const GRADIENT = {
+  bard: ["#a855f7", "#3b82f6", "#14b8a6", "#ec4899"],
+  sunset: ["#f97316", "#dc2626", "#9333ea", "#f472b6"],
+  ocean: ["#1e3a8a", "#06b6d4", "#22d3ee", "#e0f2fe"],
+  ice: ["#1e3a8a", "#67e8f9"],
+  fire: ["#7f1d1d", "#fbbf24"],
+  forest: ["#14532d", "#86efac"],
+};
+
+export const PRESETS: Record<PalettePreset, string[]> = {
+  bard: GRADIENT.bard,
+  sunset: GRADIENT.sunset,
+  ocean: GRADIENT.ocean,
+  ice: GRADIENT.ice,
+  fire: GRADIENT.fire,
+  forest: GRADIENT.forest,
+};
+
+/** RGB color components */
+export interface Rgb {
+  r: number;
+  g: number;
+  b: number;
+}
+
+/** Converts a hex color string to RGB components */
+export function hexToRgb(hex: string): Rgb {
+  const n = parseInt(hex.slice(1), 16);
+  return { r: n >> 16, g: (n >> 8) & 255, b: n & 255 };
+}
+
+/** Linear interpolation between two RGB colors */
+export const lerpRgb = (a: Rgb, b: Rgb, t: number) => ({
+  r: Math.round(a.r + (b.r - a.r) * t),
+  g: Math.round(a.g + (b.g - a.g) * t),
+  b: Math.round(a.b + (b.b - a.b) * t),
+});
+
+/**
+ * Gets a color from a palette based on position (0-1) with optional time-based cycling
+ * @param palette Array of hex color strings
+ * @param position Position along the gradient (0 = start, 1 = end)
+ * @param timeOffset Optional time offset for animated gradients
+ */
+export function getPaletteColor(palette: string[], position: number, timeOffset: number = 0): Rgb {
+  if (palette.length === 0) {
+    return { r: 255, g: 255, b: 255 };
+  }
+
+  if (palette.length === 1) {
+    return hexToRgb(palette[0]!);
+  }
+
+  const cyclePos = (position + timeOffset) % 1;
+  const scaled = cyclePos * palette.length;
+  const idx = Math.floor(scaled);
+  const t = scaled - idx;
+
+  const c1 = hexToRgb(palette[idx % palette.length]!);
+  const c2 = hexToRgb(palette[(idx + 1) % palette.length]!);
+
+  return lerpRgb(c1, c2, t);
+}
+
+/**
+ * Resolves a palette option to an array of hex color strings
+ * @param palette Preset name, custom array, or undefined
+ * @param trailStyle The trail style (determines default palette)
+ * @returns Array of hex color strings
+ */
+export function resolvePalette(
+  palette: PalettePreset | string[] | undefined,
+  trailStyle: TrailStyle,
+): string[] {
+  if (Array.isArray(palette)) {
+    return palette;
+  }
+
+  if (palette && palette in PRESETS) {
+    return PRESETS[palette as PalettePreset]!;
+  }
+
+  return trailStyle === "gradient-animated" ? GRADIENT.bard : GRADIENT.ice;
 }
