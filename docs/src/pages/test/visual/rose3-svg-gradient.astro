@@ -1,6 +1,6 @@
 ---
-// Visual regression test fixture: Rose n=3 canvas at seek(π)
-// Minimal page with no chrome for deterministic pixel comparison
+// Visual regression test fixture: Rose n=3 SVG with gradient-animated trail at seek(π)
+// Tests the gradient trail rendering (SVG renderer)
 //
 // NOTE: This page is built in production but only used for visual testing.
 // It was originally marked prerender=false to "exclude from production" but that
@@ -13,7 +13,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Visual Test — Rose3 Canvas</title>
+    <title>Visual Test — Rose3 SVG Gradient</title>
     <style>
       * { margin: 0; padding: 0; box-sizing: border-box; }
       body {
@@ -23,36 +23,28 @@
         justify-content: center;
         min-height: 100vh;
       }
-      #canvas-container {
-        width: 200px;
-        height: 200px;
-      }
-      canvas {
-        display: block;
+      #svg-container {
         width: 200px;
         height: 200px;
       }
     </style>
   </head>
   <body>
-    <div id="canvas-container">
-      <canvas id="rose3-canvas" width="200" height="200"></canvas>
-    </div>
+    <div id="svg-container"></div>
 
     <script>
-      import { createSarmal, curves } from '@sarmal/core';
+      import { createSarmalSVG, curves } from '@sarmal/core';
 
-      const canvas = document.getElementById('rose3-canvas') as HTMLCanvasElement;
-      createSarmal(canvas, curves.rose3, {
-        autoStart: false,   // never starts the RAF loop
-        initialT: Math.PI,  // seek(π) is called before renderFrame(0)
-        trailColor: '#ffffff',
+      const container = document.getElementById('svg-container');
+      createSarmalSVG(container, curves.rose3, {
+        autoStart: false,
+        initialT: Math.PI,
+        trailStyle: 'gradient-animated',
+        palette: 'bard',
         skeletonColor: '#888888',
-        headColor: '#ffffff',
         headRadius: 4,
         trailLength: 120,
       });
-      // No play(), no RAF, no pause needed — one deterministic frame already drawn
     </script>
   </body>
 </html>

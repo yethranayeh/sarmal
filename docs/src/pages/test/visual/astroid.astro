@@ -43,18 +43,16 @@
       import { createSarmal, curves } from '@sarmal/core';
 
       const canvas = document.getElementById('astroid-canvas') as HTMLCanvasElement;
-      const sarmal = createSarmal(canvas, curves.astroid, {
+      createSarmal(canvas, curves.astroid, {
+        autoStart: false,   // never starts the RAF loop
+        initialT: Math.PI,  // seek(π) is called before renderFrame(0)
         trailColor: '#ffffff',
         skeletonColor: '#888888',
         headColor: '#ffffff',
         headRadius: 4,
         trailLength: 120,
       });
-
-      // Deterministic setup: seek to fixed position and stop
-      sarmal.start();
-      sarmal.seek(Math.PI);
-      requestAnimationFrame(() => sarmal.stop());
+      // No play(), no RAF, no pause needed — one deterministic frame already drawn
     </script>
   </body>
 </html>

@@ -5,6 +5,7 @@ import type {
   MorphOptions,
   Point,
   SarmalInstance,
+  TrailStyle,
 } from "./types";
 
 import {
@@ -13,6 +14,8 @@ import {
   computeBoundaries,
   computeTrailQuad,
   enginePassthroughs,
+  getPaletteColor,
+  resolvePalette,
 } from "./renderer-shared";
 import { createEngine } from "./engine";
 
@@ -66,10 +69,19 @@ function el(tag: string): SVGElement {
 export function createSVGRenderer(options: SVGRendererOptions): SarmalInstance {
   const { container, engine } = options;
   const trailColor = options.trailColor ?? "#ffffff";
+  const trailStyle: TrailStyle = options.trailStyle ?? "default";
+  const palette = resolvePalette(options.palette, trailStyle);
   const opts = {
     skeletonColor: options.skeletonColor ?? "#ffffff",
     trailColor,
-    headColor: options.headColor ?? trailColor,
+    headColor:
+      options.headColor ??
+      (trailStyle !== "default"
+        ? (() => {
+            const { r, g, b } = getPaletteColor(palette, 1.0);
+            return `rgb(${r},${g},${b})`;
+          })()
+        : trailColor),
     ariaLabel: options.ariaLabel ?? "Loading",
   };
 
@@ -131,6 +143,7 @@ export function createSVGRenderer(options: SVGRendererOptions): SarmalInstance {
 
   container.appendChild(svg);
 
+  let gradientAnimTime = 0;
   let scale = 1;
   let offsetX = 0;
   let offsetY = 0;
@@ -176,7 +189,7 @@ export function createSVGRenderer(options: SVGRendererOptions): SarmalInstance {
      * Quads are drawn from tail to head, with later quads overlaying earlier ones.
      */
     for (let i = 0; i < trailCount - 1; i++) {
-      const { l0x, l0y, r0x, r0y, l1x, l1y, r1x, r1y, opacity } = computeTrailQuad(
+      const { l0x, l0y, r0x, r0y, l1x, l1y, r1x, r1y, opacity, progress } = computeTrailQuad(
         trail,
         i,
         trailCount,
@@ -188,6 +201,12 @@ export function createSVGRenderer(options: SVGRendererOptions): SarmalInstance {
 
       trailPaths[i]!.setAttribute("d", d);
       trailPaths[i]!.setAttribute("fill-opacity", opacity.toFixed(3));
+
+      if (trailStyle !== "default") {
+        const timeOffset = trailStyle === "gradient-animated" ? gradientAnimTime * 0.0005 : 0;
+        const { r, g, b } = getPaletteColor(palette, progress, timeOffset);
+        trailPaths[i]!.setAttribute("fill", `rgb(${r},${g},${b})`);
+      }
     }
 
     // Hide unused paths
@@ -220,6 +239,10 @@ export function createSVGRenderer(options: SVGRendererOptions): SarmalInstance {
   let morphAlpha = 0;
 
   function renderFrame(deltaTime: number) {
+    if (trailStyle === "gradient-animated") {
+      gradientAnimTime += deltaTime * 1000;
+    }
+
     if (engine.morphAlpha !== null) {
       morphAlpha = Math.min(1, morphAlpha + deltaTime / (morphDurationMs / 1000));
       engine.setMorphAlpha(morphAlpha);

@@ -30,13 +30,26 @@ const svgId = `${id}-svg`;
 		if (!canvas || !svgContainer) return;
 
 		const opts = {
-			trailColor: "#c0143c",
+			trailStyle: "gradient-animated" as const,
+			palette: "bard" as const,
 			skeletonColor: "#d4cfc8",
-			headColor: "#c0143c",
 			trailLength: 120
 		};
 
-		createSarmal(canvas, curves.lissajous43, opts);
-		createSarmalSVG(svgContainer, curves.lissajous43, opts);
+		const canvasSarmal = createSarmal(canvas, curves.lissajous43, opts);
+		const svgSarmal = createSarmalSVG(svgContainer, curves.lissajous43, opts);
+
+		canvas.addEventListener("mouseenter", () => {
+			canvasSarmal.setSpeedOver(0.3, 400).catch(() => {});
+		});
+		canvas.addEventListener("mouseleave", () => {
+			canvasSarmal.setSpeedOver(1.0, 500).catch(() => {});
+		});
+		svgContainer.addEventListener("mouseenter", () => {
+			svgSarmal.setSpeedOver(0.3, 400).catch(() => {});
+		});
+		svgContainer.addEventListener("mouseleave", () => {
+			svgSarmal.setSpeedOver(1.0, 500).catch(() => {});
+		});
 	});
 </script>

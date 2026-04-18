@@ -44,32 +44,28 @@
       import { createEngine, createRenderer, curves } from '@sarmal/core';
 
       const canvas = document.getElementById('morph-canvas') as HTMLCanvasElement;
-      
+
       // Create engine directly to access setMorphAlpha
       const engine = createEngine(curves.astroid);
-      
+
       // Start morph to deltoid
       engine.startMorph(curves.deltoid, 'normalized');
-      
+
       // Set exact mid-morph alpha
       engine.setMorphAlpha(0.5);
-      
-      // Seek to fixed position with trail
-      engine.seekWithTrail(Math.PI);
-      
-      // Create renderer and render single frame
-      const sarmal = createRenderer({
+
+      // Create renderer and render single frame (autoStart: false prevents RAF loop)
+      createRenderer({
         canvas,
         engine,
+        autoStart: false,
+        initialT: Math.PI,
         trailColor: '#ffffff',
         skeletonColor: '#888888',
         headColor: '#ffffff',
         headRadius: 4,
       });
-
-      // Start and immediately stop after one frame
-      sarmal.start();
-      requestAnimationFrame(() => sarmal.stop());
+      // No play(), no RAF, no pause needed — one deterministic frame already drawn
     </script>
   </body>
 </html>

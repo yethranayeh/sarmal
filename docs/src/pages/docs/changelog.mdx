@@ -16,7 +16,22 @@ Version history notes
 
 ## Versions
 
-## v0.13.0 - 2026-04-16
+## 0.14.0 - 18.04.2026
+
+Animated gradients are now supported in SVG renderer
+
+`trailStyle` and `palette` options now work in `createSarmalSVG` with identical behavior to `createSarmal`. Previously these options were only available in canvas.
+
+```ts
+const sarmal = createSarmalSVG(container, curves.astroid, {
+  trailStyle: 'gradient-animated',
+  palette: 'bard',
+});
+```
+
+---
+
+## 0.13.0 - 16.04.2026
 
 <Alert label="Breaking" variant="error">`SarmalInstance` methods `start()` and `stop()` are renamed to `play()` and `pause()` to match similar libraries</Alert>
 

@@ -261,23 +261,23 @@ export interface BaseRendererOptions {
   headColor?: string;
   /** @default 4 */
   headRadius?: number;
-}
-
-export interface RendererOptions extends BaseRendererOptions {
-  /** Target canvas element that will contain the Sarmal */
-  canvas: HTMLCanvasElement;
-  engine: Engine;
   /**
    * Trail rendering style
    * @default 'default'
    */
   trailStyle?: TrailStyle;
   /**
-   * Color palette for gradient trails
-   * Can be a preset name or custom array of hex colors.
-   * @default 'bard' for animated, 'ice' for static
+   * Color palette for gradient trails.
+   * Can be a preset name or a custom array of hex color strings.
+   * @default 'bard' for 'gradient-animated', 'ice' for 'gradient-static'
    */
   palette?: PalettePreset | string[];
+}
+
+export interface RendererOptions extends BaseRendererOptions {
+  /** Target canvas element that will contain the Sarmal */
+  canvas: HTMLCanvasElement;
+  engine: Engine;
 }
 
 export interface SarmalOptions extends Omit<RendererOptions, "canvas" | "engine"> {

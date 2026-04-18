@@ -24,7 +24,7 @@ Same curve with the same options in two different renderers. You just pick based
 
 ## Canvas Renderer
 
-The Canvas renderer is the default and most feature-complete option. It uses the HTML5 Canvas 2D API for rendering.
+The Canvas renderer is the default. It uses the HTML5 Canvas 2D API for rendering.
 
 **How it works:**
 
@@ -35,9 +35,9 @@ The Canvas renderer is the default and most feature-complete option. It uses the
 
 **Best for:**
 
-- Most use cases, especially when you need animated gradient trails
 - Fixed-size loading indicators where dimensions are known upfront
 - Performance-critical scenarios (cached skeleton, efficient trail rendering)
+- Exporting frames as images
 
 ```ts
 import { createSarmal, curves } from "@sarmal/core";
@@ -81,18 +81,14 @@ const sarmal = createSarmalSVG(container, curves.lissajous32, {
 });
 ```
 
-<Alert variant="warning">
-  `trailStyle` and `palette` options are not yet supported in the SVG renderer.
-</Alert>
-
 ---
 
 ## When to Use Which
 
 | Feature | Canvas | SVG |
 |---------|--------|-----|
-| **Animated gradients** | Yes | Not yet |
-| **Custom palettes** | Yes | Not yet |
+| **Animated gradients** | Yes | Yes |
+| **Custom palettes** | Yes | Yes |
 | **Responsive scaling** | Manual | Automatic |
 | **Accessibility** | Manual | Built-in |
 | **Performance** | Excellent (cached skeleton) | Good |
@@ -101,8 +97,6 @@ const sarmal = createSarmalSVG(container, curves.lissajous32, {
 
 ### Choose Canvas when:
 
-- You want gradient trail effects (`gradient-static` or `gradient-animated`)
-  - Though this is only a current limitiation.
 - You need to export frames as images
 - You have fixed dimensions and want maximum performance
 - You're building a game or canvas-heavy application

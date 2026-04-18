@@ -13,20 +13,13 @@ import { test, expect } from '@playwright/test';
 test('rose3 svg renders correctly', async ({ page }) => {
   await page.goto('/test/visual/rose3-svg');
 
-  // Wait for SVG container to be present
   const container = page.locator('#svg-container');
-  await container.waitFor({ state: 'visible' });
 
-  // Wait for SVG to be created (sarmal appends SVG to container)
   await page.waitForFunction(() => {
     const c = document.getElementById('svg-container');
-    return c && c.querySelector('svg') !== null;
+    return c !== null && c.querySelector('svg') !== null;
   });
 
-  // Additional frame for render to settle
-  await page.waitForTimeout(100);
-
-  // Compare screenshot of the container (includes SVG)
   await expect(container).toHaveScreenshot('rose3-svg.png', {
     maxDiffPixelRatio: 0.01,
     threshold: 0.2,

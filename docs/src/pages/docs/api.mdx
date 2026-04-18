@@ -19,14 +19,13 @@ The "look it up" page for all public methods, options, and the curve definition 
 
 ## createSarmal
 
-Creates a canvas-based sarmal instance. Returns `SarmalInstance`.
+Creates a canvas-based sarmal instance that start animating automatically. Returns `SarmalInstance`.
 
 ```ts
 import { createSarmal, curves } from "@sarmal/core";
 
 const canvas = document.getElementById("loading-indicator") as HTMLCanvasElement;
-const sarmal = createSarmal(canvas, curves.artemis2);
-// Animation starts automatically (autoStart: true by default)
+const sarmal = createSarmal(canvas, curves.rose3);
 ```
 
 ### Options
@@ -53,20 +52,21 @@ By default, sarmal instances start animating immediately from `t=0`. You can con
 
 ```ts
 // Start automatically from t=0 (default behavior)
-const s1 = createSarmal(canvas, curves.artemis2);
+const s1 = createSarmal(canvas, curves.rose3);
 
 // Start automatically from t=Math.PI
-const s2 = createSarmal(canvas, curves.artemis2, { initialT: Math.PI });
+const s2 = createSarmal(canvas, curves.rose5, { initialT: Math.PI });
 
 // Create dormant at t=0; call play() when ready
-const s3 = createSarmal(canvas, curves.artemis2, { autoStart: false });
+const s3 = createSarmal(canvas, curves.deltoid, { autoStart: false });
 s3.play();
 
 // Create dormant at t=Math.PI
-const s4 = createSarmal(canvas, curves.artemis2, {
+const s4 = createSarmal(canvas, curves.lissajous32, {
   autoStart: false,
   initialT: Math.PI
 });
+
 // Canvas shows skeleton + trail at t=π position
 s4.play();
 ```
@@ -85,8 +85,8 @@ const sarmal = createSarmalSVG(container, curves.lissajous32);
 // Animation starts automatically
 ```
 
-<Alert variant="warning">
-  `trailStyle` and `palette` options are not yet supported in SVG renderer.
+<Alert variant="info">
+  `trailStyle` and `palette` work identically in both canvas and SVG renderers.
 </Alert>
 
 ---
@@ -152,7 +152,7 @@ Stops the animation and cleans up resources. Call in component unmount / cleanup
 ```ts
 // React example
 useEffect(() => {
-  const sarmal = createSarmal(canvas, curves.artemis2);
+  const sarmal = createSarmal(canvas, curves.rose3);
 
   return () => {
     sarmal.destroy(); // Cleanup on unmount
@@ -411,7 +411,7 @@ const sarmal = createSarmal(canvas, curves.artemis2, {
 });
 
 // Animated flowing colors
-const sarmal = createSarmal(canvas, curves.artemis2, {
+const sarmal = createSarmal(canvas, curves.astroid, {
   trailStyle: "gradient-animated",
   palette: "bard",
 });
@@ -432,13 +432,13 @@ const sarmal = createSarmal(canvas, curves.artemis2, {
 
 ```ts
 // Use a preset
-const sarmal = createSarmal(canvas, curves.artemis2, {
+const sarmal = createSarmal(canvas, curves.rose3, {
   trailStyle: "gradient-animated",
   palette: "sunset",
 });
 
 // Custom palette
-const sarmal = createSarmal(canvas, curves.artemis2, {
+const sarmal = createSarmal(canvas, curves.lissajous32, {
   trailStyle: "gradient-static",
   palette: ["#ff6b6b", "#ffd93d", "#6bcb77"],
 });
