@@ -82,6 +82,11 @@ body {
   text-rendering: geometricPrecision;
 }
 
+::selection {
+  background-color: var(--color-primary);
+  color: var(--color-primary-foreground);
+}
+
 @utility content-auto {
   content-visibility: auto;
   contain-intrinsic-size: 100px 100px;
