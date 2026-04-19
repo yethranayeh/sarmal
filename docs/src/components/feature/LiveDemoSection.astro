@@ -44,7 +44,7 @@
 </section>
 
 <script>
-	import { createSarmal, curves } from "@sarmal/core";
+	import { createSarmal, curves, palettes } from "@sarmal/core";
 
 	// Randomised durations to let some curves breathe longer
 	function loadDuration(): number {
@@ -63,7 +63,7 @@
 		body: string;
 		meta: string;
 		trailStyle?: "default" | "gradient-static" | "gradient-animated";
-		palette?: "bard" | "sunset" | "ocean" | "ice" | "fire" | "forest";
+		trailColor?: string[];
 		trailLength?: number;
 	}> = [
 		{
@@ -73,7 +73,7 @@
 			body: "Static resources compressed and ready to serve.",
 			meta: "Expires in 24h",
 			trailStyle: "gradient-animated",
-			palette: "bard",
+			trailColor: palettes.bard,
 			trailLength: 200
 		},
 		{
@@ -170,12 +170,11 @@
 
 		const curve = curves[slide.curveId];
 		currentSarmal = createSarmal(canvas, curve, {
-			trailColor: slide.color,
+			trailColor: slide.trailColor ?? slide.color,
 			skeletonColor: slide.color,
 			headColor: slide.color,
 			trailLength: slide.trailLength ?? 80,
-			...(slide.trailStyle && { trailStyle: slide.trailStyle }),
-			...(slide.palette && { palette: slide.palette })
+			...(slide.trailStyle && { trailStyle: slide.trailStyle })
 		});
 		setActiveDot(i);
 

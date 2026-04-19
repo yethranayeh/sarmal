@@ -1,4 +1,4 @@
-import { createEngine } from "@sarmal/core";
+import { createEngine, palettes } from "@sarmal/core";
 import { createRenderer } from "@sarmal/core";
 
 const DEFAULT_CODE = `return {
@@ -120,13 +120,17 @@ function createInstance(
     params.trailLength,
   );
 
+  const resolvedTrailColor =
+    params.trailStyle !== "default"
+      ? (palettes[params.palette as keyof typeof palettes] ?? params.trailColor)
+      : params.trailColor;
+
   const rendererOptions: Parameters<typeof createRenderer>[0] = {
     canvas: previewCanvas,
     engine,
-    trailColor: params.trailColor,
+    trailColor: resolvedTrailColor,
     skeletonColor: params.skeletonColor,
     trailStyle: params.trailStyle,
-    palette: params.palette,
   };
 
   // Only pass headColor if not in auto mode

@@ -18,7 +18,7 @@ const svgId = `${id}-svg`;
 </div>
 
 <script>
-	import { createSarmal, createSarmalSVG, curves } from "@sarmal/core";
+	import { createSarmal, createSarmalSVG, curves, palettes } from "@sarmal/core";
 
 	document.querySelectorAll<HTMLElement>(".sarmal-compare").forEach((wrapper) => {
 		const canvasId = wrapper.dataset.canvasId!;
@@ -31,7 +31,7 @@ const svgId = `${id}-svg`;
 
 		const opts = {
 			trailStyle: "gradient-animated" as const,
-			palette: "bard" as const,
+			trailColor: palettes.bard,
 			skeletonColor: "#d4cfc8",
 			trailLength: 120
 		};

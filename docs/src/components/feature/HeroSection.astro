@@ -57,17 +57,15 @@ const codeSnippet = `<script src="https://unpkg.com/@sarmal/core/dist/auto-init.
 </section>
 
 <script>
-	import { createSarmal, curves } from "@sarmal/core";
+	import { createSarmal, curves, palettes } from "@sarmal/core";
 
 	const canvas = document.getElementById("hero-sarmal") as HTMLCanvasElement | null;
 	if (canvas) {
 		const sarmal = createSarmal(canvas, curves.lissajous43, {
 			skeletonColor: "#c8c5c0",
-			trailColor: "#1b1c1a",
-			headColor: "#1b1c1a",
 			headRadius: 2.5,
 			trailStyle: "gradient-animated",
-			palette: "bard",
+			trailColor: palettes.bard,
 			trailLength: 150
 		});
 

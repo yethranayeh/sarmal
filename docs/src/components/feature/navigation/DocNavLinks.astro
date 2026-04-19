@@ -1,0 +1,72 @@
+---
+interface Props {
+	currentPath: string;
+}
+interface DocFrontmatter {
+	title: string;
+	description: string;
+	sidebarLabel: string;
+	order: number;
+}
+
+interface DocModule {
+	frontmatter: DocFrontmatter;
+}
+
+interface NavItem {
+	href: string;
+	label: string;
+	order: number;
+}
+
+const { currentPath } = Astro.props;
+
+const docModules = import.meta.glob<DocModule>("../../../pages/docs/*.mdx", { eager: true });
+
+const navItems: NavItem[] = [
+	{ href: "/docs", label: "Introduction", order: -1 },
+	...Object.entries(docModules)
+		.map(([path, mod]) => {
+			const slug = path.replace("../../../pages/docs/", "").replace(".mdx", "");
+			return {
+				href: `/docs/${slug}`,
+				label: mod.frontmatter.sidebarLabel,
+				order: mod.frontmatter.order
+			};
+		})
+		.sort((a, b) => a.order - b.order)
+		.slice(0, 6)
+];
+
+const isActive = (href: string) => {
+	if (href === "/docs") {
+		return currentPath === "/docs" || currentPath === "/docs/";
+	}
+	return currentPath.startsWith(href);
+};
+---
+
+<ul role='list'>
+	{
+		navItems.map((item) => {
+			const active = isActive(item.href);
+			return (
+				<li>
+					<a
+						href={item.href}
+						class:list={[
+							'block px-3 py-2 border-l text-sm duration-300 transition-all [font-variation-settings:"wght"_var(--wght)]',
+							{
+								"text-primary border-primary bg-surface-raised font-medium [--wght:500]": active,
+								"text-muted hover:text-foreground hover:bg-surface-raised border-border [--wght:350] hover:[--wght:500]":
+									!active
+							}
+						]}
+						aria-current={active ? "page" : undefined}>
+						{item.label}
+					</a>
+				</li>
+			);
+		})
+	}
+</ul>

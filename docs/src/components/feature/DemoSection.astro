@@ -1,6 +1,6 @@
 ---
-import type { TrailStyle, PalettePreset } from "@sarmal/core";
-import { curves } from "@sarmal/core";
+import type { TrailStyle } from "@sarmal/core";
+import { curves, palettes } from "@sarmal/core";
 import { codeToHtml } from "shiki";
 
 import Button from "../Button.astro";
@@ -19,7 +19,7 @@ interface CurveConfig {
 	name: string;
 	color: string;
 	trailStyle?: TrailStyle;
-	palette?: PalettePreset;
+	trailColor?: string | string[];
 	trailLength?: number;
 	headColor?: string;
 }
@@ -31,7 +31,7 @@ const sarmalCurves: CurveConfig[] = [
 		name: "Deltoid",
 		color: "#fb923c",
 		trailStyle: "gradient-animated",
-		palette: "ocean",
+		trailColor: palettes.ocean,
 		trailLength: 200,
 		headColor: "#22d3ee"
 	},
@@ -40,7 +40,7 @@ const sarmalCurves: CurveConfig[] = [
 		name: "Astroid",
 		color: "#38bdf8",
 		trailStyle: "gradient-animated",
-		palette: "bard",
+		trailColor: palettes.bard,
 		trailLength: 200,
 		headColor: "#a855f7"
 	},
@@ -49,7 +49,7 @@ const sarmalCurves: CurveConfig[] = [
 		name: "Epitrochoid",
 		color: "#a78bfa",
 		trailStyle: "gradient-static",
-		palette: "fire",
+		trailColor: palettes.fire,
 		headColor: "#fbbf24"
 	},
 	{
@@ -57,7 +57,7 @@ const sarmalCurves: CurveConfig[] = [
 		name: "Rose (n=5)",
 		color: "#f472b6",
 		trailStyle: "gradient-static",
-		palette: "sunset",
+		trailColor: palettes.sunset,
 		headColor: "#f472b6"
 	},
 	{
@@ -65,7 +65,7 @@ const sarmalCurves: CurveConfig[] = [
 		name: "Lissajous 4:3",
 		color: "#2dd4bf",
 		trailStyle: "gradient-static",
-		palette: "forest",
+		trailColor: palettes.forest,
 		headColor: "#86efac"
 	}
 ];
@@ -76,6 +76,18 @@ const morphPairs = [
 	{ from: "lissajous32", to: "rose5", color: "#fb923c" },
 	{ from: "lame", to: "astroid", color: "#a78bfa" }
 ] as const;
+
+const lazyConfigMap = Object.fromEntries(
+	sarmalCurves.map((c) => [
+		c.id,
+		{
+			trailColor: c.trailColor ?? c.color,
+			trailStyle: c.trailStyle,
+			trailLength: c.trailLength,
+			headColor: c.headColor
+		}
+	])
+);
 
 const curveDataWithHighlight = await Promise.all(
 	sarmalCurves.map(async (curve) => {
@@ -113,6 +125,9 @@ const curveDataWithHighlight = await Promise.all(
 );
 ---
 
+<script is:inline type="application/json" id="sarmal-lazy-configs" set:html={JSON.stringify(lazyConfigMap)}>
+</script>
+
 <div id='demo-section' class='flex flex-col md:flex-row justify-center gap-4 md:gap-8 lg:gap-12 p-2 sm:p-6 mx-auto'>
 	<InfoCard label='Standard Sarmals'>
 		<div class='grid grid-cols-2 sm:grid-cols-3 gap-4'>
@@ -120,17 +135,16 @@ const curveDataWithHighlight = await Promise.all(
 				curveDataWithHighlight.map((curve) => (
 					<div class='flex flex-col items-center'>
 						<div title={curve.id} class='relative content-auto rounded-lg p-4 mb-2 overflow-visible'>
-						<Sarmal
-							curve={curve.id}
-							width={80}
-							height={80}
-							trailColor={curve.color}
-							lazy
-							trailStyle={curve.trailStyle}
-							palette={curve.palette}
-							trailLength={curve.trailLength}
-							headColor={curve.headColor}
-						/>
+							<Sarmal
+								curve={curve.id}
+								width={80}
+								height={80}
+								trailColor={curve.trailColor ?? curve.color}
+								lazy
+								trailStyle={curve.trailStyle}
+								trailLength={curve.trailLength}
+								headColor={curve.headColor}
+							/>
 							<DotGrid />
 						</div>
 						<span title={curve.id} class='font-mono text-[10px] tracking-wider uppercase text-muted'>
@@ -191,8 +205,12 @@ const curveDataWithHighlight = await Promise.all(
 <UnifiedCurveDialog />
 
 <script>
-	import type { TrailStyle, PalettePreset } from "@sarmal/core";
+	import type { SarmalOptions } from "@sarmal/core";
 	import { createSarmal, curves } from "@sarmal/core";
+
+	const lazyConfigs: Record<string, SarmalOptions> = JSON.parse(
+		document.getElementById("sarmal-lazy-configs")!.textContent!
+	);
 
 	const MORPH_DURATION = 800;
 	const HOLD_DURATION = 2400;
@@ -234,25 +252,12 @@ const curveDataWithHighlight = await Promise.all(
 	}
 
 	function initDemoSection(section: Element): void {
-		// lazy sarmals are not picked up by auto-init
 		section.querySelectorAll<HTMLCanvasElement>("canvas[data-sarmal-lazy]").forEach((canvas) => {
 			const curveName = canvas.dataset.sarmalLazy;
-			if (!curveName) {
-				return;
-			}
+			if (!curveName) return;
 			const curve = curves[curveName as keyof typeof curves];
-			if (!curve) {
-				return;
-			}
-			const sarmal = createSarmal(canvas, curve, {
-				...(canvas.dataset.trailColor && { trailColor: canvas.dataset.trailColor }),
-				...(canvas.dataset.skeletonColor && { skeletonColor: canvas.dataset.skeletonColor }),
-				...(canvas.dataset.headColor && { headColor: canvas.dataset.headColor }),
-				...(canvas.dataset.headRadius && { headRadius: parseFloat(canvas.dataset.headRadius) }),
-				...(canvas.dataset.trailLength && { trailLength: parseInt(canvas.dataset.trailLength, 10) }),
-				...(canvas.dataset.trailStyle && { trailStyle: canvas.dataset.trailStyle as TrailStyle }),
-				...(canvas.dataset.palette && { palette: canvas.dataset.palette as PalettePreset })
-			});
+			if (!curve) return;
+			createSarmal(canvas, curve, lazyConfigs[curveName] ?? {});
 		});
 
 		section.querySelectorAll<HTMLDivElement>("div[id^='morph-']").forEach((container) => {

@@ -146,9 +146,11 @@ const sarmal = createSarmal(canvas, curves.rose3, {
 Set `trailStyle` to render a color-cycling gradient along the trail:
 
 ```ts
+import { createSarmal, curves, palettes } from "@sarmal/core";
+
 const sarmal = createSarmal(canvas, curves.astroid, {
-	trailStyle: "gradient-animated", // cycles colors over time
-	palette: "bard" // or a custom array of hex colors: e.g. `['#ff6b6b', '#ffd93d', '#6bcb77']`
+	trailStyle: "gradient-animated",
+	trailColor: palettes.bard // or a custom array: ['#ff6b6b', '#ffd93d', '#6bcb77']
 });
 ```
 

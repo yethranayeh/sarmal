@@ -1,7 +1,8 @@
 ---
 import "../styles/globals.css";
 import { Font } from "astro:assets";
-import Navbar from "../components/Navbar.astro";
+import Navbar from "../components/feature/navigation/Navbar.astro";
+import NavLinks from "../components/feature/navigation/NavLinks.astro";
 import Footer from "../components/Footer.astro";
 
 const SITE_NAME = "Sarmal";
@@ -64,7 +65,9 @@ const canonicalUrl = canonical ?? new URL(Astro.url.pathname, SITE_URL).href;
 	</head>
 	<body class='min-h-screen flex flex-col'>
 		<slot name='navbar'>
-			<Navbar />
+			<Navbar>
+				<NavLinks slot='nav' />
+			</Navbar>
 		</slot>
 
 		<slot />

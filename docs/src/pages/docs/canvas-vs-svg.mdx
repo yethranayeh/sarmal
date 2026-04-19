@@ -40,12 +40,12 @@ The Canvas renderer is the default. It uses the HTML5 Canvas 2D API for renderin
 - Exporting frames as images
 
 ```ts
-import { createSarmal, curves } from "@sarmal/core";
+import { createSarmal, curves, palettes } from "@sarmal/core";
 
 const canvas = document.getElementById("spinner") as HTMLCanvasElement;
 const sarmal = createSarmal(canvas, curves.artemis2, {
   trailStyle: "gradient-animated",
-  palette: "bard",
+  trailColor: palettes.bard,
 });
 ```
 
