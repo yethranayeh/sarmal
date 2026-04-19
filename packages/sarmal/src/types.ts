@@ -224,13 +224,43 @@ export interface SarmalInstance extends AnimationControls {
    * @returns Promise that resolves when the morph is complete
    */
   morphTo(target: CurveDef, options?: MorphOptions): Promise<void>;
+  /**
+   * Changes render options on a live SarmalInstance without destroying and recreating it.
+   *
+   * ! Validation fails the operation completely if any of the fields fail the chceck.
+   */
+  setRenderOptions(partial: RuntimeRenderOptions): void;
 }
 
 /**
  * With 'gradient-animated' the colors cycle along the trail over time
  */
 export type TrailStyle = "default" | "gradient-static" | "gradient-animated";
-export type PalettePreset = "bard" | "sunset" | "ocean" | "ice" | "fire" | "forest";
+
+/**
+ * The value must be a single hex string or an array of hex strings.
+ *
+ * ! Named colors, shorthand hex, `rgb()`,  and `hsl()` notations are not yet supported.
+ */
+export type TrailColor = string | string[];
+
+/**
+ * Runtime-renderable options that can be changed on a live instance without destroying and recreating it.
+ *
+ * Passing `null` for `headColor`makes the head color derive its color from the current `trailColor` and `trailStyle`
+ * Passing a hex string locks the head color until overridden.
+ *
+ * Passing `"transparent"` for `skeletonColor` hides the skeleton. Any other value must be a valid {@link TrailColor}.
+ */
+export interface RuntimeRenderOptions {
+  trailColor?: TrailColor;
+  /** 6-digit hex string to override, or `null` to make it automatic */
+  headColor?: string | null;
+  // TODO: maybe skeleton color should be nullable too instead of expecting "transparent"
+  /** 6-digit hex string, or `"transparent"` to hide the skeleton. */
+  skeletonColor?: string;
+  trailStyle?: TrailStyle;
+}
 
 /**
  * Common renderer options shared between canvas and SVG renderers.
@@ -252,11 +282,13 @@ export interface BaseRendererOptions {
    */
   skeletonColor?: string;
   /**
+   * Single hex color for default trails, or an array of hex colors for gradient trails.
    * @default '#ffffff'
    */
-  trailColor?: string;
+  trailColor?: TrailColor;
   /**
-   * @default '#ffffff'
+   * Hex color for the head dot.
+   * If omitted, the color is derived from the trail
    */
   headColor?: string;
   /** @default 4 */
@@ -266,12 +298,6 @@ export interface BaseRendererOptions {
    * @default 'default'
    */
   trailStyle?: TrailStyle;
-  /**
-   * Color palette for gradient trails.
-   * Can be a preset name or a custom array of hex color strings.
-   * @default 'bard' for 'gradient-animated', 'ice' for 'gradient-static'
-   */
-  palette?: PalettePreset | string[];
 }
 
 export interface RendererOptions extends BaseRendererOptions {

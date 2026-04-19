@@ -33,18 +33,13 @@ const sarmal = createSarmal(canvas, curves.rose3);
 | Option | Type | Default | Description |
 |--------|------|---------|-------------|
 | `trailLength` | `number` | `120` | Number of points in trail |
-| `skeletonColor` | `string` | `'#ffffff'` | Hex color string for the skeleton path |
-| `trailColor` | `string` | `'#ffffff'` | Hex color string for the trail |
-| `headColor` | `string` | `'#ffffff'` | Hex color string for the head dot |
+| `skeletonColor` | `string` | `'#ffffff'` | Hex color string for the skeleton path. Use `"transparent"` to hide |
+| `trailColor` | `string \| string[]` | `'#ffffff'` | Hex color string for solid trails, or array of hex colors for gradients |
+| `headColor` | `string` | derived | Hex color string for the head dot. Omit to auto-follow trail color |
 | `headRadius` | `number` | `4` | Radius of the head dot in pixels |
 | `trailStyle` | `TrailStyle` | `'default'` | `'default'` \| `'gradient-static'` \| `'gradient-animated'` |
-| `palette` | `PalettePreset \| string[]` | - | Built-in preset name or custom hex array |
 | `autoStart` | `boolean` | `true` | Start the animation loop automatically on creation |
 | `initialT` | `number` | `undefined` | Initial position along the curve (t value). Calls `seek(initialT)` before first frame |
-
-### Built-in palettes
-
-`'bard'`, `'sunset'`, `'ocean'`, `'ice'`, `'fire'`, `'forest'`
 
 ### Auto-start and initial position
 
@@ -300,6 +295,44 @@ sarmal.pause();                     // then pause the loop
 - `speed` must be a finite number
 - `duration` must be a finite number greater than `0`
 
+### setRenderOptions(partial)
+
+Changes colors and trail style on a live Sarmal instance without destroying and recreating it.
+Render options are independent of engine state. They do not affect and are not affected by morphing, seeking, jumping, speed changes, pause/play, or reset.
+
+
+```ts
+// Theme change: switch the whole palette
+sarmal.setRenderOptions({ trailColor: palettes.sunset });
+
+// Error state: flip to a solid red.
+sarmal.setRenderOptions({ trailStyle: "default", trailColor: "#c0143c" });
+
+// Override head color to make it independent of trailColor
+sarmal.setRenderOptions({ headColor: "#ffffff" });
+
+// Make head color auto inheirt from trailColor again
+sarmal.setRenderOptions({ headColor: null });
+
+// Hide skeleton
+sarmal.setRenderOptions({ skeletonColor: "transparent" });
+```
+
+**Options:**
+
+| Option | Type | Description |
+|--------|------|-------------|
+| `trailColor` | `string \| string[]` | Single hex color for solid trails, or array of hex colors for gradients |
+| `headColor` | `string \| null` | Hex color to orverride, or `null` to let it auto pick from trail color |
+| `skeletonColor` | `string` | Hex color, or `"transparent"` to hide |
+| `trailStyle` | `TrailStyle` | `'default'` \| `'gradient-static'` \| `'gradient-animated'` |
+
+
+<Alert variant="warning">
+  Accepted color format is currently only 6-digit hex strings. Shorthand hex (`#fff`), named colors (`"red"`), `rgb()`, `hsl()`, or CSS keywords like (`currentColor`) are not yet accepted.
+</Alert>
+
+**Validation:** Throws an error if *any* field fails validation. In case of a validation error, no fields will be mutated, so the animation continues on the previous valid state.
 
 ---
 
@@ -399,27 +432,39 @@ const myCurve: CurveDef = {
 
 | Style | Description |
 |-------|-------------|
-| `'default'` | White trail with opacity fade |
+| `'default'` | Solid trail with opacity fade |
 | `'gradient-static'` | Head-to-tail color transition, fixed |
 | `'gradient-animated'` | Colors flow along trail continuously |
 
 ```ts
-// Static gradient from head to tail
-const sarmal = createSarmal(canvas, curves.artemis2, {
-  trailStyle: "gradient-static",
-  palette: "ice",
+// Solid color trail (string)
+const sarmal = createSarmal(canvas, curves.rose3, {
+  trailStyle: "default",
+  trailColor: "#3b82f6",
 });
 
-// Animated flowing colors
+// Static gradient from head to tail (array)
+const sarmal = createSarmal(canvas, curves.deltoid, {
+  trailStyle: "gradient-static",
+  trailColor: palettes.ice,
+});
+
+// Animated flowing colors (array)
 const sarmal = createSarmal(canvas, curves.astroid, {
   trailStyle: "gradient-animated",
-  palette: "bard",
+  trailColor: palettes.bard,
 });
 ```
+
+<Alert variant="warning">
+  Mismatched combinations (e.g. an array of colors with `"default"` trail style, or a color string with gradient styles) still produce a valid render, but output a console warning to inform that there is a mismatch. The selected `trailStyle` determines whether to use a single color, or the whole array (if available).
+</Alert>
 
 ---
 
 ## Built-in Palettes
+
+These color combinations are exposed as the `palettes` named export. When in gradient trail style mode, pass any palette to `trailColor` for gradient trails.
 
 | Preset | Colors | Best For |
 |--------|--------|----------|
@@ -431,16 +476,18 @@ const sarmal = createSarmal(canvas, curves.astroid, {
 | `forest` | Deep green → mint | Natural, organic |
 
 ```ts
+import { createSarmal, curves, palettes } from "@sarmal/core";
+
 // Use a preset
 const sarmal = createSarmal(canvas, curves.rose3, {
   trailStyle: "gradient-animated",
-  palette: "sunset",
+  trailColor: palettes.sunset,
 });
 
 // Custom palette
 const sarmal = createSarmal(canvas, curves.lissajous32, {
   trailStyle: "gradient-static",
-  palette: ["#ff6b6b", "#ffd93d", "#6bcb77"],
+  trailColor: ["#ff6b6b", "#ffd93d", "#6bcb77"],
 });
 ```
 
@@ -502,8 +549,25 @@ interface SarmalInstance {
     duration?: number;
     morphStrategy?: "normalized" | "raw";
   }): Promise<void>;
+  setRenderOptions(partial: RuntimeRenderOptions): void;
 }
 
 type TrailStyle = "default" | "gradient-static" | "gradient-animated";
-type PalettePreset = "bard" | "sunset" | "ocean" | "ice" | "fire" | "forest";
+type TrailColor = string | string[];
+
+interface RuntimeRenderOptions {
+  trailColor?: TrailColor;
+  headColor?: string | null;
+  skeletonColor?: string;
+  trailStyle?: TrailStyle;
+}
+
+const palettes: {
+  bard: string[];
+  sunset: string[];
+  ocean: string[];
+  ice: string[];
+  fire: string[];
+  forest: string[];
+};
 ```

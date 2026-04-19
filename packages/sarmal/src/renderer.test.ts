@@ -14,9 +14,18 @@ import {
   hexToRgb,
   lerpRgb,
   getPaletteColor,
-  resolvePalette,
 } from "./renderer";
-import { computeBoundaries, FIT_PADDING, FIT_PADDING_MIN } from "./renderer-shared";
+import {
+  computeBoundaries,
+  FIT_PADDING,
+  FIT_PADDING_MIN,
+  palettes,
+  resolveHeadColor,
+  resolveTrailPalette,
+  resolveTrailMainColor,
+  validateRenderOptions,
+  warnIfTrailColorMismatch,
+} from "./renderer-shared";
 
 // Mock OffscreenCanvas for jsdom environment
 class MockOffscreenCanvas {
@@ -631,35 +640,53 @@ describe("getPaletteColor", () => {
   });
 });
 
-describe("resolvePalette", () => {
-  it("returns custom array as-is", () => {
-    const custom = ["#ff0000", "#00ff00"];
-    expect(resolvePalette(custom, "gradient-static")).toBe(custom);
+describe("resolveTrailMainColor", () => {
+  it("returns the string unchanged when trailColor is a string", () => {
+    expect(resolveTrailMainColor("#ff0000")).toBe("#ff0000");
   });
 
-  it("resolves preset names to palettes", () => {
-    const bard = resolvePalette("bard", "gradient-animated");
-    expect(bard.length).toBe(4);
-    expect(bard[0]).toBe("#a855f7");
+  it("returns the first entry when trailColor is an array", () => {
+    expect(resolveTrailMainColor(["#ff0000", "#00ff00", "#0000ff"])).toBe("#ff0000");
+  });
+});
 
-    const ice = resolvePalette("ice", "gradient-static");
-    expect(ice.length).toBe(2);
-    expect(ice[0]).toBe("#1e3a8a");
+describe("resolveTrailPalette", () => {
+  it("wraps a single string in a one-element array", () => {
+    expect(resolveTrailPalette("#ff0000")).toEqual(["#ff0000"]);
   });
 
-  it("defaults to Bard for animated style", () => {
-    const result = resolvePalette(undefined, "gradient-animated");
-    expect(result[0]).toBe("#a855f7"); // Bard's first color
+  it("returns the array reference unchanged when trailColor is an array", () => {
+    const arr = ["#ff0000", "#00ff00"];
+    expect(resolveTrailPalette(arr)).toBe(arr);
+  });
+});
+
+describe("resolveHeadColor", () => {
+  it("returns the solid trail color for default style", () => {
+    expect(resolveHeadColor("#ff0000", "default")).toBe("#ff0000");
   });
 
-  it("defaults to Ice for static style", () => {
-    const result = resolvePalette(undefined, "gradient-static");
-    expect(result[0]).toBe("#1e3a8a"); // Ice's first color
+  it("returns the first array entry for default style when trailColor is an array", () => {
+    expect(resolveHeadColor(["#ff0000", "#00ff00"], "default")).toBe("#ff0000");
   });
 
-  it("defaults to Ice for default style", () => {
-    const result = resolvePalette(undefined, "default");
-    expect(result[0]).toBe("#1e3a8a"); // Ice's first color
+  it("returns the last palette stop as an rgb() string for gradient styles", () => {
+    // Last entry of bard is "#ec4899" → rgb(236,72,153)
+    expect(resolveHeadColor(palettes.bard, "gradient-animated")).toBe("rgb(236,72,153)");
+    expect(resolveHeadColor(palettes.bard, "gradient-static")).toBe("rgb(236,72,153)");
+  });
+
+  it("wraps a single string as a one-color palette for gradient styles", () => {
+    expect(resolveHeadColor("#ff0000", "gradient-animated")).toBe("rgb(255,0,0)");
+  });
+});
+
+describe("palettes", () => {
+  it("exposes the named palettes as plain arrays", () => {
+    expect(Array.isArray(palettes.bard)).toBe(true);
+    expect(palettes.bard.length).toBeGreaterThanOrEqual(2);
+    expect(palettes.ice.length).toBe(2);
+    expect(palettes.sunset[0]).toMatch(/^#[0-9a-fA-F]{6}$/);
   });
 });
 
@@ -910,6 +937,558 @@ describe("createSarmal() integration", () => {
     const result = instance.morphTo(anotherCurve);
     expect(result).toBeInstanceOf(Promise);
 
+    vi.restoreAllMocks();
+  });
+});
+
+// ─── validateRenderOptions ───────────────────────────────────────────────────
+
+describe("validateRenderOptions", () => {
+  it("accepts an empty partial as a no-op", () => {
+    expect(() => validateRenderOptions({})).not.toThrow();
+  });
+
+  it("rejects unknown keys by name", () => {
+    expect(() =>
+      validateRenderOptions({ trailColorr: "#ffffff" } as unknown as Parameters<
+        typeof validateRenderOptions
+      >[0]),
+    ).toThrow(/unknown key "trailColorr"/);
+  });
+
+  it("rejects 3-digit shorthand hex for trailColor", () => {
+    expect(() => validateRenderOptions({ trailColor: "#fff" })).toThrow(TypeError);
+  });
+
+  it("rejects named colors for trailColor", () => {
+    expect(() => validateRenderOptions({ trailColor: "red" })).toThrow(TypeError);
+  });
+
+  it("rejects rgb() notation for trailColor", () => {
+    expect(() => validateRenderOptions({ trailColor: "rgb(255,0,0)" })).toThrow(TypeError);
+  });
+
+  it("accepts a valid 6-digit hex for trailColor", () => {
+    expect(() => validateRenderOptions({ trailColor: "#ff00aa" })).not.toThrow();
+    expect(() => validateRenderOptions({ trailColor: "#FF00AA" })).not.toThrow();
+  });
+
+  it("accepts an array of 2+ valid hex entries for trailColor", () => {
+    expect(() => validateRenderOptions({ trailColor: ["#ff0000", "#00ff00"] })).not.toThrow();
+    expect(() =>
+      validateRenderOptions({ trailColor: ["#ff0000", "#00ff00", "#0000ff"] }),
+    ).not.toThrow();
+  });
+
+  it("rejects a trailColor array with only one entry", () => {
+    expect(() => validateRenderOptions({ trailColor: ["#ff0000"] })).toThrow(RangeError);
+  });
+
+  it("rejects a trailColor array with invalid entries", () => {
+    expect(() => validateRenderOptions({ trailColor: ["#ff0000", "red"] })).toThrow(
+      /trailColor\[1\]/,
+    );
+  });
+
+  it("rejects a non-string, non-array trailColor", () => {
+    expect(() => validateRenderOptions({ trailColor: 42 as unknown as string })).toThrow(TypeError);
+  });
+
+  it("accepts null for headColor (reset to auto-follow)", () => {
+    expect(() => validateRenderOptions({ headColor: null })).not.toThrow();
+  });
+
+  it("accepts a valid hex for headColor", () => {
+    expect(() => validateRenderOptions({ headColor: "#aabbcc" })).not.toThrow();
+  });
+
+  it("rejects the legacy 'auto' sentinel for headColor (null is the supported form)", () => {
+    expect(() => validateRenderOptions({ headColor: "auto" })).toThrow(TypeError);
+  });
+
+  it("rejects invalid hex for headColor", () => {
+    expect(() => validateRenderOptions({ headColor: "#zzz" })).toThrow(TypeError);
+  });
+
+  it("accepts 'transparent' for skeletonColor", () => {
+    expect(() => validateRenderOptions({ skeletonColor: "transparent" })).not.toThrow();
+  });
+
+  it("accepts a valid hex for skeletonColor", () => {
+    expect(() => validateRenderOptions({ skeletonColor: "#112233" })).not.toThrow();
+  });
+
+  it("rejects invalid skeletonColor values", () => {
+    expect(() => validateRenderOptions({ skeletonColor: "red" })).toThrow(TypeError);
+  });
+
+  it("accepts each valid trailStyle", () => {
+    expect(() => validateRenderOptions({ trailStyle: "default" })).not.toThrow();
+    expect(() => validateRenderOptions({ trailStyle: "gradient-static" })).not.toThrow();
+    expect(() => validateRenderOptions({ trailStyle: "gradient-animated" })).not.toThrow();
+  });
+
+  it("rejects unknown trailStyle values with a message listing valid options", () => {
+    let caught: unknown = null;
+    try {
+      validateRenderOptions({ trailStyle: "graident" as unknown as "default" });
+    } catch (err) {
+      caught = err;
+    }
+    expect(caught).toBeInstanceOf(RangeError);
+    expect(String(caught)).toMatch(/default.*gradient-static.*gradient-animated/);
+  });
+
+  it("fail-atomic: invalid trailStyle with valid trailColor throws without side-effects", () => {
+    // validateRenderOptions is a pure check — it cannot mutate anything. The
+    // test here is that after a throw, re-running the same payload still throws
+    // the same way (i.e. no hidden state was carried over).
+    const payload = {
+      trailColor: "#ff0000",
+      trailStyle: "nope" as unknown as "default",
+    };
+    expect(() => validateRenderOptions(payload)).toThrow(RangeError);
+    expect(() => validateRenderOptions(payload)).toThrow(RangeError);
+  });
+});
+
+// ─── warnIfTrailColorMismatch ────────────────────────────────────────────────
+
+describe("warnIfTrailColorMismatch", () => {
+  it("does not warn when default style is paired with a single string", () => {
+    const spy = vi.spyOn(console, "warn").mockImplementation(() => {});
+    warnIfTrailColorMismatch("#ff0000", "default");
+    expect(spy).not.toHaveBeenCalled();
+    spy.mockRestore();
+  });
+
+  it("does not warn when gradient style is paired with an array", () => {
+    const spy = vi.spyOn(console, "warn").mockImplementation(() => {});
+    warnIfTrailColorMismatch(["#ff0000", "#00ff00"], "gradient-animated");
+    expect(spy).not.toHaveBeenCalled();
+    spy.mockRestore();
+  });
+
+  it("warns when default style is paired with an array", () => {
+    const spy = vi.spyOn(console, "warn").mockImplementation(() => {});
+    warnIfTrailColorMismatch(["#ff0000", "#00ff00"], "default");
+    expect(spy).toHaveBeenCalledTimes(1);
+    expect(String(spy.mock.calls[0]?.[0])).toMatch(/only the first color/);
+    spy.mockRestore();
+  });
+
+  it("warns when gradient style is paired with a single string", () => {
+    const spy = vi.spyOn(console, "warn").mockImplementation(() => {});
+    warnIfTrailColorMismatch("#ff0000", "gradient-animated");
+    expect(spy).toHaveBeenCalledTimes(1);
+    expect(String(spy.mock.calls[0]?.[0])).toMatch(/solid color/);
+    spy.mockRestore();
+  });
+});
+
+// ─── setRenderOptions on SarmalInstance (canvas) ─────────────────────────────
+
+/**
+ * Creates a canvas that records every `fillStyle` assignment, so tests can
+ * observe which color was used for the most recent draw calls. Returns both the
+ * canvas and the shared `fillStyles` array — clear the array before a checkpoint
+ * and inspect it after forcing a render.
+ */
+function makeCanvasWithFillTracker(): {
+  canvas: HTMLCanvasElement;
+  fillStyles: string[];
+} {
+  const canvas = document.createElement("canvas");
+  canvas.width = 200;
+  canvas.height = 200;
+  canvas.getBoundingClientRect = () => ({
+    width: 200,
+    height: 200,
+    top: 0,
+    left: 0,
+    bottom: 200,
+    right: 200,
+    x: 0,
+    y: 0,
+    toJSON: () => {},
+  });
+  const fillStyles: string[] = [];
+  let currentFillStyle = "";
+  // biome-ignore lint/suspicious/noExplicitAny: minimal mock context for the test
+  (canvas as any).getContext = (contextId: string) => {
+    if (contextId !== "2d") return null;
+    return {
+      save: () => {},
+      restore: () => {},
+      clearRect: () => {},
+      fillRect: () => {},
+      stroke: () => {},
+      fill: () => {},
+      beginPath: () => {},
+      moveTo: () => {},
+      lineTo: () => {},
+      closePath: () => {},
+      setTransform: () => {},
+      get fillStyle() {
+        return currentFillStyle;
+      },
+      set fillStyle(v: string) {
+        currentFillStyle = v;
+        fillStyles.push(v);
+      },
+      strokeStyle: "",
+      lineWidth: 1,
+      globalAlpha: 1,
+      drawImage: () => {},
+      arc: () => {},
+    };
+  };
+  return { canvas, fillStyles };
+}
+
+describe("setRenderOptions on SarmalInstance (canvas)", () => {
+  it("is exposed on the instance", () => {
+    const instance = createSarmal(makeCanvas(), testCircle, { autoStart: false });
+    expect(typeof instance.setRenderOptions).toBe("function");
+  });
+
+  it("accepts an empty partial as a no-op", () => {
+    const instance = createSarmal(makeCanvas(), testCircle, { autoStart: false });
+    expect(() => instance.setRenderOptions({})).not.toThrow();
+  });
+
+  it("throws on invalid input without mutating any field (fail-atomic)", () => {
+    // Mock rAF so play() doesn't crash and the initial frame can render.
+    vi.spyOn(globalThis, "requestAnimationFrame").mockImplementation(() => 1);
+    vi.spyOn(globalThis, "cancelAnimationFrame").mockImplementation(() => {});
+
+    const { canvas, fillStyles } = makeCanvasWithFillTracker();
+    const instance = createSarmal(canvas, testCircle, {
+      autoStart: false,
+      trailColor: "#ff0000",
+    });
+    instance.play();
+    instance.pause();
+
+    // Attempt a partial where trailColor is valid but trailStyle is bogus.
+    expect(() =>
+      instance.setRenderOptions({
+        trailColor: "#00ff00",
+        trailStyle: "bogus" as unknown as "default",
+      }),
+    ).toThrow();
+
+    fillStyles.length = 0;
+    instance.play();
+    instance.pause();
+
+    // Trail should still be red — trailColor was not assigned because the whole
+    // call threw before any mutation.
+    expect(fillStyles.some((s) => s.includes("255,0,0"))).toBe(true);
+    expect(fillStyles.some((s) => s.includes("0,255,0"))).toBe(false);
+
+    instance.destroy();
+    vi.restoreAllMocks();
+  });
+
+  it("updates the solid trail color when trailColor changes in default style", () => {
+    vi.spyOn(globalThis, "requestAnimationFrame").mockImplementation(() => 1);
+    vi.spyOn(globalThis, "cancelAnimationFrame").mockImplementation(() => {});
+
+    const { canvas, fillStyles } = makeCanvasWithFillTracker();
+    const instance = createSarmal(canvas, testCircle, {
+      trailColor: "#ff0000",
+      trailStyle: "default",
+    });
+    instance.pause();
+
+    fillStyles.length = 0;
+    instance.setRenderOptions({ trailColor: "#00ff00" });
+    instance.play();
+    instance.pause();
+
+    expect(fillStyles.some((s) => s.includes("0,255,0"))).toBe(true);
+
+    instance.destroy();
+    vi.restoreAllMocks();
+  });
+
+  it("refreshes the palette cache when trailColor changes in gradient style", () => {
+    vi.spyOn(globalThis, "requestAnimationFrame").mockImplementation(() => 1);
+    vi.spyOn(globalThis, "cancelAnimationFrame").mockImplementation(() => {});
+
+    const { canvas, fillStyles } = makeCanvasWithFillTracker();
+    const instance = createSarmal(canvas, testCircle, {
+      trailStyle: "gradient-animated",
+      trailColor: palettes.bard,
+    });
+    instance.pause();
+
+    // Switch palette to sunset. First color: #f97316 = 249,115,22
+    fillStyles.length = 0;
+    instance.setRenderOptions({ trailColor: palettes.sunset });
+    instance.play();
+    instance.pause();
+
+    // Some segment of the trail should be tinted with a sunset color
+    expect(fillStyles.some((s) => s.includes("249,115,22"))).toBe(true);
+
+    instance.destroy();
+    vi.restoreAllMocks();
+  });
+
+  describe("auto-follow head color", () => {
+    it("follows trailColor changes when headColor has never been set", () => {
+      vi.spyOn(globalThis, "requestAnimationFrame").mockImplementation(() => 1);
+      vi.spyOn(globalThis, "cancelAnimationFrame").mockImplementation(() => {});
+
+      const { canvas, fillStyles } = makeCanvasWithFillTracker();
+      const instance = createSarmal(canvas, testCircle, {
+        trailColor: "#ff0000",
+        trailStyle: "default",
+      });
+      instance.pause();
+
+      fillStyles.length = 0;
+      instance.setRenderOptions({ trailColor: "#00ff00" });
+      instance.play();
+      instance.pause();
+
+      // The head draws with `ctx.fillStyle = headColor`. In default style the
+      // auto head color is the solid hex, so we look for the literal "#00ff00".
+      expect(fillStyles.some((s) => s.toLowerCase() === "#00ff00")).toBe(true);
+
+      instance.destroy();
+      vi.restoreAllMocks();
+    });
+
+    it("locks headColor to the explicit value after a user override", () => {
+      vi.spyOn(globalThis, "requestAnimationFrame").mockImplementation(() => 1);
+      vi.spyOn(globalThis, "cancelAnimationFrame").mockImplementation(() => {});
+
+      const { canvas, fillStyles } = makeCanvasWithFillTracker();
+      const instance = createSarmal(canvas, testCircle, {
+        trailColor: "#ff0000",
+        trailStyle: "default",
+      });
+      instance.pause();
+
+      instance.setRenderOptions({ headColor: "#aabbcc" });
+      fillStyles.length = 0;
+      // Change trailColor — head should NOT follow because it is locked.
+      instance.setRenderOptions({ trailColor: "#00ff00" });
+      instance.play();
+      instance.pause();
+
+      expect(fillStyles.some((s) => s.toLowerCase() === "#aabbcc")).toBe(true);
+      expect(fillStyles.some((s) => s.toLowerCase() === "#00ff00")).toBe(false);
+
+      instance.destroy();
+      vi.restoreAllMocks();
+    });
+
+    it("resumes auto-follow when headColor is set back to null", () => {
+      vi.spyOn(globalThis, "requestAnimationFrame").mockImplementation(() => 1);
+      vi.spyOn(globalThis, "cancelAnimationFrame").mockImplementation(() => {});
+
+      const { canvas, fillStyles } = makeCanvasWithFillTracker();
+      const instance = createSarmal(canvas, testCircle, {
+        trailColor: "#ff0000",
+        trailStyle: "default",
+      });
+      instance.pause();
+
+      instance.setRenderOptions({ headColor: "#aabbcc" }); // lock
+      instance.setRenderOptions({ headColor: null }); // unlock
+      fillStyles.length = 0;
+      instance.setRenderOptions({ trailColor: "#00ff00" });
+      instance.play();
+      instance.pause();
+
+      // Auto-follow should kick back in — head matches the new trail color.
+      expect(fillStyles.some((s) => s.toLowerCase() === "#00ff00")).toBe(true);
+
+      instance.destroy();
+      vi.restoreAllMocks();
+    });
+
+    it("follows trailStyle changes when auto-follow is active", () => {
+      vi.spyOn(globalThis, "requestAnimationFrame").mockImplementation(() => 1);
+      vi.spyOn(globalThis, "cancelAnimationFrame").mockImplementation(() => {});
+
+      const { canvas, fillStyles } = makeCanvasWithFillTracker();
+      const instance = createSarmal(canvas, testCircle, {
+        trailColor: palettes.bard,
+        trailStyle: "default", // starts as default — head = first entry of bard
+      });
+      instance.pause();
+
+      fillStyles.length = 0;
+      // Switch to gradient. Auto head color now = last palette stop = bard[3]
+      // = #ec4899 = rgb(236,72,153).
+      instance.setRenderOptions({ trailStyle: "gradient-animated" });
+      instance.play();
+      instance.pause();
+
+      expect(fillStyles.some((s) => s === "rgb(236,72,153)")).toBe(true);
+
+      instance.destroy();
+      vi.restoreAllMocks();
+    });
+  });
+
+  describe("skeletonColor", () => {
+    it("updates the skeleton color on subsequent frames", () => {
+      vi.spyOn(globalThis, "requestAnimationFrame").mockImplementation(() => 1);
+      vi.spyOn(globalThis, "cancelAnimationFrame").mockImplementation(() => {});
+
+      const instance = createSarmal(makeCanvas(), testCircle, { autoStart: false });
+      expect(() => instance.setRenderOptions({ skeletonColor: "#123456" })).not.toThrow();
+
+      instance.destroy();
+      vi.restoreAllMocks();
+    });
+
+    it("switching to transparent and back does not throw", () => {
+      vi.spyOn(globalThis, "requestAnimationFrame").mockImplementation(() => 1);
+      vi.spyOn(globalThis, "cancelAnimationFrame").mockImplementation(() => {});
+
+      const instance = createSarmal(makeCanvas(), testCircle, { autoStart: false });
+      expect(() => instance.setRenderOptions({ skeletonColor: "transparent" })).not.toThrow();
+      expect(() => instance.setRenderOptions({ skeletonColor: "#ffffff" })).not.toThrow();
+
+      instance.destroy();
+      vi.restoreAllMocks();
+    });
+  });
+
+  describe("mismatch warnings", () => {
+    it("warns when setRenderOptions creates a mismatched (trailColor, trailStyle) pair", () => {
+      const instance = createSarmal(makeCanvas(), testCircle, {
+        autoStart: false,
+        trailColor: "#ff0000",
+        trailStyle: "default",
+      });
+
+      const spy = vi.spyOn(console, "warn").mockImplementation(() => {});
+      instance.setRenderOptions({ trailStyle: "gradient-animated" });
+      expect(spy).toHaveBeenCalledTimes(1);
+      expect(String(spy.mock.calls[0]?.[0])).toMatch(/solid color/);
+
+      spy.mockRestore();
+      instance.destroy();
+    });
+
+    it("does not re-warn when neither trailColor nor trailStyle is in the payload", () => {
+      const instance = createSarmal(makeCanvas(), testCircle, {
+        autoStart: false,
+        trailColor: "#ff0000",
+        trailStyle: "default",
+      });
+
+      const spy = vi.spyOn(console, "warn").mockImplementation(() => {});
+      instance.setRenderOptions({ skeletonColor: "#222222" });
+      expect(spy).not.toHaveBeenCalled();
+
+      spy.mockRestore();
+      instance.destroy();
+    });
+  });
+});
+
+// ─── Orthogonality: engine/lifecycle APIs do NOT touch render options ────────
+
+describe("setRenderOptions orthogonality", () => {
+  // Counts fill assignments that contain red — either rgba("255,0,0,...") from
+  // trail segments or the literal "#ff0000" from the head dot. Either form is
+  // enough to prove the closure state survived a lifecycle call.
+  function countWithRed(fillStyles: string[]) {
+    return fillStyles.filter((s) => s.toLowerCase().includes("ff0000") || s.includes("255,0,0"))
+      .length;
+  }
+
+  it("reset() preserves trailColor", () => {
+    vi.spyOn(globalThis, "requestAnimationFrame").mockImplementation(() => 1);
+    vi.spyOn(globalThis, "cancelAnimationFrame").mockImplementation(() => {});
+
+    const { canvas, fillStyles } = makeCanvasWithFillTracker();
+    const instance = createSarmal(canvas, testCircle, { trailColor: "#ff0000" });
+    instance.pause();
+    instance.reset();
+
+    fillStyles.length = 0;
+    instance.play();
+    instance.pause();
+
+    expect(countWithRed(fillStyles)).toBeGreaterThan(0);
+
+    instance.destroy();
+    vi.restoreAllMocks();
+  });
+
+  it("pause()/play() preserves trailColor", () => {
+    vi.spyOn(globalThis, "requestAnimationFrame").mockImplementation(() => 1);
+    vi.spyOn(globalThis, "cancelAnimationFrame").mockImplementation(() => {});
+
+    const { canvas, fillStyles } = makeCanvasWithFillTracker();
+    const instance = createSarmal(canvas, testCircle, { trailColor: "#ff0000" });
+    instance.pause();
+    instance.play();
+    instance.pause();
+
+    fillStyles.length = 0;
+    instance.play();
+    instance.pause();
+
+    expect(countWithRed(fillStyles)).toBeGreaterThan(0);
+
+    instance.destroy();
+    vi.restoreAllMocks();
+  });
+
+  it("setSpeed()/resetSpeed() preserves trailColor", () => {
+    vi.spyOn(globalThis, "requestAnimationFrame").mockImplementation(() => 1);
+    vi.spyOn(globalThis, "cancelAnimationFrame").mockImplementation(() => {});
+
+    const { canvas, fillStyles } = makeCanvasWithFillTracker();
+    const instance = createSarmal(canvas, testCircle, { trailColor: "#ff0000" });
+    instance.pause();
+    instance.setSpeed(2);
+    instance.resetSpeed();
+
+    fillStyles.length = 0;
+    instance.play();
+    instance.pause();
+
+    expect(countWithRed(fillStyles)).toBeGreaterThan(0);
+
+    instance.destroy();
+    vi.restoreAllMocks();
+  });
+
+  it("morphTo() preserves trailColor after it settles", () => {
+    vi.spyOn(globalThis, "requestAnimationFrame").mockImplementation(() => 1);
+    vi.spyOn(globalThis, "cancelAnimationFrame").mockImplementation(() => {});
+
+    const otherCurve: CurveDef = {
+      name: "other",
+      fn: (t) => ({ x: Math.sin(t), y: Math.cos(t) }),
+      period: Math.PI * 2,
+      speed: 1,
+    };
+
+    const { canvas, fillStyles } = makeCanvasWithFillTracker();
+    const instance = createSarmal(canvas, testCircle, { trailColor: "#ff0000" });
+    instance.pause();
+    instance.morphTo(otherCurve);
+
+    fillStyles.length = 0;
+    instance.play();
+    instance.pause();
+
+    expect(countWithRed(fillStyles)).toBeGreaterThan(0);
+
+    instance.destroy();
     vi.restoreAllMocks();
   });
 });

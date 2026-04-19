@@ -4,7 +4,9 @@ import type {
   Engine,
   MorphOptions,
   Point,
+  RuntimeRenderOptions,
   SarmalInstance,
+  TrailColor,
   TrailStyle,
 } from "./types";
 
@@ -15,7 +17,11 @@ import {
   computeTrailQuad,
   enginePassthroughs,
   getPaletteColor,
-  resolvePalette,
+  resolveHeadColor,
+  resolveTrailPalette,
+  resolveTrailMainColor,
+  validateRenderOptions,
+  warnIfTrailColorMismatch,
 } from "./renderer-shared";
 import { createEngine } from "./engine";
 
@@ -68,22 +74,22 @@ function el(tag: string): SVGElement {
  */
 export function createSVGRenderer(options: SVGRendererOptions): SarmalInstance {
   const { container, engine } = options;
-  const trailColor = options.trailColor ?? "#ffffff";
-  const trailStyle: TrailStyle = options.trailStyle ?? "default";
-  const palette = resolvePalette(options.palette, trailStyle);
-  const opts = {
-    skeletonColor: options.skeletonColor ?? "#ffffff",
-    trailColor,
-    headColor:
-      options.headColor ??
-      (trailStyle !== "default"
-        ? (() => {
-            const { r, g, b } = getPaletteColor(palette, 1.0);
-            return `rgb(${r},${g},${b})`;
-          })()
-        : trailColor),
-    ariaLabel: options.ariaLabel ?? "Loading",
-  };
+
+  // TODO: duplicate let variables. maybe a better way to share these too?
+  // ! Mutated only by `setRenderOptions`.
+  let trailStyle: TrailStyle = options.trailStyle ?? "default";
+  let trailColor: TrailColor = options.trailColor ?? "#ffffff";
+  let skeletonColor: string = options.skeletonColor ?? "#ffffff";
+  // `null` means that head color is derived from `trailColor` & `trailStyle` and refreshed whenever either changes.
+  let userHeadColor: string | null = options.headColor ?? null;
+  let headColor: string = userHeadColor ?? resolveHeadColor(trailColor, trailStyle);
+
+  let trailSolid: string = resolveTrailMainColor(trailColor);
+  let trailPalette: string[] = resolveTrailPalette(trailColor);
+
+  const ariaLabel = options.ariaLabel ?? "Loading";
+
+  warnIfTrailColorMismatch(trailColor, trailStyle);
 
   const rect = container.getBoundingClientRect();
   const width = rect.width || 200;
@@ -96,30 +102,33 @@ export function createSVGRenderer(options: SVGRendererOptions): SarmalInstance {
   svg.setAttribute("height", String(height));
   svg.setAttribute("viewBox", `0 0 ${width} ${height}`);
   svg.setAttribute("role", "img");
-  svg.setAttribute("aria-label", opts.ariaLabel);
+  svg.setAttribute("aria-label", ariaLabel);
 
   const titleEl = el("title");
-  titleEl.textContent = opts.ariaLabel;
+  titleEl.textContent = ariaLabel;
   svg.appendChild(titleEl);
 
   const skeletonPath = el("path") as SVGPathElement;
   skeletonPath.setAttribute("data-sarmal-role", "skeleton");
   skeletonPath.setAttribute("fill", "none");
-  skeletonPath.setAttribute("stroke", opts.skeletonColor);
+  skeletonPath.setAttribute("stroke", skeletonColor);
   skeletonPath.setAttribute("stroke-opacity", String(DEFAULT_SKELETON_OPACITY));
   skeletonPath.setAttribute("stroke-width", "1.5");
+  if (skeletonColor === "transparent") {
+    skeletonPath.setAttribute("visibility", "hidden");
+  }
   svg.appendChild(skeletonPath);
 
   const skeletonPathA = el("path") as SVGPathElement;
   skeletonPathA.setAttribute("fill", "none");
-  skeletonPathA.setAttribute("stroke", opts.skeletonColor);
+  skeletonPathA.setAttribute("stroke", skeletonColor);
   skeletonPathA.setAttribute("stroke-width", "1.5");
   skeletonPathA.setAttribute("visibility", "hidden");
   svg.appendChild(skeletonPathA);
 
   const skeletonPathB = el("path") as SVGPathElement;
   skeletonPathB.setAttribute("fill", "none");
-  skeletonPathB.setAttribute("stroke", opts.skeletonColor);
+  skeletonPathB.setAttribute("stroke", skeletonColor);
   skeletonPathB.setAttribute("stroke-width", "1.5");
   skeletonPathB.setAttribute("visibility", "hidden");
   svg.appendChild(skeletonPathB);
@@ -130,14 +139,14 @@ export function createSVGRenderer(options: SVGRendererOptions): SarmalInstance {
   const trailPaths: SVGPathElement[] = [];
   for (let i = 0; i < MAX_TRAIL_SEGMENTS; i++) {
     const path = el("path") as SVGPathElement;
-    path.setAttribute("fill", opts.trailColor);
+    path.setAttribute("fill", trailSolid);
     svg.appendChild(path);
     trailPaths.push(path);
   }
 
   const headCircle = el("circle") as SVGCircleElement;
   headCircle.setAttribute("data-sarmal-role", "head");
-  headCircle.setAttribute("fill", opts.headColor);
+  headCircle.setAttribute("fill", headColor);
   headCircle.setAttribute("r", String(headRadius));
   svg.appendChild(headCircle);
 
@@ -181,6 +190,7 @@ export function createSVGRenderer(options: SVGRendererOptions): SarmalInstance {
       for (const p of trailPaths) {
         p.setAttribute("d", "");
       }
+
       return;
     }
 
@@ -204,7 +214,7 @@ export function createSVGRenderer(options: SVGRendererOptions): SarmalInstance {
 
       if (trailStyle !== "default") {
         const timeOffset = trailStyle === "gradient-animated" ? gradientAnimTime * 0.0005 : 0;
-        const { r, g, b } = getPaletteColor(palette, progress, timeOffset);
+        const { r, g, b } = getPaletteColor(trailPalette, progress, timeOffset);
         trailPaths[i]!.setAttribute("fill", `rgb(${r},${g},${b})`);
       }
     }
@@ -374,6 +384,66 @@ export function createSVGRenderer(options: SVGRendererOptions): SarmalInstance {
       return new Promise<void>((resolve) => {
         morphResolve = resolve;
       });
+    },
+
+    setRenderOptions(partial: RuntimeRenderOptions): void {
+      validateRenderOptions(partial);
+
+      const prevTrailStyle = trailStyle;
+
+      if (partial.trailColor !== undefined) {
+        trailColor = partial.trailColor;
+        trailSolid = resolveTrailMainColor(trailColor);
+        trailPalette = resolveTrailPalette(trailColor);
+
+        // Only the "default" style paints trail paths at setter time, whereas gradient styles repaint per-segment fills every frame in `updateTrail`,
+        //  so they would already overwrite any fill operation made here
+        if (trailStyle === "default") {
+          for (const p of trailPaths) {
+            p.setAttribute("fill", trailSolid);
+          }
+        }
+      }
+
+      if (partial.skeletonColor !== undefined) {
+        skeletonColor = partial.skeletonColor;
+
+        if (skeletonColor === "transparent") {
+          // TODO: what happens when `skeletonColor` is set to "transparent" during morph? Do the skeleton paths of A and B still render?
+          skeletonPath.setAttribute("visibility", "hidden");
+        } else {
+          skeletonPath.setAttribute("stroke", skeletonColor);
+          skeletonPath.removeAttribute("visibility");
+          skeletonPathA.setAttribute("stroke", skeletonColor);
+          skeletonPathB.setAttribute("stroke", skeletonColor);
+        }
+      }
+
+      if (partial.trailStyle !== undefined) {
+        trailStyle = partial.trailStyle;
+
+        // When transitioning from gradient to default, the whole trail needs to be filled with the color
+        // Transitioning from default to gradient does not require this as it already does per-segment color fills
+        if (prevTrailStyle !== "default" && trailStyle === "default") {
+          for (const p of trailPaths) {
+            p.setAttribute("fill", trailSolid);
+          }
+        }
+      }
+      if (partial.headColor !== undefined) {
+        userHeadColor = partial.headColor;
+      }
+
+      if (userHeadColor === null) {
+        headColor = resolveHeadColor(trailColor, trailStyle);
+      } else {
+        headColor = userHeadColor;
+      }
+      headCircle.setAttribute("fill", headColor);
+
+      if (partial.trailColor !== undefined || partial.trailStyle !== undefined) {
+        warnIfTrailColorMismatch(trailColor, trailStyle);
+      }
     },
   };
 

@@ -3,7 +3,9 @@ import type {
   MorphOptions,
   Point,
   RendererOptions,
+  RuntimeRenderOptions,
   SarmalInstance,
+  TrailColor,
   TrailStyle,
 } from "./types";
 import {
@@ -13,21 +15,17 @@ import {
   computeTrailQuad,
   enginePassthroughs,
   getPaletteColor,
-  resolvePalette,
+  resolveHeadColor,
+  resolveTrailPalette,
+  resolveTrailMainColor,
+  validateRenderOptions,
+  warnIfTrailColorMismatch,
 } from "./renderer-shared";
 
 export { computeTangent, computeNormal, TrailPoint } from "./renderer-shared";
-export {
-  Rgb,
-  GRADIENT,
-  PRESETS,
-  hexToRgb,
-  lerpRgb,
-  getPaletteColor,
-  resolvePalette,
-} from "./renderer-shared";
+export { Rgb, palettes, hexToRgb, lerpRgb, getPaletteColor } from "./renderer-shared";
 
-const DEFAULT_SKELETON_COLOR = "#ffffff";
+const WHITE_HEX = "#ffffff";
 
 // TODO: accept rgb(a)
 export function hexToRgbComponents(hex: string): string {
@@ -95,25 +93,19 @@ export function createRenderer(options: RendererOptions): SarmalInstance {
   const ctx = canvas.getContext("2d")!;
 
   const engine = options.engine;
-  const trailStyle: TrailStyle = options.trailStyle ?? "default";
-  const trailColor = options.trailColor ?? "#ffffff";
-  const palette = resolvePalette(options.palette, trailStyle);
 
-  function defaultHeadColor(): string {
-    if (trailStyle !== "default") {
-      const { r, g, b } = getPaletteColor(palette, 1.0);
-      return `rgb(${r},${g},${b})`;
-    }
-    return trailColor;
-  }
+  // ! Mutated only by `setRenderOptions`.
+  let trailStyle: TrailStyle = options.trailStyle ?? "default";
+  let trailColor: TrailColor = options.trailColor ?? WHITE_HEX;
+  let skeletonColor: string = options.skeletonColor ?? WHITE_HEX;
+  // `null` means that head color is derived from `trailColor` & `trailStyle` and refreshed whenever either changes.
+  let userHeadColor: string | null = options.headColor ?? null;
+  let headColor: string = userHeadColor ?? resolveHeadColor(trailColor, trailStyle);
 
-  const opts = {
-    skeletonColor: options.skeletonColor ?? DEFAULT_SKELETON_COLOR,
-    trailColor,
-    headColor: options.headColor ?? defaultHeadColor(),
-  };
+  let trailSolidRgb = hexToRgbComponents(resolveTrailMainColor(trailColor));
+  let trailPalette = resolveTrailPalette(trailColor);
 
-  const trailRgb = hexToRgbComponents(opts.trailColor);
+  warnIfTrailColorMismatch(trailColor, trailStyle);
 
   /**
    * Device pixel ratio for high-DPI displays.
@@ -171,7 +163,9 @@ export function createRenderer(options: RendererOptions): SarmalInstance {
    * only needs a single ctx.drawImage() instead of rebuilding the full path.
    */
   function buildSkeletonCanvas() {
-    if (skeleton.length < 2) return;
+    if (skeleton.length < 2) {
+      return;
+    }
 
     skeletonCanvas = new OffscreenCanvas(canvas.width, canvas.height);
     const skeletonCtx = skeletonCanvas.getContext("2d")!;
@@ -179,7 +173,7 @@ export function createRenderer(options: RendererOptions): SarmalInstance {
     // Apply DPR scale to draw in logical coordinates
     skeletonCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
 
-    skeletonCtx.strokeStyle = `rgba(${hexToRgbComponents(opts.skeletonColor)},${DEFAULT_SKELETON_OPACITY})`;
+    skeletonCtx.strokeStyle = `rgba(${hexToRgbComponents(skeletonColor)},${DEFAULT_SKELETON_OPACITY})`;
     skeletonCtx.lineWidth = 1.5;
     skeletonCtx.beginPath();
 
@@ -195,8 +189,11 @@ export function createRenderer(options: RendererOptions): SarmalInstance {
   }
 
   function drawSkeletonPath(pts: Array<Point>, opacity: number) {
-    if (pts.length < 2) return;
-    ctx.strokeStyle = `rgba(${hexToRgbComponents(opts.skeletonColor)},${opacity})`;
+    if (pts.length < 2) {
+      return;
+    }
+
+    ctx.strokeStyle = `rgba(${hexToRgbComponents(skeletonColor)},${opacity})`;
     ctx.lineWidth = 1.5;
     ctx.beginPath();
     ctx.moveTo(pts[0]!.x * scale + offsetX, pts[0]!.y * scale + offsetY);
@@ -207,7 +204,7 @@ export function createRenderer(options: RendererOptions): SarmalInstance {
   }
 
   function drawSkeleton() {
-    if (opts.skeletonColor === "transparent") {
+    if (skeletonColor === "transparent") {
       return;
     }
 
@@ -223,7 +220,7 @@ export function createRenderer(options: RendererOptions): SarmalInstance {
         return;
       }
 
-      ctx.strokeStyle = `rgba(${hexToRgbComponents(opts.skeletonColor)},${DEFAULT_SKELETON_OPACITY})`;
+      ctx.strokeStyle = `rgba(${hexToRgbComponents(skeletonColor)},${DEFAULT_SKELETON_OPACITY})`;
       ctx.lineWidth = 1.5;
       ctx.beginPath();
 
@@ -273,10 +270,10 @@ export function createRenderer(options: RendererOptions): SarmalInstance {
 
       // Determine fill color based on trail style
       if (trailStyle === "default") {
-        ctx.fillStyle = `rgba(${trailRgb},${opacity})`;
+        ctx.fillStyle = `rgba(${trailSolidRgb},${opacity})`;
       } else {
         const timeOffset = trailStyle === "gradient-animated" ? gradientAnimTime * 0.0005 : 0;
-        const color = getPaletteColor(palette, progress, timeOffset);
+        const color = getPaletteColor(trailPalette, progress, timeOffset);
         ctx.fillStyle = `rgba(${color.r},${color.g},${color.b},${opacity})`;
       }
 
@@ -300,7 +297,7 @@ export function createRenderer(options: RendererOptions): SarmalInstance {
     const r =
       options.headRadius ?? Math.max(2, 3 * Math.sqrt(Math.min(logicalWidth, logicalHeight) / 160));
 
-    ctx.fillStyle = opts.headColor;
+    ctx.fillStyle = headColor;
     ctx.beginPath();
     ctx.arc(x, y, r, 0, Math.PI * 2);
     ctx.fill();
@@ -437,6 +434,42 @@ export function createRenderer(options: RendererOptions): SarmalInstance {
       return new Promise<void>((resolve) => {
         morphResolve = resolve;
       });
+    },
+
+    setRenderOptions(partial: RuntimeRenderOptions): void {
+      validateRenderOptions(partial);
+
+      if (partial.trailColor !== undefined) {
+        trailColor = partial.trailColor;
+        trailSolidRgb = hexToRgbComponents(resolveTrailMainColor(trailColor));
+        trailPalette = resolveTrailPalette(trailColor);
+      }
+
+      if (partial.skeletonColor !== undefined) {
+        skeletonColor = partial.skeletonColor;
+
+        if (skeletonColor !== "transparent" && !engine.isLiveSkeleton) {
+          buildSkeletonCanvas();
+        }
+      }
+
+      if (partial.trailStyle !== undefined) {
+        trailStyle = partial.trailStyle;
+      }
+
+      if (partial.headColor !== undefined) {
+        userHeadColor = partial.headColor;
+      }
+
+      if (userHeadColor === null) {
+        headColor = resolveHeadColor(trailColor, trailStyle);
+      } else {
+        headColor = userHeadColor;
+      }
+
+      if (partial.trailColor !== undefined || partial.trailStyle !== undefined) {
+        warnIfTrailColorMismatch(trailColor, trailStyle);
+      }
     },
   };
 

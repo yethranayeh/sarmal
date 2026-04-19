@@ -11,7 +11,8 @@ export type {
   RendererOptions,
   SarmalOptions,
   TrailStyle,
-  PalettePreset,
+  TrailColor,
+  RuntimeRenderOptions,
 } from "./types";
 export type { CurveName } from "./curves";
 
@@ -19,6 +20,7 @@ export { createEngine } from "./engine";
 export { createRenderer } from "./renderer";
 export { createSVGRenderer, createSarmalSVG } from "./renderer-svg";
 export { curves } from "./curves";
+export { palettes } from "./renderer-shared";
 export {
   artemis2,
   epitrochoid7,

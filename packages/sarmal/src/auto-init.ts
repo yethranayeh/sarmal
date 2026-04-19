@@ -1,26 +1,34 @@
+import type { TrailColor } from "./types";
+import type { CurveName } from "./curves";
+
 /**
  * Scans for `<canvas data-sarmal="curveName">` when DOMContentLoaded is triggered,
  *  and creates a Sarmal instance for each one
  */
 import { createSarmal } from "./index";
 import { curves } from "./curves";
-import type { PalettePreset } from "./types";
-import type { CurveName } from "./curves";
 
 /**
- * Parses a palette value from a data attribute.
- * Tries to parse as JSON array first, falls back to preset name.
+ * Parses the `data-trail-color` attribute, which accepts either a single hex string
+ *  or a JSON array of hex strings.
+ *
+ * Anything that does not parse as a JSON array is passed through as a string,
+ *  so the library's own validator produces a meaningful error.
+ *
+ * @example "#ff0000"
+ * @example '["#ff0000","#00ff00"]'
  */
-function parsePalette(value: string): PalettePreset | string[] {
+function parseTrailColor(value: string): TrailColor {
   try {
     const parsed = JSON.parse(value);
+
     if (Array.isArray(parsed)) {
       return parsed as string[];
     }
   } catch {
-    // Not a valid JSON array, treat as preset name
+    // Will delegate further validtion to renderer. Will treat it as a single hex string here
   }
-  return value as PalettePreset;
+  return value;
 }
 
 function init(): void {
@@ -38,7 +46,9 @@ function init(): void {
     }
 
     createSarmal(canvas, curveDef, {
-      ...(canvas.dataset.trailColor && { trailColor: canvas.dataset.trailColor }),
+      ...(canvas.dataset.trailColor && {
+        trailColor: parseTrailColor(canvas.dataset.trailColor),
+      }),
       ...(canvas.dataset.skeletonColor && { skeletonColor: canvas.dataset.skeletonColor }),
       ...(canvas.dataset.headColor && { headColor: canvas.dataset.headColor }),
       ...(canvas.dataset.headRadius && { headRadius: parseFloat(canvas.dataset.headRadius) }),
@@ -49,7 +59,6 @@ function init(): void {
           | "gradient-static"
           | "gradient-animated",
       }),
-      ...(canvas.dataset.palette && { palette: parsePalette(canvas.dataset.palette) }),
     });
   });
 }

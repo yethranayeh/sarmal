@@ -16,6 +16,40 @@ Version history notes
 
 ## Versions
 
+## 0.15.0 - 19.04.2026
+
+<Alert label="Breaking" variant="error">The `palette` option is removed. Colors are now unified under `trailColor` which accepts a single hex string OR an array of hex strings.</Alert>
+
+```ts
+// Before
+const sarmal = createSarmal(canvas, curves.astroid, {
+  trailStyle: "gradient-animated",
+  palette: "bard",
+});
+
+// After
+import { palettes } from "@sarmal/core";
+const sarmal = createSarmal(canvas, curves.rose3, {
+  trailStyle: "gradient-animated",
+  trailColor: palettes.sunset,
+});
+```
+
+`setRenderOptions(partial)` is added to `SarmalInstance`. Change colors and trail style on a live instance without destroying and recreating it.
+
+```ts
+sarmal.setRenderOptions({ trailColor: palettes.sunset });
+
+sarmal.setRenderOptions({ trailStyle: "default", trailColor: "#c0143c" });
+
+sarmal.setRenderOptions({ headColor: "#ffffff" }); // override
+sarmal.setRenderOptions({ headColor: null });      // inherited from trail color
+```
+
+**Validation rules:** The current setup requeires that all colors be 6-digit hex strings. `skeletonColor` also accepts `"transparent"`. If any field fails validation, then no fields are mutated.
+
+---
+
 ## 0.14.0 - 18.04.2026
 
 Animated gradients are now supported in SVG renderer
