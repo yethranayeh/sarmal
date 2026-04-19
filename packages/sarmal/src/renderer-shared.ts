@@ -454,3 +454,6 @@ export function warnIfTrailColorMismatch(trailColor: TrailColor, trailStyle: Tra
     );
   }
 }
+
+export const getHeadDotRadius = (w: number, h: number) =>
+  Math.max(1, 3 * Math.sqrt(Math.min(w, h) / 160));

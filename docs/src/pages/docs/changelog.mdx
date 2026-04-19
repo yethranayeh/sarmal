@@ -16,6 +16,14 @@ Version history notes
 
 ## Versions
 
+## 0.15.1 - 19.04.2026
+
+Replaced `getBoundingClientRect()` approach of getting container size with `offsetWidth` and `offsetHeight`.
+
+The `getBoundingClientRect()` would cause unexpected width/height output, because it would return visually scaled size affected by CSS. So, if one were to apply `transform: scale(0.99)` to the canvas, but **280px** for the actual canvas size, the end result would be **277.2px**
+
+The *offset* values now give the inherent layout box size, unaffected by CSS transforms
+
 ## 0.15.0 - 19.04.2026
 
 <Alert label="Breaking" variant="error">The `palette` option is removed. Colors are now unified under `trailColor` which accepts a single hex string OR an array of hex strings.</Alert>

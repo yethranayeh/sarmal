@@ -6,6 +6,7 @@ interface Props extends SarmalOptions {
 	width?: number;
 	height?: number;
 	trailStyle?: TrailStyle;
+	speed?: number;
 	lazy?: boolean;
 }
 
@@ -22,6 +23,7 @@ const {
 	headRadius = 2.5,
 	trailLength = defaultTrailLength,
 	trailStyle,
+	speed,
 	lazy = false
 } = Astro.props;
 
@@ -41,7 +43,8 @@ const serializedTrailColor = Array.isArray(trailColor) ? JSON.stringify(trailCol
 	data-head-color={resolvedHeadColor}
 	data-head-radius={headRadius}
 	data-trail-length={trailLength}
-	data-trail-style={trailStyle}></canvas>
+	data-trail-style={trailStyle}
+	data-speed={speed}></canvas>
 
 <script>
 	import "@sarmal/core/auto";

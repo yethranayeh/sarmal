@@ -20,6 +20,7 @@ import {
   resolveTrailMainColor,
   validateRenderOptions,
   warnIfTrailColorMismatch,
+  getHeadDotRadius,
 } from "./renderer-shared";
 
 export { computeTangent, computeNormal, TrailPoint } from "./renderer-shared";
@@ -118,9 +119,8 @@ export function createRenderer(options: RendererOptions): SarmalInstance {
    */
   function setupCanvas() {
     // TODO: attach a ResizeObserver so this function can be called again for the right scale of canvas
-    const rect = canvas.getBoundingClientRect();
-    const lw = rect.width || 200;
-    const lh = rect.height || 200;
+    const lw = canvas.offsetWidth || 200;
+    const lh = canvas.offsetHeight || 200;
     applyDprSizing(canvas, lw, lh, dpr);
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
   }
@@ -294,8 +294,7 @@ export function createRenderer(options: RendererOptions): SarmalInstance {
 
     const x = head.x * scale + offsetX;
     const y = head.y * scale + offsetY;
-    const r =
-      options.headRadius ?? Math.max(2, 3 * Math.sqrt(Math.min(logicalWidth, logicalHeight) / 160));
+    const r = options.headRadius ?? getHeadDotRadius(logicalWidth, logicalHeight);
 
     ctx.fillStyle = headColor;
     ctx.beginPath();

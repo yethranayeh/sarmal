@@ -22,6 +22,7 @@ import {
   resolveTrailMainColor,
   validateRenderOptions,
   warnIfTrailColorMismatch,
+  getHeadDotRadius,
 } from "./renderer-shared";
 import { createEngine } from "./engine";
 
@@ -91,11 +92,10 @@ export function createSVGRenderer(options: SVGRendererOptions): SarmalInstance {
 
   warnIfTrailColorMismatch(trailColor, trailStyle);
 
-  const rect = container.getBoundingClientRect();
-  const width = rect.width || 200;
-  const height = rect.height || 200;
-  const headRadius =
-    options.headRadius ?? Math.max(2, 3 * Math.sqrt(Math.min(width, height) / 160));
+  const htmlContainer = container as HTMLElement;
+  const width = htmlContainer.offsetWidth || 200;
+  const height = htmlContainer.offsetHeight || 200;
+  const headRadius = options.headRadius ?? getHeadDotRadius(width, height);
 
   const svg = el("svg") as SVGSVGElement;
   svg.setAttribute("width", String(width));

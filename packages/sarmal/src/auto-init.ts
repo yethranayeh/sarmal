@@ -31,7 +31,7 @@ function parseTrailColor(value: string): TrailColor {
   return value;
 }
 
-function init(): void {
+export function init() {
   const canvases = document.querySelectorAll<HTMLCanvasElement>("canvas[data-sarmal]");
 
   canvases.forEach((canvas) => {
@@ -45,7 +45,7 @@ function init(): void {
       return console.error(`[sarmal] "${curveName}" is not a valid curve name`);
     }
 
-    createSarmal(canvas, curveDef, {
+    const instance = createSarmal(canvas, curveDef, {
       ...(canvas.dataset.trailColor && {
         trailColor: parseTrailColor(canvas.dataset.trailColor),
       }),
@@ -60,6 +60,10 @@ function init(): void {
           | "gradient-animated",
       }),
     });
+
+    if (canvas.dataset.speed) {
+      instance.setSpeed(parseFloat(canvas.dataset.speed));
+    }
   });
 }
 
