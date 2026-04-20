@@ -3,7 +3,7 @@ import BaseLayout from "../layouts/BaseLayout.astro";
 
 import DemoSection from "../components/feature/DemoSection.astro";
 import HeroSection from "../components/feature/HeroSection.astro";
-import LiveDemoSection from "../components/feature/LiveDemoSection.astro";
+import LiveDemoContainer from "../components/feature/demo/LiveDemoContainer.astro";
 
 import { PACKAGE_SIZE } from "../variables";
 ---
@@ -15,7 +15,7 @@ import { PACKAGE_SIZE } from "../variables";
 	<main class='w-full space-y-4 md:space-y-16'>
 		<HeroSection />
 
-		<LiveDemoSection />
+		<LiveDemoContainer />
 
 		<DemoSection />
 	</main>

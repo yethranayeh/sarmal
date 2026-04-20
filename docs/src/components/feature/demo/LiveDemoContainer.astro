@@ -1,0 +1,119 @@
+---
+import DemoPipeline from "./DemoPipeline.astro";
+import DemoChat from "./DemoChat.astro";
+import DemoUpload from "./DemoUpload.astro";
+import DemoDashboard from "./DemoDashboard.astro";
+---
+
+<section class='w-full bg-foreground py-6 md:py-12'>
+	<div class='max-w-3xl mx-auto px-4 flex flex-col items-center gap-10'>
+		<div class='flex items-center gap-4 w-full'>
+			<div class='flex-1 h-px bg-white/20'></div>
+			<span class='font-mono text-[10px] tracking-[0.25em] uppercase text-muted'>Live demo</span>
+			<div class='flex-1 h-px bg-white/20'></div>
+		</div>
+
+		<div class='w-full max-w-sm flex flex-col items-center gap-4'>
+			<div id='live-demo-card' class='relative w-full min-h-50 bg-surface-raised rounded-xl overflow-hidden'>
+				<DemoPipeline />
+				<DemoChat />
+				<DemoUpload />
+				<DemoDashboard />
+			</div>
+
+			<!-- Pagination dots -->
+			<div id='live-demo-dots' class='flex gap-2'></div>
+		</div>
+	</div>
+</section>
+
+<script>
+	import type { DemoScenarioAPI, DemoSlide } from "../../../lib/demo";
+	import { SLIDES, contentDuration } from "../../../lib/demo";
+
+	// Create dots
+	const dotsEl = document.getElementById("live-demo-dots")!;
+	SLIDES.forEach(() => {
+		const dot = document.createElement("span");
+		dot.className = "w-1.5 h-1.5 rounded-full transition-all duration-300";
+		dot.style.backgroundColor = "rgba(255,255,255,0.15)";
+		dotsEl.appendChild(dot);
+	});
+	const dots = Array.from(dotsEl.querySelectorAll("span")) as HTMLElement[];
+
+	// Click to navigate
+	dots.forEach((dot, i) => {
+		dot.style.cursor = "pointer";
+		dot.addEventListener("click", () => {
+			idx = i;
+			showSlide(i);
+		});
+	});
+
+	function setActiveDot(i: number) {
+		dots.forEach((d, j) => {
+			if (j === i) {
+				d.style.backgroundColor = SLIDES[j].color;
+				d.style.transform = "scale(1.4)";
+				d.style.opacity = "0.85";
+			} else {
+				d.style.backgroundColor = "rgba(255,255,255,0.15)";
+				d.style.transform = "scale(1)";
+				d.style.opacity = "1";
+			}
+		});
+	}
+
+	function getScenario(id: string): DemoScenarioAPI | undefined {
+		return window.demoRegistry?.[id];
+	}
+
+	function cleanupAll() {
+		SLIDES.forEach((slide) => {
+			getScenario(slide.id)?.cleanup();
+		});
+	}
+
+	function showSlide(i: number) {
+		if (mainTimer) {
+			clearTimeout(mainTimer);
+			mainTimer = null;
+		}
+		cleanupAll();
+
+		// Hide all scenarios
+		document.querySelectorAll<HTMLElement>("[data-scenario]").forEach((el) => el.classList.remove("active"));
+
+		// Show active scenario
+		document.querySelector(`[data-scenario="${SLIDES[i].id}"]`)!.classList.add("active");
+		setActiveDot(i);
+
+		// Start the scenario
+		const scenario = getScenario(SLIDES[i].id);
+		if (scenario) {
+			scenario.start(() => {
+				mainTimer = setTimeout(() => {
+					idx = (i + 1) % SLIDES.length;
+					showSlide(idx);
+				}, contentDuration());
+			});
+		}
+	}
+
+	let idx = 0;
+	let mainTimer: ReturnType<typeof setTimeout> | null = null;
+
+	// Start on scroll into view
+	const card = document.getElementById("live-demo-card")!;
+	const observer = new IntersectionObserver(
+		(entries) => {
+			if (entries[0]?.isIntersecting) {
+				observer.disconnect();
+				// Small delay to allow scenario scripts to register
+				setTimeout(() => showSlide(0), 100);
+			}
+		},
+		{ threshold: 0.1 }
+	);
+	observer.observe(card);
+</script>

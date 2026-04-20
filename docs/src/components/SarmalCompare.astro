@@ -5,7 +5,7 @@ const svgId = `${id}-svg`;
 ---
 
 <div class='sarmal-compare not-prose my-8' data-canvas-id={canvasId} data-svg-id={svgId}>
-	<div class='flex gap-30 justify-center items-end'>
+	<div class='flex flex-col md:flex-row gap-6 md:gap-30 justify-center items-center md:items-end'>
 		<div class='flex flex-col items-center gap-3'>
 			<canvas id={canvasId} width={200} height={200}></canvas>
 			<span class='font-mono text-[10px] tracking-[0.25em] uppercase text-muted'>Canvas</span>

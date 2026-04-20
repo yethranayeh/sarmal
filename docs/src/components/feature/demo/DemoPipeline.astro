@@ -1,0 +1,165 @@
+---
+// Shows a 3-step workflow with animated indicators on each step
+---
+
+<div
+	data-scenario='pipeline'
+	class='absolute space-y-4 inset-0 p-8 flex flex-col justify-center opacity-0 transition-opacity duration-400 pointer-events-none [&.active]:opacity-100 [&.active]:pointer-events-auto'>
+	<p class='font-mono text-[9px] tracking-[0.25em] uppercase text-muted'>Processing</p>
+	<div class='flex flex-col'>
+		<div class='flex items-start gap-3'>
+			<div class='flex flex-col items-center'>
+				<div
+					data-pipe-dot='0'
+					class='w-9.5 h-9.5 rounded-lg bg-surface border border-border overflow-hidden shrink-0 transition-all duration-400 [&.done]:bg-green-400/[0.07] [&.done]:border-green-400/20 [&.done]:flex [&.done]:items-center [&.done]:justify-center [&.done]:text-base [&.done]:text-green-400'>
+				</div>
+				<div class='w-px h-3 bg-border'></div>
+			</div>
+			<span
+				data-pipe-label='0'
+				class='font-body text-[13px] pt-2.5 leading-none transition-colors duration-300 text-muted [&.active]:text-foreground [&.done]:text-muted'
+				>Parsing files</span
+			>
+		</div>
+		<div class='flex items-start gap-3'>
+			<div class='flex flex-col items-center'>
+				<div
+					data-pipe-dot='1'
+					class='w-9.5 h-9.5 rounded-lg bg-surface border border-border-subtle overflow-hidden shrink-0 transition-all duration-400 [&.done]:bg-green-400/[0.07] [&.done]:border-green-400/20 [&.done]:flex [&.done]:items-center [&.done]:justify-center [&.done]:text-base [&.done]:text-green-400'>
+				</div>
+				<div class='w-px h-3 bg-border'></div>
+			</div>
+			<span
+				data-pipe-label='1'
+				class='font-body text-[13px] pt-2.5 leading-none transition-colors duration-300 text-muted [&.active]:text-foreground [&.done]:text-muted'
+				>Analysing patterns</span
+			>
+		</div>
+		<div class='flex items-start gap-3'>
+			<div class='flex flex-col items-center'>
+				<div
+					data-pipe-dot='2'
+					class='w-9.5 h-9.5 rounded-lg bg-surface border border-border-subtle overflow-hidden shrink-0 transition-all duration-400 [&.done]:bg-green-400/[0.07] [&.done]:border-green-400/20 [&.done]:flex [&.done]:items-center [&.done]:justify-center [&.done]:text-base [&.done]:text-green-400'>
+				</div>
+			</div>
+			<span
+				data-pipe-label='2'
+				class='font-body text-[13px] pt-2.5 leading-none transition-colors duration-300 text-muted [&.active]:text-foreground [&.done]:text-muted'
+				>Generating output</span
+			>
+		</div>
+	</div>
+</div>
+
+<script>
+	import { createSarmalSVG, curves } from "@sarmal/core";
+	import type { DemoScenarioAPI } from "../../../lib/demo";
+
+	type Instance = ReturnType<typeof createSarmalSVG>;
+
+	function stop(s: Instance | null, slot: HTMLElement): null {
+		s?.pause();
+		slot.innerHTML = "";
+		return null;
+	}
+
+	const PIPE_STEPS = [
+		{
+			dotSelector: "[data-pipe-dot='0']",
+			labelSelector: "[data-pipe-label='0']",
+			curve: curves.lissajous43,
+			color: "#2dd4bf",
+			speed: 2.5
+		},
+		{
+			dotSelector: "[data-pipe-dot='1']",
+			labelSelector: "[data-pipe-label='1']",
+			curve: curves.rose3,
+			color: "#a78bfa",
+			speed: 1.5
+		},
+		{
+			dotSelector: "[data-pipe-dot='2']",
+			labelSelector: "[data-pipe-label='2']",
+			curve: curves.epitrochoid7,
+			color: "#2dd4bf",
+			speed: 2
+		}
+	];
+
+	const stepDotBaseClasses =
+		"w-9.5 h-9.5 rounded-lg bg-surface border border-border-subtle overflow-hidden shrink-0 transition-all duration-400";
+	const stepDotDoneClasses =
+		"w-9.5 h-9.5 rounded-lg border overflow-hidden shrink-0 transition-all duration-400 bg-green-400/[0.07] border-green-400/20 flex items-center justify-center text-base text-green-400";
+
+	function initPipeline(container: HTMLElement): DemoScenarioAPI {
+		let pipeSarmals: (Instance | null)[] = [null, null, null];
+		let pipeGen = 0;
+		let pipeTimer: ReturnType<typeof setTimeout> | null = null;
+
+		function cleanup() {
+			pipeGen++;
+			if (pipeTimer) {
+				clearTimeout(pipeTimer);
+				pipeTimer = null;
+			}
+			PIPE_STEPS.forEach((step) => {
+				const dot = container.querySelector(step.dotSelector) as HTMLElement;
+				const idx = PIPE_STEPS.indexOf(step);
+				pipeSarmals[idx] = stop(pipeSarmals[idx], dot);
+				dot.className = stepDotBaseClasses;
+				dot.textContent = "";
+				const label = container.querySelector(step.labelSelector) as HTMLElement;
+				label.classList.remove("active", "done");
+			});
+		}
+
+		function start(onDone: () => void) {
+			cleanup();
+			const gen = pipeGen;
+
+			function activateStep(i: number) {
+				if (pipeGen !== gen) return;
+				const step = PIPE_STEPS[i]!;
+				const dot = container.querySelector(step.dotSelector) as HTMLElement;
+				const label = container.querySelector(step.labelSelector) as HTMLElement;
+
+				label.classList.add("active");
+				pipeSarmals[i] = createSarmalSVG(dot, step.curve, {
+					trailColor: step.color,
+					skeletonColor: "transparent",
+					headColor: step.color,
+					headRadius: 1.5,
+					trailLength: 70
+				});
+				pipeSarmals[i]!.setSpeed(step.speed);
+
+				pipeTimer = setTimeout(() => {
+					if (pipeGen !== gen) return;
+					pipeSarmals[i] = stop(pipeSarmals[i], dot);
+					dot.className = stepDotDoneClasses;
+					dot.textContent = "✓";
+					label.classList.remove("active");
+					label.classList.add("done");
+
+					if (i < PIPE_STEPS.length - 1) {
+						pipeTimer = setTimeout(() => activateStep(i + 1), 300);
+					} else {
+						onDone();
+					}
+				}, 1400);
+			}
+
+			activateStep(0);
+		}
+
+		return { start, cleanup };
+	}
+
+	// Register on DOM ready
+	const container = document.querySelector('[data-scenario="pipeline"]') as HTMLElement;
+	if (container) {
+		window.demoRegistry = window.demoRegistry || {};
+		window.demoRegistry["pipeline"] = initPipeline(container);
+	}
+</script>
