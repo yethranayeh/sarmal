@@ -125,6 +125,24 @@ const sarmal = createSarmal(canvas, myCurve);
 
 Only `name` and `fn` are required.
 
+{/* FIXME: Repetitive content. Same in concepts.mdx */}
+The `fn` receives three arguments:
+- `t` (position along the curve, 0 -> period),
+- `time` (elapsed seconds),
+- `params` (reserved for now; always `{}`).
+
+For behavior that varies independently of curve position (e.g. oscillating a shape parameter) use `time`:
+
+```ts
+const wobble: CurveDef = {
+  name: "wobble",
+  fn: (t, time, _params) => {
+    const r = 1 + 0.3 * Math.sin(time * 2); // radius pulses with real time
+    return { x: r * Math.cos(t), y: r * Math.sin(t) };
+  },
+};
+```
+
 See the <Link href="/docs/api#curve-definition-schema">Curve Definition Schema</Link> for the full list of options.
 You can also prototype your curve ideas in the <Link href="/play">Playground</Link> page.
 
@@ -203,7 +221,3 @@ if (typeof window !== "undefined") {
 
 {/* TODO: Replace this with actual compoents once they are ready */}
 Or use a `useEffect` (React) / `onMount` (Svelte) / `mounted` hook (Vue) to ensure the code only runs client-side.
-
-## Next steps
-
-- [API Reference](/docs/api) - complete reference for every export

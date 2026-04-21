@@ -1,0 +1,131 @@
+---
+const id = `tpos-${Math.random().toString(36).slice(2, 8)}`;
+---
+
+<div id={id} data-t-pos-demo class='my-6 mx-auto max-w-sm rounded-lg overflow-hidden border border-border'>
+	<div class='t-pos-view relative' style='height:220px;background:var(--color-surface);'>
+		<div class='t-pos-coords absolute top-3 left-3.5 flex flex-col gap-0.5 pointer-events-none select-none'>
+			<span class='text-[0.58rem] font-mono text-muted leading-none'>P(t) =</span>
+			<span class='text-[0.7rem] font-mono text-primary leading-none'>
+				(<span data-coord-x>1.000</span>, <span data-coord-y>0.000</span>)
+			</span>
+		</div>
+	</div>
+
+	<div class='t-pos-bar grid grid-cols-4 border-t border-border'>
+		<button class='t-pos-btn' data-t='0' data-active>
+			<span class='t-pos-label'>t = 0</span>
+			<span class='t-pos-sub'>start</span>
+		</button>
+		<button class='t-pos-btn' data-t={String(Math.PI / 2)}>
+			<span class='t-pos-label'>t = π/2</span>
+			<span class='t-pos-sub'>¼ period</span>
+		</button>
+		<button class='t-pos-btn' data-t={String(Math.PI)}>
+			<span class='t-pos-label'>t = π</span>
+			<span class='t-pos-sub'>½ period</span>
+		</button>
+		<button class='t-pos-btn' data-t={String((3 * Math.PI) / 2)}>
+			<span class='t-pos-label'>t = 3π/2</span>
+			<span class='t-pos-sub'>¾ period</span>
+		</button>
+	</div>
+</div>
+
+<style>
+	.t-pos-bar {
+		background: var(--color-surface-raised);
+	}
+
+	.t-pos-btn {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		justify-content: center;
+		gap: 3px;
+		padding: 0.5rem 0.25rem;
+		cursor: pointer;
+		background: transparent;
+		border: none;
+		border-right: 1px solid var(--color-border);
+		transition: background 0.12s;
+	}
+
+	.t-pos-btn:last-child {
+		border-right: none;
+	}
+
+	.t-pos-btn:hover:not([data-active]) {
+		background: var(--color-surface);
+	}
+
+	.t-pos-btn[data-active] {
+		background: var(--color-primary);
+	}
+
+	.t-pos-label {
+		font-size: 0.68rem;
+		font-family: ui-monospace, "SF Mono", monospace;
+		color: var(--color-foreground);
+		line-height: 1;
+	}
+
+	.t-pos-btn[data-active] .t-pos-label {
+		color: #ffffff;
+	}
+
+	.t-pos-sub {
+		font-size: 0.55rem;
+		font-family: ui-monospace, "SF Mono", monospace;
+		color: var(--color-muted);
+		line-height: 1;
+	}
+
+	.t-pos-btn[data-active] .t-pos-sub {
+		color: rgba(255, 255, 255, 0.65);
+	}
+</style>
+
+<script>
+	import { createSarmalSVG, curves, palettes } from "@sarmal/core";
+
+	document.querySelectorAll<HTMLElement>("[data-t-pos-demo]").forEach((wrapper) => {
+		const view = wrapper.querySelector<HTMLElement>(".t-pos-view")!;
+		const buttons = wrapper.querySelectorAll<HTMLButtonElement>(".t-pos-btn");
+		const coordX = wrapper.querySelector<HTMLElement>("[data-coord-x]")!;
+		const coordY = wrapper.querySelector<HTMLElement>("[data-coord-y]")!;
+
+		const instance = createSarmalSVG(view, curves.astroid, {
+			autoStart: false,
+			initialT: 0,
+			trailColor: palettes.fire,
+			trailStyle: "gradient-static",
+			skeletonColor: "#c8c4be",
+			headRadius: 4
+		});
+
+		function updateCoords(t: number) {
+			const pt = curves.astroid.fn(t, 0, {});
+			coordX.textContent = pt.x.toFixed(3);
+			coordY.textContent = pt.y.toFixed(3);
+		}
+
+		function renderOnce() {
+			instance.play();
+			requestAnimationFrame(() => instance.pause());
+		}
+
+		buttons.forEach((btn) => {
+			btn.addEventListener("click", () => {
+				const t = parseFloat(btn.dataset.t!);
+
+				buttons.forEach((b) => delete b.dataset.active);
+				btn.dataset.active = "";
+
+				instance.seek(t);
+				renderOnce();
+				updateCoords(t);
+			});
+		});
+	});
+</script>

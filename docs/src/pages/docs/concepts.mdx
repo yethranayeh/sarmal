@@ -10,6 +10,7 @@ import Link from "../../components/Link.astro";
 import Alert from "../../components/Alert.astro";
 import SarmalBlueprint from "../../components/SarmalBlueprint.astro";
 import ConceptDemo from "../../components/ConceptDemo.astro";
+import TPositionDemo from "../../components/feature/demo/TPositionDemo.astro";
 
 # Concepts
 
@@ -58,6 +59,10 @@ The key idea is that you control _when_ the dot is at each position. You can spe
   </svg>
 </div>
 
+The parameter `t` controls exactly where on that path the dot is at any moment. Click a position to see the trail rebuild as if the dot had traveled naturally to that point:
+
+<TPositionDemo />
+
 You can <Link href='/play'>try it in the playground</Link> to see how it works
 
 ## The Skeleton
@@ -103,6 +108,11 @@ const points = engine.tick(dt); // math-space coordinates
 renderer.render(points, skeleton);
 ```
 
+`fn` is called each tick with three arguments:
+- `t` (position along the curve, 0 -> period),
+- `time` (elapsed seconds, useful for time-varying shapes),
+- `params` (reserved for now; always `{}`).
+
 The renderer *automatically* fits the curve to its container by using the skeleton's bounding box. So, you don't really have to set a scale or size on the curve itself.
 
 **What the engine manages:**
@@ -110,7 +120,7 @@ The renderer *automatically* fits the curve to its container by using the skelet
 - **t**: position along the curve (advances via `tick(dt)`, overridden with `seek(t)`)
 - **actualTime**: actual elapsed seconds (only advances with `tick()`, never with `seek()`)
 - Trail buffer: the last `N` points. It is a mutable, same array reference each tick
-- Morphing state: when transitioning between curves
+- <Link href="/docs/getting-started#morphing-between-curves">Morphing state</Link>: when transitioning between curves
 
 <Alert variant="info">
 The engine never touches pixels, canvas, SVG elements, colors, opacity, DPR, container dimensions.
