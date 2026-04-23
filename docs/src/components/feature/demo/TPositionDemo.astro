@@ -12,79 +12,34 @@ const id = `tpos-${Math.random().toString(36).slice(2, 8)}`;
 		</div>
 	</div>
 
-	<div class='t-pos-bar grid grid-cols-4 border-t border-border'>
-		<button class='t-pos-btn' data-t='0' data-active>
-			<span class='t-pos-label'>t = 0</span>
-			<span class='t-pos-sub'>start</span>
+	<div class='grid grid-cols-4 border-t border-border bg-surface-raised'>
+		<button
+			class='t-pos-btn group flex flex-col items-center justify-center gap-0.75 py-2 px-1 cursor-pointer bg-transparent border-0 border-r border-border transition-[background] duration-120 last:border-r-0 [&:hover:not([data-active])]:bg-surface data-active:bg-primary'
+			data-t='0'
+			data-active>
+			<span class='font-mono text-[0.68rem] text-foreground leading-none group-data-active:text-white'>t = 0</span>
+			<span class='font-mono text-[0.55rem] text-muted leading-none group-data-active:text-white/65'>start</span>
 		</button>
-		<button class='t-pos-btn' data-t={String(Math.PI / 2)}>
-			<span class='t-pos-label'>t = π/2</span>
-			<span class='t-pos-sub'>¼ period</span>
+		<button
+			class='t-pos-btn group flex flex-col items-center justify-center gap-0.75 py-2 px-1 cursor-pointer bg-transparent border-0 border-r border-border transition-[background] duration-120 last:border-r-0 [&:hover:not([data-active])]:bg-surface data-active:bg-primary'
+			data-t={String(Math.PI / 2)}>
+			<span class='font-mono text-[0.68rem] text-foreground leading-none group-data-active:text-white'>t = π/2</span>
+			<span class='font-mono text-[0.55rem] text-muted leading-none group-data-active:text-white/65'>¼ period</span>
 		</button>
-		<button class='t-pos-btn' data-t={String(Math.PI)}>
-			<span class='t-pos-label'>t = π</span>
-			<span class='t-pos-sub'>½ period</span>
+		<button
+			class='t-pos-btn group flex flex-col items-center justify-center gap-0.75 py-2 px-1 cursor-pointer bg-transparent border-0 border-r border-border transition-[background] duration-120 last:border-r-0 [&:hover:not([data-active])]:bg-surface data-active:bg-primary'
+			data-t={String(Math.PI)}>
+			<span class='font-mono text-[0.68rem] text-foreground leading-none group-data-active:text-white'>t = π</span>
+			<span class='font-mono text-[0.55rem] text-muted leading-none group-data-active:text-white/65'>½ period</span>
 		</button>
-		<button class='t-pos-btn' data-t={String((3 * Math.PI) / 2)}>
-			<span class='t-pos-label'>t = 3π/2</span>
-			<span class='t-pos-sub'>¾ period</span>
+		<button
+			class='t-pos-btn group flex flex-col items-center justify-center gap-0.75 py-2 px-1 cursor-pointer bg-transparent border-0 border-r border-border transition-[background] duration-120 last:border-r-0 [&:hover:not([data-active])]:bg-surface data-active:bg-primary'
+			data-t={String((3 * Math.PI) / 2)}>
+			<span class='font-mono text-[0.68rem] text-foreground leading-none group-data-active:text-white'>t = 3π/2</span>
+			<span class='font-mono text-[0.55rem] text-muted leading-none group-data-active:text-white/65'>¾ period</span>
 		</button>
 	</div>
 </div>
-
-<style>
-	.t-pos-bar {
-		background: var(--color-surface-raised);
-	}
-
-	.t-pos-btn {
-		display: flex;
-		flex-direction: column;
-		align-items: center;
-		justify-content: center;
-		gap: 3px;
-		padding: 0.5rem 0.25rem;
-		cursor: pointer;
-		background: transparent;
-		border: none;
-		border-right: 1px solid var(--color-border);
-		transition: background 0.12s;
-	}
-
-	.t-pos-btn:last-child {
-		border-right: none;
-	}
-
-	.t-pos-btn:hover:not([data-active]) {
-		background: var(--color-surface);
-	}
-
-	.t-pos-btn[data-active] {
-		background: var(--color-primary);
-	}
-
-	.t-pos-label {
-		font-size: 0.68rem;
-		font-family: ui-monospace, "SF Mono", monospace;
-		color: var(--color-foreground);
-		line-height: 1;
-	}
-
-	.t-pos-btn[data-active] .t-pos-label {
-		color: #ffffff;
-	}
-
-	.t-pos-sub {
-		font-size: 0.55rem;
-		font-family: ui-monospace, "SF Mono", monospace;
-		color: var(--color-muted);
-		line-height: 1;
-	}
-
-	.t-pos-btn[data-active] .t-pos-sub {
-		color: rgba(255, 255, 255, 0.65);
-	}
-</style>
 
 <script>
 	import { createSarmalSVG, curves, palettes } from "@sarmal/core";

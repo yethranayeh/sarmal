@@ -1,0 +1,50 @@
+---
+const id = `skel-${Math.random().toString(36).slice(2, 8)}`;
+---
+
+<div
+	id={id}
+	data-skeleton-mode-demo
+	class='my-6 content-auto mx-auto max-w-xl rounded-lg overflow-hidden border border-border'>
+	<div class='grid grid-cols-2 divide-x divide-border'>
+		<div class='flex flex-col'>
+			<div
+				class='flex items-center justify-between px-3 py-[0.35rem] border-b border-border bg-(--color-surface-raised)'>
+				<span class='font-mono text-[0.63rem] text-foreground'>skeleton: 'static'</span>
+				<span class='font-mono text-[0.57rem] text-muted'>drifts over time</span>
+			</div>
+			<div class='skel-static-view h-50 bg-surface'></div>
+		</div>
+		<div class='flex flex-col'>
+			<div
+				class='flex items-center justify-between px-3 py-[0.35rem] border-b border-border bg-(--color-surface-raised)'>
+				<span class='font-mono text-[0.63rem] text-foreground'>skeleton: 'live'</span>
+				<span class='font-mono text-[0.57rem] text-muted'>always matches</span>
+			</div>
+			<div class='skel-live-view h-50 bg-surface'></div>
+		</div>
+	</div>
+</div>
+
+<script>
+	import { createSarmalSVG, curves, palettes } from "@sarmal/core";
+
+	document.querySelectorAll<HTMLElement>("[data-skeleton-mode-demo]").forEach((wrapper) => {
+		const staticView = wrapper.querySelector<HTMLElement>(".skel-static-view")!;
+		const liveView = wrapper.querySelector<HTMLElement>(".skel-live-view")!;
+
+		const staticCurve = { ...curves.lame, skeleton: "static" as const };
+
+		createSarmalSVG(staticView, staticCurve, {
+			trailColor: palettes.fire,
+			trailStyle: "gradient-static",
+			skeletonColor: "#000000"
+		});
+
+		createSarmalSVG(liveView, curves.lame, {
+			trailColor: palettes.fire,
+			trailStyle: "gradient-static",
+			skeletonColor: "#000000"
+		});
+	});
+</script>

@@ -11,6 +11,8 @@ import Alert from "../../components/Alert.astro";
 import SarmalBlueprint from "../../components/SarmalBlueprint.astro";
 import ConceptDemo from "../../components/ConceptDemo.astro";
 import TPositionDemo from "../../components/feature/demo/TPositionDemo.astro";
+import SkeletonModeDemo from "../../components/feature/demo/SkeletonModeDemo.astro";
+import EngineOutputDemo from "../../components/feature/demo/EngineOutputDemo.astro";
 
 # Concepts
 
@@ -87,6 +89,10 @@ A third option exists for curves that animate but still have a natural reference
 | `'live'`             | Shape changes with time                                                |
 | `skeletonFn`         | Curve animates but has a stable reference shape                        |
 
+Watch the difference on the **Lamé** curve, which morphs continuously. The static skeleton freezes at the initial shape and quickly falls out of sync with the trail. The live skeleton redraws each frame and follows the current curvature.
+
+<SkeletonModeDemo />
+
 ## Engine
 
 The engine owns time, state, and math. It does not know about pixels, colors, or rendering.
@@ -114,6 +120,10 @@ renderer.render(points, skeleton);
 - `params` (reserved for now; always `{}`).
 
 The renderer *automatically* fits the curve to its container by using the skeleton's bounding box. So, you don't really have to set a scale or size on the curve itself.
+
+Watch the engine and renderer working together. The numbers on the right are raw `{x, y}` math-space coordinates received from `engine.tick(dt)`. These values are then translated by the renderer into pixels on the left:
+
+<EngineOutputDemo />
 
 **What the engine manages:**
 
