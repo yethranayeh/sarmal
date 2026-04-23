@@ -1,20 +1,7 @@
 {
-  "name": "@sarmal/core",
-  "version": "0.16.0",
-  "description": "Curve path based loading indicators and their renderer",
-  "keywords": [
-    "animation",
-    "canvas",
-    "curve",
-    "loading",
-    "parametric",
-    "spinner",
-    "svg"
-  ],
-  "homepage": "https://sarmal.art",
-  "bugs": {
-    "url": "https://github.com/yethranayeh/sarmal/issues"
-  },
+  "name": "@sarmal/react",
+  "version": "0.1.0",
+  "description": "React wrapper for @sarmal/core",
   "license": "MIT",
   "author": {
     "name": "Alper Halil",
@@ -24,16 +11,13 @@
   "repository": {
     "type": "git",
     "url": "git+https://github.com/yethranayeh/sarmal.git",
-    "directory": "packages/sarmal"
+    "directory": "packages/react"
   },
   "files": [
     "dist",
     "LICENSE"
   ],
   "type": "module",
-  "sideEffects": [
-    "./dist/auto-init.*"
-  ],
   "main": "./dist/index.js",
   "module": "./dist/index.js",
   "types": "./dist/index.d.ts",
@@ -42,20 +26,6 @@
       "types": "./dist/index.d.ts",
       "import": "./dist/index.js",
       "require": "./dist/index.cjs"
-    },
-    "./curves": {
-      "types": "./dist/curves/index.d.ts",
-      "import": "./dist/curves/index.js",
-      "require": "./dist/curves/index.cjs"
-    },
-    "./curves/*": {
-      "types": "./dist/curves/*.d.ts",
-      "import": "./dist/curves/*.js",
-      "require": "./dist/curves/*.cjs"
-    },
-    "./auto": {
-      "import": "./dist/auto-init.js",
-      "require": "./dist/auto-init.cjs"
     }
   },
   "scripts": {
@@ -65,17 +35,26 @@
     "lint": "oxlint",
     "format": "oxfmt",
     "test": "vitest",
-    "test:watch": "vitest --watch",
-    "bench": "vitest bench"
+    "test:watch": "vitest --watch"
   },
   "devDependencies": {
+    "@sarmal/core": "workspace:*",
+    "@testing-library/react": "^16.3.2",
     "@types/node": "^25.5.2",
+    "@types/react": "^19.2.14",
+    "@types/react-dom": "^19.2.0",
     "jsdom": "^29.0.2",
     "oxfmt": "^0.44.0",
     "oxlint": "^1.58.0",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
     "tsup": "^8.5.1",
     "typescript": "^6.0.2",
     "vitest": "^4.1.2"
+  },
+  "peerDependencies": {
+    "@sarmal/core": "*",
+    "react": ">=18"
   },
   "engines": {
     "node": ">=18.0.0"

@@ -1,0 +1,194 @@
+---
+layout: ../../layouts/DocsLayout.astro
+title: Framework Guides
+sidebarLabel: Framework Guides
+order: 6
+description: Framework integration guides for React and CDN usage.
+---
+
+import Alert from "../../components/Alert.astro";
+import Link from "../../components/Link.astro";
+
+# Framework Guides
+
+Framework integration guides for React and CDN usage.
+
+## React
+
+The `@sarmal/react` package provides a thin React wrapper over `@sarmal/core`. It gives you a `<Sarmal>` component for drop-in usage and a `useSarmal` hook for imperative control.
+
+### Installation
+
+```bash
+npm install @sarmal/core @sarmal/react
+```
+
+### The Component
+
+The quickest way to get a spinner on screen in React:
+
+```tsx
+import { Sarmal } from "@sarmal/react";
+import { rose5 } from "@sarmal/core";
+
+function App() {
+  return <Sarmal curve={rose5} />;
+}
+```
+
+The component renders a `<canvas>` element. You are responsible for sizing it - the canvas dimensions are captured at creation time and do not respond to CSS resizes.
+
+```tsx
+<Sarmal
+  curve={curves.rose3}
+  className="my-spinner"
+  style={{ width: 200, height: 200 }}
+/>
+```
+
+#### Props
+
+| Prop | Type | Default | Description |
+|------|------|---------|-------------|
+| `curve` | `CurveDef` | - | **Required.** The curve definition. Must be a stable reference (module-level const or `useMemo`). |
+| `className` | `string` | - | Applied to the `<canvas>` element |
+| `style` | `CSSProperties` | - | Applied to the `<canvas>` element |
+| `autoStart` | `boolean` | `true` | Start the animation loop automatically |
+| `initialT` | `number` | `undefined` | Initial position along the curve |
+| `skeletonColor` | `string` | `'#ffffff'` | Hex color for the skeleton path |
+| `trailColor` | `string \| string[]` | `'#ffffff'` | Hex color or array of hex colors for gradient trails |
+| `headColor` | `string` | derived | Hex color for the head dot. Omit to auto-follow trail color |
+| `headRadius` | `number` | `4` | Radius of the head dot in pixels |
+| `trailStyle` | `TrailStyle` | `'default'` | `'default'` \| `'gradient-static'` \| `'gradient-animated'` |
+| `morphDuration` | `number` | `300` | Duration of the morph transition when `curve` changes (ms) |
+| `onReady` | `(instance) => void` | - | Fired once after the instance is created. Store the reference if you need imperative control. |
+
+#### Curve stability
+
+The `curve` prop must be a **stable reference**.
+
+<Alert variant="warning" label="Do not define it inline">
+The component cannot deep-compare curves because they contain functions.
+</Alert>
+
+Use a module-level constant or `useMemo`:
+
+
+```tsx
+// [GOOD] module-level constant
+import { curves } from "@sarmal/core";
+
+<Sarmal curve={curves.rose3} />
+
+// [GOOD] memoized custom curve
+const myCurve = useMemo(
+  () => ({
+    name: "circle",
+    fn: (t) => ({ x: Math.cos(t), y: Math.sin(t) }),
+  }),
+  [],
+);
+
+<Sarmal curve={myCurve} />
+
+// [BAD] new object every render, causes infinite morph loop
+<Sarmal
+  curve={{
+    name: "circle",
+    fn: (t) => ({ x: Math.cos(t), y: Math.sin(t) }),
+  }}
+/>
+```
+
+#### Curve morphing
+
+When the `curve` prop changes, the spinner smoothly transitions using `morphTo`. The `morphDuration` prop controls how long the transition takes:
+
+```tsx
+const [curve, setCurve] = useState(curves.astroid);
+
+// Later...
+setCurve(curves.deltoid); // morphs over 300ms (default)
+
+// Custom duration:
+<Sarmal curve={curve} morphDuration={800} />
+```
+
+#### Imperative control
+
+Use the `onReady` callback to get the `SarmalInstance` for manual control:
+
+```tsx
+const sarmalRef = useRef<SarmalInstance | null>(null);
+
+<Sarmal
+  curve={curves.rose3}
+  onReady={(inst) => {
+    sarmalRef.current = inst;
+  }}
+/>;
+
+// Later:
+sarmalRef.current?.pause();
+sarmalRef.current?.setSpeed(0.5);
+```
+
+### `useSarmal` Hook
+
+For full control over the canvas element and instance lifecycle, you may prefer to use the hook:
+
+```tsx
+import { useSarmal } from "@sarmal/react";
+import { curves } from "@sarmal/core";
+
+function MySpinner() {
+  const { canvasRef, instance } = useSarmal(curves.astroid);
+
+  return <canvas ref={canvasRef} width={200} height={200} />;
+}
+```
+
+The hook returns:
+
+- `canvasRef`: attach to your `<canvas>` element
+- `instance`: a `useRef` holding the `SarmalInstance`. Access with `instance.current` for imperative calls (`play`, `pause`, `setSpeed`, `morphTo`, etc.)
+
+#### Hook signature
+
+```ts
+function useSarmal(
+  curve: CurveDef,
+  options?: Partial<SarmalOptions>,
+  morphOptions?: { morphDuration?: number },
+): {
+  canvasRef: React.RefObject<HTMLCanvasElement | null>;
+  instance: React.RefObject<SarmalInstance | null>;
+}
+```
+
+<Alert variant="warning">
+The `options` parameter is **init-only**. It is passed at creation and not tracked for changes.
+If you need to change render options reactively after mount, call `instance.current.setRenderOptions(...)` directly.
+</Alert>
+
+### SSR and Next.js App Router
+
+Each source file in `@sarmal/react` begins with `"use client"`. `createSarmal` is only ever called inside `useEffect`, which never runs on the server.
+
+**Next.js App Router:** Importing `@sarmal/react` inside a Server Component will fail. Add `"use client"` to the file that imports it, or wrap the `<Sarmal>` usage in a dedicated `ClientWrapper.tsx` that is itself marked `"use client"`.
+
+```tsx
+// ClientWrapper.tsx
+"use client";
+
+import { Sarmal } from "@sarmal/react";
+import { curves } from "@sarmal/core";
+
+export default function ClientWrapper() {
+  return <Sarmal curve={curves.astroid} />;
+}
+```
+
+## CDN
+
+[WIP]

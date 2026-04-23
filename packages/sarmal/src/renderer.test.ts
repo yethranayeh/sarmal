@@ -1466,7 +1466,7 @@ describe("setRenderOptions orthogonality", () => {
     vi.restoreAllMocks();
   });
 
-  it("morphTo() preserves trailColor after it settles", () => {
+  it("morphTo() preserves trailColor after it settles", async () => {
     vi.spyOn(globalThis, "requestAnimationFrame").mockImplementation(() => 1);
     vi.spyOn(globalThis, "cancelAnimationFrame").mockImplementation(() => {});
 
@@ -1480,7 +1480,7 @@ describe("setRenderOptions orthogonality", () => {
     const { canvas, fillStyles } = makeCanvasWithFillTracker();
     const instance = createSarmal(canvas, testCircle, { trailColor: "#ff0000" });
     instance.pause();
-    instance.morphTo(otherCurve);
+    const morphPromise = instance.morphTo(otherCurve);
 
     fillStyles.length = 0;
     instance.play();
@@ -1489,6 +1489,7 @@ describe("setRenderOptions orthogonality", () => {
     expect(countWithRed(fillStyles)).toBeGreaterThan(0);
 
     instance.destroy();
+    await expect(morphPromise).rejects.toThrow("Instance destroyed during morph");
     vi.restoreAllMocks();
   });
 });

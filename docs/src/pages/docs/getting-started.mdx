@@ -219,5 +219,23 @@ if (typeof window !== "undefined") {
 }
 ```
 
-{/* TODO: Replace this with actual compoents once they are ready */}
-Or use a `useEffect` (React) / `onMount` (Svelte) / `mounted` hook (Vue) to ensure the code only runs client-side.
+### React
+
+If you're using React, install `@sarmal/react` for a drop-in `<Sarmal>` component and `useSarmal` hook:
+
+```bash
+npm install @sarmal/core @sarmal/react
+```
+
+```tsx
+"use client";
+
+import { Sarmal } from "@sarmal/react";
+import { curves } from "@sarmal/core";
+
+export default function App() {
+  return <Sarmal curve={curves.artemis2} />;
+}
+```
+
+See the <Link href="/docs/frameworks">Framework Guides</Link> for the full React API and SSR notes.

@@ -143,6 +143,7 @@ export function createRenderer(options: RendererOptions): SarmalInstance {
   let lastTime = 0;
 
   let morphResolve: (() => void) | null = null;
+  let morphReject: ((error: Error) => void) | null = null;
   let morphDurationMs = DEFAULT_MORPH_DURATION_MS;
   let morphAlpha = 0;
 
@@ -329,6 +330,7 @@ export function createRenderer(options: RendererOptions): SarmalInstance {
         engine.completeMorph();
         morphResolve?.();
         morphResolve = null;
+        morphReject = null;
         morphAlpha = 0;
 
         skeleton = engine.getSarmalSkeleton();
@@ -413,6 +415,12 @@ export function createRenderer(options: RendererOptions): SarmalInstance {
         cancelAnimationFrame(animationId);
         animationId = null;
       }
+
+      if (morphReject !== null) {
+        morphReject(new Error("Instance destroyed during morph"));
+        morphResolve = null;
+        morphReject = null;
+      }
     },
 
     ...enginePassthroughs(engine),
@@ -422,6 +430,7 @@ export function createRenderer(options: RendererOptions): SarmalInstance {
         engine.completeMorph();
         morphResolve();
         morphResolve = null;
+        morphReject = null;
         morphAlpha = 0;
       }
 
@@ -430,8 +439,9 @@ export function createRenderer(options: RendererOptions): SarmalInstance {
 
       engine.startMorph(target, options?.morphStrategy);
 
-      return new Promise<void>((resolve) => {
+      return new Promise<void>((resolve, reject) => {
         morphResolve = resolve;
+        morphReject = reject;
       });
     },
 

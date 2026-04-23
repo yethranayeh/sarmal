@@ -2,21 +2,30 @@
 layout: ../../layouts/DocsLayout.astro
 title: Changelog
 sidebarLabel: Changelog
-order: 6
+order: 7
 description: Version history and migration notes.
 ---
 
-import Alert from "../../components/Alert.astro";
 import { ArrowRight } from "@lucide/astro";
+import Alert from "../../components/Alert.astro";
+import Link from "../../components/Link.astro";
 
 
 # Changelog
 
-Version history notes
+Version history notes of the <Link href="#core">Core</Link> and the <Link href="#react">React</Link> packages
 
-## Versions
+## Core
 
-## 0.15.1 - 19.04.2026
+### 0.16.0 - 23.04.2026
+
+`destroy()` now rejects any pending `morphTo` Promise.
+
+Previously, if a Sarmal instance was destroyed druing a morph, the Promise was *never* settled.
+
+The rejection is swallowed by the `.catch(() => {})` in `@sarmal/react`'s `useSarmal` hook. Callers who await `morphTo` directly should handle the rejection if they call `destroy()` before the morph completes.
+
+### 0.15.1 - 19.04.2026
 
 Replaced `getBoundingClientRect()` approach of getting container size with `offsetWidth` and `offsetHeight`.
 
@@ -24,7 +33,7 @@ The `getBoundingClientRect()` would cause unexpected width/height output, becaus
 
 The *offset* values now give the inherent layout box size, unaffected by CSS transforms
 
-## 0.15.0 - 19.04.2026
+### 0.15.0 - 19.04.2026
 
 <Alert label="Breaking" variant="error">The `palette` option is removed. Colors are now unified under `trailColor` which accepts a single hex string OR an array of hex strings.</Alert>
 
@@ -58,7 +67,7 @@ sarmal.setRenderOptions({ headColor: null });      // inherited from trail color
 
 ---
 
-## 0.14.0 - 18.04.2026
+### 0.14.0 - 18.04.2026
 
 Animated gradients are now supported in SVG renderer
 
@@ -73,7 +82,7 @@ const sarmal = createSarmalSVG(container, curves.astroid, {
 
 ---
 
-## 0.13.0 - 16.04.2026
+### 0.13.0 - 16.04.2026
 
 <Alert label="Breaking" variant="error">`SarmalInstance` methods `start()` and `stop()` are renamed to `play()` and `pause()` to match similar libraries</Alert>
 
@@ -109,3 +118,20 @@ A new `initialT` option lets you seek to a specific position before the first fr
 // Start at a specific position
 const sarmal = createSarmal(canvas, curves.artemis2, { initialT: Math.PI })
 ```
+
+## React
+
+## 0.1.0 - 23.04.2026
+
+`@sarmal/react` is a new package that provides a React wrapper over `@sarmal/core`. It exports a `<Sarmal>` component for drop-in usage and a `useSarmal` hook for imperative control.
+
+<Alert variant="tip">Curve changes use `morphTo` under the hood</Alert>
+
+```tsx
+import { Sarmal } from "@sarmal/react";
+import { curves } from "@sarmal/core";
+
+<Sarmal curve={curves.rose3} />
+```
+
+Peer dependencies: `react >= 18` and `@sarmal/core`. Each source file is marked with `"use client"` for SSR compatibility.

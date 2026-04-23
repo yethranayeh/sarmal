@@ -250,6 +250,7 @@ export function createSVGRenderer(options: SVGRendererOptions): SarmalInstance {
     typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
   let morphResolve: (() => void) | null = null;
+  let morphReject: ((error: Error) => void) | null = null;
   let morphDurationMs = DEFAULT_MORPH_DURATION_MS;
   let morphTarget: CurveDef | null = null;
   let morphAlpha = 0;
@@ -282,6 +283,7 @@ export function createSVGRenderer(options: SVGRendererOptions): SarmalInstance {
         engine.completeMorph();
         morphResolve?.();
         morphResolve = null;
+        morphReject = null;
         morphTarget = null;
         morphAlpha = 0;
         morphPathABuilt = "";
@@ -358,6 +360,13 @@ export function createSVGRenderer(options: SVGRendererOptions): SarmalInstance {
         cancelAnimationFrame(animationId);
         animationId = null;
       }
+
+      if (morphReject !== null) {
+        morphReject(new Error("Instance destroyed during morph"));
+        morphResolve = null;
+        morphReject = null;
+      }
+
       svg.remove();
     },
 
@@ -368,6 +377,7 @@ export function createSVGRenderer(options: SVGRendererOptions): SarmalInstance {
         engine.completeMorph();
         morphResolve();
         morphResolve = null;
+        morphReject = null;
         morphAlpha = 0;
         skeletonPathA.setAttribute("visibility", "hidden");
         skeletonPathB.setAttribute("visibility", "hidden");
@@ -387,8 +397,9 @@ export function createSVGRenderer(options: SVGRendererOptions): SarmalInstance {
         morphPathBBuilt = pointsToPathString(targetSkeleton, scale, offsetX, offsetY);
       }
 
-      return new Promise<void>((resolve) => {
+      return new Promise<void>((resolve, reject) => {
         morphResolve = resolve;
+        morphReject = reject;
       });
     },
 
