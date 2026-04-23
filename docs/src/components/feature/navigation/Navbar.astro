@@ -2,13 +2,17 @@
 import Branding from "../../Branding.astro";
 ---
 
-<header class='bg-surface-raised w-full relative z-10'>
-	<div class='w-full bg-white h-13 md:hidden'></div>
+<header class='bg-surface-raised w-full relative z-20'>
+	<div class='w-full relative bg-white h-13 md:hidden'>
+		<div class='z-10 relative flex items-center h-full w-max pl-4'><Branding /></div>
+	</div>
 
 	<div
 		class='flex items-center justify-between w-full px-4 py-2 isolate border-b border-border bg-white/70 md:bg-transparent backdrop-blur-sm md:backdrop-blur-none ring-1 md:ring-0 ring-black/5 fixed md:relative top-0'>
-		<Branding />
-		<div class='flex items-center gap-4'>
+		<div>
+			<div class='hidden md:block'><Branding /></div>
+		</div>
+		<div class='flex items-center gap-4 z-20'>
 			<slot name='nav' />
 			<slot />
 		</div>

@@ -9,6 +9,7 @@ import sarmalLight from "./src/themes/sarmal-editorial.json";
 import sarmalDark from "./src/themes/sarmal-editorial-dark.json";
 import rehypeWrapTables from "./src/plugins/rehype-wrap-tables.mjs";
 import rehypeHeadingAnchors from "./src/plugins/rehype-heading-anchors.mjs";
+import rehypeWrapSections from "./src/plugins/rehype-wrap-sections.mjs";
 
 // https://astro.build/config
 export default defineConfig({
@@ -16,7 +17,7 @@ export default defineConfig({
   integrations: [
     sitemap(),
     mdx({
-      rehypePlugins: [rehypeWrapTables, rehypeHeadingIds, rehypeHeadingAnchors],
+      rehypePlugins: [rehypeWrapTables, rehypeHeadingIds, rehypeHeadingAnchors, rehypeWrapSections],
     }),
   ],
   markdown: {
