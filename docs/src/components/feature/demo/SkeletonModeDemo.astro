@@ -2,11 +2,8 @@
 const id = `skel-${Math.random().toString(36).slice(2, 8)}`;
 ---
 
-<div
-	id={id}
-	data-skeleton-mode-demo
-	class='my-6 content-auto mx-auto max-w-xl rounded-lg overflow-hidden border border-border'>
-	<div class='grid grid-cols-2 divide-x divide-border'>
+<div id={id} data-skeleton-mode-demo class='my-6 content-auto max-w-xl rounded-lg overflow-hidden border border-border'>
+	<div class='grid grid-cols-1 md:grid-cols-2 divide-x divide-border'>
 		<div class='flex flex-col'>
 			<div
 				class='flex items-center justify-between px-3 py-[0.35rem] border-b border-border bg-(--color-surface-raised)'>

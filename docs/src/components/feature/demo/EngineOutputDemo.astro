@@ -2,16 +2,13 @@
 const id = `eng-${Math.random().toString(36).slice(2, 8)}`;
 ---
 
-<div
-	id={id}
-	data-engine-output-demo
-	class='content-auto my-6 mx-auto max-w-sm rounded-lg overflow-hidden border border-border'>
-	<div class='flex' style='height:220px;'>
+<div id={id} data-engine-output-demo class='content-auto my-6 max-w-sm rounded-lg overflow-hidden border border-border'>
+	<div class='flex flex-col md:flex-row' style='height:220px;'>
 		<div class='eng-view flex-1 min-w-0' style='background:var(--color-surface);'></div>
 		<div
-			class='w-36 shrink-0 border-l border-border bg-(--color-surface-raised) flex flex-col justify-center py-4 px-[1.1rem] gap-3'>
-			<div class='font-mono text-[0.57rem] text-muted leading-[1.4]'>engine.tick(dt) →</div>
-			<div class='font-mono text-[0.72rem] leading-loose flex flex-col'>
+			class='w-full md:w-36 shrink-0 border-l border-border bg-surface-raised flex flex-col justify-center py-4 px-[1.1rem] md:gap-3'>
+			<div class='font-mono text-[0.57rem] text-muted leading-[1.4]'>engine.tick(dt) {"->"}</div>
+			<div class='font-mono text-[0.72rem] leading-loose flex md:flex-col gap-4 md:gap-0'>
 				<div>
 					<span class='text-muted'>x: </span><span data-coord-x class='text-primary'>0.000</span>
 				</div>
