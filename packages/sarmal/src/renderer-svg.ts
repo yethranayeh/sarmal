@@ -197,8 +197,14 @@ export function createSVGRenderer(options: SVGRendererOptions): SarmalInstance {
     /**
      * Ribbon approach: each segment is a filled quad with its own opacity.
      * Quads are drawn from tail to head, with later quads overlaying earlier ones.
+     * When trailCount exceeds MAX_TRAIL_SEGMENTS, we draw only the most recent
+     *  segments so the trail stays visually connected to the head dot.
      */
-    for (let i = 0; i < trailCount - 1; i++) {
+    const startIdx = Math.max(0, trailCount - 1 - MAX_TRAIL_SEGMENTS);
+    const drawnCount = trailCount - 1 - startIdx;
+
+    for (let i = startIdx; i < trailCount - 1; i++) {
+      const j = i - startIdx;
       const { l0x, l0y, r0x, r0y, l1x, l1y, r1x, r1y, opacity, progress } = computeTrailQuad(
         trail,
         i,
@@ -209,18 +215,18 @@ export function createSVGRenderer(options: SVGRendererOptions): SarmalInstance {
 
       const d = `M${l0x.toFixed(2)} ${l0y.toFixed(2)} L${l1x.toFixed(2)} ${l1y.toFixed(2)} L${r1x.toFixed(2)} ${r1y.toFixed(2)} L${r0x.toFixed(2)} ${r0y.toFixed(2)} Z`;
 
-      trailPaths[i]!.setAttribute("d", d);
-      trailPaths[i]!.setAttribute("fill-opacity", opacity.toFixed(3));
+      trailPaths[j]!.setAttribute("d", d);
+      trailPaths[j]!.setAttribute("fill-opacity", opacity.toFixed(3));
 
       if (trailStyle !== "default") {
         const timeOffset = trailStyle === "gradient-animated" ? gradientAnimTime * 0.0005 : 0;
         const { r, g, b } = getPaletteColor(trailPalette, progress, timeOffset);
-        trailPaths[i]!.setAttribute("fill", `rgb(${r},${g},${b})`);
+        trailPaths[j]!.setAttribute("fill", `rgb(${r},${g},${b})`);
       }
     }
 
     // Hide unused paths
-    for (let i = trailCount - 1; i < trailPaths.length; i++) {
+    for (let i = drawnCount; i < trailPaths.length; i++) {
       trailPaths[i]!.setAttribute("d", "");
     }
   }

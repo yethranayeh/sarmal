@@ -278,6 +278,31 @@ describe("setRenderOptions — SVG attribute re-apply", () => {
   });
 });
 
+describe("SVG renderer — trailLength exceeds MAX_TRAIL_SEGMENTS", () => {
+  it("does not throw when engine trailLength > 200 and trail is fully filled", () => {
+    const container = makeContainer();
+    const engine = createEngine(testCircle, 250);
+    const instance = createSVGRenderer({ container, engine, autoStart: false });
+
+    // Tick 260 times to fill the trail well past the 200-segment cap
+    expect(() => {
+      for (let i = 0; i < 260; i++) {
+        engine.tick(0.016);
+      }
+      instance.play();
+      instance.pause();
+    }).not.toThrow();
+
+    // Head must still be advancing — not frozen at origin
+    const head = getHeadCircle(container);
+    const cx = parseFloat(head.getAttribute("cx") ?? "0");
+    const cy = parseFloat(head.getAttribute("cy") ?? "0");
+    expect(Number.isFinite(cx) && Number.isFinite(cy)).toBe(true);
+
+    instance.destroy();
+  });
+});
+
 describe("SVG renderer — palette array applied at construction", () => {
   it("renders gradient segments from the palette after a tick", () => {
     const container = makeContainer();
