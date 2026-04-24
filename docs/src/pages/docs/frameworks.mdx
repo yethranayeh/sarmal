@@ -36,7 +36,7 @@ function App() {
 }
 ```
 
-The component renders a `<canvas>` element. You are responsible for sizing it - the canvas dimensions are captured at creation time and do not respond to CSS resizes.
+The component renders a `<canvas>` element. With the current implementation, <u style="text-decoration-style: wavy;">you are responsible</u> for sizing it. Which means the canvas dimensions are captured at creation time and *do not* respond to CSS resizes.
 
 ```tsx
 <Sarmal

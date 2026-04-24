@@ -110,14 +110,6 @@ h6 {
   position: relative;
   max-width: 100%;
 
-  &::after {
-    position: absolute;
-    content: "";
-    inset: -10px -30px;
-    z-index: 0;
-    pointer-events: auto;
-  }
-
   &:hover .anchor-link {
     z-index: 1;
     opacity: 1;
@@ -126,14 +118,18 @@ h6 {
 
   & .anchor-link {
     position: absolute;
-    left: -20px;
-    top: 4px;
+    display: flex;
+    align-items: center;
+    left: -26px;
+    top: 0;
+    bottom: 0;
+    padding: 0 6px;
     opacity: 0;
     transition: opacity 0.2s;
     color: var(--color-muted);
     text-decoration: none;
 
-    & > svg:hover {
+    &:hover {
       & line:nth-of-type(1) {
         transform: translateY(0);
       }
