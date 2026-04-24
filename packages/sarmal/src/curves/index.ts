@@ -9,11 +9,19 @@ export { lissajous43 } from "./lissajous43";
 export { lame } from "./lame";
 export { rose3 } from "./rose3";
 export { rose5 } from "./rose5";
+export { rose52 } from "./rose52";
+export { star } from "./star";
+export { star4 } from "./star4";
+export { star7 } from "./star7";
 
 // Bulk export for convenience
 // >> Standard
 import { rose3 } from "./rose3";
 import { rose5 } from "./rose5";
+import { rose52 } from "./rose52";
+import { star } from "./star";
+import { star4 } from "./star4";
+import { star7 } from "./star7";
 import { astroid } from "./astroid";
 import { deltoid } from "./deltoid";
 import { epicycloid3 } from "./epicycloid3";
@@ -33,8 +41,12 @@ export const curves = {
   epitrochoid7,
   astroid,
   deltoid,
-  rose5,
   rose3,
+  rose5,
+  rose52,
+  star,
+  star4,
+  star7,
   lissajous32,
   lissajous43,
   epicycloid3,
