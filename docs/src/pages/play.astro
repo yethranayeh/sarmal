@@ -11,7 +11,8 @@ import { SEPARATOR_DOT } from "../variables";
 const curveEntries = Object.entries(curves).map(([id, def]) => ({
 	id,
 	name: def.name,
-	fn: def.fn.toString()
+	fn: def.fn.toString(),
+	period: def.period ?? Math.PI * 2,
 }));
 
 const DEFAULT_CODE = `return {
@@ -23,13 +24,14 @@ const presetsJson = JSON.stringify(
 	curveEntries.map((c) => ({
 		id: c.id,
 		name: c.name,
-		fn: c.fn
+		fn: c.fn,
+		period: c.period,
 	}))
 );
 ---
 
 <BaseLayout
-	title={`Play ${SEPARATOR_DOT} Sarmal`}
+	title={`Playground ${SEPARATOR_DOT} Sarmal`}
 	description='Type math, see it follow a path. Create your own sarmal loading indicators.'>
 
 	<main class='flex flex-col lg:flex-row h-[calc(100vh-57px)]'>
@@ -39,7 +41,7 @@ const presetsJson = JSON.stringify(
 					<span class='font-mono text-xs tracking-wider uppercase text-muted'>Editor</span>
 					<select
 						id='preset-select'
-						class='font-mono text-xs bg-transparent border border-border rounded px-2 py-1 text-foreground cursor-pointer hover:border-primary transition-colors'>
+						class='font-mono text-xs bg-surface-raised border border-border rounded px-2 py-1 text-foreground cursor-pointer hover:border-primary transition-colors'>
 						<option value=''>Select a curve</option>
 						{curveEntries.map((curve) => <option value={curve.id}>{curve.name}</option>)}
 					</select>
@@ -66,135 +68,91 @@ const presetsJson = JSON.stringify(
 				<div class='mb-3'>
 					<label for='code-input' class='block font-mono text-[10px] tracking-wider text-muted mb-1'>
 						<span class='text-muted'
-							>function (<span></span><code title='parametric angle (0 -> period)' class='text-primary'>t</code><span
-								class='text-muted'>:</span
-							><span class='text-muted'>number</span><span class='text-muted'> </span>,
-						</span><code title='elapsed time in seconds' class='text-primary'>time</code><span class='text-muted'
-							>:</span
-						><span class='text-muted'>number</span><span class='text-muted'>, </span><code
-							title='custom parameters object'
-							class='text-primary'>params</code
-						><span class='text-muted'>:</span><span class='text-muted'>{`Record<string, number>;`}</span><span
-							class='text-muted'>) {"{"}</span
-						>
+							><span class="text-primary font-semibold">function</span> (<code title='parametric angle (0 -> period)' class='text-accent'>t</code><span class='text-muted'>: number, </span
+							><code title='elapsed time in seconds' class='text-accent'>time</code><span class='text-muted'>: number, </span
+							><code title='custom parameters object' class='text-accent'>params</code><span class='text-muted'>: Record&lt;string, number&gt;) <span class="text-primary font-semibold">{"{"}</span></span>
+						</span>
 					</label>
 					<textarea
 						id='code-input'
-						class='w-full h-48 font-mono text-sm bg-surface-raised border border-border rounded-md p-3 text-foreground resize-none focus:outline-none focus:border-primary transition-colors'
+						class='w-full h-36 font-mono text-sm bg-surface-raised border border-border rounded-md p-3 text-foreground resize-none focus:outline-none focus:border-primary transition-colors'
 						>{DEFAULT_CODE}</textarea
 					>
-					<div id='error-display' class='hidden mt-2 font-mono text-xs text-error'></div>
-					<p class='mt-2 font-mono text-[10px] text-muted'>{"}"}</p>
+					<div id='error-display' class='hidden mt-1.5 font-mono text-xs text-error'></div>
+					<span class='mt-1 font-mono text-[10px] text-primary font-semibold'>{"}"}</span>
 				</div>
 
-				<div class='space-y-4'>
+				<div class='space-y-3'>
 					<Toggle id='skeleton-toggle' label='Skeleton' checked={true} />
 
-					<div>
-						<div class='flex items-center justify-between mb-1'>
-							<label for='speed-slider' class='font-mono text-xs tracking-wider uppercase text-muted'> Speed </label>
-							<span id='speed-value' class='font-mono text-xs text-muted'>1.0</span>
-						</div>
-						<input
-							type='range'
-							id='speed-slider'
-							min='0.1'
-							max='5'
-							step='0.1'
-							value='1'
-							class='w-full accent-primary'
-						/>
+					<div class='flex items-center gap-2'>
+						<label for='speed-slider' class='font-mono text-[10px] tracking-wider uppercase text-muted w-24 shrink-0'>Speed</label>
+						<input type='range' id='speed-slider' min='0.1' max='5' step='0.1' value='1' class='flex-1 min-w-0 accent-primary' />
+						<span id='speed-value' class='font-mono text-[10px] text-muted w-7 text-right tabular-nums'>1.0</span>
 					</div>
 
-					<div>
-						<div class='flex items-center justify-between mb-1'>
-							<label for='trail-slider' class='font-mono text-xs tracking-wider uppercase text-muted'>
-								Trail Length
-							</label>
-							<span id='trail-value' class='font-mono text-xs text-muted'>120</span>
-						</div>
-						<input
-							type='range'
-							id='trail-slider'
-							min='10'
-							max='500'
-							step='10'
-							value='120'
-							class='w-full accent-primary'
-						/>
+					<div class='flex items-center gap-2'>
+						<label for='trail-slider' class='font-mono text-[10px] tracking-wider uppercase text-muted w-24 shrink-0'>Trail Length</label>
+						<input type='range' id='trail-slider' min='10' max='500' step='10' value='120' class='flex-1 min-w-0 accent-primary' />
+						<span id='trail-value' class='font-mono text-[10px] text-muted w-7 text-right tabular-nums'>120</span>
 					</div>
 
-					<div>
-						<div class='flex items-center justify-between mb-1'>
-							<label for='color-input' class='font-mono text-xs tracking-wider uppercase text-muted'>
-								Trail Color
-							</label>
-							<input
-								type='color'
-								id='color-input'
-								value='#c0143c'
-								class='w-8 h-5 rounded border border-border cursor-pointer'
-							/>
-						</div>
-					</div>
+					<div class='border-t border-border-subtle'></div>
 
-					<div>
-						<div class='flex items-center justify-between mb-1'>
-							<label for='head-color-input' class='font-mono text-xs tracking-wider uppercase text-muted'>
-								Head Color
-							</label>
-							<div class='flex items-center gap-2'>
-								<label class='flex items-center gap-1 cursor-pointer'>
-									<input
-										type='checkbox'
-										id='head-color-auto'
-										checked
-										class='accent-primary'
+					<div class='grid grid-cols-3 gap-x-3'>
+						<div class='flex flex-col gap-1'>
+							<label for='trail-style-select' class='font-mono text-[10px] tracking-wider uppercase text-muted'>Trail Style</label>
+							<select
+								id='trail-style-select'
+								class='w-full font-mono text-xs bg-surface-raised border border-border rounded px-2 py-1 text-foreground cursor-pointer hover:border-primary transition-colors'>
+								<option value='default'>Default</option>
+								<option value='gradient-static'>Static Gradient</option>
+								<option value='gradient-animated'>Animated</option>
+							</select>
+						</div>
+
+						<div id='color-controls' class='contents'>
+							<div class='flex flex-col gap-1'>
+								<label for='color-input' class='font-mono text-[10px] tracking-wider uppercase text-muted'>Trail</label>
+								<input type='color' id='color-input' value='#c0143c' class='w-full h-7 cursor-pointer' />
+							</div>
+							<div class='flex flex-col gap-1'>
+								<label for='head-color-input' class='font-mono text-[10px] tracking-wider uppercase text-muted'>Head</label>
+								<div class='flex items-center gap-1.5'>
+									<label class='flex items-center gap-1 cursor-pointer'>
+										<input type='checkbox' id='head-color-auto' checked class='accent-primary' />
+										<span class='font-mono text-[10px] text-muted'>Auto</span>
+									</label>
+									<div class="w-full rounded-md overflow-hidden">
+										<input
+										type='color'
+										id='head-color-input'
+										value='#c0143c'
+										class='w-full h-7 cursor-pointer'
+										disabled
 									/>
-									<span class='font-mono text-[10px] text-muted'>Auto</span>
-								</label>
-								<input
-									type='color'
-									id='head-color-input'
-									value='#c0143c'
-									class='w-8 h-5 rounded border border-border cursor-pointer'
-									disabled
-								/>
+									</div>
+								</div>
 							</div>
 						</div>
-					</div>
 
-					<div>
-						<div class='flex items-center justify-between mb-1'>
-							<label for='trail-style-select' class='font-mono text-xs tracking-wider uppercase text-muted'>
-								Trail Style
-							</label>
-						</div>
-						<select
-							id='trail-style-select'
-							class='w-full font-mono text-xs bg-transparent border border-border rounded px-2 py-1 text-foreground cursor-pointer hover:border-primary transition-colors'>
-							<option value='default'>Default (white fade)</option>
-							<option value='gradient-static'>Static Gradient</option>
-							<option value='gradient-animated'>Animated Gradient</option>
-						</select>
-					</div>
+						<div id='palette-container' class='col-start-2 col-span-2 flex flex-col gap-1.5'>
+							<div class='flex items-center justify-between'>
+								<label for='palette-select' class='font-mono text-[10px] tracking-wider uppercase text-muted'>Palette</label>
+								<select
+									id='palette-select'
+									class='font-mono text-xs bg-transparent border border-border rounded px-2 py-1 text-foreground cursor-pointer hover:border-primary transition-colors'>
+									<option value='bard'>Bard</option>
+									<option value='sunset'>Sunset</option>
+									<option value='ocean'>Ocean</option>
+									<option value='ice'>Ice</option>
+									<option value='fire'>Fire</option>
+									<option value='forest'>Forest</option>
+								</select>
+							</div>
 
-					<div id='palette-container' class='hidden'>
-						<div class='flex items-center justify-between mb-1'>
-							<label for='palette-select' class='font-mono text-xs tracking-wider uppercase text-muted'>
-								Palette
-							</label>
-						</div>
-						<select
-							id='palette-select'
-							class='w-full font-mono text-xs bg-transparent border border-border rounded px-2 py-1 text-foreground cursor-pointer hover:border-primary transition-colors'>
-							<option value='bard'>Bard (purple, blue, teal, pink)</option>
-							<option value='sunset'>Sunset (orange, red, purple, pink)</option>
-							<option value='ocean'>Ocean (deep blue, cyan, aqua, white)</option>
-							<option value='ice'>Ice (deep blue, ice cyan)</option>
-							<option value='fire'>Fire (deep red, amber)</option>
-							<option value='forest'>Forest (deep green, mint)</option>
-						</select>
+							<div id='palette-preview' class='h-2 w-full rounded-full bg-size-[200%_100%]'></div>
+					</div>
 					</div>
 				</div>
 			</div>
@@ -211,5 +169,15 @@ const presetsJson = JSON.stringify(
 		<script is:inline type='application/json' id='presets-data' set:html={presetsJson}>
 		</script>
 		<script src='../play.ts'></script>
+
+		<style>
+			#palette-preview.animated {
+				animation: palette-shift 3s linear infinite;
+			}
+			@keyframes palette-shift {
+				0%   { background-position: 0% 50%; }
+				100% { background-position: 200% 50%; }
+			}
+		</style>
 	</main>
 </BaseLayout>

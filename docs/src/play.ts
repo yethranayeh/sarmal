@@ -1,5 +1,5 @@
-import { createEngine, palettes } from "@sarmal/core";
-import { createRenderer } from "@sarmal/core";
+import { createEngine, palettes, createRenderer } from "@sarmal/core";
+import type { TrailStyle } from "@sarmal/core";
 
 const DEFAULT_CODE = `return {
   x: Math.cos(t),
@@ -11,20 +11,28 @@ if (!presetsDataEl) {
   throw new Error("presets-data element not found");
 }
 
-const presetsData: Array<{ id: string; fn: string }> = JSON.parse(
+const presetsData: Array<{ id: string; fn: string; period?: number }> = JSON.parse(
   presetsDataEl.textContent || "[]",
 );
-const PRESETS: Record<string, string> = presetsData.reduce(
+const PRESETS: Record<string, { fn: string; period: number }> = presetsData.reduce(
   (acc, c) => {
-    acc[c.id] = c.fn;
+    acc[c.id] = { fn: c.fn, period: c.period ?? Math.PI * 2 };
     return acc;
   },
-  {} as Record<string, string>,
+  {} as Record<string, { fn: string; period: number }>,
 );
+
+type CurveFn = (
+  t: number,
+  time: number,
+  params: Record<string, number>,
+) => { x: number; y: number };
 
 let currentInstance: ReturnType<typeof createRenderer> | null = null;
 let showSkeleton = true;
 let currentCode = DEFAULT_CODE;
+let lastCompiledCode = "";
+let lastCompiledFn: CurveFn | null = null;
 let debounceTimer: ReturnType<typeof setTimeout> | null = null;
 
 const codeInput = document.getElementById("code-input") as HTMLTextAreaElement;
@@ -45,6 +53,8 @@ const headColorAutoCheckbox = document.getElementById("head-color-auto") as HTML
 const trailStyleSelect = document.getElementById("trail-style-select") as HTMLSelectElement;
 const paletteSelect = document.getElementById("palette-select") as HTMLSelectElement;
 const paletteContainer = document.getElementById("palette-container") as HTMLDivElement;
+const colorControlsDiv = document.getElementById("color-controls") as HTMLDivElement;
+const palettePreview = document.getElementById("palette-preview") as HTMLDivElement;
 
 // Full state shared via the KV API.
 interface SharedState {
@@ -60,21 +70,46 @@ interface SharedState {
   showSkeleton: boolean;
 }
 
-function showError(msg: string): void {
+const SAMPLE_N = 16;
+const SAMPLE_EPSILON = 1e-9;
+const SAMPLE_PERIOD = Math.PI * 2;
+
+function sampleCurveFn(fn: CurveFn): Array<{ x: number; y: number }> {
+  const samples: Array<{ x: number; y: number }> = [];
+  for (let i = 0; i < SAMPLE_N; i++) {
+    const t = (i / SAMPLE_N) * SAMPLE_PERIOD;
+    samples.push(fn(t, 0, {}));
+  }
+  return samples;
+}
+
+function samplesEqual(
+  a: Array<{ x: number; y: number }>,
+  b: Array<{ x: number; y: number }>,
+): boolean {
+  for (let i = 0; i < a.length; i++) {
+    if (Math.abs(a[i].x - b[i].x) > SAMPLE_EPSILON || Math.abs(a[i].y - b[i].y) > SAMPLE_EPSILON) {
+      return false;
+    }
+  }
+  return true;
+}
+
+function showError(msg: string) {
   errorDisplay.textContent = msg;
   errorDisplay.classList.remove("hidden");
   codeInput.classList.add("border-error");
   codeInput.classList.remove("border-border");
 }
 
-function clearError(): void {
+function clearError() {
   errorDisplay.classList.add("hidden");
   codeInput.classList.remove("border-error");
   codeInput.classList.add("border-border");
 }
 
 // TODO: expose `params` as user-configurable key-value sliders in the UI
-function buildCurveFn(code: string) {
+function buildCurveFn(code: string): CurveFn | null {
   try {
     const fn = new Function("t", "time", "params", code);
     const result = fn(0, 0, {});
@@ -82,15 +117,19 @@ function buildCurveFn(code: string) {
     if (typeof result !== "object" || result === null || !("x" in result) || !("y" in result)) {
       throw new Error("fn must return { x, y }");
     }
-    return fn as (
-      t: number,
-      time: number,
-      params: Record<string, number>,
-    ) => { x: number; y: number };
+    return fn as CurveFn;
   } catch (err: unknown) {
     showError((err as Error).message);
     return null;
   }
+}
+
+function getResolvedTrailColor() {
+  const style = trailStyleSelect.value as TrailStyle;
+  if (style !== "default") {
+    return palettes[paletteSelect.value as keyof typeof palettes] ?? colorInput.value;
+  }
+  return colorInput.value;
 }
 
 function getParams() {
@@ -101,29 +140,23 @@ function getParams() {
     headColorAuto: headColorAutoCheckbox.checked,
     trailLength: parseInt(trailSlider.value, 10),
     speed: parseFloat(speedSlider.value),
-    trailStyle: trailStyleSelect.value as "default" | "gradient-static" | "gradient-animated",
+    trailStyle: trailStyleSelect.value as TrailStyle,
     palette: paletteSelect.value as "bard" | "sunset" | "ocean" | "ice" | "fire" | "forest",
   };
 }
 
-function createInstance(
-  fn: (t: number, time: number, params: Record<string, number>) => { x: number; y: number },
-  params: ReturnType<typeof getParams>,
-) {
+function createInstance(fn: CurveFn, params: ReturnType<typeof getParams>, period = Math.PI * 2) {
   if (currentInstance) {
     currentInstance.destroy();
     currentInstance = null;
   }
 
   const engine = createEngine(
-    { name: "playground", fn, period: Math.PI * 2, speed: params.speed },
+    { name: "playground", fn, period, speed: params.speed },
     params.trailLength,
   );
 
-  const resolvedTrailColor =
-    params.trailStyle !== "default"
-      ? (palettes[params.palette as keyof typeof palettes] ?? params.trailColor)
-      : params.trailColor;
+  const resolvedTrailColor = getResolvedTrailColor();
 
   const rendererOptions: Parameters<typeof createRenderer>[0] = {
     canvas: previewCanvas,
@@ -139,14 +172,16 @@ function createInstance(
   }
 
   currentInstance = createRenderer(rendererOptions);
+  lastCompiledCode = currentCode;
+  lastCompiledFn = fn;
 }
 
 // Update speed without recreating anything
-function updateSpeed(speed: number): void {
+function updateSpeed(speed: number) {
   currentInstance?.setSpeed(speed);
 }
 
-function handleCodeChange(): void {
+function handleCodeChange() {
   clearError();
   currentCode = codeInput.value;
 
@@ -155,15 +190,44 @@ function handleCodeChange(): void {
   }
 
   debounceTimer = setTimeout(() => {
-    const fn = buildCurveFn(currentCode);
-    if (fn) {
-      createInstance(fn, getParams());
+    // Gate 1: text-identity short-circuit
+    if (currentCode === lastCompiledCode) {
+      return;
     }
+
+    const fn = buildCurveFn(currentCode);
+    if (!fn) {
+      return;
+    }
+
+    // Gate 2: output sampling
+    let oldSamples: Array<{ x: number; y: number }> | undefined;
+    try {
+      if (lastCompiledFn) {
+        oldSamples = sampleCurveFn(lastCompiledFn);
+      }
+    } catch {
+      // Old function throws at some samples and we can't compare so treat as different
+    }
+
+    let newSamples: Array<{ x: number; y: number }> | undefined;
+    try {
+      newSamples = sampleCurveFn(fn);
+    } catch {
+      showError("Curve function produces invalid output for some values");
+      return;
+    }
+
+    if (oldSamples && newSamples && samplesEqual(oldSamples, newSamples)) {
+      return;
+    }
+
+    createInstance(fn, getParams());
   }, 150);
 }
 
 // TODO: Arrow function regex may capture trailing ')' from object returns. Current catalog uses function declarations, so not a practical issue.
-function extractBody(fnStr: string): string {
+function extractBody(fnStr: string) {
   const fnMatch = fnStr.match(/function\s*\w*\s*\([^)]*\)\s*\{([\s\S]*)\}$/);
   if (fnMatch) {
     return fnMatch[1].trim();
@@ -176,24 +240,24 @@ function extractBody(fnStr: string): string {
   return fnStr;
 }
 
-function loadPreset(curveId: string): void {
-  const fnStr = PRESETS[curveId];
-  if (!fnStr) {
+function loadPreset(curveId: string) {
+  const preset = PRESETS[curveId];
+  if (!preset) {
     return;
   }
 
-  const body = extractBody(fnStr);
+  const body = extractBody(preset.fn);
   codeInput.value = body;
   currentCode = body;
   clearError();
 
   const fn = buildCurveFn(body);
   if (fn) {
-    createInstance(fn, getParams());
+    createInstance(fn, getParams(), preset.period);
   }
 }
 
-function handleClear(): void {
+function handleClear() {
   codeInput.value = "";
   currentCode = "";
   history.replaceState(null, "", window.location.pathname);
@@ -203,9 +267,11 @@ function handleClear(): void {
     currentInstance.destroy();
     currentInstance = null;
   }
+  lastCompiledCode = "";
+  lastCompiledFn = null;
 }
 
-function handleSkeletonToggle(): void {
+function handleSkeletonToggle() {
   showSkeleton = !showSkeleton;
   const knob = skeletonToggle.querySelector("span");
 
@@ -221,20 +287,19 @@ function handleSkeletonToggle(): void {
     knob?.classList.add("translate-x-0");
   }
 
+  currentInstance?.setRenderOptions({
+    skeletonColor: showSkeleton ? colorInput.value : "transparent",
+  });
+}
+
+function updateTrailLength() {
   const fn = buildCurveFn(currentCode);
   if (fn) {
     createInstance(fn, getParams());
   }
 }
 
-function updateInstance(): void {
-  const fn = buildCurveFn(currentCode);
-  if (fn) {
-    createInstance(fn, getParams());
-  }
-}
-
-function setShareStatus(text: string): void {
+function setShareStatus(text: string) {
   shareStatus.textContent = text;
   shareStatus.classList.toggle("hidden", text === "");
 }
@@ -285,16 +350,24 @@ async function handleShare(): Promise<void> {
   }
 }
 
-function updatePaletteVisibility(): void {
-  const isGradient = trailStyleSelect.value !== "default";
-  if (isGradient) {
-    paletteContainer.classList.remove("hidden");
-  } else {
-    paletteContainer.classList.add("hidden");
-  }
+function updatePalettePreview() {
+  const palette = palettes[paletteSelect.value as keyof typeof palettes];
+  if (!palette) return;
+  const colors = [...palette, palette[0]];
+  palettePreview.style.backgroundImage = `linear-gradient(to right, ${colors.join(", ")})`;
+  palettePreview.style.backgroundSize = "200% 100%";
+  const isAnimated = trailStyleSelect.value === "gradient-animated";
+  palettePreview.classList.toggle("animated", isAnimated);
 }
 
-function updateHeadColorInputState(): void {
+function updatePaletteVisibility() {
+  const isGradient = trailStyleSelect.value !== "default";
+  paletteContainer.classList.toggle("hidden", !isGradient);
+  colorControlsDiv.classList.toggle("hidden", isGradient);
+  if (isGradient) updatePalettePreview();
+}
+
+function updateHeadColorInputState() {
   headColorInput.disabled = headColorAutoCheckbox.checked;
   if (headColorAutoCheckbox.checked) {
     headColorInput.classList.add("opacity-50");
@@ -303,7 +376,7 @@ function updateHeadColorInputState(): void {
   }
 }
 
-function restoreState(state: SharedState): void {
+function restoreState(state: SharedState) {
   codeInput.value = state.code;
   currentCode = state.code;
 
@@ -359,20 +432,48 @@ speedSlider.addEventListener("input", (e) => {
 trailSlider.addEventListener("input", (e) => {
   const target = e.target as HTMLInputElement;
   trailValue.textContent = target.value;
-  updateInstance();
 });
 
-colorInput.addEventListener("input", updateInstance);
-headColorInput.addEventListener("input", updateInstance);
+trailSlider.addEventListener("change", () => {
+  updateTrailLength();
+});
+
+colorInput.addEventListener("input", () => {
+  const style = trailStyleSelect.value as TrailStyle;
+  currentInstance?.setRenderOptions({
+    ...(style === "default" ? { trailColor: colorInput.value } : {}),
+    skeletonColor: showSkeleton ? colorInput.value : "transparent",
+  });
+});
+
+headColorInput.addEventListener("input", () => {
+  if (!headColorAutoCheckbox.checked) {
+    currentInstance?.setRenderOptions({ headColor: headColorInput.value });
+  }
+});
+
 headColorAutoCheckbox.addEventListener("change", () => {
   updateHeadColorInputState();
-  updateInstance();
+  currentInstance?.setRenderOptions({
+    headColor: headColorAutoCheckbox.checked ? null : headColorInput.value,
+  });
 });
+
 trailStyleSelect.addEventListener("change", () => {
   updatePaletteVisibility();
-  updateInstance();
+  currentInstance?.setRenderOptions({
+    trailStyle: trailStyleSelect.value as TrailStyle,
+    trailColor: getResolvedTrailColor(),
+  });
 });
-paletteSelect.addEventListener("change", updateInstance);
+
+paletteSelect.addEventListener("change", () => {
+  updatePalettePreview();
+  const style = trailStyleSelect.value as TrailStyle;
+  if (style !== "default") {
+    currentInstance?.setRenderOptions({ trailColor: getResolvedTrailColor() });
+  }
+});
 
 async function init(): Promise<void> {
   const searchParams = new URLSearchParams(window.location.search);
