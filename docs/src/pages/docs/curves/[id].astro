@@ -39,7 +39,11 @@ export function getStaticPaths() {
 		{ params: { id: "lissajous32" } },
 		{ params: { id: "lissajous43" } },
 		{ params: { id: "epicycloid3" } },
-		{ params: { id: "lame" } }
+		{ params: { id: "lame" } },
+		{ params: { id: "rose52" } },
+		{ params: { id: "star" } },
+		{ params: { id: "star4" } },
+		{ params: { id: "star7" } }
 	];
 }
 
@@ -56,7 +60,7 @@ const CURVE_DATA: Record<string, CurveData> = {
 		speed: 0.7,
 		skeleton: "static",
 		description:
-			"Modified lemniscate with two unequal lobes. The hero curve of the collection, tracing a path inspired by the Artemis II lunar free-return trajectory.",
+			"Modified lemniscate with two unequal lobes. The iconic curve of the collection, tracing a path inspired by the Artemis II lunar free-return trajectory.",
 		features: [
 			"Two unequal lobes creating organic asymmetry",
 			"Based on NASA's Artemis II mission trajectory",
@@ -134,6 +138,23 @@ const CURVE_DATA: Record<string, CurveData> = {
 		features: ["5 petals with radial symmetry", "Polar equation: r = cos(5t)", "Classic rhodonea curve"],
 		importPath: "@sarmal/core/curves/rose5"
 	},
+	rose52: {
+		name: "Rose (n=5/2)",
+		curveKey: "rose52",
+		family: "Rose",
+		equation: "r = \\cos\\!\\left(\\tfrac{5}{2}t\\right) \\\\ x = r\\cos(t) \\\\ y = r\\sin(t)",
+		period: "4π",
+		speed: 0.8,
+		skeleton: "static",
+		description:
+			"A 5-petaled rose curve with a fractional n=5/2, requiring two full revolutions to complete. The head passes through the center between petals, creating elegant crossing trails.",
+		features: [
+			"5 petals traced over two full revolutions (period 4π)",
+			"Head crosses through the center between petals",
+			"Fractional n=5/2 creates denser, more intricate trail crossings than integer-n roses"
+		],
+		importPath: "@sarmal/core/curves/rose52"
+	},
 	lissajous32: {
 		name: "Lissajous 3:2",
 		curveKey: "lissajous32",
@@ -197,6 +218,58 @@ const CURVE_DATA: Record<string, CurveData> = {
 			"Live skeleton shifts continuously"
 		],
 		importPath: "@sarmal/core/curves/lame"
+	},
+
+	star: {
+		name: "Star",
+		curveKey: "star",
+		family: "Fourier polar",
+		equation:
+			"r = \\left|\\cos\\!\\left(\\tfrac{5}{2}t\\right)\\right| + 0.35\\left|\\cos\\!\\left(\\tfrac{15}{2}t\\right)\\right| + 0.15\\left|\\cos\\!\\left(\\tfrac{25}{2}t\\right)\\right| \\\\ x = r\\cos(t) \\\\ y = r\\sin(t)",
+		period: "2π",
+		speed: 1.0,
+		skeleton: "static",
+		description: "A 5-pointed star shape built from Fourier harmonics in polar coordinates.",
+		features: [
+			"5 sharp tips from the fundamental frequency",
+			"Two higher harmonics sharpen the tips and add subtle texture",
+			"Fully closed in a single revolution"
+		],
+		importPath: "@sarmal/core/curves/star"
+	},
+	star4: {
+		name: "Star (4-arm)",
+		curveKey: "star4",
+		family: "Fourier polar",
+		equation:
+			"r = \\left|\\cos(2t)\\right| + 0.35\\left|\\cos(6t)\\right| + 0.15\\left|\\cos(10t)\\right| \\\\ x = r\\cos(t) \\\\ y = r\\sin(t)",
+		period: "2π",
+		speed: 1.0,
+		skeleton: "static",
+		description: "A 4-pointed star shape built from Fourier harmonics in polar coordinates.",
+		features: [
+			"4 sharp tips from base frequency 2t",
+			"Same harmonic construction as Star but with 4-fold symmetry",
+			"Fully closed in a single revolution"
+		],
+		importPath: "@sarmal/core/curves/star4"
+	},
+	star7: {
+		name: "Star (7-arm)",
+		curveKey: "star7",
+		family: "Fourier polar",
+		equation:
+			"r = \\left|\\cos\\!\\left(\\tfrac{7}{2}t\\right)\\right| + 0.35\\left|\\cos\\!\\left(\\tfrac{21}{2}t\\right)\\right| + 0.15\\left|\\cos\\!\\left(\\tfrac{35}{2}t\\right)\\right| \\\\ x = r\\cos(t) \\\\ y = r\\sin(t)",
+		period: "2π",
+		speed: 1.0,
+		skeleton: "static",
+		description: "A 7-pointed star shape built from Fourier harmonics in polar coordinates.",
+		features: [
+			"7 sharp tips from base frequency 7t/2",
+			"Same harmonic construction as Star but with 7-fold symmetry",
+			"Fully closed in a single revolution"
+		],
+		importPath: "@sarmal/core/curves/star7"
 	}
 };
 
@@ -212,6 +285,13 @@ import { ${curve.curveKey} } from "${curve.importPath}";
 const canvas = document.getElementById("spinner") as HTMLCanvasElement;
 const sarmal = createSarmal(canvas, ${curve.curveKey});`;
 
+const reactSnippet = `import { Sarmal } from "@sarmal/react";
+import { ${curve.curveKey} } from "${curve.importPath}";
+
+function App() {
+  return <Sarmal curve={${curve.curveKey}} />;
+}`;
+
 const title = `${curve.name} ${SEPARATOR_DOT} Curve Catalog ${SEPARATOR_DOT} Sarmal`;
 
 const colorMap: Record<string, string> = {
@@ -224,7 +304,11 @@ const colorMap: Record<string, string> = {
 	lissajous32: "#fb923c",
 	lissajous43: "#2dd4bf",
 	epicycloid3: "#60a5fa",
-	lame: "#a78bfa"
+	lame: "#a78bfa",
+	rose52: "#e879f9",
+	star: "#fbbf24",
+	star4: "#f472b6",
+	star7: "#34d399"
 };
 
 const trailColor = colorMap[id] || "#60a5fa";
@@ -310,10 +394,20 @@ const trailColor = colorMap[id] || "#60a5fa";
 	</ul>
 
 	<h2>Usage</h2>
+
+	<h3>Standard</h3>
 	<div class='relative group'>
 		<Code lang='ts' theme={undefined} themes={codeThemes} defaultColor={false} code={usageSnippet} />
 		<div class='absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity'>
 			<CopyButton code={usageSnippet} />
+		</div>
+	</div>
+
+	<h3>React</h3>
+	<div class='relative group'>
+		<Code lang='tsx' theme={undefined} themes={codeThemes} defaultColor={false} code={reactSnippet} />
+		<div class='absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity'>
+			<CopyButton code={reactSnippet} />
 		</div>
 	</div>
 </DocsLayout>
