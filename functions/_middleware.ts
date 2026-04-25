@@ -40,7 +40,8 @@ export const onRequest: PagesFunction<Env> = async (context) => {
   const url = new URL(context.request.url);
 
   // Only intercept /play requests that reference a shared creation
-  if (url.pathname !== "/play" || !url.searchParams.has("s")) {
+  const pathname = url.pathname.replace(/\/$/, "");
+  if (pathname !== "/play" || !url.searchParams.has("s")) {
     return context.next();
   }
 
@@ -57,8 +58,12 @@ export const onRequest: PagesFunction<Env> = async (context) => {
     return response;
   }
 
-  // Fetch share state from KV
-  const kvValue = await context.env.SARMAL_SHARES.get(shareId);
+  // Fetch share state and OG image marker in parallel
+  const [kvValue, ogMarker] = await Promise.all([
+    context.env.SARMAL_SHARES.get(shareId),
+    context.env.SARMAL_SHARES.get(`og:${shareId}`),
+  ]);
+
   if (!kvValue) {
     return response;
   }
@@ -116,6 +121,28 @@ export const onRequest: PagesFunction<Env> = async (context) => {
       `<meta name="description" content="${safeDescription}">`,
     )
     .replace(/<title>[^<]*<\/title>/, `<title>${safeFullTitle}</title>`);
+
+  if (ogMarker) {
+    const safeOgImageUrl = escapeHtml(`${url.origin}/api/share-image?id=${shareId}`);
+    const safeOgImageAlt = escapeHtml("Preview of a shared Sarmal creation");
+    modified = modified
+      .replace(
+        /<meta property=["']og:image["'] content=["'][^"']*["']\s*\/?>/,
+        `<meta property="og:image" content="${safeOgImageUrl}">`,
+      )
+      .replace(
+        /<meta property=["']og:image:alt["'] content=["'][^"']*["']\s*\/?>/,
+        `<meta property="og:image:alt" content="${safeOgImageAlt}">`,
+      )
+      .replace(
+        /<meta name=["']twitter:image["'] content=["'][^"']*["']\s*\/?>/,
+        `<meta name="twitter:image" content="${safeOgImageUrl}">`,
+      )
+      .replace(
+        /<meta name=["']twitter:image:alt["'] content=["'][^"']*["']\s*\/?>/,
+        `<meta name="twitter:image:alt" content="${safeOgImageAlt}">`,
+      );
+  }
 
   const newHeaders = new Headers(response.headers);
   newHeaders.delete("content-length");
