@@ -2,6 +2,7 @@
   "name": "sarmal",
   "private": true,
   "scripts": {
+    "build": "pnpm -r build",
     "dev": "pnpm --parallel -r dev",
     "test": "pnpm -r test",
     "test:e2e": "pnpm --filter e2e test",
