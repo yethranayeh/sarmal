@@ -132,10 +132,24 @@ function getResolvedTrailColor() {
   return colorInput.value;
 }
 
+function getResolvedSkeletonColor() {
+  if (!showSkeleton) {
+    return "transparent";
+  }
+
+  const style = trailStyleSelect.value as TrailStyle;
+
+  if (style !== "default") {
+    const palette = palettes[paletteSelect.value as keyof typeof palettes];
+    return palette ? palette[0] : colorInput.value;
+  }
+  return colorInput.value;
+}
+
 function getParams() {
   return {
     trailColor: colorInput.value,
-    skeletonColor: showSkeleton ? colorInput.value : "transparent",
+    skeletonColor: getResolvedSkeletonColor(),
     headColor: headColorAutoCheckbox.checked ? undefined : headColorInput.value,
     headColorAuto: headColorAutoCheckbox.checked,
     trailLength: parseInt(trailSlider.value, 10),
@@ -288,7 +302,7 @@ function handleSkeletonToggle() {
   }
 
   currentInstance?.setRenderOptions({
-    skeletonColor: showSkeleton ? colorInput.value : "transparent",
+    skeletonColor: getResolvedSkeletonColor(),
   });
 }
 
@@ -442,7 +456,7 @@ colorInput.addEventListener("input", () => {
   const style = trailStyleSelect.value as TrailStyle;
   currentInstance?.setRenderOptions({
     ...(style === "default" ? { trailColor: colorInput.value } : {}),
-    skeletonColor: showSkeleton ? colorInput.value : "transparent",
+    skeletonColor: getResolvedSkeletonColor(),
   });
 });
 
@@ -464,6 +478,7 @@ trailStyleSelect.addEventListener("change", () => {
   currentInstance?.setRenderOptions({
     trailStyle: trailStyleSelect.value as TrailStyle,
     trailColor: getResolvedTrailColor(),
+    skeletonColor: getResolvedSkeletonColor(),
   });
 });
 
@@ -471,7 +486,10 @@ paletteSelect.addEventListener("change", () => {
   updatePalettePreview();
   const style = trailStyleSelect.value as TrailStyle;
   if (style !== "default") {
-    currentInstance?.setRenderOptions({ trailColor: getResolvedTrailColor() });
+    currentInstance?.setRenderOptions({
+      trailColor: getResolvedTrailColor(),
+      skeletonColor: getResolvedSkeletonColor(),
+    });
   }
 });
 

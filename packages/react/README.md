@@ -4,7 +4,6 @@
   <strong>React wrapper for @sarmal/core</strong>
 </p>
 
-
 ---
 
 **@sarmal/react** gives you a `<Sarmal>` component and a `useSarmal` hook so you can drop parametric curve animations into React apps without the canvas wiring.
@@ -35,11 +34,7 @@ Pass a different `curve` prop and the component will morph to it smoothly. Contr
 ```jsx
 const [curve, setCurve] = useState(curves.rose3);
 
-<Sarmal
-  curve={curve}
-  morphDuration={600}
-  style={{ width: 200, height: 200 }}
-/>
+<Sarmal curve={curve} morphDuration={600} style={{ width: 200, height: 200 }} />;
 ```
 
 ## Styling
@@ -63,21 +58,21 @@ trailColor={["#ff0080", "#7928ca", "#0070f3"]}
 
 ## Props
 
-| Prop | Type | Default | Description |
-|------|------|---------|-------------|
-| `curve` | `CurveDef` | required | The curve to render. Morph-on-change. |
-| `className` | `string` | - | Applied to the `<canvas>` element |
-| `style` | `CSSProperties` | - | Applied to the `<canvas>` element |
-| `autoStart` | `boolean` | `true` | Start animation on mount |
-| `initialT` | `number` | - | Seek to this position before the first frame |
-| `trailLength` | `number` | `120` | Number of trail points |
-| `trailColor` | `string \| string[]` | - | Trail color or gradient stops |
-| `trailStyle` | `'default' \| 'gradient-static' \| 'gradient-animated'` | `'default'` | Trail rendering style |
-| `skeletonColor` | `string` | - | Background skeleton color (`'transparent'` to hide) |
-| `headColor` | `string` | - | Head dot color (derives from trail if omitted) |
-| `headRadius` | `number` | `4` | Head dot size - init-only, cannot change after mount |
-| `morphDuration` | `number` | - | Duration in ms for curve transitions |
-| `onReady` | `(instance: SarmalInstance) => void` | - | Called once the instance is created |
+| Prop            | Type                                                    | Default     | Description                                          |
+| --------------- | ------------------------------------------------------- | ----------- | ---------------------------------------------------- |
+| `curve`         | `CurveDef`                                              | required    | The curve to render. Morph-on-change.                |
+| `className`     | `string`                                                | -           | Applied to the `<canvas>` element                    |
+| `style`         | `CSSProperties`                                         | -           | Applied to the `<canvas>` element                    |
+| `autoStart`     | `boolean`                                               | `true`      | Start animation on mount                             |
+| `initialT`      | `number`                                                | -           | Seek to this position before the first frame         |
+| `trailLength`   | `number`                                                | `120`       | Number of trail points                               |
+| `trailColor`    | `string \| string[]`                                    | -           | Trail color or gradient stops                        |
+| `trailStyle`    | `'default' \| 'gradient-static' \| 'gradient-animated'` | `'default'` | Trail rendering style                                |
+| `skeletonColor` | `string`                                                | -           | Background skeleton color (`'transparent'` to hide)  |
+| `headColor`     | `string`                                                | -           | Head dot color (derives from trail if omitted)       |
+| `headRadius`    | `number`                                                | `4`         | Head dot size - init-only, cannot change after mount |
+| `morphDuration` | `number`                                                | -           | Duration in ms for curve transitions                 |
+| `onReady`       | `(instance: SarmalInstance) => void`                    | -           | Called once the instance is created                  |
 
 ## `useSarmal` hook
 
@@ -101,6 +96,7 @@ function MyComponent() {
 ```
 
 The hook returns:
+
 - `canvasRef`: attach this to your `<canvas>` element
 - `instance`: a ref to the live `SarmalInstance`
 
