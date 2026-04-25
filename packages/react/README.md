@@ -18,10 +18,10 @@ npm install @sarmal/react @sarmal/core
 
 ```jsx
 import { Sarmal } from "@sarmal/react";
-import { curves } from "@sarmal/core";
+import { rose3 } from "@sarmal/core";
 
 export function Loader() {
-  return <Sarmal curve={curves.rose3} style={{ width: 200, height: 200 }} />;
+  return <Sarmal curve={rose3} style={{ width: 200, height: 200 }} />;
 }
 ```
 
@@ -32,7 +32,7 @@ That's it. The canvas is created, the animation starts, and everything is cleane
 Pass a different `curve` prop and the component will morph to it smoothly. Control the duration with `morphDuration` (ms):
 
 ```jsx
-const [curve, setCurve] = useState(curves.rose3);
+const [curve, setCurve] = useState(rose3);
 
 <Sarmal curve={curve} morphDuration={600} style={{ width: 200, height: 200 }} />;
 ```
@@ -41,7 +41,7 @@ const [curve, setCurve] = useState(curves.rose3);
 
 ```jsx
 <Sarmal
-  curve={curves.rose5}
+  curve={rose5}
   trailColor="#00ffaa"
   skeletonColor="transparent"
   headColor="#ffffff"
@@ -80,10 +80,10 @@ If you need direct access to the `SarmalInstance` (to call `play`, `pause`, `see
 
 ```jsx
 import { useSarmal } from "@sarmal/react";
-import { curves } from "@sarmal/core";
+import { rose5 } from "@sarmal/core";
 
 function MyComponent() {
-  const { canvasRef, instance } = useSarmal(curves.artemis2);
+  const { canvasRef, instance } = useSarmal(rose5);
 
   return (
     <>

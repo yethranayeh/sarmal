@@ -477,11 +477,11 @@ export function createSVGRenderer(options: SVGRendererOptions): SarmalInstance {
  *
  * @example
  * ```ts
- * import { createSarmalSVG, curves } from '@sarmal/core'
- * const sarmal = createSarmalSVG(document.getElementById('spinner'), curves.epitrochoid7)
+ * import { createSarmalSVG, epitrochoid7 } from '@sarmal/core'
+ * const sarmal = createSarmalSVG(document.getElementById('spinner'), epitrochoid7)
  *
  * // To control manually, use autoStart: false
- * const controlled = createSarmalSVG(container, curves.artemis2, { autoStart: false })
+ * const controlled = createSarmalSVG(container, rose5, { autoStart: false })
  * controlled.play()  // Start when ready
  * controlled.pause() // Pause later
  * ```

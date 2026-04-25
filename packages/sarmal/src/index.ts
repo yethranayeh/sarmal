@@ -42,11 +42,11 @@ import { createRenderer } from "./renderer";
  *
  * @example
  * ```ts
- * import { createSarmal, curves } from '@sarmal/core'
- * const sarmal = createSarmal(canvas, curves.artemis2)
+ * import { createSarmal, rose3 } from '@sarmal/core'
+ * const sarmal = createSarmal(canvas, rose3)
  *
  * // To control manually, use autoStart: false
- * const controlled = createSarmal(canvas, curves.artemis2, { autoStart: false })
+ * const controlled = createSarmal(canvas, rose3, { autoStart: false })
  * controlled.play()  // Start when ready
  * controlled.pause() // Pause later
  * ```

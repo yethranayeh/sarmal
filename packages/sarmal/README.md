@@ -33,7 +33,7 @@ Or use directly from CDN:
 
 ```html
 <script type="module">
-  import { createSarmal, curves } from "https://cdn.jsdelivr.net/npm/@sarmal/core/+esm";
+  import { createSarmal, rose3 } from "https://cdn.jsdelivr.net/npm/@sarmal/core/+esm";
   // your code here
 </script>
 ```
@@ -41,10 +41,10 @@ Or use directly from CDN:
 ## Quick Start
 
 ```javascript
-import { createSarmal, curves } from "@sarmal/core";
+import { createSarmal, rose3 } from "@sarmal/core";
 
 const canvas = document.getElementById("my-canvas");
-const sarmal = createSarmal(canvas, curves.artemis2, {
+const sarmal = createSarmal(canvas, rose3, {
   trailLength: 30,
   strokeStyle: "#00ffaa",
   lineWidth: 2,
@@ -57,7 +57,7 @@ Or with **auto-init** without having to write any JS:
 
 ```html
 <script src="https://cdn.jsdelivr.net/npm/@sarmal/core/dist/auto-init.js"></script>
-<canvas data-sarmal="artemis2" width="200" height="200"></canvas>
+<canvas data-sarmal="rose3" width="200" height="200"></canvas>
 ```
 
 ## Standard Curves
