@@ -170,7 +170,7 @@ h6 {
     align-items: center;
     line-height: 1;
     gap: 4px;
-    z-index: 99;
+    z-index: 30;
     position: sticky;
     /* TODO: consider `will-change: transform` for better performance, but may result in the opposite result */
 

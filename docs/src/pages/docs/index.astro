@@ -33,31 +33,35 @@ const docLinks = Object.entries(docModules)
 <DocsLayout
 	title={`Documentation ${SEPARATOR_DOT} Sarmal`}
 	description='Installation guides, API reference, and curve catalog for Sarmal'>
-	<h1>Documentation</h1>
-	<p class='lead'>
-		Welcome to the Sarmal documentation. Here you'll find everything you need to get started with parametric loading
-		spinners, from installation to advanced customization.
-	</p>
+	<section>
+		<h1>Documentation</h1>
+		<p class='text-lg text-muted'>
+			Welcome to the Sarmal documentation. Here you'll find everything you need to get started with parametric loading
+			spinners, from installation to advanced customization.
+		</p>
 
-	<p>
-		<strong>Sarmal</strong>
-		<span class='text-primary'>{"/"}</span>sɑ<span class='text-primary'>ː</span>rˈmɑ<span class='text-primary'>ː</span
-		>l<span class='text-primary'>{"/"}</span>
-		<Minus class='inline' size={16} /> From the Turkish word for <em>spiral</em>, <em>coil</em>. To define a path traced
-		by a point moving through space.
-	</p>
-	<blockquote>
-		The word is built from the verb <strong>sarmak</strong> (to wrap, to coil) with the suffix
-		<code>-al</code>, which forms nouns for the result of an action. So <em>sarmal</em> is literally 'that which is coiled'
-	</blockquote>
+		<p>
+			<strong>Sarmal</strong>
+			<span class='text-primary'>{"/"}</span>sɑ<span class='text-primary'>ː</span>rˈmɑ<span class='text-primary'>ː</span
+			>l<span class='text-primary'>{"/"}</span>
+			<Minus class='inline' size={16} /> From the Turkish word for <em>spiral</em>, <em>coil</em>. To define a path
+			traced by a point moving through space.
+		</p>
+		<blockquote>
+			The word is built from the verb <strong>sarmak</strong> (to wrap, to coil) with the suffix
+			<code>-al</code>, which forms nouns for the result of an action. So <em>sarmal</em> is literally 'that which is coiled'
+		</blockquote>
+	</section>
 
 	<hr />
 
-	<h2>Getting Started</h2>
-	<p>
-		New to Sarmal? Start with the <Link href='/docs/getting-started'>Getting Started</Link> guide to install
-		<code>@sarmal/core</code> and render your first spinner in minutes.
-	</p>
+	<section>
+		<h2>Getting Started</h2>
+		<p>
+			New to Sarmal? Start with the <Link href='/docs/getting-started'>Getting Started</Link> guide to install
+			<code>@sarmal/core</code> and render your first spinner in minutes.
+		</p>
+	</section>
 
 	<h2>Explore</h2>
 	<ul>
@@ -81,10 +85,3 @@ const docLinks = Object.entries(docModules)
 		<Link href='https://github.com/yethranayeh/sarmal' external>GitHub repository</Link> for the source code.
 	</p>
 </DocsLayout>
-
-<style>
-	.lead {
-		font-size: 1.125rem;
-		color: var(--color-muted);
-	}
-</style>
