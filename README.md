@@ -9,6 +9,7 @@ This is a monorepo of the **Sarmal** project, which aims to be a parametric curv
 | Package | Description |
 |---------|-------------|
 | [`@sarmal/core`](./packages/sarmal/README.md) | renderers, engine, and curve exports |
+| [`@sarmal/react`](./packages/react/README.md) | React component and hook wrapper |
 
 ## Documentation
 
@@ -16,6 +17,7 @@ This is a monorepo of the **Sarmal** project, which aims to be a parametric curv
 - **[Playground](https://sarmal.art/play)** | A playground where you can struggle at math like me
 - **[Docs](https://sarmal.art/docs)** | A documentation page that *I would like to build* for info about getting into Sarmal
 - **[Core README](./packages/sarmal/README.md)** | Having two READMEs is always better than none
+- **[React README](./packages/react/README.md)** | Now we have three
 
 ## License
 

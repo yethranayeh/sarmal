@@ -144,7 +144,7 @@ import { curves } from "@sarmal/core";
 function MySpinner() {
   const { canvasRef, instance } = useSarmal(curves.astroid);
 
-  return <canvas ref={canvasRef} width={200} height={200} />;
+  return <canvas ref={canvasRef} style={{ width: 200, height: 200 }} />;
 }
 ```
 
