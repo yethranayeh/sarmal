@@ -19,6 +19,10 @@ This is a monorepo of the **Sarmal** project, which aims to be a parametric curv
 - **[Core README](./packages/sarmal/README.md)** | Having two READMEs is always better than none
 - **[React README](./packages/react/README.md)** | Now we have three
 
+## Contributing
+
+I am building the project on my free time, so I would like to dedicate all my attention to what I have planned. Though I appreciate community contributions, I honestly don't find it feasible at this early and rapid development phase to also dedicate time to review contributions. For this reason, unfortunately pull requests are currently *disabled*.
+
 ## License
 
 [MIT LICENSE](./LICENSE)
