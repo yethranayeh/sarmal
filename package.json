@@ -10,10 +10,10 @@
     "lint": "pnpm -r lint",
     "format": "pnpm -r format",
     "typecheck:functions": "pnpm --filter docs exec tsc --noEmit -p ../functions/tsconfig.json",
-    "fix": "pnpm -r format && pnpm -r lint && pnpm -r typecheck && pnpm typecheck:functions"
+    "fix": "pnpm -r format && pnpm --filter docs exec prettier --write \"src/**/*.svelte\" && pnpm -r lint && pnpm -r typecheck && pnpm typecheck:functions"
   },
-  "packageManager": "pnpm@9.15.0",
   "devDependencies": {
     "wrangler": "^4.85.0"
-  }
+  },
+  "packageManager": "pnpm@9.15.0"
 }

@@ -11,6 +11,8 @@ import rehypeWrapTables from "./src/plugins/rehype-wrap-tables.mjs";
 import rehypeHeadingAnchors from "./src/plugins/rehype-heading-anchors.mjs";
 import rehypeWrapSections from "./src/plugins/rehype-wrap-sections.mjs";
 
+import svelte from "@astrojs/svelte";
+
 // https://astro.build/config
 export default defineConfig({
   site: "https://sarmal.art",
@@ -19,6 +21,7 @@ export default defineConfig({
     mdx({
       rehypePlugins: [rehypeWrapTables, rehypeHeadingIds, rehypeHeadingAnchors, rehypeWrapSections],
     }),
+    svelte(),
   ],
   markdown: {
     rehypePlugins: [rehypeWrapTables],

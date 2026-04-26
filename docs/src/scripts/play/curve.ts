@@ -1,7 +1,5 @@
 import type { Point } from "@sarmal/core";
-import type { CurveFn } from "./state";
-
-import { codeInput, errorDisplay } from "./dom";
+import type { CurveFn } from "./types";
 
 const SAMPLE_N = 16;
 const SAMPLE_EPSILON = 1e-9;
@@ -28,20 +26,9 @@ export function isEachSamplesEqual(a: Point[], b: Point[]) {
   return true;
 }
 
-export function showError(msg: string) {
-  errorDisplay.textContent = msg;
-  errorDisplay.classList.remove("hidden");
-  codeInput.classList.add("border-error");
-  codeInput.classList.remove("border-border");
-}
+export type BuildResult = { ok: true; fn: CurveFn } | { ok: false; error: string };
 
-export function clearError() {
-  errorDisplay.classList.add("hidden");
-  codeInput.classList.remove("border-error");
-  codeInput.classList.add("border-border");
-}
-
-export function buildCurveFn(code: string) {
+export function buildCurveFn(code: string): BuildResult {
   try {
     const fn = new Function("t", "time", "params", code);
     const result = fn(0, 0, {});
@@ -49,10 +36,9 @@ export function buildCurveFn(code: string) {
     if (typeof result !== "object" || result === null || !("x" in result) || !("y" in result)) {
       throw new Error("fn must return { x, y }");
     }
-    return fn as CurveFn;
+    return { ok: true, fn: fn as CurveFn };
   } catch (err: unknown) {
-    showError((err as Error).message);
-    return null;
+    return { ok: false, error: (err as Error).message };
   }
 }
 

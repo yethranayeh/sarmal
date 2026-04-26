@@ -1,182 +1,21 @@
 ---
 import { curves } from "@sarmal/core";
-import { Share2, Trash2 } from "@lucide/astro";
 
 import BaseLayout from "../layouts/BaseLayout.astro";
-import Toggle from "../components/Toggle.astro";
-import Button from "../components/Button.astro";
+import Playground from "../Playground.svelte";
 
 import { SEPARATOR_DOT } from "../variables";
 
 const curveEntries = Object.entries(curves).map(([id, def]) => ({
-	id,
-	name: def.name,
-	fn: def.fn.toString(),
-	period: def.period ?? Math.PI * 2,
+  id,
+  name: def.name,
+  fn: def.fn.toString(),
+  period: def.period ?? Math.PI * 2,
 }));
-
-const DEFAULT_CODE = `return {
-  x: Math.cos(t),
-  y: Math.sin(t)
-}`;
-
-const presetsJson = JSON.stringify(
-	curveEntries.map((c) => ({
-		id: c.id,
-		name: c.name,
-		fn: c.fn,
-		period: c.period,
-	}))
-);
 ---
 
 <BaseLayout
-	title={`Playground ${SEPARATOR_DOT} Sarmal`}
-	description='Type math, see it follow a path. Create your own sarmal loading indicators.'>
-
-	<main class='flex flex-col lg:flex-row h-[calc(100vh-57px)]'>
-		<section class='w-full lg:w-1/2 flex flex-col border-b lg:border-b-0 lg:border-r border-border'>
-			<div class='flex items-center justify-between px-4 py-2 border-b border-border-subtle bg-surface'>
-				<div class='flex items-center gap-3'>
-					<span class='font-mono text-xs tracking-wider uppercase text-muted'>Editor</span>
-					<select
-						id='preset-select'
-						class='font-mono text-xs bg-surface-raised border border-border rounded px-2 py-1 text-foreground cursor-pointer hover:border-primary transition-colors'>
-						<option value=''>Select a curve</option>
-						{curveEntries.map((curve) => <option value={curve.id}>{curve.name}</option>)}
-					</select>
-				</div>
-				<div class='flex items-center gap-3'>
-					<div class='relative'>
-					<Button id='share-btn' variant="ghost">
-						<Share2 slot='icon' class='w-3.5 h-3.5' />
-						Share
-					</Button>
-						<span
-							id='share-status'
-							class='hidden absolute right-0 top-6 whitespace-nowrap font-mono text-[10px] text-muted bg-surface border border-border rounded px-2 py-1 z-10'>
-						</span>
-					</div>
-					<Button id='clear-btn' variant='primary' hoverColor='error'>
-						<Trash2 slot='icon' class='w-3.5 h-3.5' />
-						Clear
-					</Button>
-				</div>
-			</div>
-
-			<div class='flex-1 p-4 overflow-auto'>
-				<div class='mb-3'>
-					<label for='code-input' class='block font-mono text-[10px] tracking-wider text-muted mb-1'>
-						<span class='text-muted'
-							><span class="text-primary font-semibold">function</span> (<code title='parametric angle (0 -> period)' class='text-accent'>t</code><span class='text-muted'>: number, </span
-							><code title='elapsed time in seconds' class='text-accent'>time</code><span class='text-muted'>: number, </span
-							><code title='custom parameters object' class='text-accent'>params</code><span class='text-muted'>: Record&lt;string, number&gt;) <span class="text-primary font-semibold">{"{"}</span></span>
-						</span>
-					</label>
-					<textarea
-						id='code-input'
-						class='w-full h-36 font-mono text-sm bg-surface-raised border border-border rounded-md p-3 text-foreground resize-none focus:outline-none focus:border-primary transition-colors'
-						>{DEFAULT_CODE}</textarea
-					>
-					<div id='error-display' class='hidden mt-1.5 font-mono text-xs text-error'></div>
-					<span class='mt-1 font-mono text-[10px] text-primary font-semibold'>{"}"}</span>
-				</div>
-
-				<div class='space-y-3'>
-					<Toggle id='skeleton-toggle' label='Skeleton' checked={true} />
-
-					<div class='flex items-center gap-2'>
-						<label for='speed-slider' class='font-mono text-[10px] tracking-wider uppercase text-muted w-24 shrink-0'>Speed</label>
-						<input type='range' id='speed-slider' min='0.1' max='5' step='0.1' value='1' class='flex-1 min-w-0 accent-primary' />
-						<span id='speed-value' class='font-mono text-[10px] text-muted w-7 text-right tabular-nums'>1.0</span>
-					</div>
-
-					<div class='flex items-center gap-2'>
-						<label for='trail-slider' class='font-mono text-[10px] tracking-wider uppercase text-muted w-24 shrink-0'>Trail Length</label>
-						<input type='range' id='trail-slider' min='10' max='500' step='10' value='120' class='flex-1 min-w-0 accent-primary' />
-						<span id='trail-value' class='font-mono text-[10px] text-muted w-7 text-right tabular-nums'>120</span>
-					</div>
-
-					<div class='border-t border-border-subtle'></div>
-
-					<div class='grid grid-cols-3 gap-x-3'>
-						<div class='flex flex-col gap-1'>
-							<label for='trail-style-select' class='font-mono text-[10px] tracking-wider uppercase text-muted'>Trail Style</label>
-							<select
-								id='trail-style-select'
-								class='w-full font-mono text-xs bg-surface-raised border border-border rounded px-2 py-1 text-foreground cursor-pointer hover:border-primary transition-colors'>
-								<option value='default'>Default</option>
-								<option value='gradient-static'>Static Gradient</option>
-								<option value='gradient-animated'>Animated</option>
-							</select>
-						</div>
-
-						<div id='color-controls' class='contents'>
-							<div class='flex flex-col gap-1'>
-								<label for='color-input' class='font-mono text-[10px] tracking-wider uppercase text-muted'>Trail</label>
-								<input type='color' id='color-input' value='#c0143c' class='w-full h-7 cursor-pointer' />
-							</div>
-							<div class='flex flex-col gap-1'>
-								<label for='head-color-input' class='font-mono text-[10px] tracking-wider uppercase text-muted'>Head</label>
-								<div class='flex items-center gap-1.5'>
-									<label class='flex items-center gap-1 cursor-pointer'>
-										<input type='checkbox' id='head-color-auto' checked class='accent-primary' />
-										<span class='font-mono text-[10px] text-muted'>Auto</span>
-									</label>
-									<div class="w-full rounded-md overflow-hidden">
-										<input
-										type='color'
-										id='head-color-input'
-										value='#c0143c'
-										class='w-full h-7 cursor-pointer'
-										disabled
-									/>
-									</div>
-								</div>
-							</div>
-						</div>
-
-						<div id='palette-container' class='col-start-2 col-span-2 flex flex-col gap-1.5'>
-							<div class='flex items-center justify-between'>
-								<label for='palette-select' class='font-mono text-[10px] tracking-wider uppercase text-muted'>Palette</label>
-								<select
-									id='palette-select'
-									class='font-mono text-xs bg-transparent border border-border rounded px-2 py-1 text-foreground cursor-pointer hover:border-primary transition-colors'>
-									<option value='bard'>Bard</option>
-									<option value='sunset'>Sunset</option>
-									<option value='ocean'>Ocean</option>
-									<option value='ice'>Ice</option>
-									<option value='fire'>Fire</option>
-									<option value='forest'>Forest</option>
-								</select>
-							</div>
-
-							<div id='palette-preview' class='h-2 w-full rounded-full bg-size-[200%_100%]'></div>
-					</div>
-					</div>
-				</div>
-			</div>
-		</section>
-
-		<section class='w-full lg:w-1/2 flex items-center justify-center bg-surface-raised p-4 relative'>
-			<div class='absolute inset-0 bg-[radial-gradient(#d0cec9_1.5px,transparent_1.5px)] bg-size-[24px_24px] opacity-60'></div>
-			<div class='relative w-full max-w-md aspect-square'>
-				<canvas id='preview-canvas' width='400' height='400' class='w-full h-full'></canvas>
-			</div>
-		</section>
-
-		<script is:inline type='application/json' id='presets-data' set:html={presetsJson}>
-		</script>
-		<script src='../scripts/play/index.ts'></script>
-
-		<style>
-			#palette-preview.animated {
-				animation: palette-shift 3s linear infinite;
-			}
-			@keyframes palette-shift {
-				0%   { background-position: 0% 50%; }
-				100% { background-position: 200% 50%; }
-			}
-		</style>
-	</main>
+  title={`Playground ${SEPARATOR_DOT} Sarmal`}
+  description='Type math, see it follow a path. Create your own sarmal loading indicators.'>
+  <Playground client:only='svelte' presets={curveEntries} />
 </BaseLayout>
