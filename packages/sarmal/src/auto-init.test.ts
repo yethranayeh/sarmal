@@ -6,6 +6,7 @@ const mockInstance = { setSpeed: mockSetSpeed };
 
 vi.mock("./index", () => ({
   createSarmal: vi.fn(() => mockInstance),
+  createSplineCurve: vi.fn(() => "mocked-spline"),
 }));
 
 vi.mock("./curves", () => ({
@@ -63,5 +64,16 @@ describe("auto-init", () => {
     init();
 
     expect(mockSetSpeed).not.toHaveBeenCalled();
+  });
+
+  it("initializes custom curve when data-points is present", async () => {
+    const { createSarmal, createSplineCurve } = await import("./index");
+    makeCanvas("custom", { "data-points": "[[100,100],[300,100]]" });
+
+    const { init } = await import("./auto-init");
+    init();
+
+    expect(createSplineCurve).toHaveBeenCalledOnce();
+    expect(createSarmal).toHaveBeenCalledWith(expect.any(HTMLCanvasElement), "mocked-spline", expect.any(Object));
   });
 });

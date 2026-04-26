@@ -5,7 +5,7 @@ import type { CurveName } from "./curves";
  * Scans for `<canvas data-sarmal="curveName">` when DOMContentLoaded is triggered,
  *  and creates a Sarmal instance for each one
  */
-import { createSarmal } from "./index";
+import { createSarmal, createSplineCurve } from "./index";
 import { curves } from "./curves";
 
 /**
@@ -40,7 +40,22 @@ export function init() {
       return console.warn("[sarmal] curveName is required");
     }
 
-    const curveDef = curves[curveName as CurveName]; // just assume it is the correct string, it will be runtime checked anyway
+    let curveDef = curves[curveName as CurveName];
+
+    if (curveName === "custom" && canvas.dataset.points) {
+      try {
+        const points = JSON.parse(canvas.dataset.points);
+        if (Array.isArray(points)) {
+          const normPoints = points.map((p: any) =>
+            Array.isArray(p) ? { x: p[0], y: p[1] } : p
+          );
+          curveDef = createSplineCurve(normPoints, { name: "Custom" });
+        }
+      } catch (e) {
+        console.error("[sarmal] Failed to parse data-points", e);
+      }
+    }
+
     if (!curveDef) {
       return console.error(`[sarmal] "${curveName}" is not a valid curve name`);
     }

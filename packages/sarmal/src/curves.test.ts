@@ -10,7 +10,7 @@ describe("curves regression suite", () => {
   const curveNames = Object.keys(curves) as CurveName[];
 
   it("all expected curves are exported", () => {
-    expect(curveNames).toHaveLength(10);
+    expect(curveNames).toHaveLength(14);
     expect(curveNames).toContain("artemis2");
     expect(curveNames).toContain("epitrochoid7");
     expect(curveNames).toContain("astroid");
