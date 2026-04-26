@@ -6,11 +6,13 @@ order: 1
 description: Understand parametric curves, the skeleton, and the engine.
 ---
 
+import {ArrowRight} from "@lucide/astro"
 import Link from "../../components/Link.astro";
 import Alert from "../../components/Alert.astro";
 import SarmalBlueprint from "../../components/SarmalBlueprint.astro";
 import ConceptDemo from "../../components/ConceptDemo.astro";
 import TPositionDemo from "../../components/feature/demo/TPositionDemo.astro";
+import ParametricIntroDemo from "../../components/ParametricIntroDemo.astro";
 import SkeletonModeDemo from "../../components/feature/demo/SkeletonModeDemo.astro";
 import EngineOutputDemo from "../../components/feature/demo/EngineOutputDemo.astro";
 
@@ -22,15 +24,17 @@ Understand parametric curves, the skeleton, and the engine.
 
 A parametric curve is a path drawn by a point moving through space. Instead of describing the shape directly, you describe how the point moves: where it is at each moment in time.
 
-Imagine a dot moving across a piece of paper. At any instant, the dot has an exact position: an `x` coordinate and a `y` coordinate. As time passes, the dot traces a path. A parametric curve is simply the *record* of that path.
+<div class="grid grid-cols-1 md:grid-cols-2">
+  <div class="order-2 md:order-1"><ParametricIntroDemo /></div>
+  <p class="order-1 md:order-2">Imagine a dot moving across a piece of paper. At any instant, the dot has an exact position: an `x` coordinate and a `y` coordinate. As time passes, the dot traces a path. A parametric curve is simply the *record* of that path.</p>
+</div>
 
 The key idea is that you control _when_ the dot is at each position. You can speed up, slow down, or even run time backwards. The same geometric shape can be traced at different speeds, producing different animations.
 
-**How the spinner works:** The trail you see is just the last few positions of the dot. Each frame, time advances slightly, the dot moves to its new position, and the oldest point in the trail fades away. The result is a tail that follows the curve.
+<div class="grid grid-cols-1 md:grid-cols-2">
+  <p>**How it works:** The trail you see is just the last few positions of the dot. Each frame, time advances slightly, the dot moves to its new position, and the oldest point in the trail fades away. The result is a tail that follows the curve.</p>
 
-<div class="my-2 flex justify-center">
-  <svg viewBox="0 0 230 162" class="w-full max-w-md" aria-label="Diagram of a parametric curve showing the skeleton, trail, and head dot">
-
+  <svg viewBox="39 36 154 96" class="w-full max-w-sm md:scale-80 md:-mt-14" aria-label="Diagram of a parametric curve showing the skeleton, trail, and head dot">
     {/* Skeleton: full lissajous figure-8, dashed */}
     <path
       d="M 85 82 C 95 109 123 99 123 82 C 123 65 95 55 85 82 C 75 55 47 65 47 82 C 47 99 75 109 85 82 Z"
@@ -61,11 +65,13 @@ The key idea is that you control _when_ the dot is at each position. You can spe
   </svg>
 </div>
 
-The parameter `t` controls exactly where on that path the dot is at any moment. Click a position to see the trail rebuild as if the dot had traveled naturally to that point:
 
-<TPositionDemo />
+<div class="grid grid-cols-1 md:grid-cols-2 gap-0 md:gap-4">
+  <p class="order-1 md:order-2">The parameter `t` controls exactly where on that path the dot is at any moment. <br class="hidden md:block" /> Click a position to see the trail rebuild as if the dot had traveled naturally to that point</p>
+  <div class="order-2 md:order-1"><TPositionDemo /></div>
+</div>
 
-You can <Link href='/play'>try it in the playground</Link> to see how it works
+You can head to <Link href='/play'>the playground</Link> to experiment with parametric curves and try them out in real time.
 
 ## The Skeleton
 
@@ -135,6 +141,80 @@ Watch the engine and renderer working together. The numbers on the right are raw
 <Alert variant="info">
 The engine never touches pixels, canvas, SVG elements, colors, opacity, DPR, container dimensions.
 </Alert>
+
+### The Periodicity Rule
+
+Your curve does not need to be *circular* or *act like a circle*, but it needs to be **periodic**. Its `fn` must return to its exact starting point after **one full period**. The shape can be loopy, angular, asymmetric, or anything else as long as it closes.
+
+When that holds, Sarmal loops seamlessly.
+
+<div class="my-2 flex justify-center">
+  <svg viewBox="-130 -80 280 160" class="w-full max-w-sm overflow-visible" aria-label="Closed figure-eight curve: start and end coincide at the crossing point">
+
+    <path
+      d="M 0 0 C 22 -52 88 -52 88 0 C 88 52 22 52 0 0 C -22 52 -88 52 -88 0 C -88 -52 -22 -52 0 0 Z"
+      stroke-dasharray="3 3"
+      class="fill-none stroke-current stroke-1.5 opacity-30"
+    />
+
+    {/* Der Anfang ist das Ende, und das Ende ist der Anfang */}
+    <circle cx="0" cy="0" r="5" fill="currentColor" />
+
+    <line x1="5" y1="-5" x2="22" y2="-20" stroke="currentColor" stroke-width="0.75" opacity="0.4" />
+    <text x="25" y="-22" font-size="10" fill="currentColor" opacity="0.9">start = end</text>
+    <text x="25" y="-11" font-size="9" fill="currentColor" opacity="0.45">t = 0 and t = period</text>
+    <g class="group cursor-none">
+      <text x="25" y="-1" class="text-[9px] fill-current transition-all opacity-45 group-hover:opacity-0 group-hover:-translate-x-1">The end is the beginning,</text>
+      <text x="35" y="8" class="text-[9px] fill-current transition-all opacity-45 group-hover:opacity-0 group-hover:translate-x-2">and the beginning is the end</text>
+
+      <text x="25" y="-1" class="text-[9px] fill-current transition-all opacity-0 group-hover:opacity-45 group-hover:-translate-x-1.5">Der Anfang ist das Ende,</text>
+      <text x="35" y="8" class="text-[9px] fill-current transition-all opacity-0 group-hover:opacity-45 group-hover:translate-x-2">und das Ende ist der Anfang</text>
+    </g>
+
+  </svg>
+</div>
+
+When it doesn't, the head dot teleports from the end back to the start on every cycle.
+
+<div class="my-2 flex justify-center">
+  <svg viewBox="-100 -110 280 220" class="w-full max-w-sm" aria-label="Open arc: start and end are different points, forcing the head to teleport back each cycle">
+
+    <path
+      d="M 80 0 A 80 80 0 1 1 0 -80"
+      fill="none" stroke="currentColor" stroke-width="1.5" stroke-dasharray="3 3" opacity="0.3"
+    />
+
+    <line
+      x1="0" y1="-80" x2="80" y2="0"
+      stroke-dasharray="4 3"
+      class="stroke-primary stroke-1.5 opacity-55"
+    />
+
+    {/* Start dot */}
+    <circle cx="80" cy="0" r="5" fill="currentColor" />
+
+    {/* End dot */}
+    <circle cx="0" cy="-80" r="4.5" fill="currentColor" opacity="0.65" />
+
+    {/* Start label */}
+    <line x1="85" y1="4" x2="97" y2="16" stroke="currentColor" stroke-width="0.75" opacity="0.4" />
+    <text x="100" y="18" font-size="10" fill="currentColor" opacity="0.9">start</text>
+    <text x="100" y="29" font-size="9" fill="currentColor" opacity="0.45">t = 0</text>
+
+    {/* End label */}
+    <line x1="4" y1="-82" x2="18" y2="-95" stroke="currentColor" stroke-width="0.75" opacity="0.4" />
+    <text x="21" y="-96" font-size="10" fill="currentColor" opacity="0.9">end</text>
+    <text x="21" y="-85" font-size="9" fill="currentColor" opacity="0.45">t = period</text>
+
+    <text x="-10" y="-60" class="text-[10px] fill-current opacity-60 rotate-45">teleport</text>
+
+  </svg>
+</div>
+
+So, when making a curve:
+- `starting point = ending point` <ArrowRight size={15} class="inline" /> Everyone is happy
+- `starting point ≠ ending point` <ArrowRight size={15} class="inline" /> The engine is <span class="text-primary">sad</span>, the renderer is <span class="text-muted font-mono">helpless</span>, and the user is **disappointed**.
+
 
 ## Instance Lifecycle
 

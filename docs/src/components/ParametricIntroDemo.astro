@@ -1,0 +1,233 @@
+---
+const SCALE = 86;
+const ghostPoints = Array.from({ length: 81 }, (_, i) => {
+	const t = i / 80;
+	const a = t * 1.5 * Math.PI;
+	const x = Math.cos(a) ** 3 * 0.85 * SCALE;
+	const y = -(Math.sin(a) ** 3) * 0.85 * SCALE; // flip for SVG y-down
+
+	return `${x.toFixed(2)},${y.toFixed(2)}`;
+}).join(" ");
+
+const id = `pid-${Math.random().toString(36).slice(2, 8)}`;
+---
+
+<div id={id} class='parametric-intro-demo max-w-xs rounded-lg overflow-hidden border border-border'>
+	<div class='relative bg-surface-raised' style='height: 228px;'>
+		<svg
+			class='absolute inset-0 w-full h-full'
+			viewBox='-110 -100 220 200'
+			xmlns='http://www.w3.org/2000/svg'
+			aria-hidden='true'>
+			{/* Axes */}
+			<line x1='-98' y1='0' x2='98' y2='0' class='stroke-current stroke-1 opacity-12'></line>
+			<line x1='0' y1='-90' x2='0' y2='90' class='stroke-current stroke-1 opacity-12'></line>
+
+			{/* Ghost path */}
+			<polyline
+				points={ghostPoints}
+				class='fill-none stroke-current stroke-1.5 opacity-18'
+				stroke-dasharray='3 3'
+				stroke-linecap='round'></polyline>
+
+			{/* Projection lines which are updated with script */}
+			<line data-proj-x class='stroke-current stroke-1 opacity-0' stroke-dasharray='2 2'></line>
+			<line data-proj-y class='stroke-current stroke-1 opacity-0' stroke-dasharray='2 2'></line>
+
+			{/* Axis intercept ticks which are also updated with script */}
+			<circle data-tick-x r='2.5' class='fill-current opacity-0'></circle>
+			<circle data-tick-y r='2.5' class='fill-current opacity-0'></circle>
+
+			{/* Trail dots area to be populated with script */}
+			<g data-trail></g>
+
+			{/* Head dot also with script */}
+			<circle data-head cx='73' cy='0' r='5' class='fill-primary'></circle>
+		</svg>
+
+		{/* Coordinate state */}
+		<div class='absolute top-3 left-3.5 flex flex-col gap-0.5 pointer-events-none select-none'>
+			<div class='flex items-baseline gap-1'>
+				<span class='text-[0.58rem] font-mono text-muted leading-none'>x =</span>
+				<span class='text-[0.7rem] font-mono text-primary leading-none tabular-nums' data-coord-x>0.850</span>
+			</div>
+			<div class='flex items-baseline gap-1'>
+				<span class='text-[0.58rem] font-mono text-muted leading-none'>y =</span>
+				<span class='text-[0.7rem] font-mono text-primary leading-none tabular-nums' data-coord-y>0.000</span>
+			</div>
+		</div>
+	</div>
+
+	{/* Slider footer */}
+	<div class='border-t border-border bg-surface px-5 pt-3.5 pb-4 flex flex-col gap-2'>
+		<input
+			data-slider
+			type='range'
+			min='0'
+			max='1'
+			step='0.004'
+			value='0'
+			class='pid-slider w-full'
+			aria-label='Drag to trace the path through time'
+		/>
+		<div class='flex justify-between select-none'>
+			<span class='text-[11px] font-mono text-muted'>t = 0</span>
+			<span class='text-xs font-body'>drag to trace</span>
+			<span class='text-[11px] font-mono text-muted'>t = 1</span>
+		</div>
+	</div>
+</div>
+
+<style>
+	.pid-slider {
+		appearance: none;
+		-webkit-appearance: none;
+		height: 2px;
+		background: var(--color-border);
+		border-radius: 1px;
+		outline: none;
+		cursor: pointer;
+		display: block;
+	}
+
+	.pid-slider::-webkit-slider-thumb {
+		-webkit-appearance: none;
+		appearance: none;
+		width: 15px;
+		height: 15px;
+		border-radius: 50%;
+		background: var(--color-primary);
+		cursor: grab;
+		transition: transform 120ms ease;
+		box-shadow: 0 1px 4px rgb(0 0 0 / 0.25);
+	}
+
+	.pid-slider:active::-webkit-slider-thumb {
+		cursor: grabbing;
+	}
+
+	.pid-slider::-moz-range-thumb {
+		width: 15px;
+		height: 15px;
+		border-radius: 50%;
+		background: var(--color-primary);
+		border: none;
+		cursor: grab;
+		box-shadow: 0 1px 4px rgb(0 0 0 / 0.25);
+		transition: transform 120ms ease;
+	}
+
+	@media (prefers-reduced-motion: no-preference) {
+		.pid-slider::-webkit-slider-thumb:hover {
+			transform: scale(1.25);
+		}
+
+		.pid-slider::-moz-range-thumb:hover {
+			transform: scale(1.25);
+		}
+	}
+</style>
+
+<script>
+	const SCALE = 86;
+	const TRAIL_LEN = 22;
+	const TRAIL_DT = 0.032;
+
+	function curve(t: number): { x: number; y: number } {
+		const a = t * 1.5 * Math.PI;
+		return {
+			x: Math.cos(a) ** 3 * 0.85,
+			y: Math.sin(a) ** 3 * 0.85
+		};
+	}
+
+	function toSVG(x: number, y: number) {
+		return { sx: x * SCALE, sy: -y * SCALE };
+	}
+
+	document.querySelectorAll<HTMLElement>(".parametric-intro-demo").forEach((wrapper) => {
+		const slider = wrapper.querySelector<HTMLInputElement>("[data-slider]")!;
+		const head = wrapper.querySelector<SVGCircleElement>("[data-head]")!;
+		const trailGroup = wrapper.querySelector<SVGGElement>("[data-trail]")!;
+		const projX = wrapper.querySelector<SVGLineElement>("[data-proj-x]")!;
+		const projY = wrapper.querySelector<SVGLineElement>("[data-proj-y]")!;
+		const tickX = wrapper.querySelector<SVGCircleElement>("[data-tick-x]")!;
+		const tickY = wrapper.querySelector<SVGCircleElement>("[data-tick-y]")!;
+		const coordX = wrapper.querySelector<HTMLElement>("[data-coord-x]")!;
+		const coordY = wrapper.querySelector<HTMLElement>("[data-coord-y]")!;
+
+		// Pre-create trail circles (oldest first, newest last)
+		const circles: SVGCircleElement[] = [];
+		for (let i = 0; i < TRAIL_LEN; i++) {
+			const c = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+			c.setAttribute("fill", "currentColor");
+			c.setAttribute("opacity", "0");
+			trailGroup.appendChild(c);
+			circles.push(c);
+		}
+
+		function update(progress: number) {
+			// Trail: sample evenly behind current position
+			for (let i = 0; i < TRAIL_LEN; i++) {
+				// i=0 is oldest, i=TRAIL_LEN-1 is most recent trail dot
+				const sampleT = progress - (TRAIL_LEN - 1 - i) * TRAIL_DT;
+				if (sampleT < 0) {
+					circles[i].setAttribute("opacity", "0");
+					continue;
+				}
+				const pt = curve(Math.max(0, sampleT));
+				const { sx, sy } = toSVG(pt.x, pt.y);
+
+				// Both opacity and radius taper toward the oldest
+				const frac = (i + 1) / TRAIL_LEN; // 0→oldest, 1→newest
+				const opacity = frac ** 1.8 * 0.72;
+				const r = 2 + frac * 1.2; // r: 2.0 (oldest) → 3.2 (newest)
+
+				circles[i].setAttribute("cx", String(sx));
+				circles[i].setAttribute("cy", String(sy));
+				circles[i].setAttribute("r", r.toFixed(1));
+				circles[i].setAttribute("opacity", opacity.toFixed(3));
+			}
+
+			// Head
+			const pt = curve(progress);
+			const { sx, sy } = toSVG(pt.x, pt.y);
+			head.setAttribute("cx", String(sx));
+			head.setAttribute("cy", String(sy));
+
+			// Projection lines + axis ticks
+			const showProjections = progress > 0.01;
+			const projOpacity = showProjections ? "0.32" : "0";
+
+			projX.setAttribute("x1", String(sx));
+			projX.setAttribute("y1", String(sy));
+			projX.setAttribute("x2", String(sx));
+			projX.setAttribute("y2", "0");
+			projX.setAttribute("opacity", projOpacity);
+
+			projY.setAttribute("x1", String(sx));
+			projY.setAttribute("y1", String(sy));
+			projY.setAttribute("x2", "0");
+			projY.setAttribute("y2", String(sy));
+			projY.setAttribute("opacity", projOpacity);
+
+			tickX.setAttribute("cx", String(sx));
+			tickX.setAttribute("cy", "0");
+			tickX.setAttribute("opacity", showProjections ? "0.45" : "0");
+
+			tickY.setAttribute("cx", "0");
+			tickY.setAttribute("cy", String(sy));
+			tickY.setAttribute("opacity", showProjections ? "0.45" : "0");
+
+			// Coordinate readout
+			coordX.textContent = pt.x.toFixed(3);
+			coordY.textContent = pt.y.toFixed(3);
+		}
+
+		slider.addEventListener("input", () => {
+			update(parseFloat(slider.value));
+		});
+
+		update(0);
+	});
+</script>

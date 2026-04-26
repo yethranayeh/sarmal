@@ -340,6 +340,12 @@ function captureImageBlob(): Promise<Blob | null> {
   const drawY = (OG_H - drawH) / 2;
   ctx.drawImage(previewCanvas, drawX, drawY, drawW, drawH);
 
+  ctx.font = 'italic 22px "Newsreader", Georgia, serif';
+  ctx.fillStyle = "#7a7067";
+  ctx.textAlign = "right";
+  ctx.textBaseline = "bottom";
+  ctx.fillText("sarmal.art", OG_W - 36, OG_H - 30);
+
   return new Promise<Blob | null>((resolve) => offscreen.toBlob(resolve, "image/png"));
 }
 
