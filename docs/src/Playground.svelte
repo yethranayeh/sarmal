@@ -1,11 +1,16 @@
 <script lang="ts">
-  import type { Component } from "svelte";
-  import type { PresetData, SharedState, CurveFn } from "./scripts/play/types";
+  import type {
+    PresetData,
+    SharedState,
+    CurveFn,
+    PlaygroundMode,
+  } from "./scripts/play/types";
   import type { TrailStyle } from "@sarmal/core";
+  import type { DrawingSegment } from "./scripts/play/catmull-rom";
 
   import { onMount } from "svelte";
   import { palettes } from "@sarmal/core";
-  import { Share2, Trash2 } from "@lucide/svelte";
+  import { Share2, Trash, Trash2 } from "@lucide/svelte";
 
   import {
     buildCurveFn,
@@ -30,7 +35,7 @@
 
   let canvas: HTMLCanvasElement;
 
-  let currentMode = $state<"math" | "draw">("math");
+  let currentMode = $state<PlaygroundMode>("math");
   let currentCode = $state(DEFAULT_CODE);
   let error = $state<string | null>(null);
   let showSkeleton = $state(true);
@@ -50,7 +55,19 @@
   let lastCompiledFn: CurveFn | null = $state(null);
   let debounceTimer: ReturnType<typeof setTimeout> | null = null;
 
-  let DrawBoard = $state<Component | null>(null);
+  interface DrawBoardExports {
+    getPoints: () => Array<DrawingSegment>;
+    toggleAnimate: () => void;
+    clearPoints: () => void;
+    isAnimating: () => boolean;
+    rebuildInstance: () => void;
+  }
+
+  let DrawBoard = $state<any>(null);
+  let drawBoardRef = $state<DrawBoardExports | null>(null);
+  let drawInitialPoints = $state<Array<DrawingSegment> | undefined>(undefined);
+  let drawCanAnimate = $state(false);
+  let drawIsAnimating = $state(false);
 
   const PRESETS = $derived(
     presets.reduce(
@@ -150,16 +167,19 @@
   }
 
   function handleClear() {
-    currentCode = "";
-    error = null;
-    history.replaceState(null, "", window.location.pathname);
-
-    if (instance) {
-      instance.destroy();
-      instance = null;
+    if (currentMode === "math") {
+      currentCode = "";
+      error = null;
+      if (instance) {
+        instance.destroy();
+        instance = null;
+      }
+      lastCompiledCode = "";
+      lastCompiledFn = null;
+    } else {
+      drawBoardRef?.clearPoints();
     }
-    lastCompiledCode = "";
-    lastCompiledFn = null;
+    history.replaceState(null, "", window.location.pathname);
   }
 
   function switchMode(mode: "math" | "draw") {
@@ -172,6 +192,7 @@
       }
       lastCompiledCode = "";
       lastCompiledFn = null;
+      canvas.getContext("2d")?.clearRect(0, 0, canvas.width, canvas.height);
       if (!DrawBoard) {
         import("./scripts/play/DrawBoard.svelte").then((mod) => {
           DrawBoard = mod.default;
@@ -190,40 +211,49 @@
 
   function handleSkeletonToggle() {
     showSkeleton = !showSkeleton;
-    instance?.setRenderOptions({
-      skeletonColor: getResolvedSkeletonColor(
-        showSkeleton,
-        trailStyle,
-        palette,
-        trailColor,
-      ),
-    });
+    const color = getResolvedSkeletonColor(
+      showSkeleton,
+      trailStyle,
+      palette,
+      trailColor,
+    );
+    if (currentMode === "math") {
+      instance?.setRenderOptions({ skeletonColor: color });
+    }
   }
 
   function handleSpeedChange(newSpeed: number) {
     speed = newSpeed;
-    instance?.setSpeed(newSpeed);
+    if (currentMode === "math") {
+      instance?.setSpeed(newSpeed);
+    }
   }
 
   function handleTrailLengthChange(newLength: number) {
     trailLength = newLength;
-    const result = buildCurveFn(currentCode);
-    if (result.ok) {
-      rebuildInstance(result.fn);
+    if (currentMode === "math") {
+      const result = buildCurveFn(currentCode);
+      if (result.ok) {
+        rebuildInstance(result.fn);
+      }
+    } else {
+      drawBoardRef?.rebuildInstance();
     }
   }
 
   function handleTrailColorChange(newColor: string) {
     trailColor = newColor;
-    instance?.setRenderOptions({
-      ...(trailStyle === "default" ? { trailColor: newColor } : {}),
-      skeletonColor: getResolvedSkeletonColor(
-        showSkeleton,
-        trailStyle,
-        palette,
-        trailColor,
-      ),
-    });
+    if (currentMode === "math") {
+      instance?.setRenderOptions({
+        ...(trailStyle === "default" ? { trailColor: newColor } : {}),
+        skeletonColor: getResolvedSkeletonColor(
+          showSkeleton,
+          trailStyle,
+          palette,
+          trailColor,
+        ),
+      });
+    }
     if (trailStyle === "default" && headColorAuto) {
       headColor = newColor;
     }
@@ -231,30 +261,34 @@
 
   function handleHeadColorChange(newColor: string) {
     headColor = newColor;
-    if (!headColorAuto) {
+    if (!headColorAuto && currentMode === "math") {
       instance?.setRenderOptions({ headColor: newColor });
     }
   }
 
   function handleHeadColorAutoChange(auto: boolean) {
     headColorAuto = auto;
-    instance?.setRenderOptions({
-      headColor: auto ? null : headColor,
-    });
+    if (currentMode === "math") {
+      instance?.setRenderOptions({
+        headColor: auto ? null : headColor,
+      });
+    }
   }
 
   function handleTrailStyleChange(newStyle: TrailStyle) {
     trailStyle = newStyle;
-    instance?.setRenderOptions({
-      trailStyle: newStyle,
-      trailColor: getResolvedTrailColor(newStyle, palette, trailColor),
-      skeletonColor: getResolvedSkeletonColor(
-        showSkeleton,
-        newStyle,
-        palette,
-        trailColor,
-      ),
-    });
+    if (currentMode === "math") {
+      instance?.setRenderOptions({
+        trailStyle: newStyle,
+        trailColor: getResolvedTrailColor(newStyle, palette, trailColor),
+        skeletonColor: getResolvedSkeletonColor(
+          showSkeleton,
+          newStyle,
+          palette,
+          trailColor,
+        ),
+      });
+    }
     if (headColorAuto) {
       if (newStyle === "default") {
         headColor = trailColor;
@@ -268,15 +302,17 @@
   function handlePaletteChange(newPalette: string) {
     palette = newPalette as typeof palette;
     if (trailStyle !== "default") {
-      instance?.setRenderOptions({
-        trailColor: getResolvedTrailColor(trailStyle, newPalette, trailColor),
-        skeletonColor: getResolvedSkeletonColor(
-          showSkeleton,
-          trailStyle,
-          newPalette,
-          trailColor,
-        ),
-      });
+      if (currentMode === "math") {
+        instance?.setRenderOptions({
+          trailColor: getResolvedTrailColor(trailStyle, newPalette, trailColor),
+          skeletonColor: getResolvedSkeletonColor(
+            showSkeleton,
+            trailStyle,
+            newPalette,
+            trailColor,
+          ),
+        });
+      }
       if (headColorAuto) {
         const p = palettes[newPalette as keyof typeof palettes];
         if (p) headColor = p[p.length - 1]!;
@@ -290,7 +326,7 @@
     const payload: SharedState = {
       v: 1,
       mode: currentMode,
-      code: currentCode,
+      code: currentMode === "draw" ? "" : currentCode,
       trailStyle,
       palette,
       trailColor,
@@ -300,6 +336,10 @@
       speed,
       showSkeleton,
     };
+
+    if (currentMode === "draw") {
+      payload.drawPoints = drawBoardRef?.getPoints();
+    }
 
     const result = await handleShare(canvas, payload);
     if (result.ok) {
@@ -316,7 +356,22 @@
   }
 
   function restoreState(saved: SharedState) {
-    currentCode = saved.code;
+    if (saved.mode === "draw" && saved.drawPoints) {
+      currentMode = "draw";
+      drawInitialPoints = saved.drawPoints;
+      if (!DrawBoard) {
+        import("./scripts/play/DrawBoard.svelte").then((mod) => {
+          DrawBoard = mod.default;
+        });
+      }
+    } else {
+      currentCode = saved.code;
+      error = null;
+      const result = buildCurveFn(saved.code);
+      if (result.ok) {
+        rebuildInstance(result.fn);
+      }
+    }
 
     if (saved.trailStyle) {
       trailStyle = saved.trailStyle as TrailStyle;
@@ -344,12 +399,6 @@
       saved.showSkeleton !== showSkeleton
     ) {
       showSkeleton = saved.showSkeleton;
-    }
-
-    error = null;
-    const result = buildCurveFn(saved.code);
-    if (result.ok) {
-      rebuildInstance(result.fn);
     }
   }
 
@@ -388,6 +437,13 @@
 
   const isPaletteAnimated = $derived(trailStyle === "gradient-animated");
   const showPalette = $derived(trailStyle !== "default");
+
+  const resolvedTrailColor = $derived(
+    getResolvedTrailColor(trailStyle, palette, trailColor),
+  );
+  const resolvedSkeletonColor = $derived(
+    getResolvedSkeletonColor(showSkeleton, trailStyle, palette, trailColor),
+  );
 </script>
 
 <div class="flex flex-col lg:flex-row h-[calc(100vh-57px)]">
@@ -399,28 +455,44 @@
       class="flex items-center justify-between px-4 py-2 border-b border-border-subtle bg-surface"
     >
       <div class="flex items-center gap-3">
-
-        <select
-          id="preset-select"
-          class="font-mono text-xs bg-surface-raised border border-border rounded px-2 py-1 text-foreground cursor-pointer hover:border-primary transition-colors"
-          onchange={(e) => {
-            const target = e.target as HTMLSelectElement;
-            if (target.value && currentMode === "math") {
-              loadPreset(target.value);
-            }
-          }}
+        <div
+          class="flex border border-border rounded overflow-hidden"
+          id="mode-toggle"
         >
-          <option value="">Select a curve</option>
-          {#each presets as curve}
-            <option value={curve.id}>{curve.name}</option>
+          {#each ["math", "draw"] as mode}
+            <button
+              data-mode={mode}
+              data-active={currentMode === mode ? "" : undefined}
+              class="font-mono text-xs tracking-wider uppercase px-2.5 py-1 cursor-pointer transition-colors w-14 bg-surface-raised text-muted hover:text-foreground data-active:bg-primary data-active:text-background"
+              onclick={() => switchMode(mode as "math" | "draw")}
+            >
+              {mode}
+            </button>
           {/each}
-        </select>
+        </div>
+        {#if currentMode === "math"}
+          <select
+            id="preset-select"
+            class="font-mono text-xs bg-surface-raised border border-border rounded px-2 py-1 text-foreground cursor-pointer hover:border-primary transition-colors"
+            onchange={(e) => {
+              const target = e.target as HTMLSelectElement;
+              if (target.value && currentMode === "math") {
+                loadPreset(target.value);
+              }
+            }}
+          >
+            <option value="">Select a curve</option>
+            {#each presets as curve}
+              <option value={curve.id}>{curve.name}</option>
+            {/each}
+          </select>
+        {/if}
       </div>
       <div class="flex items-center gap-3">
         <div class="relative">
           <button
             id="share-btn"
-            class="font-mono text-xs px-3 py-1.5 rounded transition-colors text-muted hover:text-foreground hover:bg-surface-raised flex items-center gap-1.5"
+            class="font-mono text-xs px-3 py-1.5 rounded transition-colors text-muted hover:text-foreground hover:bg-surface-raised flex items-center gap-1.5 cursor-pointer"
             onclick={handleShareClick}
           >
             <Share2 class="w-3.5 h-3.5" />
@@ -435,11 +507,10 @@
           {/if}
         </div>
         <button
-          id="clear-btn"
-          class="font-mono text-xs px-3 py-1.5 rounded transition-colors bg-primary text-background hover:bg-error flex items-center gap-1.5"
+          class="font-mono text-xs px-3 py-1.5 rounded transition-colors bg-primary text-background hover:bg-error flex items-center gap-1.5 cursor-pointer"
           onclick={handleClear}
         >
-          <Trash2 class="w-3.5 h-3.5" />
+          <Trash class="w-3.5 h-3.5" />
           Clear
         </button>
       </div>
@@ -486,14 +557,45 @@
         </div>
       {:else}
         <div id="draw-section" class="mb-3">
+          <div
+            class="relative w-full max-w-md mx-auto aspect-square bg-white rounded-md border border-border overflow-hidden"
+          >
+            {#if DrawBoard}
+              <DrawBoard
+                bind:this={drawBoardRef}
+                {canvas}
+                {trailLength}
+                {speed}
+                {trailStyle}
+                trailColor={resolvedTrailColor}
+                skeletonColor={resolvedSkeletonColor}
+                {headColor}
+                {headColorAuto}
+                initialPoints={drawInitialPoints}
+                onCanAnimateChange={(v: boolean) => (drawCanAnimate = v)}
+                onAnimateModeChange={(v: boolean) => (drawIsAnimating = v)}
+              />
+            {:else}
+              <div
+                class="absolute inset-0 flex items-center justify-center font-mono text-sm text-muted"
+              >
+                Loading drawing board...
+              </div>
+            {/if}
+          </div>
           {#if DrawBoard}
-            <DrawBoard />
-          {:else}
-            <div
-              class="font-mono text-sm text-muted p-4 bg-surface-raised border border-border rounded-md"
+            <button
+              id="animate-btn"
+              class="w-full font-mono text-xs px-3 py-2 mt-3 rounded transition-colors bg-primary text-background hover:bg-primary/90 flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+              disabled={!drawCanAnimate}
+              onclick={() => drawBoardRef?.toggleAnimate()}
             >
-              Click on the canvas to place points
-            </div>
+              {drawIsAnimating ? "Edit" : "Animate"}
+            </button>
+            <p class="mt-2 font-mono text-xs text-muted">
+              Click on the board to place points. Drag to move. Click a point to
+              delete.
+            </p>
           {/if}
         </div>
       {/if}
