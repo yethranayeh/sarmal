@@ -158,8 +158,7 @@ const presetsJson = JSON.stringify(
 			</div>
 		</section>
 
-		<section class='w-full lg:w-1/2 flex items-center justify-center bg-background p-4 relative'>
-			<!-- <div class='absolute inset-0 bg-[radial-gradient(#000_1.5px,transparent_1.5px)] bg-size-[24px_24px]'></div> -->
+		<section class='w-full lg:w-1/2 flex items-center justify-center bg-surface-raised p-4 relative'>
 			<div class='absolute inset-0 bg-[radial-gradient(#d0cec9_1.5px,transparent_1.5px)] bg-size-[24px_24px] opacity-60'></div>
 			<div class='relative w-full max-w-md aspect-square'>
 				<canvas id='preview-canvas' width='400' height='400' class='w-full h-full'></canvas>
@@ -168,7 +167,7 @@ const presetsJson = JSON.stringify(
 
 		<script is:inline type='application/json' id='presets-data' set:html={presetsJson}>
 		</script>
-		<script src='../play.ts'></script>
+		<script src='../scripts/play/index.ts'></script>
 
 		<style>
 			#palette-preview.animated {
