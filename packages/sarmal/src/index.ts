@@ -15,6 +15,7 @@ export type {
   RuntimeRenderOptions,
 } from "./types";
 export type { CurveName } from "./curves";
+export type { SarmalPalette } from "./renderer-shared";
 
 export { createEngine } from "./engine";
 export { createRenderer } from "./renderer";

@@ -225,7 +225,8 @@ export const palettes = {
   ice: ["#1e3a8a", "#67e8f9"],
   fire: ["#7f1d1d", "#fbbf24"],
   forest: ["#14532d", "#86efac"],
-} as const satisfies Record<string, string[]>;
+} as const satisfies Record<string, Array<string>>;
+export type SarmalPalette = keyof typeof palettes; // TODO: reconsider naming convention. Should this represent the value type instead of the key union?
 
 /** RGB color components */
 export interface Rgb {
