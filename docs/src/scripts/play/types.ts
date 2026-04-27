@@ -1,4 +1,5 @@
-import type { Point } from "@sarmal/core";
+import type { Point, TrailStyle } from "@sarmal/core";
+import type { DrawingSegment } from "./catmull-rom";
 
 export const DEFAULT_CODE = `return {
   x: Math.cos(t),
@@ -34,4 +35,20 @@ export interface SharedState {
   trailLength: number;
   speed: number;
   showSkeleton: boolean;
+}
+
+export interface DrawBoardExports {
+  getPoints: () => Array<DrawingSegment>;
+  clearPoints: () => void;
+  rebuildInstance: () => void;
+  deletePointAt: (index: number) => void;
+}
+
+export interface PlaygroundRenderParams {
+  trailColor: string | Array<string>;
+  skeletonColor: string;
+  headColor?: string;
+  trailLength: number;
+  speed: number;
+  trailStyle: TrailStyle;
 }

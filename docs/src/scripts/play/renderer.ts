@@ -1,12 +1,13 @@
-import type { TrailStyle } from "@sarmal/core";
-import type { CurveFn } from "./types";
+import type { SarmalPalette, TrailStyle } from "@sarmal/core";
+import type { CurveFn, PlaygroundRenderParams } from "./types";
 
 import { createEngine, palettes, createRenderer } from "@sarmal/core";
 
-export function getResolvedTrailColor(style: TrailStyle, palette: string, color: string) {
+export function getResolvedTrailColor(style: TrailStyle, palette: SarmalPalette, color: string) {
   if (style !== "default") {
-    return palettes[palette as keyof typeof palettes] ?? color;
+    return palettes[palette] ?? color;
   }
+
   return color;
 }
 
@@ -21,7 +22,7 @@ export function getResolvedSkeletonColor(
   }
 
   if (style !== "default") {
-    const p = palettes[palette as keyof typeof palettes];
+    const p = palettes[palette as SarmalPalette];
     return p ? p[0] : color;
   }
   return color;
@@ -30,14 +31,7 @@ export function getResolvedSkeletonColor(
 export function createInstance(
   canvas: HTMLCanvasElement,
   fn: CurveFn,
-  params: {
-    trailColor: string | string[];
-    skeletonColor: string;
-    headColor?: string;
-    trailLength: number;
-    speed: number;
-    trailStyle: TrailStyle;
-  },
+  params: PlaygroundRenderParams,
   period = Math.PI * 2,
 ) {
   const engine = createEngine(

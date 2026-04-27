@@ -65,6 +65,11 @@ The SVG renderer generates DOM elements and updates them via `requestAnimationFr
 - Updates path data and attributes each frame
 - Automatically scales to fit the container. Unlike canvas, does not require DPR handling
 - Includes built-in accessibility features (`role="img"`, `<title>`)
+- Pre-allocates one `<path>` DOM element per trail segment at construction time. This is because SVG is a **retained-mode** API — the browser owns a live scene graph, so creating and destroying elements mid-animation is expensive. Canvas is **immediate-mode**: every frame is a fresh paint with no persistent objects, so it has no equivalent overhead.
+
+<Alert variant="warning">
+  Because path elements are pre-allocated at construction, SVG renderer performance scales with `trailLength`. Very high values (500+) may be noticeable in the DOM. Canvas is unaffected by trail length.
+</Alert>
 
 **Best for:**
 
@@ -91,7 +96,7 @@ const sarmal = createSarmalSVG(container, curves.lissajous32, {
 | **Custom palettes** | Yes | Yes |
 | **Responsive scaling** | Manual | Automatic |
 | **Accessibility** | Manual | Built-in |
-| **Performance** | Excellent (cached skeleton) | Good |
+| **Performance** | Excellent (cached skeleton, trail length has no DOM cost) | Good (pre-allocates one DOM node per trail segment) |
 | **SSR-friendly** | No | No |
 | **Export to image** | Native | Requires conversion |
 
