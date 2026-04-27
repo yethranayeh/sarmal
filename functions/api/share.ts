@@ -4,6 +4,7 @@ interface Env {
 
 interface SharedState {
   v: 1;
+  mode?: string;
   code: string;
   trailStyle: string;
   palette: string;
@@ -12,10 +13,12 @@ interface SharedState {
   trailLength: number;
   speed: number;
   showSkeleton: boolean;
+  drawPoints?: [number, number][];
 }
 
 const SHARE_TTL_SECONDS = 90 * 24 * 60 * 60; // 90 days
 const MAX_CODE_LENGTH = 4000;
+const MAX_DRAW_POINTS = 500;
 
 function generateId(): string {
   const chars = "abcdefghijklmnopqrstuvwxyz0123456789";
@@ -26,9 +29,14 @@ function generateId(): string {
 function isValidState(value: unknown): value is SharedState {
   if (typeof value !== "object" || value === null) return false;
   const s = value as Record<string, unknown>;
-  return (
-    s.v === 1 && typeof s.code === "string" && s.code.length > 0 && s.code.length <= MAX_CODE_LENGTH
-  );
+  if (s.v !== 1) return false;
+  if (typeof s.code !== "string" || s.code.length > MAX_CODE_LENGTH) return false;
+  const isDrawMode = s.mode === "draw";
+  if (isDrawMode) {
+    if (!Array.isArray(s.drawPoints) || s.drawPoints.length === 0 || s.drawPoints.length > MAX_DRAW_POINTS) return false;
+    return s.drawPoints.every((p) => Array.isArray(p) && p.length === 2 && typeof p[0] === "number" && typeof p[1] === "number");
+  }
+  return s.code.length > 0;
 }
 
 export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
