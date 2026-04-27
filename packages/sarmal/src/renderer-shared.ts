@@ -263,7 +263,7 @@ export function getPaletteColor(palette: string[], position: number, timeOffset:
     return hexToRgb(palette[0]!);
   }
 
-  const cyclePos = (position + timeOffset) % 1;
+  const cyclePos = (((position + timeOffset) % 1) + 1) % 1;
   const scaled = cyclePos * palette.length;
   const idx = Math.floor(scaled);
   const t = scaled - idx;
