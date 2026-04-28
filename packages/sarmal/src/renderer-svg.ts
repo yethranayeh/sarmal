@@ -38,19 +38,27 @@ export interface SVGSarmalOptions extends Omit<SVGRendererOptions, "container" |
   /** @default 120 */
   trailLength?: number;
 }
-/** Maximum number of trail segment paths pre-created for the ribbon */
-const MAX_TRAIL_SEGMENTS = 200;
-
 const EMPTY_PARAMS: Record<string, number> = {};
 
+/**
+ * Threshold above which a console.warn suggests canvas for long SVG trails
+ * The value is based on results from `playwright test e2e/tests/svg-trail-benchmark.spec.ts --project=chromium-dpr1 --reporter=list`
+ */
+const HIGH_TRAIL_LENGTH_THRESHOLD = 5000;
+
 function pointsToPathString(pts: Point[], scale: number, offsetX: number, offsetY: number): string {
-  if (pts.length < 2) return "";
+  if (pts.length < 2) {
+    return "";
+  }
+
   const px = (p: Point) => (p.x * scale + offsetX).toFixed(2);
   const py = (p: Point) => (p.y * scale + offsetY).toFixed(2);
   let d = `M${px(pts[0]!)} ${py(pts[0]!)}`;
+
   for (let i = 1; i < pts.length; i++) {
     d += ` L${px(pts[i]!)} ${py(pts[i]!)}`;
   }
+
   return d + " Z";
 }
 
@@ -58,10 +66,12 @@ function sampleCurveSkeleton(curveDef: CurveDef): Point[] {
   const period = curveDef.period ?? Math.PI * 2;
   const samples = Math.ceil(period * 50); // match engine's POINTS_PER_PERIOD_UNIT
   const pts: Point[] = Array.from({ length: samples });
+
   for (let i = 0; i < samples; i++) {
     const t = (i / (samples - 1)) * period;
     pts[i] = curveDef.skeletonFn ? curveDef.skeletonFn(t) : curveDef.fn(t, 0, EMPTY_PARAMS);
   }
+
   return pts;
 }
 
@@ -75,6 +85,13 @@ function el(tag: string): SVGElement {
  */
 export function createSVGRenderer(options: SVGRendererOptions): SarmalInstance {
   const { container, engine } = options;
+  const poolSize = engine.trailLength;
+
+  if (poolSize > HIGH_TRAIL_LENGTH_THRESHOLD) {
+    console.warn(
+      `[sarmal] High trailLength in SVG renderer (${poolSize}). Consider using the canvas renderer for long trails.`,
+    );
+  }
 
   // TODO: duplicate let variables. maybe a better way to share these too?
   // ! Mutated only by `setRenderOptions`.
@@ -137,7 +154,7 @@ export function createSVGRenderer(options: SVGRendererOptions): SarmalInstance {
   let morphPathBBuilt = "";
 
   const trailPaths: SVGPathElement[] = [];
-  for (let i = 0; i < MAX_TRAIL_SEGMENTS; i++) {
+  for (let i = 0; i < poolSize; i++) {
     const path = el("path") as SVGPathElement;
     path.setAttribute("fill", trailSolid);
     svg.appendChild(path);
@@ -197,14 +214,10 @@ export function createSVGRenderer(options: SVGRendererOptions): SarmalInstance {
     /**
      * Ribbon approach: each segment is a filled quad with its own opacity.
      * Quads are drawn from tail to head, with later quads overlaying earlier ones.
-     * When trailCount exceeds MAX_TRAIL_SEGMENTS, we draw only the most recent
-     *  segments so the trail stays visually connected to the head dot.
      */
-    const startIdx = Math.max(0, trailCount - 1 - MAX_TRAIL_SEGMENTS);
-    const drawnCount = trailCount - 1 - startIdx;
+    const drawnCount = trailCount - 1;
 
-    for (let i = startIdx; i < trailCount - 1; i++) {
-      const j = i - startIdx;
+    for (let i = 0; i < drawnCount; i++) {
       const { l0x, l0y, r0x, r0y, l1x, l1y, r1x, r1y, opacity, progress } = computeTrailQuad(
         trail,
         i,
@@ -215,13 +228,13 @@ export function createSVGRenderer(options: SVGRendererOptions): SarmalInstance {
 
       const d = `M${l0x.toFixed(2)} ${l0y.toFixed(2)} L${l1x.toFixed(2)} ${l1y.toFixed(2)} L${r1x.toFixed(2)} ${r1y.toFixed(2)} L${r0x.toFixed(2)} ${r0y.toFixed(2)} Z`;
 
-      trailPaths[j]!.setAttribute("d", d);
-      trailPaths[j]!.setAttribute("fill-opacity", opacity.toFixed(3));
+      trailPaths[i]!.setAttribute("d", d);
+      trailPaths[i]!.setAttribute("fill-opacity", opacity.toFixed(3));
 
       if (trailStyle !== "default") {
         const timeOffset = trailStyle === "gradient-animated" ? gradientAnimTime * 0.0005 : 0;
         const { r, g, b } = getPaletteColor(trailPalette, progress, timeOffset);
-        trailPaths[j]!.setAttribute("fill", `rgb(${r},${g},${b})`);
+        trailPaths[i]!.setAttribute("fill", `rgb(${r},${g},${b})`);
       }
     }
 

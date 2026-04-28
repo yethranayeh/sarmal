@@ -278,26 +278,67 @@ describe("setRenderOptions — SVG attribute re-apply", () => {
   });
 });
 
-describe("SVG renderer — trailLength exceeds MAX_TRAIL_SEGMENTS", () => {
-  it("does not throw when engine trailLength > 200 and trail is fully filled", () => {
+describe("SVG renderer — trail pool sizing", () => {
+  it("creates exactly trailLength trail <path> elements in the DOM", () => {
     const container = makeContainer();
-    const engine = createEngine(testCircle, 250);
+    const engine = createEngine(testCircle, 75);
     const instance = createSVGRenderer({ container, engine, autoStart: false });
 
-    // Tick 260 times to fill the trail well past the 200-segment cap
-    expect(() => {
-      for (let i = 0; i < 260; i++) {
-        engine.tick(0.016);
-      }
-      instance.play();
-      instance.pause();
-    }).not.toThrow();
+    const trailPaths = getTrailPaths(container);
+    // 75 trail paths, excluding the 3 skeleton paths and the head circle
+    expect(trailPaths.length).toBe(75);
 
-    // Head must still be advancing — not frozen at origin
+    instance.destroy();
+  });
+
+  it("head connects to the visible trail after the buffer wraps", () => {
+    const container = makeContainer();
+    const trailLength = 30;
+    const engine = createEngine(testCircle, trailLength);
+    const instance = createSVGRenderer({ container, engine, autoStart: false });
+
+    // Tick more than trailLength times to fill and wrap the circular buffer
+    for (let i = 0; i < trailLength + 10; i++) {
+      engine.tick(0.016);
+    }
+
+    instance.play();
+    instance.pause();
+
     const head = getHeadCircle(container);
     const cx = parseFloat(head.getAttribute("cx") ?? "0");
     const cy = parseFloat(head.getAttribute("cy") ?? "0");
-    expect(Number.isFinite(cx) && Number.isFinite(cy)).toBe(true);
+
+    // Find the last non-empty trail path
+    const trailPaths = getTrailPaths(container);
+    let lastPath: SVGPathElement | null = null;
+    for (let i = trailPaths.length - 1; i >= 0; i--) {
+      const d = trailPaths[i]!.getAttribute("d");
+      if (d && d.length > 0) {
+        lastPath = trailPaths[i]!;
+        break;
+      }
+    }
+    expect(lastPath).not.toBeNull();
+
+    // Parse the quad's head-side midpoint from the d attribute.
+    // Format: M l0x l0y L l1x l1y L r1x r1y L r0x r0y Z
+    // The head-side edge is l1→r1; its midpoint is the exact head position.
+    const d = lastPath!.getAttribute("d")!;
+    const matches = d.match(/M[\d.]+ [\d.]+ L([\d.]+) ([\d.]+) L([\d.]+) ([\d.]+)/);
+    expect(matches).not.toBeNull();
+
+    const l1x = parseFloat(matches![1]!);
+    const l1y = parseFloat(matches![2]!);
+    const r1x = parseFloat(matches![3]!);
+    const r1y = parseFloat(matches![4]!);
+
+    const midX = (l1x + r1x) / 2;
+    const midY = (l1y + r1y) / 2;
+
+    // Head circle should sit exactly on the midpoint of the head-side edge
+    expect(Math.abs(cx - midX)).toBeLessThanOrEqual(1);
+    expect(Math.abs(cy - midY)).toBeLessThanOrEqual(1);
 
     instance.destroy();
   });

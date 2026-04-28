@@ -17,6 +17,12 @@ Version history notes of the <Link href="#core">Core</Link> and the <Link href="
 
 ## Core
 
+### 0.18.0 - 28.04.2026
+
+SVG renderer trail pool is now sized to `trailLength` at the time of construction instead of a hardcoded cap, which was 200. Before the change, `trailLength` values above 200 would silently clip in the SVG renderer while the canvas equivalent would have no problem rendering it fully.
+
+`Engine.trailLength` is now exposed on `Engine` objects. It reflects the maximum trail capacity set at the time of engine creation.
+
 ### 0.17.3 - 24.04.2026
 
 `cyclePos` in shared renderer where palette color is retrieved now uses the safe double-modulo form

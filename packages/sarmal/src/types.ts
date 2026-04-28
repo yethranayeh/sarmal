@@ -161,6 +161,11 @@ export interface Engine extends AnimationControls {
    */
   readonly trailCount: number;
   /**
+   * The maximum capacity of the trail buffer, which is set at engine creation
+   * This is the upper bound for `trailCount`
+   */
+  readonly trailLength: number;
+  /**
    * Returns the *skeleton* of the curve.
    * In technicality, it just represents the complete traversal of the curve over one full period,
    *  which is sampled at points from `t=0` to `t=period`

@@ -197,6 +197,10 @@ export function createEngine(curveDef: CurveDef, trailLength: number = 120): Eng
       return trail.length;
     },
 
+    get trailLength() {
+      return trailLength;
+    },
+
     get isLiveSkeleton() {
       return curve.skeleton === "live";
     },
