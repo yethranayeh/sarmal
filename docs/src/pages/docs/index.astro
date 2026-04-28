@@ -1,5 +1,5 @@
 ---
-import { Minus } from "@lucide/astro";
+import { Hash, Minus } from "@lucide/astro";
 
 import DocsLayout from "../../layouts/DocsLayout.astro";
 import Link from "../../components/Link.astro";
@@ -34,7 +34,12 @@ const docLinks = Object.entries(docModules)
 	title={`Documentation ${SEPARATOR_DOT} Sarmal`}
 	description='Installation guides, API reference, and curve catalog for Sarmal'>
 	<section>
-		<h1>Documentation</h1>
+		<h1 id="documentation">
+			<a class="anchor-link" aria-hidden="true" tabindex="-1" href="#documentation">
+				<Hash size={16} aria-hidden="true" />
+			</a>
+			Documentation
+		</h1>
 		<p class='text-lg text-muted'>
 			Welcome to the Sarmal documentation. Here you'll find everything you need to get started with parametric loading
 			spinners, from installation to advanced customization.
@@ -56,14 +61,24 @@ const docLinks = Object.entries(docModules)
 	<hr />
 
 	<section>
-		<h2>Getting Started</h2>
+		<h2 id="getting-started">
+			<a class="anchor-link" aria-hidden="true" tabindex="-1" href="#getting-started">
+				<Hash size={16} aria-hidden="true" />
+			</a>
+			Getting Started
+		</h2>
 		<p>
 			New to Sarmal? Start with the <Link href='/docs/getting-started'>Getting Started</Link> guide to install
 			<code>@sarmal/core</code> and render your first spinner in minutes.
 		</p>
 	</section>
 
-	<h2>Explore</h2>
+	<h2 id="explore">
+		<a class="anchor-link" aria-hidden="true" tabindex="-1" href="#explore">
+			<Hash size={16} aria-hidden="true" />
+		</a>
+		Explore
+	</h2>
 	<ul>
 		{
 			docLinks.map((link) => (

@@ -57,6 +57,8 @@
   let lastCompiledCode = $state("");
   let lastCompiledFn: CurveFn | null = $state(null);
   let debounceTimer: ReturnType<typeof setTimeout> | null = null;
+  let isSliding = $state(false);
+  let slideTimer: ReturnType<typeof setTimeout> | null = null;
 
   let DrawBoard = $state<any>(null);
   let drawBoardRef = $state<DrawBoardExports | null>(null);
@@ -226,6 +228,16 @@
     }
 
     currentMode = mode;
+
+    // Restart slide animation so rapid clicks replay the blur/stretch
+    isSliding = false;
+    requestAnimationFrame(() => {
+      isSliding = true;
+    });
+    if (slideTimer) clearTimeout(slideTimer);
+    slideTimer = setTimeout(() => {
+      isSliding = false;
+    }, 450);
   }
 
   function handleSkeletonToggle() {
@@ -879,10 +891,13 @@
         </button>
       {/each}
       <div
-        class="bg-primary w-17 group-hover:w-18 h-7 rounded-full absolute {currentMode ===
+        class="bg-primary w-17 group-hover:w-18 h-7 rounded-full absolute -z-1 {currentMode ===
         'math'
           ? 'left-1'
-          : 'left-[50%] group-hover:left-[47%]'} -z-1 transition-all duration-300"
+          : 'left-[50%] group-hover:left-[47%]'} {isSliding
+          ? 'is-sliding'
+          : ''}"
+        style="transition: left 300ms cubic-bezier(0.34, 1.2, 0.64, 1), width 300ms cubic-bezier(0.34, 1.2, 0.64, 1);"
       ></div>
     </div>
 
@@ -938,6 +953,30 @@
     }
     100% {
       background-position: 200% 50%;
+    }
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .is-sliding {
+      animation: slide 450ms ease-out forwards;
+    }
+  }
+  @keyframes slide {
+    0% {
+      filter: blur(0px);
+      transform: scaleX(1);
+    }
+    20% {
+      filter: blur(1px);
+      transform: scaleX(1.03);
+    }
+    60% {
+      filter: blur(0.5px);
+      transform: scaleX(0.98);
+    }
+    100% {
+      filter: blur(0px);
+      transform: scaleX(1);
     }
   }
 </style>
