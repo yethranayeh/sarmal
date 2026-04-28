@@ -12,7 +12,14 @@
 
   import { onDestroy, onMount } from "svelte";
   import { palettes } from "@sarmal/core";
-  import { Share2, Link, Unlink, Trash, XIcon } from "@lucide/svelte";
+  import {
+    Share2,
+    Link,
+    Unlink,
+    Trash,
+    XIcon,
+    PanelLeft,
+  } from "@lucide/svelte";
 
   import {
     buildCurveFn,
@@ -52,6 +59,7 @@
   let palette = $state<SarmalPalette>("bard");
   let presetId = $state<string>("");
   let shareStatus = $state<string | null>(null);
+  let sidebarVisible = $state(false);
 
   let instance = $state<ReturnType<typeof createInstance> | null>(null);
   let lastCompiledCode = $state("");
@@ -88,6 +96,7 @@
     }
 
     presetId = curveId;
+    sidebarVisible = false;
     const body = extractBody(preset.fn);
     currentCode = body;
     error = null;
@@ -514,11 +523,34 @@
   );
 </script>
 
-<div class="flex flex-col lg:flex-row h-[calc(100vh-57px)]">
+<div class="flex flex-col lg:flex-row h-[calc(100dvh-57px)] relative">
+  {#if sidebarVisible}
+    <div
+      class="absolute inset-0 z-20 bg-black/40 lg:hidden"
+      onclick={() => (sidebarVisible = false)}
+      role="presentation"
+    ></div>
+  {/if}
   <!-- Sidebar -->
   <aside
-    class="w-full space-y-4 lg:w-90 lg:shrink-0 p-3 border-b lg:border-b-0 lg:border-r border-border bg-background overflow-y-auto flex flex-col"
+    class="absolute lg:relative inset-y-0 left-0 z-30 w-[min(85vw,360px)] lg:w-90 lg:shrink-0 p-3 lg:border-r border-border bg-background overflow-y-auto flex flex-col transition-transform duration-300 {sidebarVisible
+      ? 'translate-x-0'
+      : '-translate-x-full'} lg:translate-x-0"
   >
+    <!-- Mobile close header -->
+    <div class="flex items-center justify-between mb-1 lg:hidden">
+      <span class="font-heading text-xs font-medium text-muted-foreground"
+        >Controls</span
+      >
+      <button
+        class="p-1 rounded cursor-pointer text-muted-foreground hover:text-foreground transition-colors"
+        onclick={() => (sidebarVisible = false)}
+        aria-label="Close controls"
+      >
+        <XIcon class="w-4 h-4" />
+      </button>
+    </div>
+
     <!-- Definition -->
     <section class="pb-4 border-b border-border-subtle">
       <header
@@ -835,7 +867,7 @@
     <!-- Square canvas inset -->
     <div class="absolute inset-0 flex items-center justify-center p-10">
       <div
-        class="relative w-full max-w-[min(640px,calc(100vh-137px))] aspect-square"
+        class="relative w-full max-w-[min(640px,calc(100dvh-137px))] aspect-square"
       >
         <canvas
           bind:this={canvas}
@@ -885,30 +917,42 @@
       </div>
     </div>
 
-    <!-- Floating: mode segmented control (top-left) -->
-    <div
-      class="absolute group top-4 left-4 z-10 inline-flex items-center bg-surface/90 backdrop-blur-md border border-border rounded-full p-0.75 gap-0.5 shadow-[0_1px_2px_rgba(27,28,26,0.04)]"
-    >
-      {#each ["math", "draw"] as mode}
+    <!-- Floating: sidebar toggle + mode segmented control (top-left) -->
+    <div class="absolute top-4 left-4 z-10 flex items-center gap-2">
+      {#if !sidebarVisible}
         <button
-          class="px-4 py-1.5 rounded-full font-body text-[11px] font-semibold uppercase tracking-[0.08em] cursor-pointer transition-colors duration-300 bg-transparent {currentMode ===
-          mode
-            ? 'text-primary-foreground'
-            : 'text-muted-foreground hover:text-foreground'}"
-          onclick={() => switchMode(mode as "math" | "draw")}
+          class="lg:hidden p-2 rounded-full bg-surface/90 backdrop-blur-md border border-border shadow-[0_1px_2px_rgba(27,28,26,0.04)] text-foreground cursor-pointer hover:text-primary transition-colors"
+          onclick={() => (sidebarVisible = true)}
+          aria-label="Open controls"
         >
-          {mode}
+          <PanelLeft class="w-4 h-4" />
         </button>
-      {/each}
+      {/if}
+
       <div
-        class="bg-primary w-17 group-hover:w-18 h-7 rounded-full absolute -z-1 {currentMode ===
-        'math'
-          ? 'left-1'
-          : 'left-[50%] group-hover:left-[47%]'} {isSliding
-          ? 'is-sliding'
-          : ''}"
-        style="transition: left 300ms cubic-bezier(0.34, 1.2, 0.64, 1), width 300ms cubic-bezier(0.34, 1.2, 0.64, 1);"
-      ></div>
+        class="group inline-flex items-center bg-surface/90 backdrop-blur-md border border-border rounded-full p-0.75 gap-0.5 shadow-[0_1px_2px_rgba(27,28,26,0.04)]"
+      >
+        {#each ["math", "draw"] as mode}
+          <button
+            class="px-4 py-1.5 rounded-full font-body text-[11px] font-semibold uppercase tracking-[0.08em] cursor-pointer transition-colors duration-300 bg-transparent {currentMode ===
+            mode
+              ? 'text-primary-foreground'
+              : 'text-muted-foreground hover:text-foreground'}"
+            onclick={() => switchMode(mode as "math" | "draw")}
+          >
+            {mode}
+          </button>
+        {/each}
+        <div
+          class="bg-primary w-17 group-hover:w-18 h-7 rounded-full absolute -z-1 {currentMode ===
+          'math'
+            ? 'left-1'
+            : 'left-[50%] group-hover:left-[47%]'} {isSliding
+            ? 'is-sliding'
+            : ''}"
+          style="transition: left 300ms cubic-bezier(0.34, 1.2, 0.64, 1), width 300ms cubic-bezier(0.34, 1.2, 0.64, 1);"
+        ></div>
+      </div>
     </div>
 
     <!-- Floating: share / clear (top-right) -->
