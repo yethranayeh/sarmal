@@ -352,7 +352,9 @@
     isAnimating = false;
   }
 
-  // Rebuild engine when points stabilize (not mid-drag)
+  let builtPoints: DrawingSegment[] = [];
+
+  // Rebuild engine when points stabilize and when they actually changed
   $effect(() => {
     const pts = points;
     const dragging = dragIndex;
@@ -360,9 +362,15 @@
       return;
     }
 
+    if (pointsEqual(builtPoints, pts)) {
+      return;
+    }
+
     if (pts.length >= 3) {
+      builtPoints = pts.map((p) => [p[0], p[1]]);
       buildEngine();
     } else {
+      builtPoints = [];
       destroyEngine();
     }
   });
@@ -381,6 +389,18 @@
     points = [];
     popoverIndex = null;
     destroyEngine();
+  }
+
+  function pointsEqual(a: DrawingSegment[], b: DrawingSegment[]): boolean {
+    if (a.length !== b.length) {
+      return false;
+    }
+
+    for (let i = 0; i < a.length; i++) {
+      if (a[i]![0] !== b[i]![0] || a[i]![1] !== b[i]![1]) return false;
+    }
+
+    return true;
   }
 
   export function getPoints(): Array<DrawingSegment> {
@@ -412,7 +432,7 @@
 <svg
   bind:this={svgElement}
   class="absolute {showControls
-    ? 'cursor-crosshair bg-surface rounded-lg border border-dashed border-foreground/10'
+    ? 'cursor-crosshair bg-surface rounded-lg border border-dashed border-foreground/10 touch-none'
     : 'cursor-default bg-transparent'} inset-0 w-full h-full"
   viewBox="-1 -1 2 2"
   width="100%"
