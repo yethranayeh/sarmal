@@ -12,7 +12,7 @@
 
   import { onMount } from "svelte";
   import { palettes } from "@sarmal/core";
-  import { Share2, Trash2, Link, Unlink, Trash } from "@lucide/svelte";
+  import { Share2, Trash2, Link, Unlink, Trash, XIcon } from "@lucide/svelte";
 
   import {
     buildCurveFn,
@@ -63,7 +63,13 @@
   let drawInitialPoints = $state<Array<DrawingSegment> | undefined>(undefined);
   let drawPoints = $state<Array<DrawingSegment>>([]);
   const drawPointCount = $derived(drawPoints.length);
-  let showDrawMeta = $state(true);
+  let showDrawControls = $state(true);
+
+  $effect(() => {
+    if (drawPoints.length < 3) {
+      showDrawControls = true;
+    }
+  });
 
   const PRESETS = $derived(
     presets.reduce(
@@ -184,7 +190,7 @@
       lastCompiledFn = null;
     } else {
       drawBoardRef?.clearPoints();
-      showDrawMeta = true;
+      showDrawControls = true;
     }
     history.replaceState(null, "", window.location.pathname);
   }
@@ -503,16 +509,14 @@
         </h2>
         {#if currentMode === "draw" && drawPointCount > 0}
           <button
-            class="relative w-8 h-4.5 rounded-full transition-colors duration-150 shrink-0 cursor-pointer {showDrawMeta
+            class="relative w-8 h-4.5 rounded-full transition-colors duration-150 shrink-0 cursor-pointer {showDrawControls
               ? 'bg-primary'
               : 'bg-border'}"
-            onclick={() => (showDrawMeta = !showDrawMeta)}
-            aria-label={showDrawMeta
-              ? "Hide control points"
-              : "Show control points"}
+            onclick={() => (showDrawControls = !showDrawControls)}
+            aria-label={showDrawControls ? "Hide controls" : "Show controls"}
           >
             <span
-              class="absolute top-0.5 w-3.5 h-3.5 bg-white rounded-full shadow-[0_1px_2px_rgba(0,0,0,0.15)] transition-[left] duration-150 {showDrawMeta
+              class="absolute top-0.5 w-3.5 h-3.5 bg-white rounded-full shadow-[0_1px_2px_rgba(0,0,0,0.15)] transition-[left] duration-150 {showDrawControls
                 ? 'left-4'
                 : 'left-0.5'}"
             ></span>
@@ -548,10 +552,12 @@
               <span class="text-foreground font-medium">curve</span>
               <span class="text-muted-gray">(</span>
               <!-- TODO: add title or tooltip explanations for parameters -->
-              <span class="text-muted-foreground italic font-heading text-xs"
+              <span
+                class="text-muted-foreground italic font-heading text-xs cursor-help"
                 >t, time, params</span
               >
-              <span class="text-muted-gray">) {`{`}</span>
+              <span class="text-muted-gray">)</span>
+              <span class="text-primary font-bold">{`{`}</span>
             </div>
             <textarea
               bind:value={currentCode}
@@ -606,11 +612,12 @@
                 {point[1].toFixed(2)}</span
               >
               <button
-                class="w-2 h-2 rounded-full cursor-pointer hover:opacity-60 transition-opacity"
-                style="background: {trailColor}"
+                class="cursor-pointer w-max rounded-full p-1 hover:bg-primary/10 transition-colors"
                 onclick={() => drawBoardRef?.deletePointAt(i)}
                 aria-label="Delete point {i + 1}"
-              ></button>
+              >
+                <XIcon size={14} class="text-primary" />
+              </button>
             </div>
           {/each}
         </div>
@@ -827,7 +834,7 @@
             {headColor}
             {headColorAuto}
             initialPoints={drawInitialPoints}
-            showMeta={showDrawMeta}
+            showControls={showDrawControls}
             onPointsChange={(pts: Array<DrawingSegment>) => (drawPoints = pts)}
           />
         {/if}
@@ -837,11 +844,12 @@
           <div
             class="absolute inset-0 flex items-center justify-center pointer-events-none"
           >
-            <div class="text-center max-w-85 px-6">
+            <div class="text-center max-w-85 px-6 select-none">
               <h2
                 class="font-heading italic text-[26px] leading-tight font-normal text-muted-dark m-0"
               >
-                Begin with a <span class="text-primary">gesture</span>.
+                <span class="select-text">Begin</span> with a
+                <span class="text-primary">gesture</span>.
               </h2>
               <p
                 class="font-mono text-[11px] tracking-[0.04em] leading-[1.6] text-muted-gray mt-3"
@@ -857,19 +865,25 @@
 
     <!-- Floating: mode segmented control (top-left) -->
     <div
-      class="absolute top-4 left-4 z-10 inline-flex items-center bg-surface/90 backdrop-blur-md border border-border rounded-full p-0.75 gap-0.5 shadow-[0_1px_2px_rgba(27,28,26,0.04)]"
+      class="absolute group top-4 left-4 z-10 inline-flex items-center bg-surface/90 backdrop-blur-md border border-border rounded-full p-0.75 gap-0.5 shadow-[0_1px_2px_rgba(27,28,26,0.04)]"
     >
       {#each ["math", "draw"] as mode}
         <button
-          class="px-4 py-1.5 rounded-full font-body text-[11px] font-semibold uppercase tracking-[0.08em] cursor-pointer transition-colors duration-150 {currentMode ===
+          class="px-4 py-1.5 rounded-full font-body text-[11px] font-semibold uppercase tracking-[0.08em] cursor-pointer transition-colors duration-300 bg-transparent {currentMode ===
           mode
-            ? 'bg-primary text-primary-foreground'
-            : 'bg-transparent text-muted-foreground hover:text-foreground'}"
+            ? 'text-primary-foreground'
+            : 'text-muted-foreground hover:text-foreground'}"
           onclick={() => switchMode(mode as "math" | "draw")}
         >
           {mode}
         </button>
       {/each}
+      <div
+        class="bg-primary w-17 group-hover:w-18 h-7 rounded-full absolute {currentMode ===
+        'math'
+          ? 'left-1'
+          : 'left-[50%] group-hover:left-[47%]'} -z-1 transition-all duration-300"
+      ></div>
     </div>
 
     <!-- Floating: share / clear (top-right) -->
@@ -904,11 +918,11 @@
 
     <!-- Mode tag (bottom-left) -->
     <div class="absolute bottom-6 left-6 z-10 pointer-events-none">
-      <div
-        class="font-heading italic font-medium text-[28px] leading-none tracking-[-0.01em] text-muted-foreground"
+      <span
+        class="font-heading italic font-medium text-[28px] leading-none tracking-[-0.01em] text-muted-foreground select-none"
       >
         {currentMode === "math" ? "Parametric" : "Hand-drawn"}
-      </div>
+      </span>
       <!-- TODO: add live mouse coordinates -->
     </div>
   </section>

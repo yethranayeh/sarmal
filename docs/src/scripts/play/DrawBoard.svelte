@@ -20,7 +20,7 @@
     headColor?: string;
     headColorAuto?: boolean;
     initialPoints?: Array<DrawingSegment>;
-    showMeta?: boolean;
+    showControls?: boolean;
     onPointsChange?: (points: Array<DrawingSegment>) => void;
   }
 
@@ -33,7 +33,7 @@
     headColor,
     headColorAuto = false,
     initialPoints = [],
-    showMeta = true,
+    showControls = true,
     onPointsChange,
   }: Props = $props();
 
@@ -180,7 +180,9 @@
   function handleSvgPointerDown(e: PointerEvent) {
     e.preventDefault();
     const target = e.target as Element;
+
     if (target.closest("circle")) {
+      // On the very small chance that the user clicks the animated curve's head
       return;
     }
 
@@ -188,6 +190,7 @@
       popoverIndex = null;
       return;
     }
+
     const [x, y] = getSvgPoint(e.clientX, e.clientY);
     points = [...points, [x, y]];
     dragIndex = points.length - 1;
@@ -393,7 +396,7 @@
 <!-- svelte-ignore a11y_no_static_element_interactions -->
 <svg
   bind:this={svgElement}
-  class="absolute {showMeta
+  class="absolute {showControls
     ? 'cursor-crosshair bg-surface rounded-lg border border-dashed border-foreground/10'
     : 'cursor-default bg-transparent'} inset-0 w-full h-full"
   viewBox="-1 -1 2 2"
@@ -401,10 +404,10 @@
   height="100%"
   overflow="visible"
   preserveAspectRatio="xMidYMid meet"
-  onpointerdown={showMeta ? handleSvgPointerDown : undefined}
-  onpointermove={showMeta ? handlePointPointerMove : undefined}
-  onpointerup={showMeta ? handlePointPointerUp : undefined}
-  onpointercancel={showMeta ? handlePointerCancel : undefined}
+  onpointerdown={showControls ? handleSvgPointerDown : undefined}
+  onpointermove={showControls ? handlePointPointerMove : undefined}
+  onpointerup={showControls ? handlePointPointerUp : undefined}
+  onpointercancel={showControls ? handlePointerCancel : undefined}
   role="img"
   aria-label="Drawing board for placing curve control points"
 >
@@ -421,7 +424,7 @@
   {/if}
 
   <!-- Dashed polygon that connects control points -->
-  {#if showMeta && points.length >= 2}
+  {#if showControls && points.length >= 2}
     <polygon
       points={polygonPointsStr}
       fill="none"
@@ -442,7 +445,7 @@
   {/if}
 
   <!-- Control point dots -->
-  {#if showMeta}
+  {#if showControls}
     {#each points as point, i (i)}
       {@const isLast = i === points.length - 1}
       <g class="cursor-pointer">
@@ -456,6 +459,7 @@
             class="pointer-events-none"
           ></circle>
         {/if}
+
         <circle
           cx={point[0]}
           cy={point[1]}
@@ -468,13 +472,16 @@
           tabindex="0"
           aria-label="Control point {i + 1}"
         ></circle>
-        <circle
-          cx={point[0]}
-          cy={point[1]}
-          r="0.022"
-          fill={strokeColor}
-          class="pointer-events-none"
-        ></circle>
+
+        {#if isLast}
+          <circle
+            cx={point[0]}
+            cy={point[1]}
+            r="0.022"
+            fill={strokeColor}
+            class="pointer-events-none"
+          ></circle>
+        {/if}
       </g>
     {/each}
   {/if}
