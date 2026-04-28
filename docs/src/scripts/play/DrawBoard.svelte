@@ -84,6 +84,9 @@
       trailPathEls.push(p);
     }
     return () => {
+      for (const p of trailPathEls) {
+        g.removeChild(p);
+      }
       trailPathEls = [];
     };
   });
@@ -155,12 +158,17 @@
   });
 
   $effect(() => {
-    onPointsChange?.([...points]);
+    // Only notify parent when not mid-drag to avoid re-renders
+    if (dragIndex === null) {
+      onPointsChange?.([...points]);
+    }
   });
 
   // Dashed straight-line polygon connecting control points
   const polygonPointsStr = $derived(
-    points.map((p) => `${p[0]},${p[1]}`).join(" "),
+    showControls && points.length >= 2
+      ? points.map((p) => `${p[0]},${p[1]}`).join(" ")
+      : "",
   );
 
   let svgElement: SVGSVGElement;
@@ -287,8 +295,15 @@
     const count = engine.trailCount;
 
     renderTrailRibbon(trail, count);
-    headPos =
-      count > 0 ? { x: trail[count - 1]!.x, y: trail[count - 1]!.y } : null;
+
+    const newHead = count > 0 ? trail[count - 1]! : null;
+    if (newHead) {
+      if (!headPos || headPos.x !== newHead.x || headPos.y !== newHead.y) {
+        headPos = { x: newHead.x, y: newHead.y };
+      }
+    } else {
+      headPos = null;
+    }
 
     rafId = requestAnimationFrame(loop);
   }

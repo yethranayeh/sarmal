@@ -10,9 +10,9 @@
   import type { Point, TrailStyle, SarmalPalette } from "@sarmal/core";
   import type { DrawingSegment } from "./scripts/play/catmull-rom";
 
-  import { onMount } from "svelte";
+  import { onDestroy, onMount } from "svelte";
   import { palettes } from "@sarmal/core";
-  import { Share2, Trash2, Link, Unlink, Trash, XIcon } from "@lucide/svelte";
+  import { Share2, Link, Unlink, Trash, XIcon } from "@lucide/svelte";
 
   import {
     buildCurveFn,
@@ -64,14 +64,12 @@
   let drawBoardRef = $state<DrawBoardExports | null>(null);
   let drawInitialPoints = $state<Array<DrawingSegment> | undefined>(undefined);
   let drawPoints = $state<Array<DrawingSegment>>([]);
-  const drawPointCount = $derived(drawPoints.length);
   let showDrawControls = $state(true);
 
-  $effect(() => {
-    if (drawPoints.length < 3) {
-      showDrawControls = true;
-    }
-  });
+  const drawPointCount = $derived(drawPoints.length);
+  const shouldShowDrawControls = $derived(
+    showDrawControls || drawPointCount < 3,
+  );
 
   const PRESETS = $derived(
     presets.reduce(
@@ -406,17 +404,17 @@
     }
   }
 
-  function restoreState(saved: SharedState) {
+  async function restoreState(saved: SharedState) {
     if (saved.mode === "draw" && saved.drawPoints) {
-      currentMode = "draw";
       drawInitialPoints = saved.drawPoints;
       drawPoints = [...saved.drawPoints];
 
       if (!DrawBoard) {
-        import("./scripts/play/DrawBoard.svelte").then((mod) => {
-          DrawBoard = mod.default;
-        });
+        const mod = await import("./scripts/play/DrawBoard.svelte");
+        DrawBoard = mod.default;
       }
+
+      currentMode = "draw";
     } else {
       currentCode = saved.code;
       error = null;
@@ -456,6 +454,16 @@
       showSkeleton = saved.showSkeleton;
     }
   }
+
+  onDestroy(() => {
+    if (debounceTimer) {
+      clearTimeout(debounceTimer);
+    }
+
+    if (slideTimer) {
+      clearTimeout(slideTimer);
+    }
+  });
 
   onMount(async () => {
     if (savedState) {
@@ -521,14 +529,16 @@
         </h2>
         {#if currentMode === "draw" && drawPointCount > 0}
           <button
-            class="relative w-8 h-4.5 rounded-full transition-colors duration-150 shrink-0 cursor-pointer {showDrawControls
+            class="relative w-8 h-4.5 rounded-full transition-colors duration-150 shrink-0 cursor-pointer {shouldShowDrawControls
               ? 'bg-primary'
               : 'bg-border'}"
             onclick={() => (showDrawControls = !showDrawControls)}
-            aria-label={showDrawControls ? "Hide controls" : "Show controls"}
+            aria-label={shouldShowDrawControls
+              ? "Hide controls"
+              : "Show controls"}
           >
             <span
-              class="absolute top-0.5 w-3.5 h-3.5 bg-white rounded-full shadow-[0_1px_2px_rgba(0,0,0,0.15)] transition-[left] duration-150 {showDrawControls
+              class="absolute top-0.5 w-3.5 h-3.5 bg-white rounded-full shadow-[0_1px_2px_rgba(0,0,0,0.15)] transition-[left] duration-150 {shouldShowDrawControls
                 ? 'left-4'
                 : 'left-0.5'}"
             ></span>
@@ -846,7 +856,7 @@
             {headColor}
             {headColorAuto}
             initialPoints={drawInitialPoints}
-            showControls={showDrawControls}
+            showControls={shouldShowDrawControls}
             onPointsChange={(pts: Array<DrawingSegment>) => (drawPoints = pts)}
           />
         {/if}
