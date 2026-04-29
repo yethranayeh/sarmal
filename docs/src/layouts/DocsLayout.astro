@@ -13,16 +13,25 @@ interface DocFrontmatter {
 	description: string;
 	sidebarLabel: string;
 	order: number;
+	ogTitle?: string;
+	ogDescription?: string;
+	ogImage?: string;
 }
 
 type Props = Partial<MarkdownLayoutProps<DocFrontmatter>> & {
 	title?: string;
 	description?: string;
+	ogTitle?: string;
+	ogDescription?: string;
+	ogImage?: string;
 };
 
 const { frontmatter } = Astro.props;
 const title = frontmatter?.title ?? Astro.props.title ?? "";
 const description = frontmatter?.description ?? Astro.props.description ?? "";
+const ogTitle = frontmatter?.ogTitle ?? Astro.props.ogTitle;
+const ogDescription = frontmatter?.ogDescription ?? Astro.props.ogDescription;
+const ogImage = frontmatter?.ogImage ?? Astro.props.ogImage;
 const currentPath = Astro.url.pathname;
 
 const topNavLinks = [
@@ -31,7 +40,12 @@ const topNavLinks = [
 ];
 ---
 
-<BaseLayout title={title} description={description}>
+<BaseLayout
+	title={title}
+	description={description}
+	ogTitle={ogTitle}
+	ogDescription={ogDescription}
+	ogImage={ogImage}>
 	<Navbar slot='navbar'>
 		<div slot='nav' class='hidden lg:block'>
 			<NavLinks />

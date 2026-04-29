@@ -87,6 +87,9 @@ importers:
       '@playwright/test':
         specifier: ^1.49.0
         version: 1.59.1
+      '@sarmal/core':
+        specifier: workspace:*
+        version: link:../packages/sarmal
 
   packages/react:
     devDependencies:

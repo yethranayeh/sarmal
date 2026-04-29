@@ -14,297 +14,35 @@ import Link from "../../../components/Link.astro";
 
 import { codeThemes } from "../../../lib/shiki";
 import { SEPARATOR_DOT } from "../../../variables";
+import { CURVE_DOCS, type CurveDocsMeta } from "../../../data/curves";
 
-export type CurveData = {
-  name: string;
-  curveKey: CurveName;
-  family: string;
-  equation: string;
-  period: string;
-  speed: number;
-  skeleton: string;
-  description: string;
-  features: string[];
-  importPath: string;
-};
+export type CurveData = CurveDocsMeta & {
+  curveKey: CurveName
+  urlId: string
+}
 
 export function getStaticPaths() {
-  return [
-    { params: { id: "artemis2" } },
-    { params: { id: "epitrochoid" } },
-    { params: { id: "astroid" } },
-    { params: { id: "deltoid" } },
-    { params: { id: "rose3" } },
-    { params: { id: "rose5" } },
-    { params: { id: "lissajous32" } },
-    { params: { id: "lissajous43" } },
-    { params: { id: "epicycloid3" } },
-    { params: { id: "lame" } },
-    { params: { id: "rose52" } },
-    { params: { id: "star" } },
-    { params: { id: "star4" } },
-    { params: { id: "star7" } },
-  ];
+  return Object.keys(CURVE_DOCS).map((id) => ({ params: { id } }));
 }
 
 const { id } = Astro.params;
 
-const CURVE_DATA: Record<string, CurveData> = {
-  artemis2: {
-    name: "Artemis II",
-    curveKey: "artemis2",
-    family: "Free-return trajectory",
-    equation:
-      "x = \\frac{\\cos(t)\\,(1 + 0.35\\cos(t))}{1 + \\sin^2(t)} - 0.175 \\\\ y = \\frac{\\sin(t)\\cos(t)\\,(1 + 0.15\\cos(t))}{1 + \\sin^2(t)}",
-    period: "2π",
-    speed: 0.7,
-    skeleton: "static",
-    description:
-      "Modified lemniscate with two unequal lobes. The iconic curve of the collection, tracing a path inspired by the Artemis II lunar free-return trajectory.",
-    features: [
-      "Two unequal lobes creating organic asymmetry",
-      "Based on NASA's Artemis II mission trajectory",
-      "Hero curve of the Sarmal collection",
-    ],
-    importPath: "@sarmal/core/curves/artemis2",
-  },
-  epitrochoid: {
-    name: "Epitrochoid",
-    curveKey: "epitrochoid7",
-    family: "Roulette",
-    equation:
-      "x = 7\\cos(t) - d\\cos(7t) \\\\ y = 7\\sin(t) - d\\sin(7t) \\\\ \\text{where } d = 1.0 + 0.55\\sin(0.5t)",
-    period: "2π",
-    speed: 1.4,
-    skeleton: "custom (stabilized)",
-    description:
-      "A roulette tracing 7 lobes with an animated distance parameter that creates organic, undulating motion.",
-    features: [
-      "7 lobes with flower-like symmetry",
-      "Dynamic distance parameter creates organic motion",
-      "Custom skeleton uses fixed d=1.275 for stability",
-    ],
-    importPath: "@sarmal/core/curves/epitrochoid7",
-  },
-  astroid: {
-    name: "Astroid",
-    curveKey: "astroid",
-    family: "Hypocycloid",
-    equation: "x = \\cos^3(t) \\\\ y = \\sin^3(t)",
-    period: "2π",
-    speed: 1.1,
-    skeleton: "static",
-    description:
-      "A hypocycloid with 4 sharp cusps, forming a star-like shape within a square boundary.",
-    features: [
-      "4 sharp cusps at cardinal points",
-      "Star-like shape inscribed in a square",
-      "Classic hypocycloid with n=4",
-    ],
-    importPath: "@sarmal/core/curves/astroid",
-  },
-  deltoid: {
-    name: "Deltoid",
-    curveKey: "deltoid",
-    family: "Hypocycloid",
-    equation: "x = 2\\cos(t) + \\cos(2t) \\\\ y = 2\\sin(t) - \\sin(2t)",
-    period: "2π",
-    speed: 0.9,
-    skeleton: "static",
-    description:
-      "A 3-cusped hypocycloid tracing a triangular-like curve with curved sides.",
-    features: [
-      "3 cusps creating triangular symmetry",
-      "Curved sides between cusps",
-      "Classic hypocycloid with n=3",
-    ],
-    importPath: "@sarmal/core/curves/deltoid",
-  },
-  rose3: {
-    name: "Rose (n=3)",
-    curveKey: "rose3",
-    family: "Rose",
-    equation: "r = \\cos(3t) \\\\ x = r\\cos(t) \\\\ y = r\\sin(t)",
-    period: "2π",
-    speed: 1.15,
-    skeleton: "static",
-    description:
-      "A 3-petaled rose curve with trifold symmetry, created using a polar equation.",
-    features: [
-      "3 petals with radial symmetry",
-      "Polar equation: r = cos(3t)",
-      "Classic rhodonea curve",
-    ],
-    importPath: "@sarmal/core/curves/rose3",
-  },
-  rose5: {
-    name: "Rose (n=5)",
-    curveKey: "rose5",
-    family: "Rose",
-    equation: "r = \\cos(5t) \\\\ x = r\\cos(t) \\\\ y = r\\sin(t)",
-    period: "2π",
-    speed: 1.0,
-    skeleton: "static",
-    description:
-      "A 5-petaled rose curve with fivefold symmetry, created using a polar equation.",
-    features: [
-      "5 petals with radial symmetry",
-      "Polar equation: r = cos(5t)",
-      "Classic rhodonea curve",
-    ],
-    importPath: "@sarmal/core/curves/rose5",
-  },
-  rose52: {
-    name: "Rose (n=5/2)",
-    curveKey: "rose52",
-    family: "Rose",
-    equation:
-      "r = \\cos\\!\\left(\\tfrac{5}{2}t\\right) \\\\ x = r\\cos(t) \\\\ y = r\\sin(t)",
-    period: "4π",
-    speed: 0.8,
-    skeleton: "static",
-    description:
-      "A 5-petaled rose curve with a fractional n=5/2, requiring two full revolutions to complete. The head passes through the center between petals, creating elegant crossing trails.",
-    features: [
-      "5 petals traced over two full revolutions (period 4π)",
-      "Head crosses through the center between petals",
-      "Fractional n=5/2 creates denser, more intricate trail crossings than integer-n roses",
-    ],
-    importPath: "@sarmal/core/curves/rose52",
-  },
-  lissajous32: {
-    name: "Lissajous 3:2",
-    curveKey: "lissajous32",
-    family: "Lissajous",
-    equation:
-      "x = \\sin(3t + \\varphi) \\\\ y = \\sin(2t) \\\\ \\text{where } \\varphi = t_{\\text{time}} \\cdot 0.45",
-    period: "2π",
-    speed: 2.0,
-    skeleton: "live",
-    description:
-      "A figure-eight-like curve with a slowly drifting phase that causes the skeleton to morph continuously.",
-    features: [
-      "3:2 frequency ratio creates figure-eight pattern",
-      "Phase drift causes continuous skeleton morphing",
-      "Live skeleton that evolves over time",
-    ],
-    importPath: "@sarmal/core/curves/lissajous32",
-  },
-  lissajous43: {
-    name: "Lissajous 4:3",
-    curveKey: "lissajous43",
-    family: "Lissajous",
-    equation:
-      "x = \\sin(4t + \\varphi) \\\\ y = \\sin(3t) \\\\ \\text{where } \\varphi = t_{\\text{time}} \\cdot 0.38",
-    period: "2π",
-    speed: 1.8,
-    skeleton: "live",
-    description:
-      "A more complex Lissajous pattern with 4:3 frequency ratio and drifting phase, creating an interweaving pattern.",
-    features: [
-      "4:3 frequency ratio creates complex interweaving",
-      "Phase drift causes continuous skeleton morphing",
-      "Live skeleton that evolves over time",
-    ],
-    importPath: "@sarmal/core/curves/lissajous43",
-  },
-  epicycloid3: {
-    name: "Epicycloid (n=3)",
-    curveKey: "epicycloid3",
-    family: "Roulette",
-    equation: "x = 4\\cos(t) - \\cos(4t) \\\\ y = 4\\sin(t) - \\sin(4t)",
-    period: "2π",
-    speed: 0.75,
-    skeleton: "static",
-    description:
-      "A 3-pointed star shape created by a point on a circle rolling around the outside of another circle.",
-    features: [
-      "3-pointed star shape",
-      "Created by exterior rolling circle",
-      "Classic epicycloid with n=3",
-    ],
-    importPath: "@sarmal/core/curves/epicycloid3",
-  },
-  lame: {
-    name: "Lamé Curve",
-    curveKey: "lame",
-    family: "Superellipse",
-    equation:
-      "x = \\operatorname{sgn}(\\cos t)\\,|\\cos t|^{p} \\\\ y = \\operatorname{sgn}(\\sin t)\\,|\\sin t|^{p} \\\\ \\text{where } p = 1.75 + 1.25\\sin(t_{\\text{time}} \\cdot 0.48)",
-    period: "2π",
-    speed: 1.0,
-    skeleton: "live",
-    description:
-      "A superellipse that morphs continuously between diamond, circle, and squircle shapes as the exponent oscillates.",
-    features: [
-      "Morphs between diamond, circle, and squircle",
-      "Exponent p oscillates between 0.5 and 3.0",
-      "Live skeleton shifts continuously",
-    ],
-    importPath: "@sarmal/core/curves/lame",
-  },
-
-  star: {
-    name: "Star",
-    curveKey: "star",
-    family: "Fourier polar",
-    equation:
-      "r = \\left|\\cos\\!\\left(\\tfrac{5}{2}t\\right)\\right| + 0.35\\left|\\cos\\!\\left(\\tfrac{15}{2}t\\right)\\right| + 0.15\\left|\\cos\\!\\left(\\tfrac{25}{2}t\\right)\\right| \\\\ x = r\\cos(t) \\\\ y = r\\sin(t)",
-    period: "2π",
-    speed: 1.0,
-    skeleton: "static",
-    description:
-      "A 5-pointed star shape built from Fourier harmonics in polar coordinates.",
-    features: [
-      "5 sharp tips from the fundamental frequency",
-      "Two higher harmonics sharpen the tips and add subtle texture",
-      "Fully closed in a single revolution",
-    ],
-    importPath: "@sarmal/core/curves/star",
-  },
-  star4: {
-    name: "Star (4-arm)",
-    curveKey: "star4",
-    family: "Fourier polar",
-    equation:
-      "r = \\left|\\cos(2t)\\right| + 0.35\\left|\\cos(6t)\\right| + 0.15\\left|\\cos(10t)\\right| \\\\ x = r\\cos(t) \\\\ y = r\\sin(t)",
-    period: "2π",
-    speed: 1.0,
-    skeleton: "static",
-    description:
-      "A 4-pointed star shape built from Fourier harmonics in polar coordinates.",
-    features: [
-      "4 sharp tips from base frequency 2t",
-      "Same harmonic construction as Star but with 4-fold symmetry",
-      "Fully closed in a single revolution",
-    ],
-    importPath: "@sarmal/core/curves/star4",
-  },
-  star7: {
-    name: "Star (7-arm)",
-    curveKey: "star7",
-    family: "Fourier polar",
-    equation:
-      "r = \\left|\\cos\\!\\left(\\tfrac{7}{2}t\\right)\\right| + 0.35\\left|\\cos\\!\\left(\\tfrac{21}{2}t\\right)\\right| + 0.15\\left|\\cos\\!\\left(\\tfrac{35}{2}t\\right)\\right| \\\\ x = r\\cos(t) \\\\ y = r\\sin(t)",
-    period: "2π",
-    speed: 1.0,
-    skeleton: "static",
-    description:
-      "A 7-pointed star shape built from Fourier harmonics in polar coordinates.",
-    features: [
-      "7 sharp tips from base frequency 7t/2",
-      "Same harmonic construction as Star but with 7-fold symmetry",
-      "Fully closed in a single revolution",
-    ],
-    importPath: "@sarmal/core/curves/star7",
-  },
-};
-
-const curve = CURVE_DATA[id];
-
-if (!curve) {
+if (!id) {
   return Astro.redirect("/docs/curves");
 }
+
+const curveKey = id as CurveName;
+const meta = CURVE_DOCS[curveKey];
+
+if (!meta) {
+  return Astro.redirect("/docs/curves");
+}
+
+const curve: CurveData = {
+  ...meta,
+  curveKey,
+  urlId: id,
+};
 
 const usageSnippet = `import { createSarmal } from "@sarmal/core";
 import { ${curve.curveKey} } from "${curve.importPath}";
@@ -321,27 +59,15 @@ function App() {
 
 const title = `${curve.name} ${SEPARATOR_DOT} Curve Catalog ${SEPARATOR_DOT} Sarmal`;
 
-const colorMap: Record<string, string> = {
-  artemis2: "#60a5fa",
-  epitrochoid: "#a78bfa",
-  astroid: "#38bdf8",
-  deltoid: "#fb923c",
-  rose3: "#e879f9",
-  rose5: "#f472b6",
-  lissajous32: "#fb923c",
-  lissajous43: "#2dd4bf",
-  epicycloid3: "#60a5fa",
-  lame: "#a78bfa",
-  rose52: "#e879f9",
-  star: "#fbbf24",
-  star4: "#f472b6",
-  star7: "#34d399",
-};
-
-const trailColor = colorMap[id] || "#60a5fa";
+const trailColor = curve.color;
 ---
 
-<DocsLayout title={title} description={curve.description}>
+<DocsLayout
+  title={title}
+  description={curve.descriptionLong}
+  ogTitle={curve.name}
+  ogDescription={curve.descriptionLong}
+  ogImage={`/og/curves/${id}.png`}>
   <div slot='article-header' class='w-full flex justify-end -mb-4 md:-mb-8'>
     <div class='flex flex-col gap-3'>
       <Link href='/docs/curves' class='group inline-flex items-center'>
@@ -361,7 +87,7 @@ const trailColor = colorMap[id] || "#60a5fa";
       </a>
       {curve.name}
     </h1>
-    <p class='lead'>{curve.description}</p>
+    <p class='lead'>{curve.descriptionLong}</p>
 
     <div class='relative my-8 flex justify-center'>
       <DotGrid />
@@ -392,13 +118,13 @@ const trailColor = colorMap[id] || "#60a5fa";
         theme={undefined}
         themes={codeThemes}
         defaultColor={false}
-        code={`import { ${curve.curveKey === "epitrochoid7" ? "epitrochoid7" : curve.curveKey} } from "${curve.importPath}";`}
+        code={`import { ${curve.curveKey} } from "${curve.importPath}";`}
         class='mb-0'
       />
       <div
         class='absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity'>
         <CopyButton
-          code={`import { ${curve.curveKey === "epitrochoid7" ? "epitrochoid7" : curve.curveKey} } from "${curve.importPath}";`}
+          code={`import { ${curve.curveKey} } from "${curve.importPath}";`}
         />
       </div>
     </div>
@@ -433,7 +159,7 @@ const trailColor = colorMap[id] || "#60a5fa";
         </tr>
         <tr class='border-b border-border'>
           <td class='py-2 font-medium'>Period</td>
-          <td class='py-2 text-muted'>{curve.period}</td>
+          <td class='py-2 text-muted'>{curve.periodStr}</td>
         </tr>
         <tr class='border-b border-border'>
           <td class='py-2 font-medium'>Default Speed</td>

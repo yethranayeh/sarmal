@@ -11,6 +11,7 @@ import CopyButton from "./CopyButton.astro";
 
 import { codeThemes } from "../lib/shiki";
 import { curveMetadata } from "../data/curveMetadata";
+import { CURVE_DOCS } from "../data/curves";
 
 interface Props {
 	curveId: CurveName;
@@ -24,13 +25,15 @@ if (!metadata || !curve) {
 	throw new Error(`Unknown curve: ${curveId}`);
 }
 
+const trailColor = CURVE_DOCS[curveId]?.color ?? "#60a5fa";
+
 const period =
 	typeof curve.period === "number" ? (curve.period === Math.PI * 2 ? "2π" : curve.period.toFixed(2)) : "2π";
 
 const codeSnippet = `<canvas data-sarmal="${curveId}"></canvas>`;
 ---
 
-<Dialog id={`${curveId}-modal`}>
+<Dialog id={`${curveId}-modal`} data-trail-color={trailColor}>
 	<DialogShowcase slot='showcase' canvasId={`${curveId}-modal-canvas`}>
 		<div
 			slot='top-left'
@@ -102,21 +105,11 @@ const codeSnippet = `<canvas data-sarmal="${curveId}"></canvas>`;
 		closeBtn: HTMLButtonElement;
 		sarmal: ReturnType<typeof createSarmal> | null;
 		initialized: boolean;
+		trailColor: string;
 	}
 
-	const colorMap: Record<string, string> = {
-		rose3: "#e879f9",
-		deltoid: "#fb923c",
-		astroid: "#38bdf8",
-		epitrochoid7: "#a78bfa",
-		rose5: "#f472b6",
-		lissajous43: "#2dd4bf",
-		lissajous32: "#fb923c",
-		lame: "#a78bfa"
-	};
-
 	function initCurveModal(modal: CurveDetailModal) {
-		const { curveId, dialog, canvas, closeBtn } = modal;
+		const { curveId, dialog, canvas, closeBtn, trailColor } = modal;
 
 		modal.openBtn?.addEventListener("click", () => {
 			dialog.showModal();
@@ -124,9 +117,9 @@ const codeSnippet = `<canvas data-sarmal="${curveId}"></canvas>`;
 			if (!modal.initialized) {
 				const curve = curves[curveId as CurveName];
 				modal.sarmal = createSarmal(canvas, curve, {
-					trailColor: colorMap[curveId] || "#60a5fa",
+					trailColor,
 					skeletonColor: "#1b1c1a",
-					headColor: colorMap[curveId] || "#60a5fa",
+					headColor: trailColor,
 					trailLength: 60
 				});
 				modal.initialized = true;
@@ -168,7 +161,8 @@ const codeSnippet = `<canvas data-sarmal="${curveId}"></canvas>`;
 			openBtn,
 			closeBtn,
 			sarmal: null,
-			initialized: false
+			initialized: false,
+			trailColor: dialog.dataset.trailColor ?? "#60a5fa",
 		});
 	});
 </script>
