@@ -74,6 +74,18 @@
   let drawPoints = $state<Array<DrawingSegment>>([]);
   let showDrawControls = $state(true);
 
+  let confirmDialogEl = $state<HTMLDialogElement | null>(null);
+  let showConfirmDialog = $state(false);
+  let confirmDialogTitle = $state("");
+  let confirmDialogMessage = $state("");
+  let confirmCallback = $state<(() => void) | null>(null);
+
+  $effect(() => {
+    if (showConfirmDialog && confirmDialogEl && !confirmDialogEl.open) {
+      confirmDialogEl.showModal();
+    }
+  });
+
   const drawPointCount = $derived(drawPoints.length);
   const shouldShowDrawControls = $derived(
     showDrawControls || drawPointCount < 3,
@@ -209,14 +221,37 @@
       return;
     }
 
+    if (currentMode === "draw" && showDrawControls && drawPointCount >= 3) {
+      confirmDialogTitle = "Leave drawing mode?";
+      confirmDialogMessage = `You have ${drawPointCount} control point${drawPointCount > 1 ? "s" : ""}. Switching to math mode will discard them.`;
+      confirmCallback = () => handleModeSwitch(mode);
+      showConfirmDialog = true;
+      return;
+    }
+
+    if (
+      currentMode === "math" &&
+      currentCode !== lastCompiledCode &&
+      currentCode.trim() !== ""
+    ) {
+      confirmDialogTitle = "Leave math mode?";
+      confirmDialogMessage =
+        "You have unsaved changes to the curve definition. Switching will lose your progress.";
+      confirmCallback = () => handleModeSwitch(mode);
+      showConfirmDialog = true;
+      return;
+    }
+
+    handleModeSwitch(mode);
+  }
+
+  function handleModeSwitch(mode: PlaygroundMode) {
     if (mode === "draw") {
       if (instance) {
         instance.destroy();
         instance = null;
       }
 
-      lastCompiledCode = "";
-      lastCompiledFn = null;
       canvas.getContext("2d")?.clearRect(0, 0, canvas.width, canvas.height);
 
       if (!DrawBoard) {
@@ -245,6 +280,32 @@
     slideTimer = setTimeout(() => {
       isSliding = false;
     }, 450);
+  }
+
+  function handleBeforeUnload(e: BeforeUnloadEvent) {
+    const hasWork =
+      (currentMode === "draw" && drawPointCount >= 3) ||
+      (currentMode === "math" &&
+        currentCode !== lastCompiledCode &&
+        currentCode !== DEFAULT_CODE &&
+        currentCode.trim() !== "");
+
+    if (hasWork) {
+      e.preventDefault();
+    }
+  }
+
+  function handleDialogClose() {
+    showConfirmDialog = false;
+    confirmCallback = null;
+  }
+
+  function handleDialogConfirm() {
+    const cb = confirmCallback;
+    showConfirmDialog = false;
+    confirmCallback = null;
+    confirmDialogEl?.close();
+    cb?.();
   }
 
   function handleSkeletonToggle() {
@@ -465,6 +526,8 @@
   }
 
   onDestroy(() => {
+    window.removeEventListener("beforeunload", handleBeforeUnload);
+
     if (debounceTimer) {
       clearTimeout(debounceTimer);
     }
@@ -475,6 +538,8 @@
   });
 
   onMount(async () => {
+    window.addEventListener("beforeunload", handleBeforeUnload);
+
     if (savedState) {
       restoreState(savedState);
       return;
@@ -997,6 +1062,42 @@
   </section>
 </div>
 
+<dialog
+  bind:this={confirmDialogEl}
+  class="confirm-dialog backdrop:bg-foreground/40 backdrop:backdrop-blur-sm bg-transparent p-0 max-w-none w-full my-auto outline-none rounded-lg"
+  onclose={handleDialogClose}
+  onclick={(e) => {
+    if (confirmDialogEl && e.target === confirmDialogEl) {
+      confirmDialogEl.close();
+    }
+  }}
+>
+  <div
+    class="bg-surface border border-border rounded-lg w-[min(90vw,360px)] mx-auto my-auto p-6 shadow-xl"
+  >
+    <h3 class="font-heading text-lg font-medium text-foreground mb-2">
+      {confirmDialogTitle}
+    </h3>
+    <p class="font-body text-xs text-muted-foreground leading-relaxed mb-6">
+      {confirmDialogMessage}
+    </p>
+    <div class="flex justify-end gap-3">
+      <button
+        class="font-body text-xs px-4 py-2 rounded bg-surface-raised border border-border text-foreground hover:bg-surface-raised/70 transition-colors cursor-pointer"
+        onclick={() => confirmDialogEl?.close()}
+      >
+        Cancel
+      </button>
+      <button
+        class="font-body text-xs px-4 py-2 rounded bg-primary text-primary-foreground hover:bg-primary/80 transition-colors cursor-pointer"
+        onclick={handleDialogConfirm}
+      >
+        Switch anyway
+      </button>
+    </div>
+  </div>
+</dialog>
+
 <style>
   .animated {
     animation: palette-shift 3s linear infinite;
@@ -1031,6 +1132,21 @@
     100% {
       filter: blur(0px);
       transform: scaleX(1);
+    }
+  }
+
+  @starting-style {
+    dialog[open].confirm-dialog > div {
+      opacity: 0;
+      transform: scale(0.95);
+    }
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    dialog[open].confirm-dialog > div {
+      transition:
+        opacity 200ms ease-out,
+        transform 200ms ease-out;
     }
   }
 </style>
