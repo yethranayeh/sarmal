@@ -36,15 +36,19 @@ function App() {
 }
 ```
 
-The component renders a `<canvas>` element. With the current implementation, <u style="text-decoration-style: wavy;">you are responsible</u> for sizing it. Which means the canvas dimensions are captured at creation time and *do not* respond to CSS resizes.
+The component renders a `<canvas>` element. The canvas buffer dimensions must match the display size. You can either pass `width` and `height` props directly, or wrap in a parent container with explicit dimensions.
 
 ```tsx
-<Sarmal
-  curve={curves.rose3}
-  className="my-spinner"
-  style={{ width: 200, height: 200 }}
-/>
+// Explicit dimensions
+<Sarmal curve={curves.rose3} width={200} height={200} />
+
+// Or a sized parent
+<div style={{ width: 200, height: 200 }}>
+  <Sarmal curve={curves.rose3} />
+</div>
 ```
+
+If neither is provided, the canvas falls back to **300x300** with a console warning. `width` and `height` are set during initialization. Changing them after mount **destroys** and *recreates* the instance.
 
 #### Props
 
@@ -53,12 +57,15 @@ The component renders a `<canvas>` element. With the current implementation, <u 
 | `curve` | `CurveDef` | - | **Required.** The curve definition. Must be a stable reference (module-level const or `useMemo`). |
 | `className` | `string` | - | Applied to the `<canvas>` element |
 | `style` | `CSSProperties` | - | Applied to the `<canvas>` element |
-| `autoStart` | `boolean` | `true` | Start the animation loop automatically |
-| `initialT` | `number` | `undefined` | Initial position along the curve |
+| `width` | `number` | - | Canvas buffer width in CSS pixels. **Init-only.** |
+| `height` | `number` | - | Canvas buffer height in CSS pixels. **Init-only.** |
+| `autoStart` | `boolean` | `true` | Start the animation loop automatically. **Init-only.** |
+| `initialT` | `number` | `undefined` | Initial position along the curve. **Init-only.** |
 | `skeletonColor` | `string` | `'#ffffff'` | Hex color for the skeleton path |
 | `trailColor` | `string \| string[]` | `'#ffffff'` | Hex color or array of hex colors for gradient trails |
 | `headColor` | `string` | derived | Hex color for the head dot. Omit to auto-follow trail color |
-| `headRadius` | `number` | `4` | Radius of the head dot in pixels |
+| `headRadius` | `number` | `4` | Radius of the head dot in pixels. **Init-only.** |
+| `trailLength` | `number` | `120` | Number of trail points. **Init-only.** |
 | `trailStyle` | `TrailStyle` | `'default'` | `'default'` \| `'gradient-static'` \| `'gradient-animated'` |
 | `morphDuration` | `number` | `300` | Duration of the morph transition when `curve` changes (ms) |
 | `onReady` | `(instance) => void` | - | Fired once after the instance is created. Store the reference if you need imperative control. |
@@ -159,6 +166,14 @@ The hook returns:
 function useSarmal(
   curve: CurveDef,
   options?: Partial<SarmalOptions>,
+  init?: {
+    width?: number;
+    height?: number;
+    trailLength?: number;
+    headRadius?: number;
+    autoStart?: boolean;
+    initialT?: number;
+  },
   morphOptions?: { morphDuration?: number },
 ): {
   canvasRef: React.RefObject<HTMLCanvasElement | null>;
@@ -167,8 +182,9 @@ function useSarmal(
 ```
 
 <Alert variant="warning">
-The `options` parameter is **init-only**. It is passed at creation and not tracked for changes.
-If you need to change render options reactively after mount, call `instance.current.setRenderOptions(...)` directly.
+Runtime visual options (`trailColor`, `headColor`, `skeletonColor`, `trailStyle`) passed in `options` are applied at creation but *not tracked* for changes.
+
+For reactive updates after mount, call `instance.current.setRenderOptions(...)` directly. Init options (`width`, `height`, `trailLength`, `headRadius`, `autoStart`, `initialT`) are tracked and trigger **destroy**+*recreate* on change.
 </Alert>
 
 ### SSR and Next.js App Router
@@ -185,7 +201,30 @@ import { Sarmal } from "@sarmal/react";
 import { curves } from "@sarmal/core";
 
 export default function ClientWrapper() {
-  return <Sarmal curve={curves.astroid} />;
+  return <Sarmal curve={curves.astroid} width={200} height={200} />;
+}
+```
+
+### SVG Output
+
+For SVG rendering, use `<SarmalSVG>` and `useSarmalSVG`. The API mirrors the canvas variants with these differences:
+
+- SVG elements scale naturally via CSS — no `width`/`height` sizing props needed. A `viewBox="0 0 100 100"` is set automatically.
+- `className` and `style` apply to the `<svg>` element.
+- All init-time props are available: `trailLength`, `headRadius`, `autoStart`, `initialT`.
+
+```tsx
+// Component
+import { SarmalSVG } from "@sarmal/react";
+
+<SarmalSVG curve={curves.rose3} style={{ width: 200, height: 200 }} />
+
+// Hook
+import { useSarmalSVG } from "@sarmal/react";
+
+function MySpinner() {
+  const { svgRef, instance } = useSarmalSVG(curves.astroid);
+  return <svg ref={svgRef} />;
 }
 ```
 

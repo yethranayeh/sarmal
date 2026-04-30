@@ -135,7 +135,37 @@ const sarmal = createSarmal(canvas, curves.artemis2, { initialT: Math.PI })
 
 ## React
 
-## 0.1.0 - 23.04.2026
+### 0.2.0 - 30.04.2026
+
+<Alert label="Breaking" variant="error">Init-time props (`width`, `height`, `trailLength`, `headRadius`, `autoStart`, `initialT`) now destroy and recreate the instance when changed after mount. Previously these were silently ignored on change.</Alert>
+
+Canvas sizing is fixed. `<Sarmal>` now reads `width` and `height` props and sets the canvas buffer dimensions before creating the instance. If omitted, it reads `parentElement.clientWidth` and `parentElement.clientHeight`.
+If the parent reports <span title="0x0 size can be caused by `height: auto`">0x0</span>, it falls back to 300x300 and emits a warning.
+
+```tsx
+// Before: width/height were not read at all, so canvas defaulted to 300x150
+<Sarmal curve={rose3} />
+// After: canvas is sized from explicit props, parent container, or 300x300 fallback
+<Sarmal curve={rose3} width={200} height={200} />
+```
+
+
+`trailLength` and `headRadius` are now exposed as props on `<Sarmal>` and as init options on `useSarmal`. Note that changing them after mount **destroys** and *recreates* the instance, which resets the trail.
+
+---
+
+SVG output is now supported via `SarmalSVG` component and `useSarmalSVG` hook. Works identically to the canvas variants but renders to `<svg>` with `viewBox="0 0 100 100"`.
+
+<Alert variant="info">No `width`/`height` sizing props because SVG scales naturally with CSS</Alert>
+
+
+```tsx
+import { SarmalSVG } from "@sarmal/react";
+
+<SarmalSVG curve={rose3} style={{ width: 200, height: 200 }} />
+```
+
+### 0.1.0 - 23.04.2026
 
 `@sarmal/react` is a new package that provides a React wrapper over `@sarmal/core`. It exports a `<Sarmal>` component for drop-in usage and a `useSarmal` hook for imperative control.
 

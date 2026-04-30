@@ -1,11 +1,11 @@
 "use client";
-import type { SarmalProps } from "./types";
+import type { SarmalSVGProps } from "./types";
 
 import { useEffect, memo } from "react";
-import { useSarmal } from "./use-sarmal";
+import { useSarmalSVG } from "./use-sarmal-svg";
 import { useRenderOptions } from "./use-render-options";
 
-const SarmalInner = ({
+const SarmalSVGInner = ({
   curve,
   className,
   style,
@@ -15,14 +15,12 @@ const SarmalInner = ({
   skeletonColor,
   headColor,
   trailStyle,
-  width,
-  height,
   headRadius,
   trailLength,
   autoStart,
   initialT,
-}: SarmalProps) => {
-  const { canvasRef, instance } = useSarmal(
+}: SarmalSVGProps) => {
+  const { svgRef, instance } = useSarmalSVG(
     curve,
     {
       ...(skeletonColor !== undefined && { skeletonColor }),
@@ -31,8 +29,6 @@ const SarmalInner = ({
       ...(trailStyle !== undefined && { trailStyle }),
     },
     {
-      ...(width !== undefined && { width }),
-      ...(height !== undefined && { height }),
       ...(headRadius !== undefined && { headRadius }),
       ...(trailLength !== undefined && { trailLength }),
       ...(autoStart !== undefined && { autoStart }),
@@ -49,8 +45,8 @@ const SarmalInner = ({
     }
   }, []);
 
-  return <canvas ref={canvasRef} className={className} style={style} />;
+  return <svg ref={svgRef} className={className} style={style} />;
 };
 
-export const Sarmal = memo(SarmalInner);
-export type { SarmalProps };
+export const SarmalSVG = memo(SarmalSVGInner);
+export type { SarmalSVGProps };
