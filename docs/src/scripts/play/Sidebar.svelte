@@ -8,6 +8,7 @@
 
   import Slider from "./Slider.svelte";
   import ToggleSwitch from "./ToggleSwitch.svelte";
+  import Tooltip from "./Tooltip.svelte";
 
   const pg = getContext<PlaygroundState>("playground");
 </script>
@@ -61,23 +62,59 @@
           {/each}
         </select>
 
+        <p
+          class="font-heading italic text-xs leading-relaxed text-muted-foreground lg:hidden"
+        >
+          <span class="font-mono font-bold not-italic text-[11px] text-primary"
+            >t</span
+          >
+          {" "}position along curve (0 to period),
+          {" "}
+          <span class="font-mono font-bold not-italic text-[11px] text-primary"
+            >time</span
+          >
+          {" "}elapsed seconds,
+          {" "}
+          <span class="font-mono font-bold not-italic text-[11px] text-primary"
+            >params</span
+          >
+          {" "}custom parameters
+        </p>
+
         <div
           class="bg-surface-raised border {pg.error
             ? 'border-error'
-            : 'border-border'} rounded overflow-hidden transition-colors focus-within:border-primary"
+            : 'border-border'} rounded transition-colors focus-within:border-primary"
         >
           <div
             class="flex items-center gap-1.5 px-3 py-2 border-b border-border-subtle bg-surface font-mono text-[10.5px]"
           >
-            <span class="text-primary font-semibold">function</span>
-            <span class="text-foreground font-medium">curve</span>
+            <span class="text-primary font-semibold font-mono">function</span>
             <span class="text-muted-gray">(</span>
-            <span
-              class="text-muted-foreground italic font-heading text-xs cursor-help"
-              >t, time, params</span
-            >
+            <Tooltip placement="bottom">
+              {#snippet tooltip()}
+                <div class="space-y-1 min-w-60">
+                  <p>
+                    <span class="font-mono text-primary">t</span> position along curve
+                  </p>
+                  <p>
+                    <span class="font-mono text-primary">time</span> elapsed seconds
+                  </p>
+                  <p>
+                    <span class="font-mono text-primary">params</span> custom parameters
+                  </p>
+                </div>
+              {/snippet}
+              <span
+                class="text-muted-foreground italic font-heading text-xs cursor-help"
+              >
+                t, time, params
+              </span>
+            </Tooltip>
             <span class="text-muted-gray">)</span>
-            <span class="text-primary font-bold">{`{`}</span>
+            <span class="text-primary font-bold font-mono text-[11px]"
+              >{`{`}</span
+            >
           </div>
           <textarea
             bind:value={pg.currentCode}
@@ -85,7 +122,9 @@
             spellcheck="false"
             class="w-full px-3 py-2.5 font-mono text-xs leading-[1.55] text-foreground bg-transparent border-0 resize-none outline-none min-h-35 block"
           ></textarea>
-          <div class="px-3 py-1 font-mono text-[11px] bg-surface text-primary">
+          <div
+            class="px-3 py-1 font-bold font-mono text-[11px] bg-surface text-primary"
+          >
             {`}`}
           </div>
         </div>

@@ -29,6 +29,9 @@
   "[css]": {
     "editor.defaultFormatter": "oxc.oxc-vscode"
   },
+  "[astro]": {
+    "editor.defaultFormatter": "astro-build.astro-vscode"
+  },
 
   "oxc.lint.enable": true,
   "oxc.format.enable": true,
