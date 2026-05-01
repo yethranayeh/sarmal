@@ -166,15 +166,21 @@ const id = `sbp-${Math.random().toString(36).slice(2, 8)}`;
 		const vb = svg.getAttribute("viewBox");
 		const parts = vb ? vb.split(/[\s,]+/).map(Number) : [0, 0, 100, 100];
 		const svgRect = svg.getBoundingClientRect();
-		const scaleX = svgRect.width / (parts[2] ?? 100);
-		const scaleY = svgRect.height / (parts[3] ?? 100);
+		const vbW = parts[2] ?? 100;
+		const vbH = parts[3] ?? 100;
+		// ! SVG's default preserveAspectRatio="xMidYMid meet" centers and scales the viewBox to fit the element's pixel dimensions without distorting.
+		const scale = Math.min(svgRect.width / vbW, svgRect.height / vbH);
+		const renderedW = vbW * scale;
+		const renderedH = vbH * scale;
+		const offsetX = (svgRect.width - renderedW) / 2;
+		const offsetY = (svgRect.height - renderedH) / 2;
 		const cx = parseFloat(
 			(headEl as SVGCircleElement).getAttribute("cx") ?? "0",
 		);
 		const cy = parseFloat(
 			(headEl as SVGCircleElement).getAttribute("cy") ?? "0",
 		);
-		return { x: cx * scaleX, y: cy * scaleY };
+		return { x: offsetX + cx * scale, y: offsetY + cy * scale };
 	}
 
 	function getElPos(

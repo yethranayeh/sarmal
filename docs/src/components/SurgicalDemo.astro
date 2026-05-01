@@ -303,10 +303,15 @@ const btnBase =
 			const hy = parseFloat(head.getAttribute("cy") ?? "0");
 
 			const colRect = animCol.getBoundingClientRect();
-			const scaleX = colRect.width / vbWidth;
-			const scaleY = colRect.height / vbHeight;
-			const headPxX = hx * scaleX;
-			const headPxY = hy * scaleY;
+			const sarmalRect = svg.getBoundingClientRect();
+			const scale = Math.min(
+				sarmalRect.width / vbWidth,
+				sarmalRect.height / vbHeight,
+			);
+			const vbOffsetX = (sarmalRect.width - vbWidth * scale) / 2;
+			const vbOffsetY = (sarmalRect.height - vbHeight * scale) / 2;
+			const headPxX = sarmalRect.left - colRect.left + vbOffsetX + hx * scale;
+			const headPxY = sarmalRect.top - colRect.top + vbOffsetY + hy * scale;
 
 			const labelOffsetX = headPxX > colRect.width * 0.6 ? -90 : 18;
 			const labelOffsetY = headPxY < colRect.height * 0.4 ? 24 : -36;

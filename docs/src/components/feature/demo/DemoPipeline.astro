@@ -15,7 +15,7 @@
 				<div
 					class="w-9.5 h-9.5 rounded-lg bg-surface border border-border overflow-hidden shrink-0 transition-all duration-400 [&.done]:bg-green-400/[0.07] [&.done]:border-green-400/20 [&.done]:flex [&.done]:items-center [&.done]:justify-center [&.done]:text-base [&.done]:text-green-400"
 				>
-					<svg data-pipe-dot="0"></svg>
+					<svg data-pipe-dot="0" class="w-full h-full"></svg>
 				</div>
 				<div class="w-px h-3 bg-border"></div>
 			</div>
@@ -30,7 +30,7 @@
 				<div
 					class="w-9.5 h-9.5 rounded-lg bg-surface border border-border-subtle overflow-hidden shrink-0 transition-all duration-400 [&.done]:bg-green-400/[0.07] [&.done]:border-green-400/20 [&.done]:flex [&.done]:items-center [&.done]:justify-center [&.done]:text-base [&.done]:text-green-400"
 				>
-					<svg data-pipe-dot="1"></svg>
+					<svg data-pipe-dot="1" class="w-full h-full"></svg>
 				</div>
 				<div class="w-px h-3 bg-border"></div>
 			</div>
@@ -45,7 +45,7 @@
 				<div
 					class="w-9.5 h-9.5 rounded-lg bg-surface border border-border-subtle overflow-hidden shrink-0 transition-all duration-400 [&.done]:bg-green-400/[0.07] [&.done]:border-green-400/20 [&.done]:flex [&.done]:items-center [&.done]:justify-center [&.done]:text-base [&.done]:text-green-400"
 				>
-					<svg data-pipe-dot="2"></svg>
+					<svg data-pipe-dot="2" class="w-full h-full"></svg>
 				</div>
 			</div>
 			<span
@@ -102,6 +102,10 @@
 		let pipeSarmals: (Instance | null)[] = [null, null, null];
 		let pipeGen = 0;
 		let pipeTimer: ReturnType<typeof setTimeout> | null = null;
+		const cards = PIPE_STEPS.map(
+			(step) =>
+				container.querySelector(step.dotSelector)?.parentElement as HTMLElement,
+		);
 
 		function cleanup() {
 			pipeGen++;
@@ -109,13 +113,14 @@
 				clearTimeout(pipeTimer);
 				pipeTimer = null;
 			}
-			PIPE_STEPS.forEach((step) => {
-				const dot = container.querySelector(step.dotSelector) as SVGSVGElement;
-				const card = dot.parentElement!;
-				const idx = PIPE_STEPS.indexOf(step);
-				pipeSarmals[idx] = stop(pipeSarmals[idx], dot);
+			PIPE_STEPS.forEach((step, idx) => {
+				const card = cards[idx]!;
+				const dot = card.querySelector(
+					step.dotSelector,
+				) as SVGSVGElement | null;
+				if (dot) pipeSarmals[idx] = stop(pipeSarmals[idx], dot);
 				card.className = stepDotBaseClasses;
-				card.textContent = "";
+				card.innerHTML = `<svg data-pipe-dot="${idx}" class="w-full h-full"></svg>`;
 				const label = container.querySelector(
 					step.labelSelector,
 				) as HTMLElement;
@@ -130,8 +135,8 @@
 			function activateStep(i: number) {
 				if (pipeGen !== gen) return;
 				const step = PIPE_STEPS[i]!;
-				const dot = container.querySelector(step.dotSelector) as SVGSVGElement;
-				const card = dot.parentElement!;
+				const card = cards[i]!;
+				const dot = card.querySelector(step.dotSelector) as SVGSVGElement;
 				const label = container.querySelector(
 					step.labelSelector,
 				) as HTMLElement;
