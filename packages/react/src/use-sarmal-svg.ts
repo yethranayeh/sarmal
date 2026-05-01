@@ -4,13 +4,14 @@ import type { BaseInit, MorphOptions } from "./types";
 
 import { useRef, useEffect } from "react";
 import { createSarmalSVG } from "@sarmal/core";
+import { useMorphEffect } from "./use-morph";
 
 /**
  * React hook for creating and managing a Sarmal SVG instance.
  * Mirrors the lifecycle of {@link useSarmal}
  *  but calls {@link createSarmalSVG} and returns an SVG ref instead of a canvas ref.
- * SVG elements scale with CSS, so width/height are not needed
- * The hook always sets `viewBox="0 0 100 100"` on the root `<svg>`.
+ * SVG elements scale with CSS, so width/height are not needed.
+ * The renderer sets `viewBox="0 0 100 100"` on the root `<svg>`.
  *
  * @param curve The curve definition to render. Morphs on reference change.
  * @param options Runtime visual options (trailColor, headColor, etc.) which can be updated with setRenderOptions
@@ -29,20 +30,14 @@ export function useSarmalSVG(
 } {
   const svgRef = useRef<SVGSVGElement>(null);
   const instance = useRef<SarmalInstance>(null);
-  const committedCurveRef = useRef<CurveDef>(curve);
+  const committedCurveRef = useMorphEffect(curve, instance, morphOptions);
 
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- curve changes go through morphTo, not recreation
   useEffect(() => {
-    if (instance.current) {
-      instance.current.destroy();
-      instance.current = null;
-    }
-
     const svg = svgRef.current;
     if (svg == null) {
       return;
     }
-
-    svg.setAttribute("viewBox", "0 0 100 100");
 
     instance.current = createSarmalSVG(svg, curve, {
       ...options,
@@ -57,23 +52,6 @@ export function useSarmalSVG(
       instance.current = null;
     };
   }, [init?.trailLength, init?.headRadius, init?.autoStart, init?.initialT]);
-
-  useEffect(() => {
-    if (curve === committedCurveRef.current) {
-      return;
-    }
-
-    committedCurveRef.current = curve;
-
-    if (instance.current == null) {
-      return;
-    }
-
-    const opts =
-      morphOptions?.morphDuration != null ? { duration: morphOptions.morphDuration } : undefined;
-
-    instance.current.morphTo(curve, opts).catch(() => {});
-  }, [curve]);
 
   return { svgRef, instance };
 }

@@ -14,39 +14,14 @@ const testCircle: CurveDef = {
   speed: 1,
 };
 
-function makeContainer(): HTMLElement {
-  const div = document.createElement("div");
-  div.style.width = "200px";
-  div.style.height = "200px";
-  // jsdom does not lay out, so we mock the rect
-  div.getBoundingClientRect = () => ({
-    width: 200,
-    height: 200,
-    top: 0,
-    left: 0,
-    bottom: 200,
-    right: 200,
-    x: 0,
-    y: 0,
-    toJSON: () => {},
-  });
-  document.body.appendChild(div);
-  return div;
-}
-
-function getSvg(container: Element): SVGSVGElement {
-  const svg = container.querySelector("svg");
-  if (!svg) throw new Error("no svg in container");
+function makeContainer(): SVGSVGElement {
+  const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+  document.body.appendChild(svg);
   return svg;
 }
 
-function getTrailPaths(container: Element): SVGPathElement[] {
-  const svg = getSvg(container);
-  // Trail paths are every <path> that is NOT the skeleton and NOT the morph skeletons.
-  // The simplest selector: paths without a `data-sarmal-role` attribute, and excluding
-  // the (hidden) morph skeleton paths. The renderer tags only the primary skeleton
-  // with `data-sarmal-role="skeleton"`, so we pick paths with no role attr.
-  return Array.from(svg.querySelectorAll("path")).filter(
+function getTrailPaths(container: SVGSVGElement): SVGPathElement[] {
+  return Array.from(container.querySelectorAll("path")).filter(
     (p) => p.getAttribute("data-sarmal-role") === null && p.getAttribute("stroke") === null,
   );
 }

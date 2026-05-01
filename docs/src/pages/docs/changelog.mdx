@@ -17,6 +17,30 @@ Version history notes of the <Link href="#core">Core</Link> and the <Link href="
 
 ## Core
 
+### 0.19.0 - 01.05.2026
+
+<Alert label="Breaking" variant="error">`createSVGRenderer` and `createSarmalSVG` now require an `SVGSVGElement` as the container, not a generic `Element` like a **div**. The renderer draws *directly* into the passed **svg** element. It no longer creates a nested child `<svg>`.</Alert>
+
+This change helps bring the initialization step to be identical to **canvas** renderer.
+
+```ts
+// Before
+// <div id="spinner"></div> in HTML
+const div = document.getElementById("spinner");
+createSarmalSVG(div, curves.rose3);
+
+// After (same pattern, different tag)
+// <svg id="spinner"></svg> in HTML
+const svg = document.getElementById("spinner");
+createSarmalSVG(svg, curves.rose3);
+```
+
+The renderer takes ownership of the targeted DOM element.
+
+The SVG renderer uses a fixed `viewBox="0 0 100 100"` and no longer reads pixel dimensions from the container. The default `headRadius` is now `2` (viewBox units). Override with `headRadius` if needed.
+
+`destroy()` no longer removes the caller's `<svg>` element — only the renderer's own child content is cleaned up.
+
 ### 0.18.0 - 28.04.2026
 
 SVG renderer trail pool is now sized to `trailLength` at the time of construction instead of a hardcoded cap, which was 200. Before the change, `trailLength` values above 200 would silently clip in the SVG renderer while the canvas equivalent would have no problem rendering it fully.
@@ -134,6 +158,12 @@ const sarmal = createSarmal(canvas, curves.artemis2, { initialT: Math.PI })
 ```
 
 ## React
+
+### 0.3.0 - 01.05.2026
+
+<Alert label="Breaking" variant="error">`useSarmalSVG` no longer sets `viewBox` on the `<svg>` element. The core SVG renderer (`@sarmal/core@0.19.0`) now owns viewBox. Upgrade both packages together.</Alert>
+
+- Fixed `useRenderOptions`: Toggling `skeletonColor` or `trailStyle` from a value to `undefined` and back to the same value no longer silently drops the second change.
 
 ### 0.2.0 - 30.04.2026
 

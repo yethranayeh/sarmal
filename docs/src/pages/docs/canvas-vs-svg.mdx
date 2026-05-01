@@ -80,8 +80,8 @@ The SVG renderer generates DOM elements and updates them via `requestAnimationFr
 ```ts
 import { createSarmalSVG, curves } from "@sarmal/core";
 
-const container = document.getElementById("spinner-container")!;
-const sarmal = createSarmalSVG(container, curves.lissajous32, {
+const svg = document.getElementById("spinner")!;
+const sarmal = createSarmalSVG(svg, curves.lissajous32, {
   ariaLabel: "Loading data...",
 });
 ```
@@ -121,8 +121,8 @@ Both renderers share the *same* instance methods (`play`, `pause`, `morphTo`, `s
 // Canvas: pass a canvas element
 const canvasSarmal = createSarmal(canvasElement, curve, options);
 
-// SVG: pass a container element
-const svgSarmal = createSarmalSVG(containerElement, curve, options);
+// SVG: pass an SVG element
+const svgSarmal = createSarmalSVG(svgElement, curve, options);
 ```
 
 See the <Link href="/docs/api">API Reference</Link> for the complete list of options and methods available to both renderers.

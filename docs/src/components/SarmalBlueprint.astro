@@ -78,6 +78,7 @@ const id = `sbp-${Math.random().toString(36).slice(2, 8)}`;
 		: undefined}
 	data-callouts={JSON.stringify(callouts)}
 >
+	<svg class="absolute inset-0 w-full h-full"></svg>
 </div>
 
 <style>
@@ -161,13 +162,12 @@ const id = `sbp-${Math.random().toString(36).slice(2, 8)}`;
 	function getHeadPos(
 		headEl: Element,
 		svg: SVGSVGElement,
-		wrapper: HTMLElement,
 	): { x: number; y: number } {
 		const vb = svg.getAttribute("viewBox");
 		const parts = vb ? vb.split(/[\s,]+/).map(Number) : [0, 0, 100, 100];
-		const wr = wrapper.getBoundingClientRect();
-		const scaleX = wr.width / (parts[2] ?? 100);
-		const scaleY = wr.height / (parts[3] ?? 100);
+		const svgRect = svg.getBoundingClientRect();
+		const scaleX = svgRect.width / (parts[2] ?? 100);
+		const scaleY = svgRect.height / (parts[3] ?? 100);
 		const cx = parseFloat(
 			(headEl as SVGCircleElement).getAttribute("cx") ?? "0",
 		);
@@ -245,6 +245,7 @@ const id = `sbp-${Math.random().toString(36).slice(2, 8)}`;
 	}
 
 	function initBlueprint(wrapper: HTMLElement) {
+		const svgEl = wrapper.querySelector("svg") as SVGSVGElement;
 		const curveName = (wrapper.dataset.curve ?? "lissajous32") as CurveName;
 		const autoStart = wrapper.dataset.autoStart !== "false";
 		const initialT =
@@ -266,7 +267,7 @@ const id = `sbp-${Math.random().toString(36).slice(2, 8)}`;
 			opts.trailLength = parseFloat(wrapper.dataset.trailLength);
 
 		const curve = curves[curveName];
-		const instance = createSarmalSVG(wrapper, curve, opts);
+		const instance = createSarmalSVG(svgEl, curve, opts);
 
 		if (callouts.length === 0) {
 			requestAnimationFrame(() => {
@@ -292,6 +293,12 @@ const id = `sbp-${Math.random().toString(36).slice(2, 8)}`;
 				"class",
 				"absolute inset-0 w-full h-full pointer-events-none overflow-visible",
 			);
+
+			const sarmalRect = svg.getBoundingClientRect();
+			annotSvg.setAttribute(
+				"viewBox",
+				`0 0 ${sarmalRect.width} ${sarmalRect.height}`,
+			);
 			wrapper.appendChild(annotSvg);
 
 			const wr = wrapper.getBoundingClientRect();
@@ -311,7 +318,7 @@ const id = `sbp-${Math.random().toString(36).slice(2, 8)}`;
 				}
 
 				const pos = isHead
-					? getHeadPos(targetEl, svg, wrapper)
+					? getHeadPos(targetEl, svg)
 					: getElPos(targetEl, wrapper);
 
 				const initialP: Placement =
@@ -388,12 +395,7 @@ const id = `sbp-${Math.random().toString(36).slice(2, 8)}`;
 					const obs = new MutationObserver(() => {
 						const wr = wrapper.getBoundingClientRect();
 						for (const s of headStates) {
-							applyCallout(
-								s,
-								getHeadPos(headEl, svg, wrapper),
-								wr.width,
-								wr.height,
-							);
+							applyCallout(s, getHeadPos(headEl, svg), wr.width, wr.height);
 						}
 					});
 					obs.observe(headEl, {

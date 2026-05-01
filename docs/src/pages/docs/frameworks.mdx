@@ -209,7 +209,8 @@ export default function ClientWrapper() {
 
 For SVG rendering, use `<SarmalSVG>` and `useSarmalSVG`. The API mirrors the canvas variants with these differences:
 
-- SVG elements scale naturally via CSS — no `width`/`height` sizing props needed. A `viewBox="0 0 100 100"` is set automatically.
+- The `<svg>` element has no `width`/`height` attributes set. Size it entirely with CSS.
+- The renderer sets `viewBox="0 0 100 100"` automatically, so coordinates are normalized.
 - `className` and `style` apply to the `<svg>` element.
 - All init-time props are available: `trailLength`, `headRadius`, `autoStart`, `initialT`.
 

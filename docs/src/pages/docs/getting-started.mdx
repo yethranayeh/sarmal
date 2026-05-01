@@ -175,20 +175,20 @@ const sarmal = createSarmal(canvas, curves.astroid, {
 If you need the spinner to scale freely (no fixed pixel dimensions), use the SVG renderer instead:
 
 ```html
-<div id="spinner" style="width: 200px; height: 200px;"></div>
+<svg id="spinner" style="width: 200px; height: 200px;"></svg>
 ```
 
 ```ts
 import { createSarmalSVG, curves } from "@sarmal/core";
 
-const container = document.getElementById("spinner")!;
-const sarmal = createSarmalSVG(container, curves.lissajous32);
+const svg = document.getElementById("spinner")!;
+const sarmal = createSarmalSVG(svg, curves.lissajous32);
 ```
 
-`createSarmalSVG` appends an `<svg>` into the container and animates it. It accepts the same styling options as `createSarmal`.
+`createSarmalSVG` draws directly into the `<svg>` element. It accepts the same styling options as `createSarmal`.
 
-<Alert variant='warning'>
-	`trailStyle` and `palette` properties are not yet supported, because it hasn't been implemented yet.
+<Alert variant="info">
+	`trailStyle` and colors work identically in both canvas and SVG renderers.
 </Alert>
 
 ## Morphing between curves

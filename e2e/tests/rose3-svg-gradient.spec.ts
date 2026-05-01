@@ -17,7 +17,7 @@ test('rose3 svg gradient renders correctly', async ({ page }) => {
 
   await page.waitForFunction(() => {
     const c = document.getElementById('svg-container');
-    return c !== null && c.querySelector('svg') !== null;
+    return c !== null && c.querySelector('circle[data-sarmal-role="head"]') !== null;
   });
 
   await expect(container).toHaveScreenshot('rose3-svg-gradient.png', {

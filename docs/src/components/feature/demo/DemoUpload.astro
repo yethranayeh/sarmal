@@ -8,7 +8,7 @@ import { Check } from "@lucide/astro";
 >
 	<div class="relative flex items-center justify-center min-h-22">
 		<div data-upload-spinner class="flex flex-col items-center gap-2 absolute">
-			<div data-upload-slot class="w-15 h-15"></div>
+			<svg data-upload-slot class="w-15 h-15"></svg>
 			<span data-upload-status class="font-body text-[12px] text-muted"
 				>Uploading…</span
 			>
@@ -53,7 +53,7 @@ import { Check } from "@lucide/astro";
 
 	type Instance = ReturnType<typeof createSarmalSVG>;
 
-	function stop(s: Instance | null, slot: HTMLElement): null {
+	function stop(s: Instance | null, slot: SVGSVGElement): null {
 		s?.pause();
 		slot.innerHTML = "";
 		return null;
@@ -68,7 +68,9 @@ import { Check } from "@lucide/astro";
 			uploadGen++;
 			uploadTimers.forEach((t) => clearTimeout(t));
 			uploadTimers = [];
-			const slot = container.querySelector("[data-upload-slot]") as HTMLElement;
+			const slot = container.querySelector(
+				"[data-upload-slot]",
+			) as SVGSVGElement;
 			uploadSarmal = stop(uploadSarmal, slot);
 
 			const fc1 = container.querySelector(
@@ -102,7 +104,9 @@ import { Check } from "@lucide/astro";
 		function start(onDone: () => void) {
 			cleanup();
 			const gen = uploadGen;
-			const slot = container.querySelector("[data-upload-slot]") as HTMLElement;
+			const slot = container.querySelector(
+				"[data-upload-slot]",
+			) as SVGSVGElement;
 			const spinnerArea = container.querySelector(
 				"[data-upload-spinner]",
 			) as HTMLElement;

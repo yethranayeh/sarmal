@@ -70,13 +70,13 @@ s4.play();
 
 ## createSarmalSVG
 
-Same API as `createSarmal`. First argument is any container element (typically a `<div>`). Outputs animated SVG elements.
+Same API as `createSarmal`. First argument is an `<svg>` element. The renderer takes ownership of the targeted **svg** element.
 
 ```ts
 import { createSarmalSVG, curves } from "@sarmal/core";
 
-const container = document.getElementById("loading-indicator-container")!;
-const sarmal = createSarmalSVG(container, curves.lissajous32);
+const svg = document.getElementById("loading-indicator")!;
+const sarmal = createSarmalSVG(svg, curves.lissajous32);
 // Animation starts automatically
 ```
 

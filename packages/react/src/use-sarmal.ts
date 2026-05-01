@@ -4,6 +4,7 @@ import type { CanvasInit, MorphOptions } from "./types";
 
 import { useRef, useEffect } from "react";
 import { createSarmal } from "@sarmal/core";
+import { useMorphEffect } from "./use-morph";
 
 function resolveCanvasSize(
   canvas: HTMLCanvasElement,
@@ -38,19 +39,10 @@ export function useSarmal(
 } {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const instance = useRef<SarmalInstance>(null);
-  /**
-   * Tracks which curve the instance was last committed to.
-   * Comparing by reference skips morphTo on initial mount and on StrictMode remounts
-   *  where the curve ref hasn't *actually* changed.
-   */
-  const committedCurveRef = useRef<CurveDef>(curve);
+  const committedCurveRef = useMorphEffect(curve, instance, morphOptions);
 
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- curve changes go through morphTo, not recreation
   useEffect(() => {
-    if (instance.current) {
-      instance.current.destroy();
-      instance.current = null;
-    }
-
     const canvas = canvasRef.current;
     if (canvas == null) {
       return;
@@ -80,23 +72,6 @@ export function useSarmal(
     init?.autoStart,
     init?.initialT,
   ]);
-
-  useEffect(() => {
-    if (curve === committedCurveRef.current) {
-      return;
-    }
-
-    committedCurveRef.current = curve;
-
-    if (instance.current == null) {
-      return;
-    }
-
-    const opts =
-      morphOptions?.morphDuration != null ? { duration: morphOptions.morphDuration } : undefined;
-
-    instance.current.morphTo(curve, opts).catch(() => {});
-  }, [curve]);
 
   return { canvasRef, instance };
 }

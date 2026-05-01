@@ -8,9 +8,9 @@ export const FIT_PADDING_MIN = 4;
 /** Higher values = sharper fade near the tail, more of the trail appears faint */
 export const TRAIL_FADE_CURVE = 1.5;
 export const TRAIL_MAX_OPACITY = 0.88;
-/** Stroke/line width at the tail */
+/** Pixel-space stroke/line width at the tail which the SVG renderer overrides with viewBox unit values */
 export const TRAIL_MIN_WIDTH = 0.5;
-/** Stroke/line width at the head */
+/** Pixel-space stroke/line width at the head which the SVG renderer overrides with viewBox unit values */
 export const TRAIL_MAX_WIDTH = 2.5;
 
 export interface TrailPoint {
@@ -79,7 +79,7 @@ export interface TrailQuad {
 }
 
 /**
- * Computes the pixel-space quad corners and style for one ribbon segment.
+ * Computes the quad corners and style for one ribbon segment in the renderer's coordinate space (pixel-space for canvas, viewBox-space for SVG)
  *
  * @param trail  Full trail array
  * @param i      Segment index (draws from point i to point i+1)
@@ -97,12 +97,14 @@ export function computeTrailQuad(
   trailCount: number,
   toX: (p: TrailPoint) => number,
   toY: (p: TrailPoint) => number,
+  minWidth = TRAIL_MIN_WIDTH,
+  maxWidth = TRAIL_MAX_WIDTH,
 ): TrailQuad {
   const progress = i / (trailCount - 1);
   const nextProgress = (i + 1) / (trailCount - 1);
   const opacity = Math.pow(progress, TRAIL_FADE_CURVE) * TRAIL_MAX_OPACITY;
-  const w0 = (TRAIL_MIN_WIDTH + progress * (TRAIL_MAX_WIDTH - TRAIL_MIN_WIDTH)) / 2;
-  const w1 = (TRAIL_MIN_WIDTH + nextProgress * (TRAIL_MAX_WIDTH - TRAIL_MIN_WIDTH)) / 2;
+  const w0 = (minWidth + progress * (maxWidth - minWidth)) / 2;
+  const w1 = (minWidth + nextProgress * (maxWidth - minWidth)) / 2;
 
   const curr = trail[i]!;
   const next = trail[i + 1]!;
@@ -456,5 +458,6 @@ export function warnIfTrailColorMismatch(trailColor: TrailColor, trailStyle: Tra
   }
 }
 
+/** Returns a pixel-space head dot radius based on viewport dimensions. The SVG renderer uses its own viewBox-unit constant instead. */
 export const getHeadDotRadius = (w: number, h: number) =>
   Math.max(1, 3 * Math.sqrt(Math.min(w, h) / 160));

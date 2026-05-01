@@ -13,9 +13,9 @@
 		<div class="flex items-start gap-3">
 			<div class="flex flex-col items-center">
 				<div
-					data-pipe-dot="0"
 					class="w-9.5 h-9.5 rounded-lg bg-surface border border-border overflow-hidden shrink-0 transition-all duration-400 [&.done]:bg-green-400/[0.07] [&.done]:border-green-400/20 [&.done]:flex [&.done]:items-center [&.done]:justify-center [&.done]:text-base [&.done]:text-green-400"
 				>
+					<svg data-pipe-dot="0"></svg>
 				</div>
 				<div class="w-px h-3 bg-border"></div>
 			</div>
@@ -28,9 +28,9 @@
 		<div class="flex items-start gap-3">
 			<div class="flex flex-col items-center">
 				<div
-					data-pipe-dot="1"
 					class="w-9.5 h-9.5 rounded-lg bg-surface border border-border-subtle overflow-hidden shrink-0 transition-all duration-400 [&.done]:bg-green-400/[0.07] [&.done]:border-green-400/20 [&.done]:flex [&.done]:items-center [&.done]:justify-center [&.done]:text-base [&.done]:text-green-400"
 				>
+					<svg data-pipe-dot="1"></svg>
 				</div>
 				<div class="w-px h-3 bg-border"></div>
 			</div>
@@ -43,9 +43,9 @@
 		<div class="flex items-start gap-3">
 			<div class="flex flex-col items-center">
 				<div
-					data-pipe-dot="2"
 					class="w-9.5 h-9.5 rounded-lg bg-surface border border-border-subtle overflow-hidden shrink-0 transition-all duration-400 [&.done]:bg-green-400/[0.07] [&.done]:border-green-400/20 [&.done]:flex [&.done]:items-center [&.done]:justify-center [&.done]:text-base [&.done]:text-green-400"
 				>
+					<svg data-pipe-dot="2"></svg>
 				</div>
 			</div>
 			<span
@@ -63,7 +63,7 @@
 
 	type Instance = ReturnType<typeof createSarmalSVG>;
 
-	function stop(s: Instance | null, slot: HTMLElement): null {
+	function stop(s: Instance | null, slot: SVGSVGElement): null {
 		s?.pause();
 		slot.innerHTML = "";
 		return null;
@@ -110,11 +110,12 @@
 				pipeTimer = null;
 			}
 			PIPE_STEPS.forEach((step) => {
-				const dot = container.querySelector(step.dotSelector) as HTMLElement;
+				const dot = container.querySelector(step.dotSelector) as SVGSVGElement;
+				const card = dot.parentElement!;
 				const idx = PIPE_STEPS.indexOf(step);
 				pipeSarmals[idx] = stop(pipeSarmals[idx], dot);
-				dot.className = stepDotBaseClasses;
-				dot.textContent = "";
+				card.className = stepDotBaseClasses;
+				card.textContent = "";
 				const label = container.querySelector(
 					step.labelSelector,
 				) as HTMLElement;
@@ -129,7 +130,8 @@
 			function activateStep(i: number) {
 				if (pipeGen !== gen) return;
 				const step = PIPE_STEPS[i]!;
-				const dot = container.querySelector(step.dotSelector) as HTMLElement;
+				const dot = container.querySelector(step.dotSelector) as SVGSVGElement;
+				const card = dot.parentElement!;
 				const label = container.querySelector(
 					step.labelSelector,
 				) as HTMLElement;
@@ -147,8 +149,8 @@
 				pipeTimer = setTimeout(() => {
 					if (pipeGen !== gen) return;
 					pipeSarmals[i] = stop(pipeSarmals[i], dot);
-					dot.className = stepDotDoneClasses;
-					dot.textContent = "✓";
+					card.className = stepDotDoneClasses;
+					card.textContent = "✓";
 					label.classList.remove("active");
 					label.classList.add("done");
 

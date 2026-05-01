@@ -7,10 +7,10 @@ const id = `tpos-${Math.random().toString(36).slice(2, 8)}`;
 	data-t-pos-demo
 	class="my-6 mx-auto max-w-sm rounded-lg overflow-hidden border border-border"
 >
-	<div
-		class="t-pos-view relative"
-		style="height:220px;background:var(--color-surface);"
-	>
+	<div class="relative" class="bg-surface">
+		<div class="flex justify-center">
+			<svg class="t-pos-view w-55 h-55"></svg>
+		</div>
 		<div
 			class="t-pos-coords absolute top-3 left-3.5 flex flex-col gap-0.5 pointer-events-none select-none"
 		>
@@ -86,7 +86,7 @@ const id = `tpos-${Math.random().toString(36).slice(2, 8)}`;
 	document
 		.querySelectorAll<HTMLElement>("[data-t-pos-demo]")
 		.forEach((wrapper) => {
-			const view = wrapper.querySelector<HTMLElement>(".t-pos-view")!;
+			const view = wrapper.querySelector<SVGSVGElement>(".t-pos-view")!;
 			const buttons = wrapper.querySelectorAll<HTMLButtonElement>(".t-pos-btn");
 			const coordX = wrapper.querySelector<HTMLElement>("[data-coord-x]")!;
 			const coordY = wrapper.querySelector<HTMLElement>("[data-coord-y]")!;

@@ -10,7 +10,7 @@
 		<div
 			class="flex-1 flex flex-col gap-2 p-3.5 rounded-xl bg-surface border border-border"
 		>
-			<div data-dash-slot="0" class="w-13 h-13"></div>
+			<svg data-dash-slot="0" class="w-13 h-13"></svg>
 			<div class="font-ui text-[10px] tracking-[0.04em] text-muted">
 				Active Users
 			</div>
@@ -24,7 +24,7 @@
 		<div
 			class="flex-1 flex flex-col gap-2 p-3.5 rounded-xl bg-surface border border-border"
 		>
-			<div data-dash-slot="1" class="w-13 h-13"></div>
+			<svg data-dash-slot="1" class="w-13 h-13"></svg>
 			<div class="font-ui text-[10px] tracking-[0.04em] text-muted">
 				Revenue
 			</div>
@@ -44,7 +44,7 @@
 
 	type Instance = ReturnType<typeof createSarmalSVG>;
 
-	function stop(s: Instance | null, slot: HTMLElement): null {
+	function stop(s: Instance | null, slot: SVGSVGElement): null {
 		s?.pause();
 		slot.innerHTML = "";
 		return null;
@@ -77,7 +77,9 @@
 			dashTimers.forEach((t) => clearTimeout(t));
 			dashTimers = [];
 			DASH_ITEMS.forEach((item, i) => {
-				const slot = container.querySelector(item.slotSelector) as HTMLElement;
+				const slot = container.querySelector(
+					item.slotSelector,
+				) as SVGSVGElement;
 				const valEl = container.querySelector(item.valSelector) as HTMLElement;
 				dashSarmals[i] = stop(dashSarmals[i], slot);
 				valEl.textContent = "—";
@@ -91,7 +93,9 @@
 			const gen = dashGen;
 
 			DASH_ITEMS.forEach((item, i) => {
-				const slot = container.querySelector(item.slotSelector) as HTMLElement;
+				const slot = container.querySelector(
+					item.slotSelector,
+				) as SVGSVGElement;
 				dashSarmals[i] = createSarmalSVG(slot, item.curve, {
 					trailColor: item.color,
 					skeletonColor: "rgba(255,255,255,0.05)",
@@ -108,7 +112,7 @@
 							if (dashGen !== gen) return;
 							const slot = container.querySelector(
 								item.slotSelector,
-							) as HTMLElement;
+							) as SVGSVGElement;
 							const valEl = container.querySelector(
 								item.valSelector,
 							) as HTMLElement;

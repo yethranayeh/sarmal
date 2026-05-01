@@ -19,7 +19,7 @@ const svgId = `${id}-svg`;
 			>
 		</div>
 		<div class="flex flex-col items-center gap-3">
-			<div id={svgId} style="width: 200px; height: 200px;"></div>
+			<svg id={svgId} style="width: 200px; height: 200px;"></svg>
 			<span class="font-ui text-[10px] tracking-[0.25em] uppercase text-muted"
 				>SVG</span
 			>
@@ -42,7 +42,7 @@ const svgId = `${id}-svg`;
 			const svgId = wrapper.dataset.svgId!;
 
 			const canvas = document.getElementById(canvasId) as HTMLCanvasElement;
-			const svgContainer = document.getElementById(svgId) as HTMLElement;
+			const svgContainer = document.getElementById(svgId) as SVGSVGElement;
 
 			if (!canvas || !svgContainer) return;
 

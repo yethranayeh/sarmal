@@ -15,7 +15,7 @@
 		data-chat-thinking
 		class="flex flex-col items-start gap-1.5 transition-all duration-450 ease-out [&.exiting]:opacity-0 [&.exiting]:-translate-y-2.5 [&.exiting]:pointer-events-none"
 	>
-		<div data-chat-slot class="w-14 h-14"></div>
+		<svg data-chat-slot class="w-14 h-14"></svg>
 		<span class="font-ui text-[11px] tracking-widest text-muted">Thinking…</span
 		>
 	</div>
@@ -32,7 +32,7 @@
 
 	type Instance = ReturnType<typeof createSarmalSVG>;
 
-	function stop(s: Instance | null, slot: HTMLElement): null {
+	function stop(s: Instance | null, slot: SVGSVGElement): null {
 		s?.pause();
 		slot.innerHTML = "";
 		return null;
@@ -59,7 +59,7 @@
 			}
 			const chatSlot = container.querySelector(
 				"[data-chat-slot]",
-			) as HTMLElement;
+			) as SVGSVGElement;
 			chatSarmal = stop(chatSarmal, chatSlot);
 			const thinkingArea = container.querySelector(
 				"[data-chat-thinking]",
@@ -78,7 +78,7 @@
 			const gen = chatGen;
 			const chatSlot = container.querySelector(
 				"[data-chat-slot]",
-			) as HTMLElement;
+			) as SVGSVGElement;
 			const thinkingArea = container.querySelector(
 				"[data-chat-thinking]",
 			) as HTMLElement;

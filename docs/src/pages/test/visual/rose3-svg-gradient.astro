@@ -34,12 +34,14 @@
 		</style>
 	</head>
 	<body>
-		<div id="svg-container"></div>
+		<svg id="svg-container"></svg>
 
 		<script>
 			import { createSarmalSVG, curves } from "@sarmal/core";
 
-			const container = document.getElementById("svg-container");
+			const container = document.getElementById(
+				"svg-container",
+			) as SVGSVGElement;
 			createSarmalSVG(container, curves.rose3, {
 				autoStart: false,
 				initialT: Math.PI,

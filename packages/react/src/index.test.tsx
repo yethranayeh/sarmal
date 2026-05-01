@@ -511,11 +511,13 @@ describe("useSarmalSVG", () => {
     expect(mockInstance.morphTo).not.toHaveBeenCalled();
   });
 
-  it("sets viewBox on the SVG element", () => {
+  it("viewBox is set by the renderer, not the hook", () => {
     render(<SVGTestHarness curve={circle} />);
     const svg = screen.getByTestId("svg");
 
-    expect(svg.getAttribute("viewBox")).toBe("0 0 100 100");
+    // The hook no longer sets viewBox — the renderer owns it.
+    // Since createSarmalSVG is mocked, viewBox is not set here.
+    expect(svg.hasAttribute("viewBox")).toBe(false);
   });
 
   it("passes trailLength from init to createSarmalSVG", () => {

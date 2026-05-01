@@ -14,7 +14,7 @@ const btnBase =
 		concept === "play-pause" && (
 			<div class="flex max-w-150 bg-foreground border border-[#2e2f2c] rounded-lg overflow-hidden">
 				<div class="flex-1 h-50 min-w-0">
-					<div class="w-full h-full" data-role="sarmal" />
+					<svg class="w-full h-full" data-role="sarmal" />
 				</div>
 				<div class="w-42 shrink-0 border-l border-[#242522] bg-[#131412] py-4.5 px-4 flex flex-col justify-between">
 					<div class="flex flex-col gap-1">
@@ -43,7 +43,7 @@ const btnBase =
 		concept === "initial-t" && (
 			<div class="flex max-w-150 bg-foreground border border-[#2e2f2c] rounded-lg overflow-hidden">
 				<div class="flex-1 h-50 relative min-w-0" data-role="anim-col">
-					<div class="w-full h-full" data-role="sarmal" />
+					<svg class="w-full h-full" data-role="sarmal" />
 				</div>
 				<div class="w-42 shrink-0 border-l border-[#242522] bg-[#131412] py-4.5 px-4 flex flex-col justify-between">
 					<div class="text-[0.63rem] text-[#b3ada7] leading-[1.85] font-mono">
@@ -78,7 +78,7 @@ const btnBase =
 		concept === "reset" && (
 			<div class="max-w-125 bg-foreground border border-[#2e2f2c] rounded-lg overflow-hidden">
 				<div class="h-50" data-role="anim-window">
-					<div class="w-full h-full" data-role="sarmal" />
+					<svg class="w-full h-full" data-role="sarmal" />
 				</div>
 				<div class="border-t border-[#242522] bg-[#131412] py-2.5 px-3.5 flex items-center gap-3">
 					<div class="flex-1 flex flex-col gap-1 min-w-0">
@@ -103,7 +103,7 @@ const btnBase =
 		concept === "destroy" && (
 			<div class="max-w-125 bg-foreground border border-[#2e2f2c] rounded-lg overflow-hidden">
 				<div class="anim-window h-50" data-role="anim-window">
-					<div class="w-full h-full" data-role="sarmal" />
+					<svg class="w-full h-full" data-role="sarmal" />
 				</div>
 				<div class="border-t border-[#242522] bg-[#131412] py-2.5 px-3.5 flex items-center gap-3">
 					<div class="flex-1 flex flex-col gap-1 min-w-0">
@@ -245,7 +245,9 @@ const btnBase =
 
 	/* ── Play/Pause ─────────────────────────────────────── */
 	function initPlayPause(container: HTMLElement) {
-		const sarmalEl = qs(container, "sarmal");
+		const sarmalEl = container.querySelector<SVGSVGElement>(
+			'[data-role="sarmal"]',
+		);
 		const btn = qsBtn(container, "toggle-btn");
 		const dot = qs(container, "dot");
 		const txt = qs(container, "state-text");
@@ -273,7 +275,9 @@ const btnBase =
 
 	/* ── Initial T (with annotation overlay) ─────────────── */
 	function initInitialT(container: HTMLElement) {
-		const sarmalEl = qs(container, "sarmal");
+		const sarmalEl = container.querySelector<SVGSVGElement>(
+			'[data-role="sarmal"]',
+		);
 		const animCol = qs(container, "anim-col");
 		const btn = qsBtn(container, "play-btn");
 		if (!sarmalEl || !animCol || !btn) return;
@@ -285,7 +289,7 @@ const btnBase =
 		});
 
 		requestAnimationFrame(() => {
-			const svg = sarmalEl.querySelector("svg");
+			const svg = sarmalEl;
 			const head = svg?.querySelector("circle");
 			if (!svg || !head) return;
 
@@ -387,7 +391,9 @@ const btnBase =
 
 	/* ── Reset ──────────────────────────────────────────── */
 	function initReset(container: HTMLElement) {
-		const sarmalEl = qs(container, "sarmal");
+		const sarmalEl = container.querySelector<SVGSVGElement>(
+			'[data-role="sarmal"]',
+		);
 		const btn = qsBtn(container, "reset-btn");
 		const dot = qs(container, "dot");
 		const txt = qs(container, "state-text");
@@ -411,7 +417,9 @@ const btnBase =
 
 	/* ── Destroy ────────────────────────────────────────── */
 	function initDestroy(container: HTMLElement) {
-		const sarmalEl = qs(container, "sarmal");
+		const sarmalEl = container.querySelector<SVGSVGElement>(
+			'[data-role="sarmal"]',
+		);
 		const btn = qsBtn(container, "destroy-btn");
 		const dot = qs(container, "dot");
 		const txt = qs(container, "state-text");

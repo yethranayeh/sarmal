@@ -33,7 +33,7 @@ test('svg trail benchmark', async ({ page, browserName }) => {
     // Wait for the SVG to be mounted
     await page.waitForFunction(() => {
       const container = document.getElementById('container');
-      return container !== null && container.querySelector('svg') !== null;
+      return container !== null && container.querySelector('circle[data-sarmal-role="head"]') !== null;
     });
 
     // Let the animation warm up

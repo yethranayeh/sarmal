@@ -37,8 +37,10 @@ export function useRenderOptions(
       return;
     }
 
-    if (skeletonColor !== prevSkeletonColorRef.current && skeletonColor !== undefined) {
-      sarmal.setRenderOptions({ skeletonColor });
+    if (skeletonColor !== prevSkeletonColorRef.current) {
+      if (skeletonColor !== undefined) {
+        sarmal.setRenderOptions({ skeletonColor });
+      }
       prevSkeletonColorRef.current = skeletonColor;
     }
   }, [skeletonColor]);
@@ -65,8 +67,10 @@ export function useRenderOptions(
       return;
     }
 
-    if (trailStyle !== prevTrailStyleRef.current && trailStyle !== undefined) {
-      inst.setRenderOptions({ trailStyle });
+    if (trailStyle !== prevTrailStyleRef.current) {
+      if (trailStyle !== undefined) {
+        inst.setRenderOptions({ trailStyle });
+      }
       prevTrailStyleRef.current = trailStyle;
     }
   }, [trailStyle]);

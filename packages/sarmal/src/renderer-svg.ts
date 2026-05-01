@@ -22,13 +22,12 @@ import {
   resolveTrailMainColor,
   validateRenderOptions,
   warnIfTrailColorMismatch,
-  getHeadDotRadius,
 } from "./renderer-shared";
 import { createEngine } from "./engine";
 
 export interface SVGRendererOptions extends BaseRendererOptions {
-  /** Container element that will contain the SVG */
-  container: Element;
+  /** SVG element the renderer draws into directly */
+  container: SVGSVGElement;
   engine: Engine;
   /** @default 'Loading' */
   ariaLabel?: string;
@@ -109,46 +108,48 @@ export function createSVGRenderer(options: SVGRendererOptions): SarmalInstance {
 
   warnIfTrailColorMismatch(trailColor, trailStyle);
 
-  const htmlContainer = container as HTMLElement;
-  const width = htmlContainer.offsetWidth || 200;
-  const height = htmlContainer.offsetHeight || 200;
-  const headRadius = options.headRadius ?? getHeadDotRadius(width, height);
+  const viewSize = 100;
+  const headRadius = options.headRadius ?? 1.5;
+  // Trail widths are in viewBox units (0–100 space),
+  // so they need to be ~half the pixel-space defaults used by the canvas renderer
+  const svgTrailMinWidth = 0.25;
+  const svgTrailMaxWidth = 1.25;
+  const svgSkeletonStrokeWidth = "0.75";
 
-  const svg = el("svg") as SVGSVGElement;
-  svg.setAttribute("width", String(width));
-  svg.setAttribute("height", String(height));
-  svg.setAttribute("viewBox", `0 0 ${width} ${height}`);
-  svg.setAttribute("role", "img");
-  svg.setAttribute("aria-label", ariaLabel);
+  container.setAttribute("viewBox", `0 0 ${viewSize} ${viewSize}`);
+  container.setAttribute("role", "img");
+  container.setAttribute("aria-label", ariaLabel);
+
+  const group = el("g") as SVGGElement;
 
   const titleEl = el("title");
   titleEl.textContent = ariaLabel;
-  svg.appendChild(titleEl);
+  group.appendChild(titleEl);
 
   const skeletonPath = el("path") as SVGPathElement;
   skeletonPath.setAttribute("data-sarmal-role", "skeleton");
   skeletonPath.setAttribute("fill", "none");
   skeletonPath.setAttribute("stroke", skeletonColor);
   skeletonPath.setAttribute("stroke-opacity", String(DEFAULT_SKELETON_OPACITY));
-  skeletonPath.setAttribute("stroke-width", "1.5");
+  skeletonPath.setAttribute("stroke-width", svgSkeletonStrokeWidth);
   if (skeletonColor === "transparent") {
     skeletonPath.setAttribute("visibility", "hidden");
   }
-  svg.appendChild(skeletonPath);
+  group.appendChild(skeletonPath);
 
   const skeletonPathA = el("path") as SVGPathElement;
   skeletonPathA.setAttribute("fill", "none");
   skeletonPathA.setAttribute("stroke", skeletonColor);
-  skeletonPathA.setAttribute("stroke-width", "1.5");
+  skeletonPathA.setAttribute("stroke-width", svgSkeletonStrokeWidth);
   skeletonPathA.setAttribute("visibility", "hidden");
-  svg.appendChild(skeletonPathA);
+  group.appendChild(skeletonPathA);
 
   const skeletonPathB = el("path") as SVGPathElement;
   skeletonPathB.setAttribute("fill", "none");
   skeletonPathB.setAttribute("stroke", skeletonColor);
-  skeletonPathB.setAttribute("stroke-width", "1.5");
+  skeletonPathB.setAttribute("stroke-width", svgSkeletonStrokeWidth);
   skeletonPathB.setAttribute("visibility", "hidden");
-  svg.appendChild(skeletonPathB);
+  group.appendChild(skeletonPathB);
 
   let morphPathABuilt = "";
   let morphPathBBuilt = "";
@@ -157,7 +158,7 @@ export function createSVGRenderer(options: SVGRendererOptions): SarmalInstance {
   for (let i = 0; i < poolSize; i++) {
     const path = el("path") as SVGPathElement;
     path.setAttribute("fill", trailSolid);
-    svg.appendChild(path);
+    group.appendChild(path);
     trailPaths.push(path);
   }
 
@@ -165,9 +166,9 @@ export function createSVGRenderer(options: SVGRendererOptions): SarmalInstance {
   headCircle.setAttribute("data-sarmal-role", "head");
   headCircle.setAttribute("fill", headColor);
   headCircle.setAttribute("r", String(headRadius));
-  svg.appendChild(headCircle);
+  group.appendChild(headCircle);
 
-  container.appendChild(svg);
+  container.appendChild(group);
 
   let gradientAnimTime = 0;
   let scale = 1;
@@ -175,7 +176,7 @@ export function createSVGRenderer(options: SVGRendererOptions): SarmalInstance {
   let offsetY = 0;
 
   function applyBoundaries(skeleton: Point[]) {
-    const b = computeBoundaries(skeleton, width, height);
+    const b = computeBoundaries(skeleton, viewSize, viewSize);
     if (b) {
       scale = b.scale;
       offsetX = b.offsetX;
@@ -224,6 +225,8 @@ export function createSVGRenderer(options: SVGRendererOptions): SarmalInstance {
         trailCount,
         px,
         py,
+        svgTrailMinWidth,
+        svgTrailMaxWidth,
       );
 
       const d = `M${l0x.toFixed(2)} ${l0y.toFixed(2)} L${l1x.toFixed(2)} ${l1y.toFixed(2)} L${r1x.toFixed(2)} ${r1y.toFixed(2)} L${r0x.toFixed(2)} ${r0y.toFixed(2)} Z`;
@@ -380,7 +383,7 @@ export function createSVGRenderer(options: SVGRendererOptions): SarmalInstance {
         morphReject = null;
       }
 
-      svg.remove();
+      group.remove();
     },
 
     ...enginePassthroughs(engine),
@@ -485,22 +488,25 @@ export function createSVGRenderer(options: SVGRendererOptions): SarmalInstance {
 }
 
 /**
- * Creates a sarmal animation inside a container element using an SVG renderer
- * The SVG is appended to the container and animated via requestAnimationFrame
+ * Creates a sarmal animation directly inside an `<svg>` element using an SVG renderer.
+ * The passed `<svg>` element is set to `viewBox="0 0 100 100"` and animated via requestAnimationFrame
  *
  * @example
  * ```ts
  * import { createSarmalSVG, epitrochoid7 } from '@sarmal/core'
- * const sarmal = createSarmalSVG(document.getElementById('spinner'), epitrochoid7)
+ *
+ * // <svg id="spinner"></svg> in your HTML
+ * const svg = document.getElementById('spinner')
+ * const sarmal = createSarmalSVG(svg, epitrochoid7)
  *
  * // To control manually, use autoStart: false
- * const controlled = createSarmalSVG(container, rose5, { autoStart: false })
+ * const controlled = createSarmalSVG(svg, rose5, { autoStart: false })
  * controlled.play()  // Start when ready
  * controlled.pause() // Pause later
  * ```
  */
 export function createSarmalSVG(
-  container: Element,
+  container: SVGSVGElement,
   curveDef: CurveDef,
   options?: SVGSarmalOptions,
 ): SarmalInstance {
