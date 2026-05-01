@@ -1,4 +1,64 @@
 ---
+const TWO_PI = Math.PI * 2;
+
+type Pt = { x: number; y: number };
+
+function rose3(t: number): Pt {
+	const r = Math.cos(3 * t);
+	return { x: r * Math.cos(t), y: r * Math.sin(t) };
+}
+
+function sample(fn: (t: number) => Pt, t0: number, t1: number, n = 200): Pt[] {
+	return Array.from({ length: n + 1 }, (_, i) => fn(t0 + ((t1 - t0) * i) / n));
+}
+
+type Box = { minX: number; maxX: number; minY: number; maxY: number };
+
+function boundingBox(points: Pt[]): Box {
+	const xs = points.map((p) => p.x);
+	const ys = points.map((p) => p.y);
+	return {
+		minX: Math.min(...xs),
+		maxX: Math.max(...xs),
+		minY: Math.min(...ys),
+		maxY: Math.max(...ys),
+	};
+}
+
+const SVG_SIZE = 128;
+const SVG_PAD = 16;
+
+function fitPathInBox(
+	points: Pt[],
+	box: Box,
+	size = SVG_SIZE,
+	padding = SVG_PAD,
+): string {
+	const rangeX = box.maxX - box.minX || 1;
+	const rangeY = box.maxY - box.minY || 1;
+	const available = size - 2 * padding;
+	const scale = Math.min(available / rangeX, available / rangeY);
+	const cx = (box.minX + box.maxX) / 2;
+	const cy = (box.minY + box.maxY) / 2;
+	const center = size / 2;
+	return points
+		.map((p, i) => {
+			const px = (center + (p.x - cx) * scale).toFixed(2);
+			const py = (center + (p.y - cy) * scale).toFixed(2);
+			return `${i === 0 ? "M" : "L"}${px},${py}`;
+		})
+		.join(" ");
+}
+
+const fullBox = boundingBox(sample(rose3, 0, TWO_PI));
+const petalCenters = [0, TWO_PI / 3, (2 * TWO_PI) / 3];
+const petalData = petalCenters.map((center) => ({
+	d: fitPathInBox(
+		sample(rose3, center - Math.PI / 6, center + Math.PI / 6),
+		fullBox,
+	),
+}));
+
 const currentPath = Astro.url.pathname.replace(/\/$/, "") || "/";
 const isAtHome = currentPath === "/";
 ---
@@ -7,12 +67,38 @@ const isAtHome = currentPath === "/";
 	href="/"
 	class="font-heading text-2xl text-foreground transition-colors group inline-flex items-center gap-1"
 >
-	<!-- <img
-		src="/favicon.svg"
-		alt=""
-		class="size-6 shrink-0 group-hover:rotate-45 duration-300 transition-transform"
+	<svg
+		xmlns="http://www.w3.org/2000/svg"
+		viewBox="0 0 128 128"
+		class:list={[
+			"size-6 shrink-0 duration-300 transition-transform",
+			{
+				"text-primary group-hover:text-foreground group-hover:rotate-45":
+					isAtHome,
+				"text-foreground group-hover:text-primary group-hover:rotate-45":
+					!isAtHome,
+			},
+		]}
 		aria-hidden="true"
-	/> -->
+	>
+		<circle class="dot" cx="64" cy="64" r="8" fill="currentColor"></circle>
+		<g class="petals text-primary">
+			{
+				petalData.map((petal) => (
+					<path
+						class="petal"
+						d={petal.d}
+						pathLength="1"
+						stroke-width="6"
+						fill="none"
+						stroke="currentColor"
+						stroke-linecap="round"
+						stroke-linejoin="round"
+					/>
+				))
+			}
+		</g>
+	</svg>
 	<span
 		><span
 			class:list={[
@@ -37,3 +123,135 @@ const isAtHome = currentPath === "/";
 		></span
 	>
 </a>
+
+<style>
+	.dot {
+		transform-box: view-box;
+		transform-origin: center;
+		transition:
+			opacity 0.3s ease,
+			transform 0.5s
+				linear(
+					0,
+					0.008,
+					0.068,
+					0.209,
+					0.394,
+					0.591,
+					0.769,
+					0.905,
+					0.987,
+					1.011,
+					1.001,
+					0.987,
+					0.984,
+					0.997,
+					1.005,
+					1.002,
+					0.999,
+					0.999,
+					1
+				);
+	}
+
+	.petal {
+		transform-box: view-box;
+		transform-origin: center;
+		stroke-dasharray: 1;
+		stroke-dashoffset: 1;
+		transform: scale(0);
+	}
+
+	.petals .petal:nth-child(1) {
+		transition:
+			transform 0.8s
+				linear(
+					0,
+					0.008,
+					0.068,
+					0.209,
+					0.394,
+					0.591,
+					0.769,
+					0.905,
+					0.987,
+					1.011,
+					1.001,
+					0.987,
+					0.984,
+					0.997,
+					1.005,
+					1.002,
+					0.999,
+					0.999,
+					1
+				)
+				0s,
+			stroke-dashoffset 0.65s ease-out 0s;
+	}
+	.petals .petal:nth-child(2) {
+		transition:
+			transform 0.8s
+				linear(
+					0,
+					0.008,
+					0.068,
+					0.209,
+					0.394,
+					0.591,
+					0.769,
+					0.905,
+					0.987,
+					1.011,
+					1.001,
+					0.987,
+					0.984,
+					0.997,
+					1.005,
+					1.002,
+					0.999,
+					0.999,
+					1
+				)
+				0.07s,
+			stroke-dashoffset 0.65s ease-out 0.07s;
+	}
+	.petals .petal:nth-child(3) {
+		transition:
+			transform 0.8s
+				linear(
+					0,
+					0.008,
+					0.068,
+					0.209,
+					0.394,
+					0.591,
+					0.769,
+					0.905,
+					0.987,
+					1.011,
+					1.001,
+					0.987,
+					0.984,
+					0.997,
+					1.005,
+					1.002,
+					0.999,
+					0.999,
+					1
+				)
+				0.14s,
+			stroke-dashoffset 0.65s ease-out 0.14s;
+	}
+
+	@media (prefers-reduced-motion: no-preference) {
+		:global(.group:hover) .dot {
+			opacity: 0;
+			transform: scale(0.4);
+		}
+		:global(.group:hover) .petal {
+			transform: scale(1);
+			stroke-dashoffset: 0;
+		}
+	}
+</style>
