@@ -1,6 +1,10 @@
 <script lang="ts">
   import type { Engine, Point, TrailStyle } from "@sarmal/core";
-  import { createEngine } from "@sarmal/core";
+  import type { DrawingSegment } from "./types";
+
+  import { createEngine, drawCurve } from "@sarmal/core";
+  import { onDestroy, untrack } from "svelte";
+
   import {
     computeNormal,
     getPaletteColor,
@@ -8,8 +12,6 @@
     TRAIL_FADE_CURVE,
     TRAIL_MAX_OPACITY,
   } from "../../../../packages/sarmal/src/renderer-shared";
-  import { onDestroy, untrack } from "svelte";
-  import { buildDrawCurveDef, type DrawingSegment } from "./catmull-rom";
 
   interface Props {
     trailLength: number;
@@ -318,7 +320,7 @@
     headPos = null;
     isAnimating = false;
 
-    const curveDef = buildDrawCurveDef(points);
+    const curveDef = drawCurve(points);
     const len = untrack(() => trailLength);
     const spd = untrack(() => speed);
 

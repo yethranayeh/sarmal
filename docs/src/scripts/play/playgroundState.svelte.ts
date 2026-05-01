@@ -7,7 +7,7 @@ import type {
   DrawBoardExports,
 } from "./types";
 import type { Point, TrailStyle, SarmalPalette } from "@sarmal/core";
-import type { DrawingSegment } from "./catmull-rom";
+import type { DrawingSegment } from "./types";
 
 import { onDestroy, onMount } from "svelte";
 import { palettes } from "@sarmal/core";

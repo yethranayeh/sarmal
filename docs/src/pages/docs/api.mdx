@@ -86,6 +86,50 @@ const sarmal = createSarmalSVG(svg, curves.lissajous32);
 
 ---
 
+## drawCurve
+
+Creates a `CurveDef` from hand-drawn control points. The points form a <Link href="/docs/concepts#closing-the-loop">closed loop</Link>. The last point connects back to the first, and the resulting curve passes smoothly through every point.
+
+```ts
+import { createSarmal, drawCurve } from "@sarmal/core";
+
+const curve = drawCurve([
+  [-0.5,  0.3],
+  [ 0.2, -0.8],
+  [ 0.7,  0.4],
+]);
+
+createSarmal(canvas, curve);
+```
+
+### Coordinate system
+
+Points use a **normalized grid** ranging from `-1` to `1` on both axes. `(0, 0)` is the exact center of whatever container you render into. `(-1, -1)` is the top-left corner, `(1, 1)` the bottom-right.
+
+There is no fixed pixel size. The renderer scales the curve to fit *any* canvas or SVG element.
+
+This is the same coordinate system the <Link href="/play">playground</Link>'s draw mode uses, so points you place by hand map directly into this function without any conversion.
+
+### Requirements
+
+- **At least 3 points.** Throws if fewer are passed.
+- Points can be anywhere within the normalized range. Values outside `[-1, 1]` are *valid* but may push the curve outside the visible area.
+- The returned `CurveDef` has `period: 2π` and can be passed to `createSarmal`, `createSarmalSVG`, `morphTo`, or the lower-level engine constructor.
+
+### evaluateCatmullRom
+
+The underlying spline evaluator is also exported. It returns the `(x, y)` position at any parametric `t` along the closed loop, which can be useful for computing your own geometry from the same point set:
+
+```ts
+import { evaluateCatmullRom } from "@sarmal/core";
+
+const position = evaluateCatmullRom(points, Math.PI); // halfway through the loop
+```
+
+`t` wraps modulo `2π`, so values outside that range are valid and remapped automatically.
+
+---
+
 ## Instance Methods
 
 ### play()
@@ -570,4 +614,11 @@ const palettes: {
   fire: string[];
   forest: string[];
 };
+
+function drawCurve(points: [number, number][]): CurveDef;
+
+function evaluateCatmullRom(
+  points: [number, number][],
+  t: number,
+): Point;
 ```

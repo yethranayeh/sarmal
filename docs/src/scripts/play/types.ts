@@ -1,5 +1,6 @@
 import type { Point, TrailStyle } from "@sarmal/core";
-import type { DrawingSegment } from "./catmull-rom";
+
+export type DrawingSegment = [number, number];
 
 export const DEFAULT_CODE = `return {
   x: Math.cos(t),

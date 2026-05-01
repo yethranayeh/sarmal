@@ -17,6 +17,19 @@ Version history notes of the <Link href="#core">Core</Link> and the <Link href="
 
 ## Core
 
+### 0.20.0 - 02.05.2026
+
+New `drawCurve(points)` export converts hand-drawn control points into a `CurveDef` that the engine can animate. `evaluateCatmullRom(points, t)` is also exported for evaluating the closed Catmull-Rom spline at arbitrary parametric positions.
+
+```ts
+import { createSarmal, drawCurve } from '@sarmal/core'
+
+const curve = drawCurve([[-0.5, 0.3], [0.2, -0.8], [0.7, 0.4]])
+createSarmal(canvas, curve)
+```
+
+Requires at least 3 control points in normalized `[-1, 1]` space. Throws if fewer are passed.
+
 ### 0.19.0 - 01.05.2026
 
 <Alert label="Breaking" variant="error">`createSVGRenderer` and `createSarmalSVG` now require an `SVGSVGElement` as the container, not a generic `Element` like a **div**. The renderer draws *directly* into the passed **svg** element. It no longer creates a nested child `<svg>`.</Alert>

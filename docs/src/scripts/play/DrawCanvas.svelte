@@ -1,7 +1,7 @@
 <script lang="ts">
   import type { PlaygroundState } from "./playgroundState.svelte";
   import type DrawBoardComponent from "./DrawBoard.svelte";
-  import type { DrawingSegment } from "./catmull-rom";
+  import type { DrawingSegment } from "./types";
 
   import { getContext } from "svelte";
 

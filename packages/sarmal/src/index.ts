@@ -22,6 +22,7 @@ export { createRenderer } from "./renderer";
 export { createSVGRenderer, createSarmalSVG } from "./renderer-svg";
 export { curves } from "./curves";
 export { palettes } from "./renderer-shared";
+export { drawCurve, evaluateCatmullRom } from "./catmull-rom";
 export {
   artemis2,
   epitrochoid7,
