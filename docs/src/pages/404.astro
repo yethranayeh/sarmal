@@ -8,105 +8,135 @@ import Link from "../components/Link.astro";
 import { SEPARATOR_DOT } from "../variables";
 ---
 
-<BaseLayout title={`Not Found ${SEPARATOR_DOT} Sarmal`} description="This path doesn't exist.">
-	<main class='bg-foreground flex-1 flex flex-col items-center justify-center px-6 py-16'>
-		<div class='flex flex-col items-center'>
-			<div class='chroma-wrapper group relative w-96 h-80 enter-anim' style='--enter-delay: 0ms'>
+<BaseLayout
+	title={`Not Found ${SEPARATOR_DOT} Sarmal`}
+	description="This path doesn't exist."
+>
+	<main
+		class="bg-foreground flex-1 flex flex-col items-center justify-center px-6 py-16"
+	>
+		<div class="flex flex-col items-center">
+			<div
+				class="chroma-wrapper group relative w-96 h-80 enter-anim"
+				style="--enter-delay: 0ms"
+			>
 				<!-- Channels masked to text letterforms -->
-				<div class='absolute inset-0' style='mask: url("#mask-404");'>
+				<div class="absolute inset-0" style='mask: url("#mask-404");'>
 					<!-- Red channel -->
 					<div
-						class='absolute inset-0 mix-blend-screen transition-transform duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] -translate-x-1.5 -translate-y-1 group-hover:translate-x-0 group-hover:translate-y-0'>
+						class="absolute inset-0 mix-blend-screen transition-transform duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] -translate-x-1.5 -translate-y-1 group-hover:translate-x-0 group-hover:translate-y-0"
+					>
 						<Sarmal
-							curve='rose5'
+							curve="rose5"
 							width={384}
 							height={320}
-							trailColor='#ff2040'
-							headColor='#ff2040'
-							skeletonColor='transparent'
+							trailColor="#ff2040"
+							headColor="#ff2040"
+							skeletonColor="transparent"
 							trailLength={500}
 							speed={0.3}
 						/>
 					</div>
 					<!-- Green channel -->
-					<div class='absolute inset-0 mix-blend-screen'>
+					<div class="absolute inset-0 mix-blend-screen">
 						<Sarmal
-							curve='rose5'
+							curve="rose5"
 							width={384}
 							height={320}
-							trailColor='#00ff80'
-							headColor='#00ff80'
-							skeletonColor='transparent'
+							trailColor="#00ff80"
+							headColor="#00ff80"
+							skeletonColor="transparent"
 							trailLength={500}
 							speed={0.3}
 						/>
 					</div>
 					<!-- Blue channel -->
 					<div
-						class='absolute inset-0 mix-blend-screen transition-transform duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] translate-x-2 translate-y-1.5 group-hover:translate-x-0 group-hover:translate-y-0'>
+						class="absolute inset-0 mix-blend-screen transition-transform duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] translate-x-2 translate-y-1.5 group-hover:translate-x-0 group-hover:translate-y-0"
+					>
 						<Sarmal
-							curve='rose5'
+							curve="rose5"
 							width={384}
 							height={320}
-							trailColor='#2060ff'
-							headColor='#2060ff'
-							skeletonColor='transparent'
+							trailColor="#2060ff"
+							headColor="#2060ff"
+							skeletonColor="transparent"
 							trailLength={500}
 							speed={0.3}
 						/>
 					</div>
 					<!-- Outline overlay -->
 					<svg
-						aria-hidden='true'
-						class='absolute inset-0 pointer-events-none enter-anim mix-blend-difference'
-						viewBox='0 0 384 320'
-						style='--enter-delay: 0ms'>
+						aria-hidden="true"
+						class="absolute inset-0 pointer-events-none enter-anim mix-blend-difference"
+						viewBox="0 0 384 320"
+						style="--enter-delay: 0ms"
+					>
 						<text
-							x='192'
-							y='160'
-							text-anchor='middle'
-							dominant-baseline='middle'
-							font-size='170'
-							font-family='ui-sans-serif, system-ui, -apple-system, sans-serif'
-							paint-order='stroke'
-							class='stroke-white stroke-[1.5] fill-transparent font-black transition-colors duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:fill-white'
+							x="192"
+							y="160"
+							text-anchor="middle"
+							dominant-baseline="middle"
+							font-size="170"
+							font-family="ui-sans-serif, system-ui, -apple-system, sans-serif"
+							paint-order="stroke"
+							class="stroke-white stroke-[1.5] fill-transparent font-black transition-colors duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:fill-white"
 							>404</text
 						>
 					</svg>
 				</div>
 			</div>
 
-			<h1 class='mt-6 text-2xl font-normal text-surface text-center enter-anim' style='--enter-delay: 120ms'>
-				This path doesn't <span class='text-primary'>exist</span>.
+			<h1
+				class="mt-6 text-2xl font-normal text-surface text-center enter-anim"
+				style="--enter-delay: 120ms"
+			>
+				This path doesn't <span class="text-primary">exist</span>.
 			</h1>
 
-			<div class='enter-anim' style='--enter-delay: 240ms'>
+			<div class="enter-anim" style="--enter-delay: 240ms">
 				<!-- TODO: merge into a reusable component. Duplicated in curve detail page -->
-				<Link href='/' class='group inline-flex items-center'>
+				<Link href="/" class="group inline-flex items-center">
 					<ChevronsLeft
 						size={24}
-						class='opacity-75 [&>path:nth-child(1)]:transition-transform [&>path:nth-child(1)]:translate-x-1.75 group-hover:opacity-100 group-hover:-translate-x-2 group-hover:[&>path:nth-child(1)]:translate-x-0 transition-all'
+						class="opacity-75 [&>path:nth-child(1)]:transition-transform [&>path:nth-child(1)]:translate-x-1.75 group-hover:opacity-100 group-hover:-translate-x-2 group-hover:[&>path:nth-child(1)]:translate-x-0 transition-all"
 					/>
 					Back Home</Link
 				>
 			</div>
 		</div>
 		<!-- SVG mask -->
-		<svg aria-hidden='true' style='position:absolute;width:0;height:0;overflow:hidden;'>
+		<svg
+			aria-hidden="true"
+			style="position:absolute;width:0;height:0;overflow:hidden;"
+		>
 			<defs>
-				<mask id='mask-404' maskUnits='userSpaceOnUse' x='0' y='0' width='384' height='320' style='mask-type: alpha'>
+				<mask
+					id="mask-404"
+					maskUnits="userSpaceOnUse"
+					x="0"
+					y="0"
+					width="384"
+					height="320"
+					style="mask-type: alpha"
+				>
 					<text
-						x='192'
-						y='160'
-						text-anchor='middle'
-						dominant-baseline='middle'
-						font-size='170'
-						font-weight='900'
-						font-family='ui-sans-serif, system-ui, -apple-system, sans-serif'
-						fill='white'>404</text
+						x="192"
+						y="160"
+						text-anchor="middle"
+						dominant-baseline="middle"
+						font-size="170"
+						font-weight="900"
+						font-family="ui-sans-serif, system-ui, -apple-system, sans-serif"
+						fill="white">404</text
 					>
 					<!-- Flood rectangle that fades in on hover to "release" curves from letterforms -->
-					<rect id='mask-404-reveal' width='384' height='320' fill='white' opacity='0'></rect>
+					<rect
+						id="mask-404-reveal"
+						width="384"
+						height="320"
+						fill="white"
+						opacity="0"></rect>
 				</mask>
 			</defs>
 		</svg>
@@ -131,20 +161,24 @@ import { SEPARATOR_DOT } from "../variables";
 		transition: filter 500ms cubic-bezier(0.16, 1, 0.3, 1);
 	}
 	.chroma-wrapper:hover {
-		filter: drop-shadow(0 0 6px rgba(255, 255, 255, 0.35)) drop-shadow(0 0 22px rgba(255, 255, 255, 0.02))
+		filter: drop-shadow(0 0 6px rgba(255, 255, 255, 0.35))
+			drop-shadow(0 0 22px rgba(255, 255, 255, 0.02))
 			drop-shadow(0 0 60px rgba(160, 80, 255, 0.1));
 	}
 
 	@media (prefers-reduced-motion: no-preference) {
 		.enter-anim {
-			animation: enter 600ms cubic-bezier(0.16, 1, 0.3, 1) var(--enter-delay, 0ms) both;
+			animation: enter 600ms cubic-bezier(0.16, 1, 0.3, 1)
+				var(--enter-delay, 0ms) both;
 		}
 	}
 </style>
 
 <script>
 	const wrapper = document.querySelector(".chroma-wrapper") as HTMLElement;
-	const reveal = document.getElementById("mask-404-reveal") as unknown as SVGElement;
+	const reveal = document.getElementById(
+		"mask-404-reveal",
+	) as unknown as SVGElement;
 
 	reveal.style.transition = "opacity 500ms cubic-bezier(0.16, 1, 0.3, 1)";
 

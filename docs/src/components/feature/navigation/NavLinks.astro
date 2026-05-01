@@ -16,14 +16,14 @@ const { links = [] } = Astro.props;
 
 const defaultLinks: NavLink[] = [
 	{ href: "/docs", label: "Docs", icon: BookText },
-	{ href: "/play", label: "Playground", icon: FlaskConical }
+	{ href: "/play", label: "Playground", icon: FlaskConical },
 ];
 
 const navLinks = links.length > 0 ? links : defaultLinks;
 const currentPath = Astro.url.pathname.replace(/\/$/, "") || "/";
 ---
 
-<nav class='flex items-center gap-4'>
+<nav class="flex items-center gap-4">
 	{
 		navLinks.map((link) => {
 			const isActive = link.active ?? link.href === currentPath;
@@ -36,8 +36,9 @@ const currentPath = Astro.url.pathname.replace(/\/$/, "") || "/";
 					rel={link.external ? "noopener noreferrer" : undefined}
 					class:list={[
 						"inline-flex items-center gap-1 font-mono text-xs tracking-wider uppercase hover:text-foreground transition-colors",
-						colorClass
-					]}>
+						colorClass,
+					]}
+				>
 					<Icon size={16} />
 					<span>{link.label}</span>
 				</a>

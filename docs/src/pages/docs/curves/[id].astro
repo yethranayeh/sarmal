@@ -17,31 +17,31 @@ import { SEPARATOR_DOT } from "../../../variables";
 import { CURVE_DOCS, type CurveDocsMeta } from "../../../data/curves";
 
 export type CurveData = CurveDocsMeta & {
-  curveKey: CurveName
-  urlId: string
-}
+	curveKey: CurveName;
+	urlId: string;
+};
 
 export function getStaticPaths() {
-  return Object.keys(CURVE_DOCS).map((id) => ({ params: { id } }));
+	return Object.keys(CURVE_DOCS).map((id) => ({ params: { id } }));
 }
 
 const { id } = Astro.params;
 
 if (!id) {
-  return Astro.redirect("/docs/curves");
+	return Astro.redirect("/docs/curves");
 }
 
 const curveKey = id as CurveName;
 const meta = CURVE_DOCS[curveKey];
 
 if (!meta) {
-  return Astro.redirect("/docs/curves");
+	return Astro.redirect("/docs/curves");
 }
 
 const curve: CurveData = {
-  ...meta,
-  curveKey,
-  urlId: id,
+	...meta,
+	curveKey,
+	urlId: id,
 };
 
 const usageSnippet = `import { createSarmal } from "@sarmal/core";
@@ -63,185 +63,191 @@ const trailColor = curve.color;
 ---
 
 <DocsLayout
-  title={title}
-  description={curve.descriptionLong}
-  ogTitle={curve.name}
-  ogDescription={curve.descriptionLong}
-  ogImage={`/og/curves/${id}.png`}>
-  <div slot='article-header' class='w-full flex justify-end -mb-4 md:-mb-8'>
-    <div class='flex flex-col gap-3'>
-      <Link href='/docs/curves' class='group inline-flex items-center'>
-        <ChevronsLeft
-          size={24}
-          class='opacity-75 [&>path:nth-child(1)]:transition-transform [&>path:nth-child(1)]:translate-x-1.75 group-hover:opacity-100 group-hover:-translate-x-2 group-hover:[&>path:nth-child(1)]:translate-x-0 transition-all'
-        />
-        Back to Curve Catalog</Link
-      >
-    </div>
-  </div>
+	title={title}
+	description={curve.descriptionLong}
+	ogTitle={curve.name}
+	ogDescription={curve.descriptionLong}
+	ogImage={`/og/curves/${id}.png`}
+>
+	<div slot="article-header" class="w-full flex justify-end -mb-4 md:-mb-8">
+		<div class="flex flex-col gap-3">
+			<Link href="/docs/curves" class="group inline-flex items-center">
+				<ChevronsLeft
+					size={24}
+					class="opacity-75 [&>path:nth-child(1)]:transition-transform [&>path:nth-child(1)]:translate-x-1.75 group-hover:opacity-100 group-hover:-translate-x-2 group-hover:[&>path:nth-child(1)]:translate-x-0 transition-all"
+				/>
+				Back to Curve Catalog</Link
+			>
+		</div>
+	</div>
 
-  <section>
-    <h1 id={id}>
-      <a class='anchor-link' aria-hidden='true' tabindex='-1' href={`#${id}`}>
-        <Hash size={16} aria-hidden='true' />
-      </a>
-      {curve.name}
-    </h1>
-    <p class='lead'>{curve.descriptionLong}</p>
+	<section>
+		<h1 id={id}>
+			<a class="anchor-link" aria-hidden="true" tabindex="-1" href={`#${id}`}>
+				<Hash size={16} aria-hidden="true" />
+			</a>
+			{curve.name}
+		</h1>
+		<p class="lead">{curve.descriptionLong}</p>
 
-    <div class='relative my-8 flex justify-center'>
-      <DotGrid />
+		<div class="relative my-8 flex justify-center">
+			<DotGrid />
 
-      <Sarmal
-        curve={curve.curveKey}
-        width={320}
-        height={320}
-        trailLength={140}
-        headRadius={3}
-        trailColor={trailColor}
-        skeletonColor='#1b1c1a'
-        headColor={trailColor}
-      />
-    </div>
-  </section>
+			<Sarmal
+				curve={curve.curveKey}
+				width={320}
+				height={320}
+				trailLength={140}
+				headRadius={3}
+				trailColor={trailColor}
+				skeletonColor="#1b1c1a"
+				headColor={trailColor}
+			/>
+		</div>
+	</section>
 
-  <section>
-    <h2 class='m-0!' id='import'>
-      <a class='anchor-link' aria-hidden='true' tabindex='-1' href='#import'>
-        <Hash size={16} aria-hidden='true' />
-      </a>
-      Import
-    </h2>
-    <div class='relative group'>
-      <Code
-        lang='ts'
-        theme={undefined}
-        themes={codeThemes}
-        defaultColor={false}
-        code={`import { ${curve.curveKey} } from "${curve.importPath}";`}
-        class='mb-0'
-      />
-      <div
-        class='absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity'>
-        <CopyButton
-          code={`import { ${curve.curveKey} } from "${curve.importPath}";`}
-        />
-      </div>
-    </div>
-  </section>
+	<section>
+		<h2 class="m-0!" id="import">
+			<a class="anchor-link" aria-hidden="true" tabindex="-1" href="#import">
+				<Hash size={16} aria-hidden="true" />
+			</a>
+			Import
+		</h2>
+		<div class="relative group">
+			<Code
+				lang="ts"
+				theme={undefined}
+				themes={codeThemes}
+				defaultColor={false}
+				code={`import { ${curve.curveKey} } from "${curve.importPath}";`}
+				class="mb-0"
+			/>
+			<div
+				class="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity"
+			>
+				<CopyButton
+					code={`import { ${curve.curveKey} } from "${curve.importPath}";`}
+				/>
+			</div>
+		</div>
+	</section>
 
-  <section>
-    <h2 id='equation'>
-      <a class='anchor-link' aria-hidden='true' tabindex='-1' href='#equation'>
-        <Hash size={16} aria-hidden='true' />
-      </a>
-      Equation
-    </h2>
-    <MathEquation equation={curve.equation} />
-  </section>
+	<section>
+		<h2 id="equation">
+			<a class="anchor-link" aria-hidden="true" tabindex="-1" href="#equation">
+				<Hash size={16} aria-hidden="true" />
+			</a>
+			Equation
+		</h2>
+		<MathEquation equation={curve.equation} />
+	</section>
 
-  <section>
-    <h2 id='parameters'>
-      <a
-        class='anchor-link'
-        aria-hidden='true'
-        tabindex='-1'
-        href='#parameters'>
-        <Hash size={16} aria-hidden='true' />
-      </a>
-      Parameters
-    </h2>
-    <table class='w-full text-sm'>
-      <tbody>
-        <tr class='border-b border-border'>
-          <td class='py-2 font-medium'>Family</td>
-          <td class='py-2 text-muted'>{curve.family}</td>
-        </tr>
-        <tr class='border-b border-border'>
-          <td class='py-2 font-medium'>Period</td>
-          <td class='py-2 text-muted'>{curve.periodStr}</td>
-        </tr>
-        <tr class='border-b border-border'>
-          <td class='py-2 font-medium'>Default Speed</td>
-          <td class='py-2 text-muted'>{curve.speed}</td>
-        </tr>
-        <tr class='border-b border-border'>
-          <td class='py-2 font-medium'>Skeleton</td>
-          <td class='py-2 text-muted'>{curve.skeleton}</td>
-        </tr>
-      </tbody>
-    </table>
-  </section>
+	<section>
+		<h2 id="parameters">
+			<a
+				class="anchor-link"
+				aria-hidden="true"
+				tabindex="-1"
+				href="#parameters"
+			>
+				<Hash size={16} aria-hidden="true" />
+			</a>
+			Parameters
+		</h2>
+		<table class="w-full text-sm">
+			<tbody>
+				<tr class="border-b border-border">
+					<td class="py-2 font-medium">Family</td>
+					<td class="py-2 text-muted">{curve.family}</td>
+				</tr>
+				<tr class="border-b border-border">
+					<td class="py-2 font-medium">Period</td>
+					<td class="py-2 text-muted">{curve.periodStr}</td>
+				</tr>
+				<tr class="border-b border-border">
+					<td class="py-2 font-medium">Default Speed</td>
+					<td class="py-2 text-muted">{curve.speed}</td>
+				</tr>
+				<tr class="border-b border-border">
+					<td class="py-2 font-medium">Skeleton</td>
+					<td class="py-2 text-muted">{curve.skeleton}</td>
+				</tr>
+			</tbody>
+		</table>
+	</section>
 
-  <section>
-    <h2 id='key-features'>
-      <a
-        class='anchor-link'
-        aria-hidden='true'
-        tabindex='-1'
-        href='#key-features'>
-        <Hash size={16} aria-hidden='true' />
-      </a>
-      Key Features
-    </h2>
-    <ul>
-      {curve.features.map((feature) => <li>{feature}</li>)}
-    </ul>
-  </section>
+	<section>
+		<h2 id="key-features">
+			<a
+				class="anchor-link"
+				aria-hidden="true"
+				tabindex="-1"
+				href="#key-features"
+			>
+				<Hash size={16} aria-hidden="true" />
+			</a>
+			Key Features
+		</h2>
+		<ul>
+			{curve.features.map((feature) => <li>{feature}</li>)}
+		</ul>
+	</section>
 
-  <section>
-    <h2 id='usage'>
-      <a class='anchor-link' aria-hidden='true' tabindex='-1' href='#usage'>
-        <Hash size={16} aria-hidden='true' />
-      </a>
-      Usage
-    </h2>
+	<section>
+		<h2 id="usage">
+			<a class="anchor-link" aria-hidden="true" tabindex="-1" href="#usage">
+				<Hash size={16} aria-hidden="true" />
+			</a>
+			Usage
+		</h2>
 
-    <h3 id='standard'>
-      <a class='anchor-link' aria-hidden='true' tabindex='-1' href='#standard'>
-        <Hash size={16} aria-hidden='true' />
-      </a>
-      Standard
-    </h3>
-    <div class='relative group'>
-      <Code
-        lang='ts'
-        theme={undefined}
-        themes={codeThemes}
-        defaultColor={false}
-        code={usageSnippet}
-      />
-      <div
-        class='absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity'>
-        <CopyButton code={usageSnippet} />
-      </div>
-    </div>
+		<h3 id="standard">
+			<a class="anchor-link" aria-hidden="true" tabindex="-1" href="#standard">
+				<Hash size={16} aria-hidden="true" />
+			</a>
+			Standard
+		</h3>
+		<div class="relative group">
+			<Code
+				lang="ts"
+				theme={undefined}
+				themes={codeThemes}
+				defaultColor={false}
+				code={usageSnippet}
+			/>
+			<div
+				class="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity"
+			>
+				<CopyButton code={usageSnippet} />
+			</div>
+		</div>
 
-    <h3 id='react'>
-      <a class='anchor-link' aria-hidden='true' tabindex='-1' href='#react'>
-        <Hash size={16} aria-hidden='true' />
-      </a>
-      React
-    </h3>
-    <div class='relative group'>
-      <Code
-        lang='tsx'
-        theme={undefined}
-        themes={codeThemes}
-        defaultColor={false}
-        code={reactSnippet}
-      />
-      <div
-        class='absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity'>
-        <CopyButton code={reactSnippet} />
-      </div>
-    </div>
-  </section>
+		<h3 id="react">
+			<a class="anchor-link" aria-hidden="true" tabindex="-1" href="#react">
+				<Hash size={16} aria-hidden="true" />
+			</a>
+			React
+		</h3>
+		<div class="relative group">
+			<Code
+				lang="tsx"
+				theme={undefined}
+				themes={codeThemes}
+				defaultColor={false}
+				code={reactSnippet}
+			/>
+			<div
+				class="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity"
+			>
+				<CopyButton code={reactSnippet} />
+			</div>
+		</div>
+	</section>
 </DocsLayout>
 
 <style>
-  .lead {
-    font-size: 1.125rem;
-    color: var(--color-muted);
-  }
+	.lead {
+		font-size: 1.125rem;
+		color: var(--color-muted);
+	}
 </style>

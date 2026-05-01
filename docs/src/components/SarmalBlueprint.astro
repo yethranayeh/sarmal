@@ -5,7 +5,12 @@ export interface Callout {
 	target: "head" | "skeleton" | string;
 	label: string;
 	sub?: string;
-	placement?: "auto" | "top-left" | "top-right" | "bottom-left" | "bottom-right";
+	placement?:
+		| "auto"
+		| "top-left"
+		| "top-right"
+		| "bottom-left"
+		| "bottom-right";
 	static?: boolean;
 }
 
@@ -34,7 +39,7 @@ const {
 	trailLength,
 	width,
 	height,
-	callouts = []
+	callouts = [],
 } = Astro.props;
 
 const id = `sbp-${Math.random().toString(36).slice(2, 8)}`;
@@ -42,10 +47,9 @@ const id = `sbp-${Math.random().toString(36).slice(2, 8)}`;
 
 <div
 	id={id}
-	style={[
-		height ? `--sb-h:${height}px` : '',
-		width ? `--sb-w:${width}px` : '',
-	].filter(Boolean).join(';')}
+	style={[height ? `--sb-h:${height}px` : "", width ? `--sb-w:${width}px` : ""]
+		.filter(Boolean)
+		.join(";")}
 	class:list={[
 		"sarmal-blueprint",
 		"relative",
@@ -58,7 +62,7 @@ const id = `sbp-${Math.random().toString(36).slice(2, 8)}`;
 		"border-solid",
 		"border-border",
 		"rounded",
-		"shadow-[inset_0_0_0_1px_rgba(255,255,255,0.4)]"
+		"shadow-[inset_0_0_0_1px_rgba(255,255,255,0.4)]",
 	]}
 	data-curve={curve}
 	data-auto-start={String(autoStart)}
@@ -67,8 +71,11 @@ const id = `sbp-${Math.random().toString(36).slice(2, 8)}`;
 	data-skeleton-color={skeletonColor}
 	data-head-color={headColor}
 	data-head-radius={headRadius !== undefined ? String(headRadius) : undefined}
-	data-trail-length={trailLength !== undefined ? String(trailLength) : undefined}
-	data-callouts={JSON.stringify(callouts)}>
+	data-trail-length={trailLength !== undefined
+		? String(trailLength)
+		: undefined}
+	data-callouts={JSON.stringify(callouts)}
+>
 </div>
 
 <style>
@@ -93,7 +100,7 @@ const id = `sbp-${Math.random().toString(36).slice(2, 8)}`;
 		line: "#97002a",
 		ring: "#c0143c",
 		label: "#c0143c",
-		sub: "#7a7067"
+		sub: "#7a7067",
 	};
 
 	// dx/dy: label offset from target center. lx/ly: line anchor within the label box.
@@ -101,7 +108,7 @@ const id = `sbp-${Math.random().toString(36).slice(2, 8)}`;
 		"top-left": { dx: -90, dy: -36, lx: 85, ly: 20 },
 		"top-right": { dx: 18, dy: -36, lx: 5, ly: 20 },
 		"bottom-left": { dx: -90, dy: 24, lx: 85, ly: 0 },
-		"bottom-right": { dx: 18, dy: 24, lx: 5, ly: 0 }
+		"bottom-right": { dx: 18, dy: 24, lx: 5, ly: 0 },
 	} as const;
 
 	type Placement = keyof typeof PLACEMENTS;
@@ -134,7 +141,12 @@ const id = `sbp-${Math.random().toString(36).slice(2, 8)}`;
 		return target;
 	}
 
-	function autoPlacement(tx: number, ty: number, cw: number, ch: number): Placement {
+	function autoPlacement(
+		tx: number,
+		ty: number,
+		cw: number,
+		ch: number,
+	): Placement {
 		const inRight = tx > cw / 2;
 		const inBottom = ty > ch / 2;
 		if (inRight && inBottom) return "top-left";
@@ -143,27 +155,43 @@ const id = `sbp-${Math.random().toString(36).slice(2, 8)}`;
 		return "bottom-right";
 	}
 
-	function getHeadPos(headEl: Element, svg: SVGSVGElement, wrapper: HTMLElement): { x: number; y: number } {
+	function getHeadPos(
+		headEl: Element,
+		svg: SVGSVGElement,
+		wrapper: HTMLElement,
+	): { x: number; y: number } {
 		const vb = svg.getAttribute("viewBox");
 		const parts = vb ? vb.split(/[\s,]+/).map(Number) : [0, 0, 100, 100];
 		const wr = wrapper.getBoundingClientRect();
 		const scaleX = wr.width / (parts[2] ?? 100);
 		const scaleY = wr.height / (parts[3] ?? 100);
-		const cx = parseFloat((headEl as SVGCircleElement).getAttribute("cx") ?? "0");
-		const cy = parseFloat((headEl as SVGCircleElement).getAttribute("cy") ?? "0");
+		const cx = parseFloat(
+			(headEl as SVGCircleElement).getAttribute("cx") ?? "0",
+		);
+		const cy = parseFloat(
+			(headEl as SVGCircleElement).getAttribute("cy") ?? "0",
+		);
 		return { x: cx * scaleX, y: cy * scaleY };
 	}
 
-	function getElPos(el: Element, wrapper: HTMLElement): { x: number; y: number } {
+	function getElPos(
+		el: Element,
+		wrapper: HTMLElement,
+	): { x: number; y: number } {
 		const rect = el.getBoundingClientRect();
 		const wr = wrapper.getBoundingClientRect();
 		return {
 			x: rect.left - wr.left + rect.width / 2,
-			y: rect.top - wr.top + rect.height / 2
+			y: rect.top - wr.top + rect.height / 2,
 		};
 	}
 
-	function applyCallout(state: CalloutState, pos: { x: number; y: number }, cw: number, ch: number) {
+	function applyCallout(
+		state: CalloutState,
+		pos: { x: number; y: number },
+		cw: number,
+		ch: number,
+	) {
 		let p: Placement;
 
 		if (state.callout.placement && state.callout.placement !== "auto") {
@@ -185,7 +213,9 @@ const id = `sbp-${Math.random().toString(36).slice(2, 8)}`;
 					state.currentPlacement = natural;
 					state.flipCandidate = null;
 					state.labelDiv.classList.remove("items-end", "items-start");
-					state.labelDiv.classList.add(PLACEMENTS[natural].dx < 0 ? "items-end" : "items-start");
+					state.labelDiv.classList.add(
+						PLACEMENTS[natural].dx < 0 ? "items-end" : "items-start",
+					);
 					requestAnimationFrame(() => {
 						state.labelDiv.style.transition = "";
 					});
@@ -214,25 +244,35 @@ const id = `sbp-${Math.random().toString(36).slice(2, 8)}`;
 	function initBlueprint(wrapper: HTMLElement) {
 		const curveName = (wrapper.dataset.curve ?? "lissajous32") as CurveName;
 		const autoStart = wrapper.dataset.autoStart !== "false";
-		const initialT = wrapper.dataset.initialT !== undefined ? parseFloat(wrapper.dataset.initialT) : undefined;
+		const initialT =
+			wrapper.dataset.initialT !== undefined
+				? parseFloat(wrapper.dataset.initialT)
+				: undefined;
 		const callouts: Callout[] = JSON.parse(wrapper.dataset.callouts ?? "[]");
 
 		const opts: SVGSarmalOptions = {
 			autoStart,
 			trailColor: wrapper.dataset.trailColor,
 			skeletonColor: wrapper.dataset.skeletonColor,
-			headColor: wrapper.dataset.headColor
+			headColor: wrapper.dataset.headColor,
 		};
 		if (initialT !== undefined) opts.initialT = initialT;
-		if (wrapper.dataset.headRadius !== undefined) opts.headRadius = parseFloat(wrapper.dataset.headRadius);
-		if (wrapper.dataset.trailLength !== undefined) opts.trailLength = parseFloat(wrapper.dataset.trailLength);
+		if (wrapper.dataset.headRadius !== undefined)
+			opts.headRadius = parseFloat(wrapper.dataset.headRadius);
+		if (wrapper.dataset.trailLength !== undefined)
+			opts.trailLength = parseFloat(wrapper.dataset.trailLength);
 
 		const curve = curves[curveName];
 		const instance = createSarmalSVG(wrapper, curve, opts);
 
 		if (callouts.length === 0) {
 			requestAnimationFrame(() => {
-				wrapper.dispatchEvent(new CustomEvent("sarmal:ready", { bubbles: true, detail: { instance } }));
+				wrapper.dispatchEvent(
+					new CustomEvent("sarmal:ready", {
+						bubbles: true,
+						detail: { instance },
+					}),
+				);
 			});
 			return;
 		}
@@ -241,8 +281,14 @@ const id = `sbp-${Math.random().toString(36).slice(2, 8)}`;
 			const svg = wrapper.querySelector("svg") as SVGSVGElement | null;
 			if (!svg) return;
 
-			const annotSvg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
-			annotSvg.setAttribute("class", "absolute inset-0 w-full h-full pointer-events-none overflow-visible");
+			const annotSvg = document.createElementNS(
+				"http://www.w3.org/2000/svg",
+				"svg",
+			);
+			annotSvg.setAttribute(
+				"class",
+				"absolute inset-0 w-full h-full pointer-events-none overflow-visible",
+			);
 			wrapper.appendChild(annotSvg);
 
 			const wr = wrapper.getBoundingClientRect();
@@ -255,20 +301,28 @@ const id = `sbp-${Math.random().toString(36).slice(2, 8)}`;
 				const selector = resolveSelector(callout.target);
 				const isHead = callout.target === "head";
 
-				const targetEl = svg.querySelector(selector) ?? wrapper.querySelector(selector);
+				const targetEl =
+					svg.querySelector(selector) ?? wrapper.querySelector(selector);
 				if (!targetEl) {
 					continue;
 				}
 
-				const pos = isHead ? getHeadPos(targetEl, svg, wrapper) : getElPos(targetEl, wrapper);
+				const pos = isHead
+					? getHeadPos(targetEl, svg, wrapper)
+					: getElPos(targetEl, wrapper);
 
 				const initialP: Placement =
-					callout.placement && callout.placement !== "auto" ? callout.placement : autoPlacement(pos.x, pos.y, cw, ch);
+					callout.placement && callout.placement !== "auto"
+						? callout.placement
+						: autoPlacement(pos.x, pos.y, cw, ch);
 				const { dx, dy, lx, ly } = PLACEMENTS[initialP];
 				const labelX = pos.x + dx;
 				const labelY = pos.y + dy;
 
-				const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
+				const line = document.createElementNS(
+					"http://www.w3.org/2000/svg",
+					"line",
+				);
 				line.setAttribute("x1", String(labelX + lx));
 				line.setAttribute("y1", String(labelY + ly));
 				line.setAttribute("x2", String(pos.x));
@@ -279,7 +333,10 @@ const id = `sbp-${Math.random().toString(36).slice(2, 8)}`;
 				line.setAttribute("opacity", "0.65");
 				annotSvg.appendChild(line);
 
-				const ring = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+				const ring = document.createElementNS(
+					"http://www.w3.org/2000/svg",
+					"circle",
+				);
 				ring.setAttribute("cx", String(pos.x));
 				ring.setAttribute("cy", String(pos.y));
 				ring.setAttribute("r", "8");
@@ -296,7 +353,8 @@ const id = `sbp-${Math.random().toString(36).slice(2, 8)}`;
 
 				const primary = document.createElement("span");
 				primary.textContent = callout.label;
-				primary.className = "text-[0.9rem] text-[#c0143c] leading-none font-mono";
+				primary.className =
+					"text-[0.9rem] text-[#c0143c] leading-none font-mono";
 				labelDiv.appendChild(primary);
 
 				if (callout.sub) {
@@ -316,7 +374,7 @@ const id = `sbp-${Math.random().toString(36).slice(2, 8)}`;
 					labelDiv,
 					currentPlacement: initialP,
 					flipCandidate: null,
-					flipCandidateSince: 0
+					flipCandidateSince: 0,
 				});
 			}
 
@@ -328,30 +386,50 @@ const id = `sbp-${Math.random().toString(36).slice(2, 8)}`;
 					const obs = new MutationObserver(() => {
 						const wr = wrapper.getBoundingClientRect();
 						for (const s of headStates) {
-							applyCallout(s, getHeadPos(headEl, svg, wrapper), wr.width, wr.height);
+							applyCallout(
+								s,
+								getHeadPos(headEl, svg, wrapper),
+								wr.width,
+								wr.height,
+							);
 						}
 					});
-					obs.observe(headEl, { attributes: true, attributeFilter: ["cx", "cy"] });
+					obs.observe(headEl, {
+						attributes: true,
+						attributeFilter: ["cx", "cy"],
+					});
 				}
 			}
 
 			// Non-head tracking: rAF loop re-reads bounding rects
-			const nonHeadStates = states.filter((s) => !s.isHead && !s.callout.static);
+			const nonHeadStates = states.filter(
+				(s) => !s.isHead && !s.callout.static,
+			);
 			if (nonHeadStates.length > 0) {
 				function rafLoop() {
 					const wr = wrapper.getBoundingClientRect();
 					for (const s of nonHeadStates) {
-						const targetEl = svg!.querySelector(s.selector) ?? wrapper.querySelector(s.selector);
-						if (targetEl) applyCallout(s, getElPos(targetEl, wrapper), wr.width, wr.height);
+						const targetEl =
+							svg!.querySelector(s.selector) ??
+							wrapper.querySelector(s.selector);
+						if (targetEl)
+							applyCallout(s, getElPos(targetEl, wrapper), wr.width, wr.height);
 					}
 					requestAnimationFrame(rafLoop);
 				}
 				requestAnimationFrame(rafLoop);
 			}
 
-			wrapper.dispatchEvent(new CustomEvent("sarmal:ready", { bubbles: true, detail: { instance } }));
+			wrapper.dispatchEvent(
+				new CustomEvent("sarmal:ready", {
+					bubbles: true,
+					detail: { instance },
+				}),
+			);
 		});
 	}
 
-	document.querySelectorAll<HTMLElement>(".sarmal-blueprint").forEach(initBlueprint);
+	document
+		.querySelectorAll<HTMLElement>(".sarmal-blueprint")
+		.forEach(initBlueprint);
 </script>

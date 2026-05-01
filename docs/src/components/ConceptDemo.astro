@@ -9,16 +9,17 @@ const { layout = "side" } = Astro.props;
 {
 	layout === "side" && (
 		<div
-			data-ctx='concept-demo'
-			class='concept-demo my-6 flex max-w-150 bg-foreground border border-[#2e2f2c] rounded-lg overflow-hidden'>
-			<div class='flex-1 relative min-w-0'>
-				<slot name='view' />
+			data-ctx="concept-demo"
+			class="concept-demo my-6 flex max-w-150 bg-foreground border border-[#2e2f2c] rounded-lg overflow-hidden"
+		>
+			<div class="flex-1 relative min-w-0">
+				<slot name="view" />
 			</div>
-			<div class='w-42 shrink-0 border-l border-[#242522] bg-[#131412] py-4.5 px-4 flex flex-col justify-between gap-4'>
-				<div class='text-[0.63rem] text-[#b3ada7] leading-[1.85] font-mono'>
-					<slot name='info' />
+			<div class="w-42 shrink-0 border-l border-[#242522] bg-[#131412] py-4.5 px-4 flex flex-col justify-between gap-4">
+				<div class="text-[0.63rem] text-[#b3ada7] leading-[1.85] font-mono">
+					<slot name="info" />
 				</div>
-				<slot name='controls' />
+				<slot name="controls" />
 			</div>
 		</div>
 	)
@@ -27,16 +28,17 @@ const { layout = "side" } = Astro.props;
 {
 	layout === "bottom" && (
 		<div
-			data-ctx='concept-demo'
-			class='concept-demo my-6 max-w-125 bg-foreground border border-[#2e2f2c] rounded-lg overflow-hidden'>
-			<div class='relative'>
-				<slot name='view' />
+			data-ctx="concept-demo"
+			class="concept-demo my-6 max-w-125 bg-foreground border border-[#2e2f2c] rounded-lg overflow-hidden"
+		>
+			<div class="relative">
+				<slot name="view" />
 			</div>
-			<div class='border-t border-[#242522] bg-[#131412] py-2.5 px-3.5 flex items-center gap-3'>
-				<div class='flex-1 flex flex-col gap-1 min-w-0 text-[0.68rem] font-mono'>
-					<slot name='info' />
+			<div class="border-t border-[#242522] bg-[#131412] py-2.5 px-3.5 flex items-center gap-3">
+				<div class="flex-1 flex flex-col gap-1 min-w-0 text-[0.68rem] font-mono">
+					<slot name="info" />
 				</div>
-				<slot name='controls' />
+				<slot name="controls" />
 			</div>
 		</div>
 	)
@@ -148,66 +150,79 @@ const { layout = "side" } = Astro.props;
 <script>
 	import type { SarmalInstance } from "@sarmal/core";
 
-	document.querySelectorAll<HTMLElement>(".concept-demo").forEach((container) => {
-		container.addEventListener("sarmal:ready", (e: Event) => {
-			const instance = (e as CustomEvent<{ instance: SarmalInstance }>).detail.instance;
+	document
+		.querySelectorAll<HTMLElement>(".concept-demo")
+		.forEach((container) => {
+			container.addEventListener("sarmal:ready", (e: Event) => {
+				const instance = (e as CustomEvent<{ instance: SarmalInstance }>).detail
+					.instance;
 
-			// Infer initial playing state from the blueprint in the view slot
-			const blueprint = container.querySelector<HTMLElement>(".sarmal-blueprint");
-			let isPlaying = blueprint?.dataset.autoStart !== "false";
+				// Infer initial playing state from the blueprint in the view slot
+				const blueprint =
+					container.querySelector<HTMLElement>(".sarmal-blueprint");
+				let isPlaying = blueprint?.dataset.autoStart !== "false";
 
-			const dot = container.querySelector<HTMLElement>("[data-sarmal-dot]");
-			const stateText = container.querySelector<HTMLElement>("[data-sarmal-state-text]");
+				const dot = container.querySelector<HTMLElement>("[data-sarmal-dot]");
+				const stateText = container.querySelector<HTMLElement>(
+					"[data-sarmal-state-text]",
+				);
 
-			function updateUI() {
-				if (dot) dot.dataset.state = isPlaying ? "playing" : "paused";
-				if (stateText) stateText.textContent = isPlaying ? "playing" : "paused";
-				container.querySelectorAll<HTMLButtonElement>('[data-sarmal-action="toggle"]').forEach((btn) => {
-					btn.textContent = isPlaying ? "Pause" : "Play";
-					btn.classList.toggle("cdemo-btn-ghost", isPlaying);
-					btn.classList.toggle("cdemo-btn-play", !isPlaying);
-				});
-			}
+				function updateUI() {
+					if (dot) dot.dataset.state = isPlaying ? "playing" : "paused";
+					if (stateText)
+						stateText.textContent = isPlaying ? "playing" : "paused";
+					container
+						.querySelectorAll<HTMLButtonElement>(
+							'[data-sarmal-action="toggle"]',
+						)
+						.forEach((btn) => {
+							btn.textContent = isPlaying ? "Pause" : "Play";
+							btn.classList.toggle("cdemo-btn-ghost", isPlaying);
+							btn.classList.toggle("cdemo-btn-play", !isPlaying);
+						});
+				}
 
-			updateUI();
+				updateUI();
 
-			container.querySelectorAll<HTMLElement>("[data-sarmal-action]").forEach((el) => {
-				el.addEventListener("click", () => {
-					switch (el.dataset.sarmalAction) {
-						case "play":
-							instance.play();
-							isPlaying = true;
-							updateUI();
-							break;
-						case "pause":
-							instance.pause();
-							isPlaying = false;
-							updateUI();
-							break;
-						case "toggle":
-							void (isPlaying ? instance.pause() : instance.play());
-							isPlaying = !isPlaying;
-							updateUI();
-							break;
-						case "reset":
-							instance.reset();
-							if (dot) dot.dataset.state = "paused";
-							if (stateText) stateText.textContent = "reset";
-							setTimeout(updateUI, 600);
-							break;
-						case "destroy": {
-							instance.destroy();
-							isPlaying = false;
-							if (dot) dot.dataset.state = "paused";
-							if (stateText) stateText.textContent = "destroyed";
-							const btn = el as HTMLButtonElement;
-							btn.disabled = true;
-							btn.textContent = "Destroyed";
-							break;
-						}
-					}
-				});
+				container
+					.querySelectorAll<HTMLElement>("[data-sarmal-action]")
+					.forEach((el) => {
+						el.addEventListener("click", () => {
+							switch (el.dataset.sarmalAction) {
+								case "play":
+									instance.play();
+									isPlaying = true;
+									updateUI();
+									break;
+								case "pause":
+									instance.pause();
+									isPlaying = false;
+									updateUI();
+									break;
+								case "toggle":
+									void (isPlaying ? instance.pause() : instance.play());
+									isPlaying = !isPlaying;
+									updateUI();
+									break;
+								case "reset":
+									instance.reset();
+									if (dot) dot.dataset.state = "paused";
+									if (stateText) stateText.textContent = "reset";
+									setTimeout(updateUI, 600);
+									break;
+								case "destroy": {
+									instance.destroy();
+									isPlaying = false;
+									if (dot) dot.dataset.state = "paused";
+									if (stateText) stateText.textContent = "destroyed";
+									const btn = el as HTMLButtonElement;
+									btn.disabled = true;
+									btn.textContent = "Destroyed";
+									break;
+								}
+							}
+						});
+					});
 			});
 		});
-	});
 </script>

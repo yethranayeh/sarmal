@@ -3,24 +3,35 @@
 ---
 
 <div
-	data-scenario='dashboard'
-	class='absolute inset-0 p-6 flex flex-col justify-center opacity-0 transition-opacity duration-400 pointer-events-none [&.active]:opacity-100 [&.active]:pointer-events-auto'>
-	<div class='flex gap-3'>
-		<div class='flex-1 flex flex-col gap-2 p-3.5 rounded-xl bg-surface border border-border'>
-			<div data-dash-slot='0' class='w-13 h-13'></div>
-			<div class='font-mono text-[10px] tracking-[0.04em] text-muted'>Active Users</div>
+	data-scenario="dashboard"
+	class="absolute inset-0 p-6 flex flex-col justify-center opacity-0 transition-opacity duration-400 pointer-events-none [&.active]:opacity-100 [&.active]:pointer-events-auto"
+>
+	<div class="flex gap-3">
+		<div
+			class="flex-1 flex flex-col gap-2 p-3.5 rounded-xl bg-surface border border-border"
+		>
+			<div data-dash-slot="0" class="w-13 h-13"></div>
+			<div class="font-mono text-[10px] tracking-[0.04em] text-muted">
+				Active Users
+			</div>
 			<div
-				data-dash-val='0'
-				class='transition-colors duration-500 font-heading text-xl font-semibold leading-none text-muted tracking-[-0.02em]'>
+				data-dash-val="0"
+				class="transition-colors duration-500 font-heading text-xl font-semibold leading-none text-muted tracking-[-0.02em]"
+			>
 				—
 			</div>
 		</div>
-		<div class='flex-1 flex flex-col gap-2 p-3.5 rounded-xl bg-surface border border-border'>
-			<div data-dash-slot='1' class='w-13 h-13'></div>
-			<div class='font-mono text-[10px] tracking-[0.04em] text-muted'>Revenue</div>
+		<div
+			class="flex-1 flex flex-col gap-2 p-3.5 rounded-xl bg-surface border border-border"
+		>
+			<div data-dash-slot="1" class="w-13 h-13"></div>
+			<div class="font-mono text-[10px] tracking-[0.04em] text-muted">
+				Revenue
+			</div>
 			<div
-				data-dash-val='1'
-				class='transition-colors duration-500 font-heading text-xl font-semibold leading-none text-muted tracking-[-0.02em]'>
+				data-dash-val="1"
+				class="transition-colors duration-500 font-heading text-xl font-semibold leading-none text-muted tracking-[-0.02em]"
+			>
 				—
 			</div>
 		</div>
@@ -45,15 +56,15 @@
 			valSelector: "[data-dash-val='0']",
 			curve: curves.epitrochoid7,
 			color: "#38bdf8",
-			value: "12.4k"
+			value: "12.4k",
 		},
 		{
 			slotSelector: "[data-dash-slot='1']",
 			valSelector: "[data-dash-val='1']",
 			curve: curves.rose5,
 			color: "#4ade80",
-			value: "$84.2k"
-		}
+			value: "$84.2k",
+		},
 	];
 
 	function initDashboard(container: HTMLElement): DemoScenarioAPI {
@@ -86,7 +97,7 @@
 					skeletonColor: "rgba(255,255,255,0.05)",
 					headColor: item.color,
 					headRadius: 2,
-					trailLength: 80
+					trailLength: 80,
 				});
 			});
 
@@ -95,16 +106,20 @@
 					setTimeout(
 						() => {
 							if (dashGen !== gen) return;
-							const slot = container.querySelector(item.slotSelector) as HTMLElement;
-							const valEl = container.querySelector(item.valSelector) as HTMLElement;
+							const slot = container.querySelector(
+								item.slotSelector,
+							) as HTMLElement;
+							const valEl = container.querySelector(
+								item.valSelector,
+							) as HTMLElement;
 							dashSarmals[i] = stop(dashSarmals[i], slot);
 							valEl.textContent = item.value;
 							valEl.classList.remove("text-muted");
 							valEl.classList.add("text-foreground");
 							if (i === DASH_ITEMS.length - 1) onDone();
 						},
-						2200 + i * 450
-					)
+						2200 + i * 450,
+					),
 				);
 			});
 		}
@@ -113,7 +128,9 @@
 	}
 
 	// Register on DOM ready
-	const container = document.querySelector('[data-scenario="dashboard"]') as HTMLElement;
+	const container = document.querySelector(
+		'[data-scenario="dashboard"]',
+	) as HTMLElement;
 	if (container) {
 		window.demoRegistry = window.demoRegistry || {};
 		window.demoRegistry["dashboard"] = initDashboard(container);

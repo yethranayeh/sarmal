@@ -9,24 +9,29 @@ import { PACKAGE_SIZE } from "../variables";
 ---
 
 <BaseLayout
-	title='Sarmal'
+	title="Sarmal"
 	description={`Beautiful parametric loading indicators. ${PACKAGE_SIZE}KB, zero dependencies. A curve, a color, two lines of HTML.`}
-	ogTitle='Sarmal | Parametric loading indicators'>
-	<script slot='head' type="application/ld+json" set:html={JSON.stringify({
-		"@context": "https://schema.org",
-		"@type": "SoftwareApplication",
-		name: "Sarmal",
-		applicationCategory: "DeveloperApplication",
-		operatingSystem: "Any",
-		description: `Beautiful parametric loading indicators. ${PACKAGE_SIZE}KB, zero dependencies. A curve, a color, two lines of HTML.`,
-		url: "https://sarmal.art",
-		offers: {
-			"@type": "Offer",
-			price: "0",
-			priceCurrency: "USD",
-		},
-	})} />
-	<main class='w-full space-y-4 md:space-y-16'>
+	ogTitle="Sarmal | Parametric loading indicators"
+>
+	<script
+		slot="head"
+		type="application/ld+json"
+		set:html={JSON.stringify({
+			"@context": "https://schema.org",
+			"@type": "SoftwareApplication",
+			name: "Sarmal",
+			applicationCategory: "DeveloperApplication",
+			operatingSystem: "Any",
+			description: `Beautiful parametric loading indicators. ${PACKAGE_SIZE}KB, zero dependencies. A curve, a color, two lines of HTML.`,
+			url: "https://sarmal.art",
+			offers: {
+				"@type": "Offer",
+				price: "0",
+				priceCurrency: "USD",
+			},
+		})}
+	/>
+	<main class="w-full space-y-4 md:space-y-16">
 		<HeroSection />
 
 		<LiveDemoContainer />

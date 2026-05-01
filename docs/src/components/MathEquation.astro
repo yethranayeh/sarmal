@@ -11,12 +11,17 @@ const { equation } = Astro.props;
 const lines = equation.split("\\\\").map((l) => l.trim());
 
 const latex =
-	lines.length === 1 ? equation : `\\begin{aligned}${lines.map((l) => `${l} &`).join("\\\\")}\\end{aligned}`;
+	lines.length === 1
+		? equation
+		: `\\begin{aligned}${lines.map((l) => `${l} &`).join("\\\\")}\\end{aligned}`;
 
 const html = katex.renderToString(latex, {
 	displayMode: true,
-	throwOnError: false
+	throwOnError: false,
 });
 ---
 
-<div class='overflow-x-auto py-4 bg-surface-raised rounded-lg' set:html={html} />
+<div
+	class="overflow-x-auto py-4 bg-surface-raised rounded-lg"
+	set:html={html}
+/>

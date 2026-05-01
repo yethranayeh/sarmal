@@ -30,7 +30,7 @@
     "editor.defaultFormatter": "oxc.oxc-vscode"
   },
   "[astro]": {
-    "editor.defaultFormatter": "astro-build.astro-vscode"
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
   },
 
   "oxc.lint.enable": true,

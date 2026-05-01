@@ -11,52 +11,58 @@
 
 <!doctype html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Visual Test — DPR Sizing</title>
-    <style>
-      * { margin: 0; padding: 0; box-sizing: border-box; }
-      body {
-        background: #0e0e0e;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        min-height: 100vh;
-      }
-      #canvas-container {
-        /* Container has size, but canvas itself has NO CSS sizing */
-        width: 200px;
-        height: 200px;
-        border: 1px solid #333;
-      }
-      canvas {
-        display: block;
-        /* Intentionally NO width/height CSS here — 
+	<head>
+		<meta charset="UTF-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<title>Visual Test — DPR Sizing</title>
+		<style>
+			* {
+				margin: 0;
+				padding: 0;
+				box-sizing: border-box;
+			}
+			body {
+				background: #0e0e0e;
+				display: flex;
+				align-items: center;
+				justify-content: center;
+				min-height: 100vh;
+			}
+			#canvas-container {
+				/* Container has size, but canvas itself has NO CSS sizing */
+				width: 200px;
+				height: 200px;
+				border: 1px solid #333;
+			}
+			canvas {
+				display: block;
+				/* Intentionally NO width/height CSS here — 
            the bug would cause canvas to display at 400px when DPR=2 */
-      }
-    </style>
-  </head>
-  <body>
-    <div id="canvas-container">
-      <!-- Canvas with only initial attributes — applyDprSizing must set style.width/height -->
-      <canvas id="dpr-test-canvas" width="200" height="200"></canvas>
-    </div>
+			}
+		</style>
+	</head>
+	<body>
+		<div id="canvas-container">
+			<!-- Canvas with only initial attributes — applyDprSizing must set style.width/height -->
+			<canvas id="dpr-test-canvas" width="200" height="200"></canvas>
+		</div>
 
-    <script>
-      import { createSarmal, curves } from '@sarmal/core';
+		<script>
+			import { createSarmal, curves } from "@sarmal/core";
 
-      const canvas = document.getElementById('dpr-test-canvas') as HTMLCanvasElement;
-      createSarmal(canvas, curves.astroid, {
-        autoStart: false,   // never starts the RAF loop
-        initialT: Math.PI,  // seek(π) is called before renderFrame(0)
-        trailColor: '#ffffff',
-        skeletonColor: '#888888',
-        headColor: '#ffffff',
-        headRadius: 4,
-        trailLength: 120,
-      });
-      // No play(), no RAF, no pause needed — one deterministic frame already drawn
-    </script>
-  </body>
+			const canvas = document.getElementById(
+				"dpr-test-canvas",
+			) as HTMLCanvasElement;
+			createSarmal(canvas, curves.astroid, {
+				autoStart: false, // never starts the RAF loop
+				initialT: Math.PI, // seek(π) is called before renderFrame(0)
+				trailColor: "#ffffff",
+				skeletonColor: "#888888",
+				headColor: "#ffffff",
+				headRadius: 4,
+				trailLength: 120,
+			});
+			// No play(), no RAF, no pause needed — one deterministic frame already drawn
+		</script>
+	</body>
 </html>

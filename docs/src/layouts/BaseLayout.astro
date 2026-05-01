@@ -10,87 +10,87 @@ const SITE_URL = "https://sarmal.art";
 const DEFAULT_OG_IMAGE = `${SITE_URL}/og-image.png`;
 
 interface Props {
-  title: string;
-  description: string;
-  ogTitle?: string;
-  ogDescription?: string;
-  ogImage?: string;
-  ogImageAlt?: string;
-  ogLocale?: string;
-  robots?: string;
-  canonical?: string;
+	title: string;
+	description: string;
+	ogTitle?: string;
+	ogDescription?: string;
+	ogImage?: string;
+	ogImageAlt?: string;
+	ogLocale?: string;
+	robots?: string;
+	canonical?: string;
 }
 
 const {
-  title,
-  description,
-  ogTitle = title,
-  ogDescription = description,
-  ogImage = DEFAULT_OG_IMAGE,
-  ogImageAlt = "Sarmal - Parametric loading spinner",
-  ogLocale = "en_US",
-  robots = "index, follow",
-  canonical,
+	title,
+	description,
+	ogTitle = title,
+	ogDescription = description,
+	ogImage = DEFAULT_OG_IMAGE,
+	ogImageAlt = "Sarmal - Parametric loading spinner",
+	ogLocale = "en_US",
+	robots = "index, follow",
+	canonical,
 } = Astro.props;
 
 const canonicalUrl = canonical ?? new URL(Astro.url.pathname, SITE_URL).href;
 ---
 
-<html lang='en'>
-  <head>
-    <meta charset='utf-8' />
-    <link rel='icon' type='image/svg+xml' href='/favicon.svg' />
-    <meta name='viewport' content='width=device-width' />
-    <meta name='generator' content={Astro.generator} />
+<html lang="en">
+	<head>
+		<meta charset="utf-8" />
+		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+		<meta name="viewport" content="width=device-width" />
+		<meta name="generator" content={Astro.generator} />
 
-    <title>{title}</title>
-    <meta name='description' content={description} />
-    <link rel='canonical' href={canonicalUrl} />
-    <meta name='robots' content={robots} />
+		<title>{title}</title>
+		<meta name="description" content={description} />
+		<link rel="canonical" href={canonicalUrl} />
+		<meta name="robots" content={robots} />
 
-    <meta property='og:type' content='website' />
-    <meta property='og:url' content={canonicalUrl} />
-    <meta property='og:title' content={ogTitle} />
-    <meta property='og:description' content={ogDescription} />
-    <meta property='og:image' content={ogImage} />
-    <meta property='og:image:width' content='1200' />
-    <meta property='og:image:height' content='630' />
-    <meta property='og:image:alt' content={ogImageAlt} />
-    <meta property='og:locale' content={ogLocale} />
-    <meta property='og:site_name' content={SITE_NAME} />
+		<meta property="og:type" content="website" />
+		<meta property="og:url" content={canonicalUrl} />
+		<meta property="og:title" content={ogTitle} />
+		<meta property="og:description" content={ogDescription} />
+		<meta property="og:image" content={ogImage} />
+		<meta property="og:image:width" content="1200" />
+		<meta property="og:image:height" content="630" />
+		<meta property="og:image:alt" content={ogImageAlt} />
+		<meta property="og:locale" content={ogLocale} />
+		<meta property="og:site_name" content={SITE_NAME} />
 
-    <meta name='twitter:card' content='summary_large_image' />
-    <meta name='twitter:title' content={ogTitle} />
-    <meta name='twitter:description' content={ogDescription} />
-    <meta name='twitter:image' content={ogImage} />
-    <meta name='twitter:image:alt' content={ogImageAlt} />
+		<meta name="twitter:card" content="summary_large_image" />
+		<meta name="twitter:title" content={ogTitle} />
+		<meta name="twitter:description" content={ogDescription} />
+		<meta name="twitter:image" content={ogImage} />
+		<meta name="twitter:image:alt" content={ogImageAlt} />
 
-    <Font cssVariable='--font-heading' preload />
+		<Font cssVariable="--font-heading" preload />
 
-    <slot name='head' />
+		<slot name="head" />
 
-    <script
-      type='application/ld+json'
-      set:html={JSON.stringify({
-        "@context": "https://schema.org",
-        "@type": "WebSite",
-        name: SITE_NAME,
-        url: SITE_URL,
-        description: description,
-      })}
-    />
-  </head>
-  <body class='min-h-screen flex flex-col'>
-    <slot name='navbar'>
-      <Navbar>
-        <NavLinks slot='nav' />
-      </Navbar>
-    </slot>
+		<script
+			type="application/ld+json"
+			set:html={JSON.stringify({
+				"@context": "https://schema.org",
+				"@type": "WebSite",
+				name: SITE_NAME,
+				url: SITE_URL,
+				description: description,
+			})}
+		/>
+	</head>
+	<body class="min-h-screen flex flex-col">
+		<slot name="navbar">
+			<Navbar>
+				<NavLinks slot="nav" />
+			</Navbar>
+		</slot>
 
-    <slot />
+		<slot />
 
-    <slot name='footer'>
-      <Footer />
-    </slot>
-  </body>
+		<slot name="footer">
+			<Footer />
+		</slot>
+	</body>
 </html>

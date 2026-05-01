@@ -28,47 +28,58 @@ if (!metadata || !curve) {
 const trailColor = CURVE_DOCS[curveId]?.color ?? "#60a5fa";
 
 const period =
-	typeof curve.period === "number" ? (curve.period === Math.PI * 2 ? "2π" : curve.period.toFixed(2)) : "2π";
+	typeof curve.period === "number"
+		? curve.period === Math.PI * 2
+			? "2π"
+			: curve.period.toFixed(2)
+		: "2π";
 
 const codeSnippet = `<canvas data-sarmal="${curveId}"></canvas>`;
 ---
 
 <Dialog id={`${curveId}-modal`} data-trail-color={trailColor}>
-	<DialogShowcase slot='showcase' canvasId={`${curveId}-modal-canvas`}>
+	<DialogShowcase slot="showcase" canvasId={`${curveId}-modal-canvas`}>
 		<div
-			slot='top-left'
-			class='absolute top-4 left-4 font-mono text-[9px] tracking-widest uppercase text-muted/60 leading-relaxed pointer-events-none'>
-			<span class='block'>{metadata.name}</span>
+			slot="top-left"
+			class="absolute top-4 left-4 font-mono text-[9px] tracking-widest uppercase text-muted/60 leading-relaxed pointer-events-none"
+		>
+			<span class="block">{metadata.name}</span>
 		</div>
 	</DialogShowcase>
 
-	<div slot='details' class='flex-1 flex flex-col p-6 font-mono text-[11px]'>
+	<div slot="details" class="flex-1 flex flex-col p-6 font-mono text-[11px]">
 		<DialogInfoGrid
 			items={[
 				{ label: "Name", value: metadata.name },
 				{ label: "Family", value: metadata.family },
-				{ label: "Period", value: period }
+				{ label: "Period", value: period },
 			]}
 		/>
 
-		<hr class='my-4 w-full border-t-px border-dotted text-muted' />
+		<hr class="my-4 w-full border-t-px border-dotted text-muted" />
 
-		<div class='mb-4'>
-			<div class='text-muted/50 uppercase tracking-wider text-[9px] mb-2'>Equation</div>
-			<div class='text-foreground/90 font-mono text-sm'>{metadata.equation}</div>
+		<div class="mb-4">
+			<div class="text-muted/50 uppercase tracking-wider text-[9px] mb-2">
+				Equation
+			</div>
+			<div class="text-foreground/90 font-mono text-sm">
+				{metadata.equation}
+			</div>
 		</div>
 
-		<hr class='my-4 w-full border-t-px border-dotted text-muted' />
+		<hr class="my-4 w-full border-t-px border-dotted text-muted" />
 
-		<div class='mb-4'>
-			<div class='flex items-center justify-between mb-2'>
-				<span class='text-muted/50 uppercase tracking-wider text-[9px]'>Code</span>
-				<CopyButton code={codeSnippet} variant='ghost' />
+		<div class="mb-4">
+			<div class="flex items-center justify-between mb-2">
+				<span class="text-muted/50 uppercase tracking-wider text-[9px]"
+					>Code</span
+				>
+				<CopyButton code={codeSnippet} variant="ghost" />
 			</div>
-			<div class='bg-surface border border-border rounded-md'>
+			<div class="bg-surface border border-border rounded-md">
 				<Code
-					class='p-2 rounded-md'
-					lang='html'
+					class="p-2 rounded-md"
+					lang="html"
 					theme={undefined}
 					themes={codeThemes}
 					defaultColor={false}
@@ -77,16 +88,25 @@ const codeSnippet = `<canvas data-sarmal="${curveId}"></canvas>`;
 			</div>
 		</div>
 
-		<div class='flex-1'>
-			<div class='text-muted/50 uppercase tracking-wider text-[9px] mb-2'>Description</div>
-			<div class='text-foreground/70 leading-relaxed'>{metadata.description}</div>
+		<div class="flex-1">
+			<div class="text-muted/50 uppercase tracking-wider text-[9px] mb-2">
+				Description
+			</div>
+			<div class="text-foreground/70 leading-relaxed">
+				{metadata.description}
+			</div>
 		</div>
 
-		<div class='border-t border-border/60 pt-3 mt-3 flex items-center justify-between'>
-			<span class='text-muted/50 uppercase tracking-widest text-[9px]'>{metadata.family}</span>
+		<div
+			class="border-t border-border/60 pt-3 mt-3 flex items-center justify-between"
+		>
+			<span class="text-muted/50 uppercase tracking-widest text-[9px]"
+				>{metadata.family}</span
+			>
 			<button
 				data-curve-close-btn
-				class='font-mono text-[9px] tracking-widest uppercase text-muted/50 hover:text-foreground transition-colors cursor-pointer'>
+				class="font-mono text-[9px] tracking-widest uppercase text-muted/50 hover:text-foreground transition-colors cursor-pointer"
+			>
 				Close
 			</button>
 		</div>
@@ -120,7 +140,7 @@ const codeSnippet = `<canvas data-sarmal="${curveId}"></canvas>`;
 					trailColor,
 					skeletonColor: "#1b1c1a",
 					headColor: trailColor,
-					trailLength: 60
+					trailLength: 60,
 				});
 				modal.initialized = true;
 			}
@@ -142,27 +162,35 @@ const codeSnippet = `<canvas data-sarmal="${curveId}"></canvas>`;
 		});
 	}
 
-	document.querySelectorAll<HTMLDialogElement>("[id$=-modal]").forEach((dialog) => {
-		// Only handle curve detail modals (e.g., "rose3-modal", "deltoid-modal")
-		// Skip morph modals ("morph-*-modal") and artemis2 modal
-		if (dialog.id.startsWith("morph-") || dialog.id.includes("artemis2")) {
-			return;
-		}
+	document
+		.querySelectorAll<HTMLDialogElement>("[id$=-modal]")
+		.forEach((dialog) => {
+			// Only handle curve detail modals (e.g., "rose3-modal", "deltoid-modal")
+			// Skip morph modals ("morph-*-modal") and artemis2 modal
+			if (dialog.id.startsWith("morph-") || dialog.id.includes("artemis2")) {
+				return;
+			}
 
-		const curveId = dialog.id.replace("-modal", "");
-		const canvas = document.getElementById(`${curveId}-modal-canvas`) as HTMLCanvasElement;
-		const openBtn = document.getElementById(`${curveId}-details`) as HTMLButtonElement | null;
-		const closeBtn = dialog.querySelector("[data-curve-close-btn]") as HTMLButtonElement;
+			const curveId = dialog.id.replace("-modal", "");
+			const canvas = document.getElementById(
+				`${curveId}-modal-canvas`,
+			) as HTMLCanvasElement;
+			const openBtn = document.getElementById(
+				`${curveId}-details`,
+			) as HTMLButtonElement | null;
+			const closeBtn = dialog.querySelector(
+				"[data-curve-close-btn]",
+			) as HTMLButtonElement;
 
-		initCurveModal({
-			curveId,
-			dialog,
-			canvas,
-			openBtn,
-			closeBtn,
-			sarmal: null,
-			initialized: false,
-			trailColor: dialog.dataset.trailColor ?? "#60a5fa",
+			initCurveModal({
+				curveId,
+				dialog,
+				canvas,
+				openBtn,
+				closeBtn,
+				sarmal: null,
+				initialized: false,
+				trailColor: dialog.dataset.trailColor ?? "#60a5fa",
+			});
 		});
-	});
 </script>

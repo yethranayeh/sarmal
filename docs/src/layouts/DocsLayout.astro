@@ -36,7 +36,7 @@ const currentPath = Astro.url.pathname;
 
 const topNavLinks = [
 	{ href: "/docs", label: "Docs", icon: BookText },
-	{ href: "/play", label: "Playground", icon: FlaskConical }
+	{ href: "/play", label: "Playground", icon: FlaskConical },
 ];
 ---
 
@@ -45,89 +45,112 @@ const topNavLinks = [
 	description={description}
 	ogTitle={ogTitle}
 	ogDescription={ogDescription}
-	ogImage={ogImage}>
-	<Navbar slot='navbar'>
-		<div slot='nav' class='hidden lg:block'>
+	ogImage={ogImage}
+>
+	<Navbar slot="navbar">
+		<div slot="nav" class="hidden lg:block">
 			<NavLinks />
 		</div>
 		<button
-			id='mobile-menu-btn'
-			class='lg:hidden flex items-center justify-center w-9 h-9 rounded-md hover:bg-surface transition-colors'
-			aria-label='Open navigation menu'
-			aria-expanded='false'
-			aria-controls='mobile-drawer'>
+			id="mobile-menu-btn"
+			class="lg:hidden flex items-center justify-center w-9 h-9 rounded-md hover:bg-surface transition-colors"
+			aria-label="Open navigation menu"
+			aria-expanded="false"
+			aria-controls="mobile-drawer"
+		>
 			<Menu size={20} />
 		</button>
 	</Navbar>
 
-	<div class='flex flex-1'>
+	<div class="flex flex-1">
 		<!-- Desktop sidebar -->
 		<aside
-			class='hidden lg:block sticky top-0 w-64 shrink-0 h-screen bg-surface border-r border-border'
-			aria-label='Documentation navigation'>
-			<nav class='p-4' aria-label='Documentation sections'>
+			class="hidden lg:block sticky top-0 w-64 shrink-0 h-screen bg-surface border-r border-border"
+			aria-label="Documentation navigation"
+		>
+			<nav class="p-4" aria-label="Documentation sections">
 				<DocNavLinks currentPath={currentPath} />
 			</nav>
 		</aside>
 
 		<!-- Mobile drawer wrapper: owns open/close state via data-open attribute -->
-		<div id='mobile-menu-wrapper' class='group' data-open='false'>
+		<div id="mobile-menu-wrapper" class="group" data-open="false">
+			<!-- Mobile drawer (slides in from the right) -->
+			<div
+				id="mobile-drawer"
+				class="lg:hidden fixed inset-y-0 right-0 z-50 w-72 bg-surface border-l border-border transform translate-x-full group-data-[open=true]:translate-x-0 transition-transform duration-300 ease-in-out flex flex-col"
+				aria-label="Navigation menu"
+			>
+				<!-- Drawer header -->
+				<div
+					class="flex items-center justify-between px-4 py-2 border-b border-border shrink-0 bg-surface-raised"
+				>
+					<h2>Menu</h2>
+					<button
+						id="mobile-menu-close"
+						class="flex items-center justify-center w-9 h-9 rounded-md hover:bg-surface transition-colors"
+						aria-label="Close navigation menu"
+					>
+						<X size={20} />
+					</button>
+				</div>
 
-		<!-- Mobile drawer (slides in from the right) -->
-		<div
-			id='mobile-drawer'
-			class='lg:hidden fixed inset-y-0 right-0 z-50 w-72 bg-surface border-l border-border transform translate-x-full group-data-[open=true]:translate-x-0 transition-transform duration-300 ease-in-out flex flex-col'
-			aria-label='Navigation menu'>
-			<!-- Drawer header -->
-			<div class='flex items-center justify-between px-4 py-2 border-b border-border shrink-0 bg-surface-raised'>
-				<h2>Menu</h2>
-				<button
-					id='mobile-menu-close'
-					class='flex items-center justify-center w-9 h-9 rounded-md hover:bg-surface transition-colors'
-					aria-label='Close navigation menu'>
-					<X size={20} />
-				</button>
-			</div>
+				<!-- Top nav links -->
+				<div class="px-4 py-3 border-b border-border shrink-0">
+					<nav class="flex flex-col gap-1">
+						{
+							topNavLinks.map((link) => {
+								const isLinkActive =
+									link.href === "/docs"
+										? currentPath.startsWith("/docs")
+										: currentPath.startsWith(link.href);
+								const Icon = link.icon;
+								return (
+									<a
+										href={link.href}
+										class:list={[
+											"inline-flex items-center gap-2 px-3 py-2 rounded-md font-mono text-xs tracking-wider uppercase transition-colors hover:bg-surface-raised hover:text-foreground",
+											isLinkActive ? "text-primary" : "text-muted",
+										]}
+									>
+										<Icon size={16} />
+										<span>{link.label}</span>
+									</a>
+								);
+							})
+						}
+					</nav>
+				</div>
 
-			<!-- Top nav links -->
-			<div class='px-4 py-3 border-b border-border shrink-0'>
-				<nav class='flex flex-col gap-1'>
-					{
-						topNavLinks.map((link) => {
-							const isLinkActive =
-								link.href === "/docs" ? currentPath.startsWith("/docs") : currentPath.startsWith(link.href);
-							const Icon = link.icon;
-							return (
-								<a
-									href={link.href}
-									class:list={[
-										"inline-flex items-center gap-2 px-3 py-2 rounded-md font-mono text-xs tracking-wider uppercase transition-colors hover:bg-surface-raised hover:text-foreground",
-										isLinkActive ? "text-primary" : "text-muted"
-									]}>
-									<Icon size={16} />
-									<span>{link.label}</span>
-								</a>
-							);
-						})
-					}
+				<!-- Sidebar doc links -->
+				<nav
+					class="flex-1 overflow-y-auto p-4"
+					aria-label="Documentation sections"
+				>
+					<p
+						class="px-3 pb-2 text-xs font-mono tracking-widest uppercase text-muted"
+					>
+						Documentation
+					</p>
+					<DocNavLinks currentPath={currentPath} />
 				</nav>
 			</div>
 
-			<!-- Sidebar doc links -->
-			<nav class='flex-1 overflow-y-auto p-4' aria-label='Documentation sections'>
-				<p class='px-3 pb-2 text-xs font-mono tracking-widest uppercase text-muted'>Documentation</p>
-				<DocNavLinks currentPath={currentPath} />
-			</nav>
+			<!-- Overlay -->
+			<div
+				id="sidebar-overlay"
+				class="fixed inset-0 bg-black/60 z-40 opacity-0 pointer-events-none group-data-[open=true]:opacity-100 group-data-[open=true]:pointer-events-auto transition-opacity duration-300 lg:hidden"
+				aria-hidden="true"
+			>
+			</div>
 		</div>
+		<!-- /mobile-menu-wrapper -->
 
-		<!-- Overlay -->
-		<div id='sidebar-overlay' class='fixed inset-0 bg-black/60 z-40 opacity-0 pointer-events-none group-data-[open=true]:opacity-100 group-data-[open=true]:pointer-events-auto transition-opacity duration-300 lg:hidden' aria-hidden='true'></div>
-
-		</div> <!-- /mobile-menu-wrapper -->
-
-		<main class='flex-1 min-w-0 p-4 md:p-8'>
-			<slot name='article-header' />
-			<article class='prose max-w-3xl mx-auto lg:mx-0 prose-headings:font-medium'>
+		<main class="flex-1 min-w-0 p-4 md:p-8">
+			<slot name="article-header" />
+			<article
+				class="prose max-w-3xl mx-auto lg:mx-0 prose-headings:font-medium"
+			>
 				<slot />
 			</article>
 		</main>

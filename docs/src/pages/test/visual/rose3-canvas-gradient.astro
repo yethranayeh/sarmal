@@ -10,48 +10,54 @@
 
 <!doctype html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Visual Test — Rose3 Canvas Gradient</title>
-    <style>
-      * { margin: 0; padding: 0; box-sizing: border-box; }
-      body {
-        background: #0e0e0e;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        min-height: 100vh;
-      }
-      #canvas-container {
-        width: 200px;
-        height: 200px;
-      }
-      canvas {
-        display: block;
-        width: 200px;
-        height: 200px;
-      }
-    </style>
-  </head>
-  <body>
-    <div id="canvas-container">
-      <canvas id="rose3-canvas-gradient" width="200" height="200"></canvas>
-    </div>
+	<head>
+		<meta charset="UTF-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<title>Visual Test — Rose3 Canvas Gradient</title>
+		<style>
+			* {
+				margin: 0;
+				padding: 0;
+				box-sizing: border-box;
+			}
+			body {
+				background: #0e0e0e;
+				display: flex;
+				align-items: center;
+				justify-content: center;
+				min-height: 100vh;
+			}
+			#canvas-container {
+				width: 200px;
+				height: 200px;
+			}
+			canvas {
+				display: block;
+				width: 200px;
+				height: 200px;
+			}
+		</style>
+	</head>
+	<body>
+		<div id="canvas-container">
+			<canvas id="rose3-canvas-gradient" width="200" height="200"></canvas>
+		</div>
 
-    <script>
-      import { createSarmal, curves } from '@sarmal/core';
+		<script>
+			import { createSarmal, curves } from "@sarmal/core";
 
-      const canvas = document.getElementById('rose3-canvas-gradient') as HTMLCanvasElement;
-      createSarmal(canvas, curves.rose3, {
-        autoStart: false,
-        initialT: Math.PI,
-        trailStyle: 'gradient-animated',
-        palette: 'bard',
-        skeletonColor: '#888888',
-        headRadius: 4,
-        trailLength: 120,
-      });
-    </script>
-  </body>
+			const canvas = document.getElementById(
+				"rose3-canvas-gradient",
+			) as HTMLCanvasElement;
+			createSarmal(canvas, curves.rose3, {
+				autoStart: false,
+				initialT: Math.PI,
+				trailStyle: "gradient-animated",
+				palette: "bard",
+				skeletonColor: "#888888",
+				headRadius: 4,
+				trailLength: 120,
+			});
+		</script>
+	</body>
 </html>

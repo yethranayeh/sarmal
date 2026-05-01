@@ -28,34 +28,40 @@ const morphSnippet = `sarmal.morphTo(curves.${toId});`;
 ---
 
 <Dialog id={`morph-${fromId}-${toId}-modal`}>
-	<DialogShowcase slot='showcase' canvasId={`morph-${fromId}-${toId}-modal-canvas`}>
+	<DialogShowcase
+		slot="showcase"
+		canvasId={`morph-${fromId}-${toId}-modal-canvas`}
+	>
 		<div
-			slot='top-left'
-			class='absolute top-4 left-4 font-mono text-[9px] tracking-widest uppercase text-muted/60 leading-relaxed pointer-events-none'>
-			<span class='block'>{fromCurve.name} → {toCurve.name}</span>
+			slot="top-left"
+			class="absolute top-4 left-4 font-mono text-[9px] tracking-widest uppercase text-muted/60 leading-relaxed pointer-events-none"
+		>
+			<span class="block">{fromCurve.name} → {toCurve.name}</span>
 		</div>
 	</DialogShowcase>
 
-	<div slot='details' class='flex-1 flex flex-col p-6 font-mono text-[11px]'>
+	<div slot="details" class="flex-1 flex flex-col p-6 font-mono text-[11px]">
 		<DialogInfoGrid
 			items={[
 				{ label: "From", value: fromCurve.name },
 				{ label: "To", value: toCurve.name },
-				{ label: "Type", value: "Morph" }
+				{ label: "Type", value: "Morph" },
 			]}
 		/>
 
-		<hr class='my-4 w-full border-t-px border-dotted text-muted' />
+		<hr class="my-4 w-full border-t-px border-dotted text-muted" />
 
-		<div class='mb-4'>
-			<div class='flex items-center justify-between mb-2'>
-				<span class='text-muted/50 uppercase tracking-wider text-[9px]'>Code</span>
-				<CopyButton code={morphSnippet} variant='ghost' />
+		<div class="mb-4">
+			<div class="flex items-center justify-between mb-2">
+				<span class="text-muted/50 uppercase tracking-wider text-[9px]"
+					>Code</span
+				>
+				<CopyButton code={morphSnippet} variant="ghost" />
 			</div>
-			<div class='bg-surface border border-border rounded-md'>
+			<div class="bg-surface border border-border rounded-md">
 				<Code
-					class='p-2 rounded-md'
-					lang='javascript'
+					class="p-2 rounded-md"
+					lang="javascript"
 					theme={undefined}
 					themes={codeThemes}
 					defaultColor={false}
@@ -64,20 +70,29 @@ const morphSnippet = `sarmal.morphTo(curves.${toId});`;
 			</div>
 		</div>
 
-		<div class='flex-1'>
-			<div class='text-muted/50 uppercase tracking-wider text-[9px] mb-2'>Description</div>
-			<div class='text-foreground/70 leading-relaxed'>
-				Watch the curve morph from <span class='text-primary'>{fromCurve.name}</span> to{" "}
-				<span class='text-primary'>{toCurve.name}</span>. The animation smoothly interpolates between the two curve
-				definitions.
+		<div class="flex-1">
+			<div class="text-muted/50 uppercase tracking-wider text-[9px] mb-2">
+				Description
+			</div>
+			<div class="text-foreground/70 leading-relaxed">
+				Watch the curve morph from <span class="text-primary"
+					>{fromCurve.name}</span
+				> to{" "}
+				<span class="text-primary">{toCurve.name}</span>. The animation smoothly
+				interpolates between the two curve definitions.
 			</div>
 		</div>
 
-		<div class='border-t border-border/60 pt-3 mt-3 flex items-center justify-between'>
-			<span class='text-muted/50 uppercase tracking-widest text-[9px]'>Morph</span>
+		<div
+			class="border-t border-border/60 pt-3 mt-3 flex items-center justify-between"
+		>
+			<span class="text-muted/50 uppercase tracking-widest text-[9px]"
+				>Morph</span
+			>
 			<button
 				data-morph-close-btn
-				class='font-mono text-[9px] tracking-widest uppercase text-muted/50 hover:text-foreground transition-colors cursor-pointer'>
+				class="font-mono text-[9px] tracking-widest uppercase text-muted/50 hover:text-foreground transition-colors cursor-pointer"
+			>
 				Close
 			</button>
 		</div>
@@ -106,7 +121,7 @@ const morphSnippet = `sarmal.morphTo(curves.${toId});`;
 		epitrochoid7: "#a78bfa",
 		lissajous32: "#fb923c",
 		rose5: "#f472b6",
-		lame: "#a78bfa"
+		lame: "#a78bfa",
 	};
 
 	const MORPH_DURATION = 800;
@@ -123,7 +138,7 @@ const morphSnippet = `sarmal.morphTo(curves.${toId});`;
 					trailColor: colorMap[fromId] || "#60a5fa",
 					skeletonColor: colorMap[fromId] || "#60a5fa",
 					headColor: colorMap[fromId] || "#60a5fa",
-					trailLength: 60
+					trailLength: 60,
 				});
 				modal.initialized = true;
 			}
@@ -135,9 +150,13 @@ const morphSnippet = `sarmal.morphTo(curves.${toId});`;
 
 			async function runMorphLoop() {
 				while (dialog.open) {
-					await modal.sarmal!.morphTo(curves[toId as CurveName], { duration: MORPH_DURATION });
+					await modal.sarmal!.morphTo(curves[toId as CurveName], {
+						duration: MORPH_DURATION,
+					});
 					await new Promise((resolve) => setTimeout(resolve, HOLD_DURATION));
-					await modal.sarmal!.morphTo(curves[fromId as CurveName], { duration: MORPH_DURATION });
+					await modal.sarmal!.morphTo(curves[fromId as CurveName], {
+						duration: MORPH_DURATION,
+					});
 					await new Promise((resolve) => setTimeout(resolve, HOLD_DURATION));
 				}
 			}
@@ -158,25 +177,33 @@ const morphSnippet = `sarmal.morphTo(curves.${toId});`;
 		});
 	}
 
-	document.querySelectorAll<HTMLDialogElement>("[id^='morph-'][id$='-modal']").forEach((dialog) => {
-		const idMatch = dialog.id.match(/^morph-(.+)-(.+)-modal$/);
-		if (!idMatch) return;
+	document
+		.querySelectorAll<HTMLDialogElement>("[id^='morph-'][id$='-modal']")
+		.forEach((dialog) => {
+			const idMatch = dialog.id.match(/^morph-(.+)-(.+)-modal$/);
+			if (!idMatch) return;
 
-		const fromId = idMatch[1]!;
-		const toId = idMatch[2]!;
-		const canvas = document.getElementById(`morph-${fromId}-${toId}-modal-canvas`) as HTMLCanvasElement;
-		const openBtn = document.getElementById(`morph-${fromId}-${toId}-details`) as HTMLButtonElement | null;
-		const closeBtn = dialog.querySelector("[data-morph-close-btn]") as HTMLButtonElement;
+			const fromId = idMatch[1]!;
+			const toId = idMatch[2]!;
+			const canvas = document.getElementById(
+				`morph-${fromId}-${toId}-modal-canvas`,
+			) as HTMLCanvasElement;
+			const openBtn = document.getElementById(
+				`morph-${fromId}-${toId}-details`,
+			) as HTMLButtonElement | null;
+			const closeBtn = dialog.querySelector(
+				"[data-morph-close-btn]",
+			) as HTMLButtonElement;
 
-		initMorphModal({
-			fromId,
-			toId,
-			dialog,
-			canvas,
-			openBtn,
-			closeBtn,
-			sarmal: null,
-			initialized: false
+			initMorphModal({
+				fromId,
+				toId,
+				dialog,
+				canvas,
+				openBtn,
+				closeBtn,
+				sarmal: null,
+				initialized: false,
+			});
 		});
-	});
 </script>

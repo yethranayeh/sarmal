@@ -2,41 +2,80 @@
 const id = `tpos-${Math.random().toString(36).slice(2, 8)}`;
 ---
 
-<div id={id} data-t-pos-demo class='my-6 mx-auto max-w-sm rounded-lg overflow-hidden border border-border'>
-	<div class='t-pos-view relative' style='height:220px;background:var(--color-surface);'>
-		<div class='t-pos-coords absolute top-3 left-3.5 flex flex-col gap-0.5 pointer-events-none select-none'>
-			<span class='text-[0.58rem] font-mono text-muted leading-none'>P(t) =</span>
-			<span class='text-[0.7rem] font-mono text-primary leading-none'>
+<div
+	id={id}
+	data-t-pos-demo
+	class="my-6 mx-auto max-w-sm rounded-lg overflow-hidden border border-border"
+>
+	<div
+		class="t-pos-view relative"
+		style="height:220px;background:var(--color-surface);"
+	>
+		<div
+			class="t-pos-coords absolute top-3 left-3.5 flex flex-col gap-0.5 pointer-events-none select-none"
+		>
+			<span class="text-[0.58rem] font-mono text-muted leading-none"
+				>P(t) =</span
+			>
+			<span class="text-[0.7rem] font-mono text-primary leading-none">
 				(<span data-coord-x>1.000</span>, <span data-coord-y>0.000</span>)
 			</span>
 		</div>
 	</div>
 
-	<div class='grid grid-cols-4 border-t border-border bg-surface-raised'>
+	<div class="grid grid-cols-4 border-t border-border bg-surface-raised">
 		<button
-			class='t-pos-btn group flex flex-col items-center justify-center gap-0.75 py-2 px-1 cursor-pointer bg-transparent border-0 border-r border-border transition-[background] duration-120 last:border-r-0 [&:hover:not([data-active])]:bg-surface data-active:bg-primary'
-			data-t='0'
-			data-active>
-			<span class='font-mono text-[0.68rem] text-foreground leading-none group-data-active:text-white'>t = 0</span>
-			<span class='font-mono text-[0.55rem] text-muted leading-none group-data-active:text-white/65'>start</span>
+			class="t-pos-btn group flex flex-col items-center justify-center gap-0.75 py-2 px-1 cursor-pointer bg-transparent border-0 border-r border-border transition-[background] duration-120 last:border-r-0 [&:hover:not([data-active])]:bg-surface data-active:bg-primary"
+			data-t="0"
+			data-active
+		>
+			<span
+				class="font-mono text-[0.68rem] text-foreground leading-none group-data-active:text-white"
+				>t = 0</span
+			>
+			<span
+				class="font-mono text-[0.55rem] text-muted leading-none group-data-active:text-white/65"
+				>start</span
+			>
 		</button>
 		<button
-			class='t-pos-btn group flex flex-col items-center justify-center gap-0.75 py-2 px-1 cursor-pointer bg-transparent border-0 border-r border-border transition-[background] duration-120 last:border-r-0 [&:hover:not([data-active])]:bg-surface data-active:bg-primary'
-			data-t={String(Math.PI / 2)}>
-			<span class='font-mono text-[0.68rem] text-foreground leading-none group-data-active:text-white'>t = π/2</span>
-			<span class='font-mono text-[0.55rem] text-muted leading-none group-data-active:text-white/65'>¼ period</span>
+			class="t-pos-btn group flex flex-col items-center justify-center gap-0.75 py-2 px-1 cursor-pointer bg-transparent border-0 border-r border-border transition-[background] duration-120 last:border-r-0 [&:hover:not([data-active])]:bg-surface data-active:bg-primary"
+			data-t={String(Math.PI / 2)}
+		>
+			<span
+				class="font-mono text-[0.68rem] text-foreground leading-none group-data-active:text-white"
+				>t = π/2</span
+			>
+			<span
+				class="font-mono text-[0.55rem] text-muted leading-none group-data-active:text-white/65"
+				>¼ period</span
+			>
 		</button>
 		<button
-			class='t-pos-btn group flex flex-col items-center justify-center gap-0.75 py-2 px-1 cursor-pointer bg-transparent border-0 border-r border-border transition-[background] duration-120 last:border-r-0 [&:hover:not([data-active])]:bg-surface data-active:bg-primary'
-			data-t={String(Math.PI)}>
-			<span class='font-mono text-[0.68rem] text-foreground leading-none group-data-active:text-white'>t = π</span>
-			<span class='font-mono text-[0.55rem] text-muted leading-none group-data-active:text-white/65'>½ period</span>
+			class="t-pos-btn group flex flex-col items-center justify-center gap-0.75 py-2 px-1 cursor-pointer bg-transparent border-0 border-r border-border transition-[background] duration-120 last:border-r-0 [&:hover:not([data-active])]:bg-surface data-active:bg-primary"
+			data-t={String(Math.PI)}
+		>
+			<span
+				class="font-mono text-[0.68rem] text-foreground leading-none group-data-active:text-white"
+				>t = π</span
+			>
+			<span
+				class="font-mono text-[0.55rem] text-muted leading-none group-data-active:text-white/65"
+				>½ period</span
+			>
 		</button>
 		<button
-			class='t-pos-btn group flex flex-col items-center justify-center gap-0.75 py-2 px-1 cursor-pointer bg-transparent border-0 border-r border-border transition-[background] duration-120 last:border-r-0 [&:hover:not([data-active])]:bg-surface data-active:bg-primary'
-			data-t={String((3 * Math.PI) / 2)}>
-			<span class='font-mono text-[0.68rem] text-foreground leading-none group-data-active:text-white'>t = 3π/2</span>
-			<span class='font-mono text-[0.55rem] text-muted leading-none group-data-active:text-white/65'>¾ period</span>
+			class="t-pos-btn group flex flex-col items-center justify-center gap-0.75 py-2 px-1 cursor-pointer bg-transparent border-0 border-r border-border transition-[background] duration-120 last:border-r-0 [&:hover:not([data-active])]:bg-surface data-active:bg-primary"
+			data-t={String((3 * Math.PI) / 2)}
+		>
+			<span
+				class="font-mono text-[0.68rem] text-foreground leading-none group-data-active:text-white"
+				>t = 3π/2</span
+			>
+			<span
+				class="font-mono text-[0.55rem] text-muted leading-none group-data-active:text-white/65"
+				>¾ period</span
+			>
 		</button>
 	</div>
 </div>
@@ -44,43 +83,45 @@ const id = `tpos-${Math.random().toString(36).slice(2, 8)}`;
 <script>
 	import { createSarmalSVG, curves, palettes } from "@sarmal/core";
 
-	document.querySelectorAll<HTMLElement>("[data-t-pos-demo]").forEach((wrapper) => {
-		const view = wrapper.querySelector<HTMLElement>(".t-pos-view")!;
-		const buttons = wrapper.querySelectorAll<HTMLButtonElement>(".t-pos-btn");
-		const coordX = wrapper.querySelector<HTMLElement>("[data-coord-x]")!;
-		const coordY = wrapper.querySelector<HTMLElement>("[data-coord-y]")!;
+	document
+		.querySelectorAll<HTMLElement>("[data-t-pos-demo]")
+		.forEach((wrapper) => {
+			const view = wrapper.querySelector<HTMLElement>(".t-pos-view")!;
+			const buttons = wrapper.querySelectorAll<HTMLButtonElement>(".t-pos-btn");
+			const coordX = wrapper.querySelector<HTMLElement>("[data-coord-x]")!;
+			const coordY = wrapper.querySelector<HTMLElement>("[data-coord-y]")!;
 
-		const instance = createSarmalSVG(view, curves.astroid, {
-			autoStart: false,
-			initialT: 0,
-			trailColor: palettes.fire,
-			trailStyle: "gradient-static",
-			skeletonColor: "#c8c4be",
-			headRadius: 4
-		});
+			const instance = createSarmalSVG(view, curves.astroid, {
+				autoStart: false,
+				initialT: 0,
+				trailColor: palettes.fire,
+				trailStyle: "gradient-static",
+				skeletonColor: "#c8c4be",
+				headRadius: 4,
+			});
 
-		function updateCoords(t: number) {
-			const pt = curves.astroid.fn(t, 0, {});
-			coordX.textContent = pt.x.toFixed(3);
-			coordY.textContent = pt.y.toFixed(3);
-		}
+			function updateCoords(t: number) {
+				const pt = curves.astroid.fn(t, 0, {});
+				coordX.textContent = pt.x.toFixed(3);
+				coordY.textContent = pt.y.toFixed(3);
+			}
 
-		function renderOnce() {
-			instance.play();
-			requestAnimationFrame(() => instance.pause());
-		}
+			function renderOnce() {
+				instance.play();
+				requestAnimationFrame(() => instance.pause());
+			}
 
-		buttons.forEach((btn) => {
-			btn.addEventListener("click", () => {
-				const t = parseFloat(btn.dataset.t!);
+			buttons.forEach((btn) => {
+				btn.addEventListener("click", () => {
+					const t = parseFloat(btn.dataset.t!);
 
-				buttons.forEach((b) => delete b.dataset.active);
-				btn.dataset.active = "";
+					buttons.forEach((b) => delete b.dataset.active);
+					btn.dataset.active = "";
 
-				instance.seek(t);
-				renderOnce();
-				updateCoords(t);
+					instance.seek(t);
+					renderOnce();
+					updateCoords(t);
+				});
 			});
 		});
-	});
 </script>

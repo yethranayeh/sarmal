@@ -4,52 +4,69 @@ const canvasId = `${id}-canvas`;
 const svgId = `${id}-svg`;
 ---
 
-<div class='sarmal-compare not-prose my-8' data-canvas-id={canvasId} data-svg-id={svgId}>
-	<div class='flex flex-col md:flex-row gap-6 md:gap-30 justify-center items-center md:items-end'>
-		<div class='flex flex-col items-center gap-3'>
+<div
+	class="sarmal-compare not-prose my-8"
+	data-canvas-id={canvasId}
+	data-svg-id={svgId}
+>
+	<div
+		class="flex flex-col md:flex-row gap-6 md:gap-30 justify-center items-center md:items-end"
+	>
+		<div class="flex flex-col items-center gap-3">
 			<canvas id={canvasId} width={200} height={200}></canvas>
-			<span class='font-mono text-[10px] tracking-[0.25em] uppercase text-muted'>Canvas</span>
+			<span class="font-mono text-[10px] tracking-[0.25em] uppercase text-muted"
+				>Canvas</span
+			>
 		</div>
-		<div class='flex flex-col items-center gap-3'>
-			<div id={svgId} style='width: 200px; height: 200px;'></div>
-			<span class='font-mono text-[10px] tracking-[0.25em] uppercase text-muted'>SVG</span>
+		<div class="flex flex-col items-center gap-3">
+			<div id={svgId} style="width: 200px; height: 200px;"></div>
+			<span class="font-mono text-[10px] tracking-[0.25em] uppercase text-muted"
+				>SVG</span
+			>
 		</div>
 	</div>
 </div>
 
 <script>
-	import { createSarmal, createSarmalSVG, curves, palettes } from "@sarmal/core";
+	import {
+		createSarmal,
+		createSarmalSVG,
+		curves,
+		palettes,
+	} from "@sarmal/core";
 
-	document.querySelectorAll<HTMLElement>(".sarmal-compare").forEach((wrapper) => {
-		const canvasId = wrapper.dataset.canvasId!;
-		const svgId = wrapper.dataset.svgId!;
+	document
+		.querySelectorAll<HTMLElement>(".sarmal-compare")
+		.forEach((wrapper) => {
+			const canvasId = wrapper.dataset.canvasId!;
+			const svgId = wrapper.dataset.svgId!;
 
-		const canvas = document.getElementById(canvasId) as HTMLCanvasElement;
-		const svgContainer = document.getElementById(svgId) as HTMLElement;
+			const canvas = document.getElementById(canvasId) as HTMLCanvasElement;
+			const svgContainer = document.getElementById(svgId) as HTMLElement;
 
-		if (!canvas || !svgContainer) return;
+			if (!canvas || !svgContainer) return;
 
-		const opts = {
-			trailStyle: "gradient-animated" as const,
-			trailColor: palettes.bard,
-			skeletonColor: "#d4cfc8",
-			trailLength: 120
-		};
+			const opts = {
+				trailStyle: "gradient-animated" as const,
+				trailColor: palettes.bard,
+				skeletonColor: "#d4cfc8",
+				trailLength: 120,
+			};
 
-		const canvasSarmal = createSarmal(canvas, curves.lissajous43, opts);
-		const svgSarmal = createSarmalSVG(svgContainer, curves.lissajous43, opts);
+			const canvasSarmal = createSarmal(canvas, curves.lissajous43, opts);
+			const svgSarmal = createSarmalSVG(svgContainer, curves.lissajous43, opts);
 
-		canvas.addEventListener("mouseenter", () => {
-			canvasSarmal.setSpeedOver(0.3, 400).catch(() => {});
+			canvas.addEventListener("mouseenter", () => {
+				canvasSarmal.setSpeedOver(0.3, 400).catch(() => {});
+			});
+			canvas.addEventListener("mouseleave", () => {
+				canvasSarmal.setSpeedOver(1.0, 500).catch(() => {});
+			});
+			svgContainer.addEventListener("mouseenter", () => {
+				svgSarmal.setSpeedOver(0.3, 400).catch(() => {});
+			});
+			svgContainer.addEventListener("mouseleave", () => {
+				svgSarmal.setSpeedOver(1.0, 500).catch(() => {});
+			});
 		});
-		canvas.addEventListener("mouseleave", () => {
-			canvasSarmal.setSpeedOver(1.0, 500).catch(() => {});
-		});
-		svgContainer.addEventListener("mouseenter", () => {
-			svgSarmal.setSpeedOver(0.3, 400).catch(() => {});
-		});
-		svgContainer.addEventListener("mouseleave", () => {
-			svgSarmal.setSpeedOver(1.0, 500).catch(() => {});
-		});
-	});
 </script>

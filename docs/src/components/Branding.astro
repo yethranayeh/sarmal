@@ -3,22 +3,29 @@ const currentPath = Astro.url.pathname.replace(/\/$/, "") || "/";
 const isAtHome = currentPath === "/";
 ---
 
-<a href='/' class='font-heading text-2xl text-foreground transition-colors group'>
+<a
+	href="/"
+	class="font-heading text-2xl text-foreground transition-colors group"
+>
 	<span
 		class:list={[
 			'duration-300 transition-all [font-variation-settings:"wght"_var(--wght)]',
 			{
-				"text-primary group-hover:text-foreground [--wght:650] group-hover:[--wght:350]": isAtHome,
-				"text-foreground group-hover:text-primary [--wght:350] group-hover:[--wght:650]": !isAtHome
-			}
+				"text-primary group-hover:text-foreground [--wght:650] group-hover:[--wght:350]":
+					isAtHome,
+				"text-foreground group-hover:text-primary [--wght:350] group-hover:[--wght:650]":
+					!isAtHome,
+			},
 		]}>sarmal</span
 	><span
 		class:list={[
 			'[--wght:350] [font-variation-settings:"wght"_var(--wght)] transition-all duration-300',
 			{
-				"text-foreground group-hover:text-primary [--wght:350] group-hover:[--wght:650]": isAtHome,
-				"text-primary group-hover:text-foreground [--wght:650] group-hover:[--wght:350]": !isAtHome
-			}
+				"text-foreground group-hover:text-primary [--wght:350] group-hover:[--wght:650]":
+					isAtHome,
+				"text-primary group-hover:text-foreground [--wght:650] group-hover:[--wght:350]":
+					!isAtHome,
+			},
 		]}>.art</span
 	>
 </a>

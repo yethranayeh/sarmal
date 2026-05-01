@@ -7,15 +7,16 @@ import Playground from "../Playground.svelte";
 import { SEPARATOR_DOT } from "../variables";
 
 const curveEntries = Object.entries(curves).map(([id, def]) => ({
-  id,
-  name: def.name,
-  fn: def.fn.toString(),
-  period: def.period ?? Math.PI * 2,
+	id,
+	name: def.name,
+	fn: def.fn.toString(),
+	period: def.period ?? Math.PI * 2,
 }));
 ---
 
 <BaseLayout
-  title={`Playground ${SEPARATOR_DOT} Sarmal`}
-  description='Type math, see it follow a path. Create your own sarmal loading indicators.'>
-  <Playground client:only='svelte' presets={curveEntries} />
+	title={`Playground ${SEPARATOR_DOT} Sarmal`}
+	description="Type math, see it follow a path. Create your own sarmal loading indicators."
+>
+	<Playground client:only="svelte" presets={curveEntries} />
 </BaseLayout>

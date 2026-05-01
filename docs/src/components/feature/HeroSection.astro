@@ -13,60 +13,77 @@ const codeSnippet = `<script src="https://unpkg.com/@sarmal/core/dist/auto-init.
   data-trail-color="#a78bfa"></canvas>`;
 ---
 
-<section class='grid grid-cols-1 md:grid-cols-2 gap-10 items-center p-2 md:p-6 lg:p-12 xl:p-16'>
-	<div class='flex flex-col gap-5 min-w-0 max-w-lg'>
-		<div class='flex flex-col gap-2 md:gap-5'>
-			<h1 class='inline-flex flex-col font-heading text-4xl md:text-5xl leading-tight tracking-tight text-foreground'>
-				<span>Elegant by <span class='text-primary font-bold'>math</span>,</span>
-				<em class='pl-8 md:pl-2'><span class='text-primary font-bold'>Simple</span> by <span>design</span>.</em>
+<section
+	class="grid grid-cols-1 md:grid-cols-2 gap-10 items-center p-2 md:p-6 lg:p-12 xl:p-16"
+>
+	<div class="flex flex-col gap-5 min-w-0 max-w-lg">
+		<div class="flex flex-col gap-2 md:gap-5">
+			<h1
+				class="inline-flex flex-col font-heading text-4xl md:text-5xl leading-tight tracking-tight text-foreground"
+			>
+				<span>Elegant by <span class="text-primary font-bold">math</span>,</span
+				>
+				<em class="pl-8 md:pl-2"
+					><span class="text-primary font-bold">Simple</span> by <span
+						>design</span
+					>.</em
+				>
 			</h1>
 
-			<p class='font-body text-base text-muted w-full md:max-w-lg leading-tight'>
-				You don't need to know math to have good looking <span class='underline decoration-wavy decoration-primary'
-					>curves</span
+			<p
+				class="font-body text-base text-muted w-full md:max-w-lg leading-tight"
+			>
+				You don't need to know math to have good looking <span
+					class="underline decoration-wavy decoration-primary">curves</span
 				>. It's as simple as choosing a
-				<em>shape</em> and picking a <span class='text-primary'>color</span>.
+				<em>shape</em> and picking a <span class="text-primary">color</span>.
 			</p>
 		</div>
 
-		<div class='flex flex-col gap-2 w-full md:max-w-lg'>
-			<SectionLabel variant='info' label='Two lines of HTML' />
-			<div class='relative group rounded-md text-left overflow-x-auto'>
+		<div class="flex flex-col gap-2 w-full md:max-w-lg">
+			<SectionLabel variant="info" label="Two lines of HTML" />
+			<div class="relative group rounded-md text-left overflow-x-auto">
 				<Code
-					class='p-2 rounded-md bg-surface'
-					lang='html'
+					class="p-2 rounded-md bg-surface"
+					lang="html"
 					theme={undefined}
 					themes={codeThemes}
 					defaultColor={false}
 					code={codeSnippet}
 				/>
 			</div>
-			<div class='w-full flex justify-end'>
-				<CopyButton class='text-primary!' code={codeSnippet} />
+			<div class="w-full flex justify-end">
+				<CopyButton class="text-primary!" code={codeSnippet} />
 			</div>
 		</div>
 	</div>
 
-	<div class='hidden md:flex flex-col gap-2 items-center justify-center h-full'>
-		<div class='relative h-full w-full flex flex-col justify-center items-center gap-5'>
+	<div class="hidden md:flex flex-col gap-2 items-center justify-center h-full">
+		<div
+			class="relative h-full w-full flex flex-col justify-center items-center gap-5"
+		>
 			<DotGrid />
-			<canvas id='hero-sarmal' width='360' height='360'></canvas>
+			<canvas id="hero-sarmal" width="360" height="360"></canvas>
 		</div>
-		<span class='font-mono text-[9px] tracking-[0.25em] uppercase text-muted'> lissajous 4:3 </span>
+		<span class="font-mono text-[9px] tracking-[0.25em] uppercase text-muted">
+			lissajous 4:3
+		</span>
 	</div>
 </section>
 
 <script>
 	import { createSarmal, curves, palettes } from "@sarmal/core";
 
-	const canvas = document.getElementById("hero-sarmal") as HTMLCanvasElement | null;
+	const canvas = document.getElementById(
+		"hero-sarmal",
+	) as HTMLCanvasElement | null;
 	if (canvas) {
 		const sarmal = createSarmal(canvas, curves.lissajous43, {
 			skeletonColor: "#c8c5c0",
 			headRadius: 2.5,
 			trailStyle: "gradient-animated",
 			trailColor: palettes.bard,
-			trailLength: 150
+			trailLength: 150,
 		});
 
 		canvas.addEventListener("mouseenter", () => {

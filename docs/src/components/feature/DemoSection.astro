@@ -33,7 +33,7 @@ const sarmalCurves: CurveConfig[] = [
 		trailStyle: "gradient-animated",
 		trailColor: palettes.ocean,
 		trailLength: 200,
-		headColor: "#22d3ee"
+		headColor: "#22d3ee",
 	},
 	{
 		id: "astroid",
@@ -42,7 +42,7 @@ const sarmalCurves: CurveConfig[] = [
 		trailStyle: "gradient-animated",
 		trailColor: palettes.bard,
 		trailLength: 200,
-		headColor: "#a855f7"
+		headColor: "#a855f7",
 	},
 	{
 		id: "epitrochoid7",
@@ -50,7 +50,7 @@ const sarmalCurves: CurveConfig[] = [
 		color: "#a78bfa",
 		trailStyle: "gradient-static",
 		trailColor: palettes.fire,
-		headColor: "#fbbf24"
+		headColor: "#fbbf24",
 	},
 	{
 		id: "rose5",
@@ -58,7 +58,7 @@ const sarmalCurves: CurveConfig[] = [
 		color: "#f472b6",
 		trailStyle: "gradient-static",
 		trailColor: palettes.sunset,
-		headColor: "#f472b6"
+		headColor: "#f472b6",
 	},
 	{
 		id: "lissajous43",
@@ -66,15 +66,15 @@ const sarmalCurves: CurveConfig[] = [
 		color: "#2dd4bf",
 		trailStyle: "gradient-static",
 		trailColor: palettes.forest,
-		headColor: "#86efac"
-	}
+		headColor: "#86efac",
+	},
 ];
 
 const morphPairs = [
 	{ from: "astroid", to: "deltoid", color: "#38bdf8" },
 	{ from: "rose3", to: "epitrochoid7", color: "#e879f9" },
 	{ from: "lissajous32", to: "rose5", color: "#fb923c" },
-	{ from: "lame", to: "astroid", color: "#a78bfa" }
+	{ from: "lame", to: "astroid", color: "#a78bfa" },
 ] as const;
 
 const lazyConfigMap = Object.fromEntries(
@@ -84,9 +84,9 @@ const lazyConfigMap = Object.fromEntries(
 			trailColor: c.trailColor ?? c.color,
 			trailStyle: c.trailStyle,
 			trailLength: c.trailLength,
-			headColor: c.headColor
-		}
-	])
+			headColor: c.headColor,
+		},
+	]),
 );
 
 const curveDataWithHighlight = await Promise.all(
@@ -107,8 +107,8 @@ const curveDataWithHighlight = await Promise.all(
 			lang: "html",
 			themes: {
 				light: sarmalTheme as { name: string },
-				dark: sarmalDarkTheme as { name: string }
-			}
+				dark: sarmalDarkTheme as { name: string },
+			},
 		});
 
 		return {
@@ -119,22 +119,33 @@ const curveDataWithHighlight = await Promise.all(
 			equation: metadata.equation,
 			description: metadata.description,
 			codeText,
-			codeHtml
+			codeHtml,
 		};
-	})
+	}),
 );
 ---
 
-<script is:inline type="application/json" id="sarmal-lazy-configs" set:html={JSON.stringify(lazyConfigMap)}>
+<script
+	is:inline
+	id="sarmal-lazy-configs"
+	set:html={JSON.stringify(lazyConfigMap)}
+>
+	//
 </script>
 
-<div id='demo-section' class='flex flex-col md:flex-row justify-center gap-4 md:gap-8 lg:gap-12 p-2 sm:p-6 mx-auto'>
-	<InfoCard label='Standard Sarmals'>
-		<div class='grid grid-cols-2 sm:grid-cols-3 gap-4'>
+<div
+	id="demo-section"
+	class="flex flex-col md:flex-row justify-center gap-4 md:gap-8 lg:gap-12 p-2 sm:p-6 mx-auto"
+>
+	<InfoCard label="Standard Sarmals">
+		<div class="grid grid-cols-2 sm:grid-cols-3 gap-4">
 			{
 				curveDataWithHighlight.map((curve) => (
-					<div class='flex flex-col items-center'>
-						<div title={curve.id} class='relative content-auto rounded-lg p-4 mb-2 overflow-visible'>
+					<div class="flex flex-col items-center">
+						<div
+							title={curve.id}
+							class="relative content-auto rounded-lg p-4 mb-2 overflow-visible"
+						>
 							<Sarmal
 								curve={curve.id}
 								width={80}
@@ -147,7 +158,10 @@ const curveDataWithHighlight = await Promise.all(
 							/>
 							<DotGrid />
 						</div>
-						<span title={curve.id} class='font-mono text-[10px] tracking-wider uppercase text-muted'>
+						<span
+							title={curve.id}
+							class="font-mono text-[10px] tracking-wider uppercase text-muted"
+						>
 							{curve.name}
 						</span>
 						<button
@@ -161,9 +175,10 @@ const curveDataWithHighlight = await Promise.all(
 								period: curve.period,
 								equation: curve.equation,
 								description: curve.description,
-								color: curve.color
+								color: curve.color,
 							})}
-							class='font-mono text-[9px] tracking-widest uppercase text-muted hover:text-foreground transition-colors cursor-pointer mt-1'>
+							class="font-mono text-[9px] tracking-widest uppercase text-muted hover:text-foreground transition-colors cursor-pointer mt-1"
+						>
 							Details
 						</button>
 					</div>
@@ -172,26 +187,30 @@ const curveDataWithHighlight = await Promise.all(
 		</div>
 	</InfoCard>
 
-	<InfoCard label='Morphing Sarmals'>
-		<div class='grid grid-cols-2 sm:grid-cols-4 md:grid-cols-2 gap-4'>
+	<InfoCard label="Morphing Sarmals">
+		<div class="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-2 gap-4">
 			{
 				morphPairs.map((pair) => (
-					<div class='flex flex-col items-center'>
-						<div class='relative'>
+					<div class="flex flex-col items-center">
+						<div class="relative">
 							<div
 								id={`morph-${pair.from}-${pair.to}`}
 								data-color={pair.color}
 								title={`${pair.from} -> ${pair.to}`}
-								class=' content-auto rounded-lg p-4 mb-2 overflow-visible'
+								class=" content-auto rounded-lg p-4 mb-2 overflow-visible"
 							/>
 							<DotGrid />
 						</div>
-						<span class='font-mono text-[10px] tracking-wider uppercase text-muted'>
+						<span class="font-mono text-[10px] tracking-wider uppercase text-muted">
 							{pair.from}
 							{"->"}
 							{pair.to}
 						</span>
-						<Button id={`morph-${pair.from}-${pair.to}-details`} variant='ghost' class='text-[9px] mt-1'>
+						<Button
+							id={`morph-${pair.from}-${pair.to}-details`}
+							variant="ghost"
+							class="text-[9px] mt-1"
+						>
 							Details
 						</Button>
 					</div>
@@ -201,7 +220,11 @@ const curveDataWithHighlight = await Promise.all(
 	</InfoCard>
 </div>
 
-{morphPairs.map((pair) => <MorphDetailModal fromId={pair.from} toId={pair.to} />)}
+{
+	morphPairs.map((pair) => (
+		<MorphDetailModal fromId={pair.from} toId={pair.to} />
+	))
+}
 <UnifiedCurveDialog />
 
 <script>
@@ -209,7 +232,7 @@ const curveDataWithHighlight = await Promise.all(
 	import { createSarmal, curves } from "@sarmal/core";
 
 	const lazyConfigs: Record<string, SarmalOptions> = JSON.parse(
-		document.getElementById("sarmal-lazy-configs")!.textContent!
+		document.getElementById("sarmal-lazy-configs")!.textContent!,
 	);
 
 	const MORPH_DURATION = 800;
@@ -222,7 +245,10 @@ const curveDataWithHighlight = await Promise.all(
 		color: string;
 	}
 
-	async function runMorphLoop(canvas: HTMLCanvasElement, pair: MorphPair): Promise<void> {
+	async function runMorphLoop(
+		canvas: HTMLCanvasElement,
+		pair: MorphPair,
+	): Promise<void> {
 		const fromCurve = curves[pair.from as keyof typeof curves];
 		const toCurve = curves[pair.to as keyof typeof curves];
 
@@ -234,7 +260,7 @@ const curveDataWithHighlight = await Promise.all(
 			trailColor: pair.color,
 			skeletonColor: pair.color,
 			headColor: pair.color,
-			trailLength: 60
+			trailLength: 60,
 		});
 
 		await new Promise((resolve) => setTimeout(resolve, WARMUP_DURATION));
@@ -252,33 +278,37 @@ const curveDataWithHighlight = await Promise.all(
 	}
 
 	function initDemoSection(section: Element): void {
-		section.querySelectorAll<HTMLCanvasElement>("canvas[data-sarmal-lazy]").forEach((canvas) => {
-			const curveName = canvas.dataset.sarmalLazy;
-			if (!curveName) return;
-			const curve = curves[curveName as keyof typeof curves];
-			if (!curve) return;
-			createSarmal(canvas, curve, lazyConfigs[curveName] ?? {});
-		});
+		section
+			.querySelectorAll<HTMLCanvasElement>("canvas[data-sarmal-lazy]")
+			.forEach((canvas) => {
+				const curveName = canvas.dataset.sarmalLazy;
+				if (!curveName) return;
+				const curve = curves[curveName as keyof typeof curves];
+				if (!curve) return;
+				createSarmal(canvas, curve, lazyConfigs[curveName] ?? {});
+			});
 
-		section.querySelectorAll<HTMLDivElement>("div[id^='morph-']").forEach((container) => {
-			const idMatch = container.id.match(/^morph-(.+)-(.+)$/);
-			if (!idMatch) {
-				return;
-			}
+		section
+			.querySelectorAll<HTMLDivElement>("div[id^='morph-']")
+			.forEach((container) => {
+				const idMatch = container.id.match(/^morph-(.+)-(.+)$/);
+				if (!idMatch) {
+					return;
+				}
 
-			const fromId = idMatch[1]!;
-			const toId = idMatch[2]!;
-			const color = container.dataset.color ?? "#c0143c";
+				const fromId = idMatch[1]!;
+				const toId = idMatch[2]!;
+				const color = container.dataset.color ?? "#c0143c";
 
-			const canvas = document.createElement("canvas");
-			canvas.width = 80;
-			canvas.height = 80;
-			canvas.className = "w-[80px] h-[80px]";
-			container.innerHTML = "";
-			container.appendChild(canvas);
+				const canvas = document.createElement("canvas");
+				canvas.width = 80;
+				canvas.height = 80;
+				canvas.className = "w-[80px] h-[80px]";
+				container.innerHTML = "";
+				container.appendChild(canvas);
 
-			runMorphLoop(canvas, { from: fromId, to: toId, color }).catch(() => {});
-		});
+				runMorphLoop(canvas, { from: fromId, to: toId, color }).catch(() => {});
+			});
 	}
 
 	const section = document.getElementById("demo-section")!;
@@ -289,7 +319,7 @@ const curveDataWithHighlight = await Promise.all(
 				initDemoSection(section);
 			}
 		},
-		{ threshold: 0.1 }
+		{ threshold: 0.1 },
 	);
 	observer.observe(section);
 </script>

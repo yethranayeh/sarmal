@@ -6,75 +6,77 @@ import "../../../styles/globals.css";
 import { CURVE_DOCS } from "../../../data/curves";
 
 export function getStaticPaths() {
-  return Object.keys(CURVE_DOCS).map((id) => ({ params: { id } }));
+	return Object.keys(CURVE_DOCS).map((id) => ({ params: { id } }));
 }
 
 const { id } = Astro.params;
 
 if (!id) {
-  return new Response("Missing curve ID", { status: 400 });
+	return new Response("Missing curve ID", { status: 400 });
 }
 
 const curveKey = id as CurveName;
 const meta = CURVE_DOCS[curveKey];
 
 if (!meta) {
-  return new Response(`Unknown curve: ${id}`, { status: 404 });
+	return new Response(`Unknown curve: ${id}`, { status: 404 });
 }
 ---
 
 <!doctype html>
-<html lang='en' style={`--curve-color: ${meta.color}`}>
-  <head>
-    <meta charset='UTF-8' />
-    <meta name='viewport' content='width=device-width, initial-scale=1.0' />
-    <title>OG Image — {meta.name}</title>
-    <link rel='preconnect' href='https://fonts.googleapis.com' />
-    <link rel='preconnect' href='https://fonts.gstatic.com' crossorigin />
-    <link
-      href='https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,200..800;1,6..72,200..800&display=swap'
-      rel='stylesheet'
-    />
-  </head>
-  <body>
-    <canvas id='og-curve' class='absolute inset-0 w-300 h-157.5'></canvas>
-    <div
-      class='absolute inset-0 flex flex-col justify-end px-16 py-12 pointer-events-none'>
-      <h1
-        class='text-[72px] leading-normal font-black! font-body! text-shadow-md'
-        style={`color: ${meta.color}`}>
-        {meta.name}
-      </h1>
-      <div class='[&>a]:text-4xl!'>
-        <Branding />
-      </div>
-    </div>
+<html lang="en" style={`--curve-color: ${meta.color}`}>
+	<head>
+		<meta charset="UTF-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<title>OG Image — {meta.name}</title>
+		<link rel="preconnect" href="https://fonts.googleapis.com" />
+		<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+		<link
+			href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,200..800;1,6..72,200..800&display=swap"
+			rel="stylesheet"
+		/>
+	</head>
+	<body>
+		<canvas id="og-curve" class="absolute inset-0 w-300 h-157.5"></canvas>
+		<div
+			class="absolute inset-0 flex flex-col justify-end px-16 py-12 pointer-events-none"
+		>
+			<h1
+				class="text-[72px] leading-normal font-black! font-body! text-shadow-md"
+				style={`color: ${meta.color}`}
+			>
+				{meta.name}
+			</h1>
+			<div class="[&>a]:text-4xl!">
+				<Branding />
+			</div>
+		</div>
 
-    <script>
-      import type { CurveName } from "@sarmal/core";
-      import { createSarmal, curves } from "@sarmal/core";
+		<script>
+			import type { CurveName } from "@sarmal/core";
+			import { createSarmal, curves } from "@sarmal/core";
 
-      const id = window.location.pathname.split("/").pop() ?? "";
-      const curve = curves[id as CurveName];
-      if (!curve) {
-        throw new Error("Unknown curve: " + id);
-      }
+			const id = window.location.pathname.split("/").pop() ?? "";
+			const curve = curves[id as CurveName];
+			if (!curve) {
+				throw new Error("Unknown curve: " + id);
+			}
 
-      const canvas = document.getElementById("og-curve") as HTMLCanvasElement;
-      const color =
-        getComputedStyle(document.documentElement)
-          .getPropertyValue("--curve-color")
-          .trim() || "#000";
+			const canvas = document.getElementById("og-curve") as HTMLCanvasElement;
+			const color =
+				getComputedStyle(document.documentElement)
+					.getPropertyValue("--curve-color")
+					.trim() || "#000";
 
-      createSarmal(canvas, curve, {
-        autoStart: false,
-        initialT: curve.period! * 0.6,
-        trailColor: color,
-        skeletonColor: "#000000",
-        headColor: color,
-        headRadius: 4,
-        trailLength: 180,
-      });
-    </script>
-  </body>
+			createSarmal(canvas, curve, {
+				autoStart: false,
+				initialT: curve.period! * 0.6,
+				trailColor: color,
+				skeletonColor: "#000000",
+				headColor: color,
+				headRadius: 4,
+				trailLength: 180,
+			});
+		</script>
+	</body>
 </html>

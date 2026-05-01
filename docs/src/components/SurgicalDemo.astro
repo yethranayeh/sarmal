@@ -9,26 +9,29 @@ const btnBase =
 	"py-1.5 px-3 text-[0.68rem] font-mono rounded-sm cursor-pointer transition-colors whitespace-nowrap tracking-[0.01em]";
 ---
 
-<div class='my-6' data-concept={concept}>
+<div class="my-6" data-concept={concept}>
 	{
 		concept === "play-pause" && (
-			<div class='flex max-w-150 bg-foreground border border-[#2e2f2c] rounded-lg overflow-hidden'>
-				<div class='flex-1 h-50 min-w-0'>
-					<div class='w-full h-full' data-role='sarmal' />
+			<div class="flex max-w-150 bg-foreground border border-[#2e2f2c] rounded-lg overflow-hidden">
+				<div class="flex-1 h-50 min-w-0">
+					<div class="w-full h-full" data-role="sarmal" />
 				</div>
-				<div class='w-42 shrink-0 border-l border-[#242522] bg-[#131412] py-4.5 px-4 flex flex-col justify-between'>
-					<div class='flex flex-col gap-1'>
-						<span class='text-[0.58rem] uppercase tracking-widest text-muted font-mono'>state</span>
-						<div class='flex items-center gap-1.75'>
-							<div class='dot' data-role='dot' data-state='playing' />
+				<div class="w-42 shrink-0 border-l border-[#242522] bg-[#131412] py-4.5 px-4 flex flex-col justify-between">
+					<div class="flex flex-col gap-1">
+						<span class="text-[0.58rem] uppercase tracking-widest text-muted font-mono">
+							state
+						</span>
+						<div class="flex items-center gap-1.75">
+							<div class="dot" data-role="dot" data-state="playing" />
 							<span
-								class='text-[0.82rem] text-background font-mono transition-colors duration-150'
-								data-role='state-text'>
+								class="text-[0.82rem] text-background font-mono transition-colors duration-150"
+								data-role="state-text"
+							>
 								playing
 							</span>
 						</div>
 					</div>
-					<button class={`${btnBase} btn-ghost`} data-role='toggle-btn'>
+					<button class={`${btnBase} btn-ghost`} data-role="toggle-btn">
 						Pause
 					</button>
 				</div>
@@ -38,26 +41,32 @@ const btnBase =
 
 	{
 		concept === "initial-t" && (
-			<div class='flex max-w-150 bg-foreground border border-[#2e2f2c] rounded-lg overflow-hidden'>
-				<div class='flex-1 h-50 relative min-w-0' data-role='anim-col'>
-					<div class='w-full h-full' data-role='sarmal' />
+			<div class="flex max-w-150 bg-foreground border border-[#2e2f2c] rounded-lg overflow-hidden">
+				<div class="flex-1 h-50 relative min-w-0" data-role="anim-col">
+					<div class="w-full h-full" data-role="sarmal" />
 				</div>
-				<div class='w-42 shrink-0 border-l border-[#242522] bg-[#131412] py-4.5 px-4 flex flex-col justify-between'>
-					<div class='text-[0.63rem] text-[#b3ada7] leading-[1.85] font-mono'>
+				<div class="w-42 shrink-0 border-l border-[#242522] bg-[#131412] py-4.5 px-4 flex flex-col justify-between">
+					<div class="text-[0.63rem] text-[#b3ada7] leading-[1.85] font-mono">
 						<>
-							<code class='text-[#e0566e] bg-[#242522] px-1.25 py-px rounded-sm text-[0.6rem]'>initialT: Math.PI</code>
+							<code class="text-[#e0566e] bg-[#242522] px-1.25 py-px rounded-sm text-[0.6rem]">
+								initialT: Math.PI
+							</code>
 							<br />
 						</>
-						<code class='text-[#e0566e] bg-[#242522] px-1.25 py-px rounded-sm text-[0.6rem]'>autoStart: false</code>
+						<code class="text-[#e0566e] bg-[#242522] px-1.25 py-px rounded-sm text-[0.6rem]">
+							autoStart: false
+						</code>
 						<>
 							<br />
 							<br />
 						</>
 						Dormant at creation. Trail pre-drawn to{" "}
-						<code class='text-[#e0566e] bg-[#242522] px-1.25 py-px rounded-sm text-[0.6rem]'>t=π</code>. Play to animate
-						from there.
+						<code class="text-[#e0566e] bg-[#242522] px-1.25 py-px rounded-sm text-[0.6rem]">
+							t=π
+						</code>
+						. Play to animate from there.
 					</div>
-					<button class={`${btnBase} btn-play`} data-role='play-btn'>
+					<button class={`${btnBase} btn-play`} data-role="play-btn">
 						Play
 					</button>
 				</div>
@@ -67,21 +76,22 @@ const btnBase =
 
 	{
 		concept === "reset" && (
-			<div class='max-w-125 bg-foreground border border-[#2e2f2c] rounded-lg overflow-hidden'>
-				<div class='h-50' data-role='anim-window'>
-					<div class='w-full h-full' data-role='sarmal' />
+			<div class="max-w-125 bg-foreground border border-[#2e2f2c] rounded-lg overflow-hidden">
+				<div class="h-50" data-role="anim-window">
+					<div class="w-full h-full" data-role="sarmal" />
 				</div>
-				<div class='border-t border-[#242522] bg-[#131412] py-2.5 px-3.5 flex items-center gap-3'>
-					<div class='flex-1 flex flex-col gap-1 min-w-0'>
-						<div class='flex items-center gap-1.75 text-[0.68rem] text-background font-mono'>
-							<div class='dot' data-role='dot' data-state='playing' />
-							<span data-role='state-text'>playing</span>
+				<div class="border-t border-[#242522] bg-[#131412] py-2.5 px-3.5 flex items-center gap-3">
+					<div class="flex-1 flex flex-col gap-1 min-w-0">
+						<div class="flex items-center gap-1.75 text-[0.68rem] text-background font-mono">
+							<div class="dot" data-role="dot" data-state="playing" />
+							<span data-role="state-text">playing</span>
 						</div>
-						<span class='text-[0.62rem] text-[#b3ada7] leading-[1.55]'>
-							reset() clears the trail and resets t to 0. The loop keeps running.
+						<span class="text-[0.62rem] text-[#b3ada7] leading-[1.55]">
+							reset() clears the trail and resets t to 0. The loop keeps
+							running.
 						</span>
 					</div>
-					<button class={`${btnBase} btn-ghost`} data-role='reset-btn'>
+					<button class={`${btnBase} btn-ghost`} data-role="reset-btn">
 						Reset
 					</button>
 				</div>
@@ -91,21 +101,22 @@ const btnBase =
 
 	{
 		concept === "destroy" && (
-			<div class='max-w-125 bg-foreground border border-[#2e2f2c] rounded-lg overflow-hidden'>
-				<div class='anim-window h-50' data-role='anim-window'>
-					<div class='w-full h-full' data-role='sarmal' />
+			<div class="max-w-125 bg-foreground border border-[#2e2f2c] rounded-lg overflow-hidden">
+				<div class="anim-window h-50" data-role="anim-window">
+					<div class="w-full h-full" data-role="sarmal" />
 				</div>
-				<div class='border-t border-[#242522] bg-[#131412] py-2.5 px-3.5 flex items-center gap-3'>
-					<div class='flex-1 flex flex-col gap-1 min-w-0'>
-						<div class='flex items-center gap-1.75 text-[0.68rem] text-background font-mono'>
-							<div class='dot' data-role='dot' data-state='playing' />
-							<span data-role='state-text'>playing</span>
+				<div class="border-t border-[#242522] bg-[#131412] py-2.5 px-3.5 flex items-center gap-3">
+					<div class="flex-1 flex flex-col gap-1 min-w-0">
+						<div class="flex items-center gap-1.75 text-[0.68rem] text-background font-mono">
+							<div class="dot" data-role="dot" data-state="playing" />
+							<span data-role="state-text">playing</span>
 						</div>
-						<span class='text-[0.62rem] text-[#b3ada7] leading-[1.55]'>
-							Stops the loop and removes the SVG. The instance cannot be restarted.
+						<span class="text-[0.62rem] text-[#b3ada7] leading-[1.55]">
+							Stops the loop and removes the SVG. The instance cannot be
+							restarted.
 						</span>
 					</div>
-					<button class={`${btnBase} btn-danger`} data-role='destroy-btn'>
+					<button class={`${btnBase} btn-danger`} data-role="destroy-btn">
 						Destroy
 					</button>
 				</div>
@@ -211,21 +222,24 @@ const btnBase =
 	const SARMAL_COLORS = {
 		skeletonColor: "#3a3b37",
 		trailColor: "#fbf9f5",
-		headColor: "#ffffff"
+		headColor: "#ffffff",
 	};
 
 	const ANNOT_COLORS = {
 		line: "#97002a",
 		ring: "#c0143c",
 		label: "#c0143c",
-		sub: "#7a7067"
+		sub: "#7a7067",
 	};
 
 	function qs(container: HTMLElement, role: string): HTMLElement | null {
 		return container.querySelector(`[data-role="${role}"]`);
 	}
 
-	function qsBtn(container: HTMLElement, role: string): HTMLButtonElement | null {
+	function qsBtn(
+		container: HTMLElement,
+		role: string,
+	): HTMLButtonElement | null {
 		return container.querySelector(`[data-role="${role}"]`);
 	}
 
@@ -239,7 +253,7 @@ const btnBase =
 
 		const sarmal = createSarmalSVG(sarmalEl, CURVE, {
 			...SARMAL_COLORS,
-			autoStart: true
+			autoStart: true,
 		});
 
 		let playing = true;
@@ -267,7 +281,7 @@ const btnBase =
 		const sarmal = createSarmalSVG(sarmalEl, CURVE, {
 			...SARMAL_COLORS,
 			autoStart: false,
-			initialT: Math.PI
+			initialT: Math.PI,
 		});
 
 		requestAnimationFrame(() => {
@@ -295,10 +309,17 @@ const btnBase =
 			const labelX = headPxX + labelOffsetX;
 			const labelY = headPxY + labelOffsetY;
 
-			const annotSvg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
-			annotSvg.style.cssText = "position:absolute;inset:0;width:100%;height:100%;pointer-events:none;overflow:visible;";
+			const annotSvg = document.createElementNS(
+				"http://www.w3.org/2000/svg",
+				"svg",
+			);
+			annotSvg.style.cssText =
+				"position:absolute;inset:0;width:100%;height:100%;pointer-events:none;overflow:visible;";
 
-			const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
+			const line = document.createElementNS(
+				"http://www.w3.org/2000/svg",
+				"line",
+			);
 			line.setAttribute("x1", String(labelX + (labelOffsetX < 0 ? 85 : 5)));
 			line.setAttribute("y1", String(labelY + (labelOffsetY > 0 ? 0 : 20)));
 			line.setAttribute("x2", String(headPxX));
@@ -309,7 +330,10 @@ const btnBase =
 			line.setAttribute("opacity", "0.65");
 			annotSvg.appendChild(line);
 
-			const ring = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+			const ring = document.createElementNS(
+				"http://www.w3.org/2000/svg",
+				"circle",
+			);
 			ring.setAttribute("cx", String(headPxX));
 			ring.setAttribute("cy", String(headPxY));
 			ring.setAttribute("r", "8");
@@ -330,7 +354,7 @@ const btnBase =
 				"display:flex",
 				"flex-direction:column",
 				`align-items:${labelOffsetX < 0 ? "flex-end" : "flex-start"}`,
-				"gap:1px"
+				"gap:1px",
 			].join(";");
 			label.innerHTML = `
 				<span style="font-size:0.9rem;color:${ANNOT_COLORS.label};line-height:1;font-family:ui-monospace,'SF Mono',monospace;">t = π</span>
@@ -371,7 +395,7 @@ const btnBase =
 
 		const sarmal = createSarmalSVG(sarmalEl, CURVE, {
 			...SARMAL_COLORS,
-			autoStart: true
+			autoStart: true,
 		});
 
 		btn.addEventListener("click", () => {
@@ -395,7 +419,7 @@ const btnBase =
 
 		let sarmal: SarmalInstance | null = createSarmalSVG(sarmalEl, CURVE, {
 			...SARMAL_COLORS,
-			autoStart: true
+			autoStart: true,
 		});
 
 		btn.addEventListener("click", () => {

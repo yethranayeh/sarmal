@@ -5,16 +5,22 @@ import DemoUpload from "./DemoUpload.astro";
 import DemoDashboard from "./DemoDashboard.astro";
 ---
 
-<section class='w-full bg-foreground py-6 md:py-12'>
-	<div class='max-w-3xl mx-auto px-4 flex flex-col items-center gap-10'>
-		<div class='flex items-center gap-4 w-full'>
-			<div class='flex-1 h-px bg-white/20'></div>
-			<span class='font-mono text-[10px] tracking-[0.25em] uppercase text-surface'>Live demo</span>
-			<div class='flex-1 h-px bg-white/20'></div>
+<section class="w-full bg-foreground py-6 md:py-12">
+	<div class="max-w-3xl mx-auto px-4 flex flex-col items-center gap-10">
+		<div class="flex items-center gap-4 w-full">
+			<div class="flex-1 h-px bg-white/20"></div>
+			<span
+				class="font-mono text-[10px] tracking-[0.25em] uppercase text-surface"
+				>Live demo</span
+			>
+			<div class="flex-1 h-px bg-white/20"></div>
 		</div>
 
-		<div class='w-full max-w-sm flex flex-col items-center gap-4'>
-			<div id='live-demo-card' class='relative w-full min-h-50 bg-surface-raised rounded-xl overflow-hidden'>
+		<div class="w-full max-w-sm flex flex-col items-center gap-4">
+			<div
+				id="live-demo-card"
+				class="relative w-full min-h-50 bg-surface-raised rounded-xl overflow-hidden"
+			>
 				<DemoPipeline />
 				<DemoChat />
 				<DemoUpload />
@@ -22,7 +28,7 @@ import DemoDashboard from "./DemoDashboard.astro";
 			</div>
 
 			<!-- Pagination dots -->
-			<div id='live-demo-dots' class='flex gap-2'></div>
+			<div id="live-demo-dots" class="flex gap-2"></div>
 		</div>
 	</div>
 </section>
@@ -82,10 +88,14 @@ import DemoDashboard from "./DemoDashboard.astro";
 		cleanupAll();
 
 		// Hide all scenarios
-		document.querySelectorAll<HTMLElement>("[data-scenario]").forEach((el) => el.classList.remove("active"));
+		document
+			.querySelectorAll<HTMLElement>("[data-scenario]")
+			.forEach((el) => el.classList.remove("active"));
 
 		// Show active scenario
-		document.querySelector(`[data-scenario="${SLIDES[i].id}"]`)!.classList.add("active");
+		document
+			.querySelector(`[data-scenario="${SLIDES[i].id}"]`)!
+			.classList.add("active");
 		setActiveDot(i);
 
 		// Start the scenario
@@ -113,7 +123,7 @@ import DemoDashboard from "./DemoDashboard.astro";
 				setTimeout(() => showSlide(0), 100);
 			}
 		},
-		{ threshold: 0.1 }
+		{ threshold: 0.1 },
 	);
 	observer.observe(card);
 </script>

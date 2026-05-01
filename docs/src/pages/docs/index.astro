@@ -23,7 +23,7 @@ const docLinks = Object.entries(docModules)
 			href: `/docs/${slug}`,
 			label: mod.frontmatter.title,
 			description: mod.frontmatter.description,
-			order: mod.frontmatter.order
+			order: mod.frontmatter.order,
 		};
 	})
 	.sort((a, b) => a.order - b.order)
@@ -32,29 +32,43 @@ const docLinks = Object.entries(docModules)
 
 <DocsLayout
 	title={`Documentation ${SEPARATOR_DOT} Sarmal`}
-	description='Installation guides, API reference, and curve catalog for Sarmal'>
+	description="Installation guides, API reference, and curve catalog for Sarmal"
+>
 	<section>
 		<h1 id="documentation">
-			<a class="anchor-link" aria-hidden="true" tabindex="-1" href="#documentation">
+			<a
+				class="anchor-link"
+				aria-hidden="true"
+				tabindex="-1"
+				href="#documentation"
+			>
 				<Hash size={16} aria-hidden="true" />
 			</a>
 			Documentation
 		</h1>
-		<p class='text-lg text-muted'>
-			Welcome to the Sarmal documentation. Here you'll find everything you need to get started with parametric loading
-			spinners, from installation to advanced customization.
+		<p class="text-lg text-muted">
+			Welcome to the Sarmal documentation. Here you'll find everything you need
+			to get started with parametric loading spinners, from installation to
+			advanced customization.
 		</p>
 
 		<p>
 			<strong>Sarmal</strong>
-			<span class='text-primary'>{"/"}</span>sɑ<span class='text-primary'>ː</span>rˈmɑ<span class='text-primary'>ː</span
-			>l<span class='text-primary'>{"/"}</span>
-			<Minus class='inline' size={16} /> From the Turkish word for <em>spiral</em>, <em>coil</em>. To define a path
-			traced by a point moving through space.
+			<span class="text-primary">{"/"}</span>sɑ<span class="text-primary"
+				>ː</span
+			>rˈmɑ<span class="text-primary">ː</span>l<span class="text-primary"
+				>{"/"}</span
+			>
+			<Minus class="inline" size={16} /> From the Turkish word for <em
+				>spiral</em
+			>, <em>coil</em>. To define a path traced by a point moving through space.
 		</p>
 		<blockquote>
-			The word is built from the verb <strong>sarmak</strong> (to wrap, to coil) with the suffix
-			<code>-al</code>, which forms nouns for the result of an action. So <em>sarmal</em> is literally 'that which is coiled'
+			The word is built from the verb <strong>sarmak</strong> (to wrap, to coil) with
+			the suffix
+			<code>-al</code>, which forms nouns for the result of an action. So <em
+				>sarmal</em
+			> is literally 'that which is coiled'
 		</blockquote>
 	</section>
 
@@ -62,13 +76,20 @@ const docLinks = Object.entries(docModules)
 
 	<section>
 		<h2 id="getting-started">
-			<a class="anchor-link" aria-hidden="true" tabindex="-1" href="#getting-started">
+			<a
+				class="anchor-link"
+				aria-hidden="true"
+				tabindex="-1"
+				href="#getting-started"
+			>
 				<Hash size={16} aria-hidden="true" />
 			</a>
 			Getting Started
 		</h2>
 		<p>
-			New to Sarmal? Start with the <Link href='/docs/getting-started'>Getting Started</Link> guide to install
+			New to Sarmal? Start with the <Link href="/docs/getting-started"
+				>Getting Started</Link
+			> guide to install
 			<code>@sarmal/core</code> and render your first spinner in minutes.
 		</p>
 	</section>
@@ -85,7 +106,7 @@ const docLinks = Object.entries(docModules)
 				<li>
 					<>
 						<Link href={link.href}>{link.label}</Link>
-						<Minus class='inline' size={16} />
+						<Minus class="inline" size={16} />
 					</>{" "}
 					{link.description}
 				</li>
@@ -96,7 +117,11 @@ const docLinks = Object.entries(docModules)
 	<hr />
 
 	<p>
-		Can't find what you're looking for? Check the <Link href='/play'>Playground</Link> to experiment live, or visit the
-		<Link href='https://github.com/yethranayeh/sarmal' external>GitHub repository</Link> for the source code.
+		Can't find what you're looking for? Check the <Link href="/play"
+			>Playground</Link
+		> to experiment live, or visit the
+		<Link href="https://github.com/yethranayeh/sarmal" external
+			>GitHub repository</Link
+		> for the source code.
 	</p>
 </DocsLayout>

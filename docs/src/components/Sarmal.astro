@@ -24,12 +24,15 @@ const {
 	trailLength = defaultTrailLength,
 	trailStyle,
 	speed,
-	lazy = false
+	lazy = false,
 } = Astro.props;
 
 const curveId = `sarmal-${Math.random().toString(36).slice(2, 8)}`;
-const resolvedHeadColor = headColor ?? (Array.isArray(trailColor) ? trailColor[0] : trailColor);
-const serializedTrailColor = Array.isArray(trailColor) ? JSON.stringify(trailColor) : trailColor;
+const resolvedHeadColor =
+	headColor ?? (Array.isArray(trailColor) ? trailColor[0] : trailColor);
+const serializedTrailColor = Array.isArray(trailColor)
+	? JSON.stringify(trailColor)
+	: trailColor;
 ---
 
 <canvas

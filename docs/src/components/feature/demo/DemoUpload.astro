@@ -3,29 +3,46 @@ import { Check } from "@lucide/astro";
 ---
 
 <div
-	data-scenario='upload'
-	class='absolute inset-0 p-8 flex flex-col justify-center gap-4 opacity-0 transition-opacity duration-400 pointer-events-none [&.active]:opacity-100 [&.active]:pointer-events-auto'>
-	<div class='relative flex items-center justify-center min-h-22'>
-		<div data-upload-spinner class='flex flex-col items-center gap-2 absolute'>
-			<div data-upload-slot class='w-15 h-15'></div>
-			<span data-upload-status class='font-body text-[12px] text-muted'>Uploading…</span>
+	data-scenario="upload"
+	class="absolute inset-0 p-8 flex flex-col justify-center gap-4 opacity-0 transition-opacity duration-400 pointer-events-none [&.active]:opacity-100 [&.active]:pointer-events-auto"
+>
+	<div class="relative flex items-center justify-center min-h-22">
+		<div data-upload-spinner class="flex flex-col items-center gap-2 absolute">
+			<div data-upload-slot class="w-15 h-15"></div>
+			<span data-upload-status class="font-body text-[12px] text-muted"
+				>Uploading…</span
+			>
 		</div>
-		<div data-upload-done class='hidden flex-col items-center gap-1.5 absolute'>
-			<Check size={20} class='text-green-400' />
-			<span class='font-body text-[13px] font-medium text-foreground'>Upload complete</span>
-			<span class='font-mono text-[11px] text-muted'>2 files · 3.3 MB</span>
+		<div data-upload-done class="hidden flex-col items-center gap-1.5 absolute">
+			<Check size={20} class="text-green-400" />
+			<span class="font-body text-[13px] font-medium text-foreground"
+				>Upload complete</span
+			>
+			<span class="font-mono text-[11px] text-muted">2 files · 3.3 MB</span>
 		</div>
 	</div>
-	<div class='flex flex-col gap-1.5 w-full'>
-		<div class='flex items-center gap-2 px-2.5 py-1.5 rounded-lg bg-surface'>
-			<span class='text-sm'>📄</span>
-			<span class='flex-1 truncate font-body text-[11px] text-foreground'>quarterly-report.pdf</span>
-			<Check data-upload-check='1' size={12} class='transition-colors duration-300' />
+	<div class="flex flex-col gap-1.5 w-full">
+		<div class="flex items-center gap-2 px-2.5 py-1.5 rounded-lg bg-surface">
+			<span class="text-sm">📄</span>
+			<span class="flex-1 truncate font-body text-[11px] text-foreground"
+				>quarterly-report.pdf</span
+			>
+			<Check
+				data-upload-check="1"
+				size={12}
+				class="transition-colors duration-300"
+			/>
 		</div>
-		<div class='flex items-center gap-2 px-2.5 py-1.5 rounded-lg bg-surface'>
-			<span class='text-sm'>🖼️</span>
-			<span class='flex-1 truncate font-body text-[11px] text-foreground'>hero-banner.png</span>
-			<Check data-upload-check='2' size={12} class='transition-colors duration-300' />
+		<div class="flex items-center gap-2 px-2.5 py-1.5 rounded-lg bg-surface">
+			<span class="text-sm">🖼️</span>
+			<span class="flex-1 truncate font-body text-[11px] text-foreground"
+				>hero-banner.png</span
+			>
+			<Check
+				data-upload-check="2"
+				size={12}
+				class="transition-colors duration-300"
+			/>
 		</div>
 	</div>
 </div>
@@ -54,12 +71,22 @@ import { Check } from "@lucide/astro";
 			const slot = container.querySelector("[data-upload-slot]") as HTMLElement;
 			uploadSarmal = stop(uploadSarmal, slot);
 
-			const fc1 = container.querySelector("[data-upload-check='1']") as HTMLElement;
-			const fc2 = container.querySelector("[data-upload-check='2']") as HTMLElement;
+			const fc1 = container.querySelector(
+				"[data-upload-check='1']",
+			) as HTMLElement;
+			const fc2 = container.querySelector(
+				"[data-upload-check='2']",
+			) as HTMLElement;
 
-			const spinnerArea = container.querySelector("[data-upload-spinner]") as HTMLElement;
-			const doneArea = container.querySelector("[data-upload-done]") as HTMLElement;
-			const statusText = container.querySelector("[data-upload-status]") as HTMLElement;
+			const spinnerArea = container.querySelector(
+				"[data-upload-spinner]",
+			) as HTMLElement;
+			const doneArea = container.querySelector(
+				"[data-upload-done]",
+			) as HTMLElement;
+			const statusText = container.querySelector(
+				"[data-upload-status]",
+			) as HTMLElement;
 
 			spinnerArea.classList.remove("hidden");
 			spinnerArea.classList.add("flex");
@@ -76,18 +103,28 @@ import { Check } from "@lucide/astro";
 			cleanup();
 			const gen = uploadGen;
 			const slot = container.querySelector("[data-upload-slot]") as HTMLElement;
-			const spinnerArea = container.querySelector("[data-upload-spinner]") as HTMLElement;
-			const doneArea = container.querySelector("[data-upload-done]") as HTMLElement;
-			const statusText = container.querySelector("[data-upload-status]") as HTMLElement;
-			const fc1 = container.querySelector("[data-upload-check='1']") as HTMLElement;
-			const fc2 = container.querySelector("[data-upload-check='2']") as HTMLElement;
+			const spinnerArea = container.querySelector(
+				"[data-upload-spinner]",
+			) as HTMLElement;
+			const doneArea = container.querySelector(
+				"[data-upload-done]",
+			) as HTMLElement;
+			const statusText = container.querySelector(
+				"[data-upload-status]",
+			) as HTMLElement;
+			const fc1 = container.querySelector(
+				"[data-upload-check='1']",
+			) as HTMLElement;
+			const fc2 = container.querySelector(
+				"[data-upload-check='2']",
+			) as HTMLElement;
 
 			uploadSarmal = createSarmalSVG(slot, curves.rose5, {
 				trailColor: "#fb923c",
 				skeletonColor: "rgba(251,146,60,0.07)",
 				headColor: "#fb923c",
 				headRadius: 2,
-				trailLength: 80
+				trailLength: 80,
 			});
 
 			uploadTimers.push(
@@ -96,7 +133,7 @@ import { Check } from "@lucide/astro";
 					fc1.classList.remove("text-transparent");
 					fc1.classList.add("text-green-400/80");
 					statusText.textContent = "Almost there…";
-				}, 1800)
+				}, 1800),
 			);
 
 			uploadTimers.push(
@@ -104,7 +141,7 @@ import { Check } from "@lucide/astro";
 					if (uploadGen !== gen) return;
 					fc2.classList.remove("text-transparent");
 					fc2.classList.add("text-green-400/80");
-				}, 2800)
+				}, 2800),
 			);
 
 			uploadTimers.push(
@@ -116,7 +153,7 @@ import { Check } from "@lucide/astro";
 					doneArea.classList.remove("hidden");
 					doneArea.classList.add("flex");
 					onDone();
-				}, 3600)
+				}, 3600),
 			);
 		}
 
@@ -124,7 +161,9 @@ import { Check } from "@lucide/astro";
 	}
 
 	// Register on DOM ready
-	const container = document.querySelector('[data-scenario="upload"]') as HTMLElement;
+	const container = document.querySelector(
+		'[data-scenario="upload"]',
+	) as HTMLElement;
 	if (container) {
 		window.demoRegistry = window.demoRegistry || {};
 		window.demoRegistry["upload"] = initUpload(container);

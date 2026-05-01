@@ -3,21 +3,27 @@
 ---
 
 <div
-	data-scenario='chat'
-	class='absolute inset-0 p-8 flex flex-col justify-center gap-3 opacity-0 transition-opacity duration-400 pointer-events-none [&.active]:opacity-100 [&.active]:pointer-events-auto'>
+	data-scenario="chat"
+	class="absolute inset-0 p-8 flex flex-col justify-center gap-3 opacity-0 transition-opacity duration-400 pointer-events-none [&.active]:opacity-100 [&.active]:pointer-events-auto"
+>
 	<div
-		class='self-end font-body text-[13px] px-3.5 py-2 rounded-[14px_14px_4px_14px] bg-surface text-foreground max-w-[82%]'>
+		class="self-end font-body text-[13px] px-3.5 py-2 rounded-[14px_14px_4px_14px] bg-surface text-foreground max-w-[82%]"
+	>
 		Summarise this document
 	</div>
 	<div
 		data-chat-thinking
-		class='flex flex-col items-start gap-1.5 transition-all duration-450 ease-out [&.exiting]:opacity-0 [&.exiting]:-translate-y-2.5 [&.exiting]:pointer-events-none'>
-		<div data-chat-slot class='w-14 h-14'></div>
-		<span class='font-mono text-[11px] tracking-widest text-muted'>Thinking…</span>
+		class="flex flex-col items-start gap-1.5 transition-all duration-450 ease-out [&.exiting]:opacity-0 [&.exiting]:-translate-y-2.5 [&.exiting]:pointer-events-none"
+	>
+		<div data-chat-slot class="w-14 h-14"></div>
+		<span class="font-mono text-[11px] tracking-widest text-muted"
+			>Thinking…</span
+		>
 	</div>
 	<div
 		data-chat-response
-		class='self-start font-body text-[13px] leading-relaxed px-3.5 py-2.5 rounded-[14px_14px_14px_4px] opacity-0 translate-y-2 transition-all duration-400 ease-out bg-surface text-muted-foreground max-w-[90%] hidden [&.visible]:opacity-100 [&.visible]:translate-y-0'>
+		class="self-start font-body text-[13px] leading-relaxed px-3.5 py-2.5 rounded-[14px_14px_14px_4px] opacity-0 translate-y-2 transition-all duration-400 ease-out bg-surface text-muted-foreground max-w-[90%] hidden [&.visible]:opacity-100 [&.visible]:translate-y-0"
+	>
 	</div>
 </div>
 
@@ -33,7 +39,8 @@
 		return null;
 	}
 
-	const CHAT_RESPONSE = "Three key findings, all pointing to strong Q1 growth across every segment.";
+	const CHAT_RESPONSE =
+		"Three key findings, all pointing to strong Q1 growth across every segment.";
 
 	function initChat(container: HTMLElement): DemoScenarioAPI {
 		let chatSarmal: Instance | null = null;
@@ -51,10 +58,16 @@
 				clearInterval(chatTicker);
 				chatTicker = null;
 			}
-			const chatSlot = container.querySelector("[data-chat-slot]") as HTMLElement;
+			const chatSlot = container.querySelector(
+				"[data-chat-slot]",
+			) as HTMLElement;
 			chatSarmal = stop(chatSarmal, chatSlot);
-			const thinkingArea = container.querySelector("[data-chat-thinking]") as HTMLElement;
-			const chatResponse = container.querySelector("[data-chat-response]") as HTMLElement;
+			const thinkingArea = container.querySelector(
+				"[data-chat-thinking]",
+			) as HTMLElement;
+			const chatResponse = container.querySelector(
+				"[data-chat-response]",
+			) as HTMLElement;
 			thinkingArea.classList.remove("exiting", "hidden");
 			chatResponse.classList.remove("visible");
 			chatResponse.classList.add("hidden");
@@ -64,16 +77,22 @@
 		function start(onDone: () => void) {
 			cleanup();
 			const gen = chatGen;
-			const chatSlot = container.querySelector("[data-chat-slot]") as HTMLElement;
-			const thinkingArea = container.querySelector("[data-chat-thinking]") as HTMLElement;
-			const chatResponse = container.querySelector("[data-chat-response]") as HTMLElement;
+			const chatSlot = container.querySelector(
+				"[data-chat-slot]",
+			) as HTMLElement;
+			const thinkingArea = container.querySelector(
+				"[data-chat-thinking]",
+			) as HTMLElement;
+			const chatResponse = container.querySelector(
+				"[data-chat-response]",
+			) as HTMLElement;
 
 			chatSarmal = createSarmalSVG(chatSlot, curves.lissajous43, {
 				skeletonColor: "transparent",
 				trailColor: palettes.bard,
 				trailStyle: "gradient-animated",
 				headRadius: 1.5,
-				trailLength: 65
+				trailLength: 65,
 			});
 
 			chatTimer = setTimeout(() => {
@@ -110,7 +129,9 @@
 	}
 
 	// Register on DOM ready
-	const container = document.querySelector('[data-scenario="chat"]') as HTMLElement;
+	const container = document.querySelector(
+		'[data-scenario="chat"]',
+	) as HTMLElement;
 	if (container) {
 		window.demoRegistry = window.demoRegistry || {};
 		window.demoRegistry["chat"] = initChat(container);

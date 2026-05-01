@@ -2,18 +2,37 @@
 const id = `eng-${Math.random().toString(36).slice(2, 8)}`;
 ---
 
-<div id={id} data-engine-output-demo class='content-auto my-6 max-w-sm rounded-lg overflow-hidden border border-border'>
-	<div class='flex flex-col md:flex-row' style='height:220px;'>
-		<div class='eng-view flex-1 min-w-0' style='background:var(--color-surface);'></div>
+<div
+	id={id}
+	data-engine-output-demo
+	class="content-auto my-6 max-w-sm rounded-lg overflow-hidden border border-border"
+>
+	<div class="flex flex-col md:flex-row" style="height:220px;">
 		<div
-			class='w-full md:w-36 shrink-0 border-l border-border bg-surface-raised flex flex-col justify-center py-4 px-[1.1rem] md:gap-3'>
-			<div class='font-mono text-[0.57rem] text-muted leading-[1.4]'>engine.tick(dt) {"->"}</div>
-			<div class='font-mono text-[0.72rem] leading-loose flex md:flex-col gap-4 md:gap-0'>
+			class="eng-view flex-1 min-w-0"
+			style="background:var(--color-surface);"
+		>
+		</div>
+		<div
+			class="w-full md:w-36 shrink-0 border-l border-border bg-surface-raised flex flex-col justify-center py-4 px-[1.1rem] md:gap-3"
+		>
+			<div class="font-mono text-[0.57rem] text-muted leading-[1.4]">
+				engine.tick(dt) {"->"}
+			</div>
+			<div
+				class="font-mono text-[0.72rem] leading-loose flex md:flex-col gap-4 md:gap-0"
+			>
 				<div>
-					<span class='text-muted'>x: </span><span data-coord-x class='text-primary'>0.000</span>
+					<span class="text-muted">x: </span><span
+						data-coord-x
+						class="text-primary">0.000</span
+					>
 				</div>
 				<div>
-					<span class='text-muted'>y: </span><span data-coord-y class='text-primary'>0.000</span>
+					<span class="text-muted">y: </span><span
+						data-coord-y
+						class="text-primary">0.000</span
+					>
 				</div>
 			</div>
 		</div>
@@ -21,48 +40,55 @@ const id = `eng-${Math.random().toString(36).slice(2, 8)}`;
 </div>
 
 <script>
-	import { createSVGRenderer, createEngine, curves, palettes } from "@sarmal/core";
+	import {
+		createSVGRenderer,
+		createEngine,
+		curves,
+		palettes,
+	} from "@sarmal/core";
 	import type { Point } from "@sarmal/core";
 
-	document.querySelectorAll<HTMLElement>("[data-engine-output-demo]").forEach((wrapper) => {
-		const view = wrapper.querySelector<HTMLElement>(".eng-view")!;
-		const coordX = wrapper.querySelector<HTMLElement>("[data-coord-x]")!;
-		const coordY = wrapper.querySelector<HTMLElement>("[data-coord-y]")!;
+	document
+		.querySelectorAll<HTMLElement>("[data-engine-output-demo]")
+		.forEach((wrapper) => {
+			const view = wrapper.querySelector<HTMLElement>(".eng-view")!;
+			const coordX = wrapper.querySelector<HTMLElement>("[data-coord-x]")!;
+			const coordY = wrapper.querySelector<HTMLElement>("[data-coord-y]")!;
 
-		const base = createEngine(curves.astroid, 250);
-		let lastHead: Point | null = null;
+			const base = createEngine(curves.astroid, 250);
+			let lastHead: Point | null = null;
 
-		// Intercept tick() so the renderer's loop also captures the head position
-		const engine = new Proxy(base, {
-			get(target, prop) {
-				if (prop === "tick")
-					return (dt: number) => {
-						const trail = target.tick(dt);
-						if (target.trailCount > 0) {
-							lastHead = trail[target.trailCount - 1];
-						}
-						return trail;
-					};
-				return Reflect.get(target, prop);
-			}
+			// Intercept tick() so the renderer's loop also captures the head position
+			const engine = new Proxy(base, {
+				get(target, prop) {
+					if (prop === "tick")
+						return (dt: number) => {
+							const trail = target.tick(dt);
+							if (target.trailCount > 0) {
+								lastHead = trail[target.trailCount - 1];
+							}
+							return trail;
+						};
+					return Reflect.get(target, prop);
+				},
+			});
+
+			const sarmal = createSVGRenderer({
+				container: view,
+				engine,
+				trailColor: palettes.bard,
+				trailStyle: "gradient-animated",
+				skeletonColor: "#c8c4be",
+				headRadius: 2,
+			});
+			sarmal.setSpeed(0.3);
+
+			requestAnimationFrame(function update() {
+				if (lastHead) {
+					coordX.textContent = lastHead.x.toFixed(3);
+					coordY.textContent = lastHead.y.toFixed(3);
+				}
+				requestAnimationFrame(update);
+			});
 		});
-
-		const sarmal = createSVGRenderer({
-			container: view,
-			engine,
-			trailColor: palettes.bard,
-			trailStyle: "gradient-animated",
-			skeletonColor: "#c8c4be",
-			headRadius: 2
-		});
-		sarmal.setSpeed(0.3);
-
-		requestAnimationFrame(function update() {
-			if (lastHead) {
-				coordX.textContent = lastHead.x.toFixed(3);
-				coordY.textContent = lastHead.y.toFixed(3);
-			}
-			requestAnimationFrame(update);
-		});
-	});
 </script>

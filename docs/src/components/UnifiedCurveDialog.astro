@@ -4,58 +4,75 @@ import DialogShowcase from "./Dialog/DialogShowcase.astro";
 import DialogInfoGrid from "./Dialog/DialogInfoGrid.astro";
 ---
 
-<Dialog id='unified-curve-dialog'>
-	<DialogShowcase slot='showcase' canvasId='unified-curve-canvas'>
+<Dialog id="unified-curve-dialog">
+	<DialogShowcase slot="showcase" canvasId="unified-curve-canvas">
 		<div
-			slot='top-left'
-			class='absolute top-4 left-4 font-mono text-[9px] tracking-widest uppercase text-muted/60 leading-relaxed pointer-events-none'>
-			<span id='dialog-curve-name' class='block'></span>
+			slot="top-left"
+			class="absolute top-4 left-4 font-mono text-[9px] tracking-widest uppercase text-muted/60 leading-relaxed pointer-events-none"
+		>
+			<span id="dialog-curve-name" class="block"></span>
 		</div>
 	</DialogShowcase>
 
-	<div slot='details' class='flex-1 flex flex-col p-6 font-mono text-[11px]'>
+	<div slot="details" class="flex-1 flex flex-col p-6 font-mono text-[11px]">
 		<DialogInfoGrid
-			id='dialog-info-grid'
+			id="dialog-info-grid"
 			items={[
 				{ label: "Name", value: "", dataAttr: "name" },
 				{ label: "Family", value: "", dataAttr: "family" },
-				{ label: "Period", value: "", dataAttr: "period" }
+				{ label: "Period", value: "", dataAttr: "period" },
 			]}
 		/>
 
-		<hr class='my-4 w-full border-t-px border-dotted text-muted' />
+		<hr class="my-4 w-full border-t-px border-dotted text-muted" />
 
-		<div class='mb-4'>
-			<div class='text-muted/50 uppercase tracking-wider text-[9px] mb-2'>Equation</div>
-			<div id='dialog-equation' class='text-primary font-mono text-sm'></div>
+		<div class="mb-4">
+			<div class="text-muted/50 uppercase tracking-wider text-[9px] mb-2">
+				Equation
+			</div>
+			<div id="dialog-equation" class="text-primary font-mono text-sm"></div>
 		</div>
 
-		<hr class='my-4 w-full border-t-px border-dotted text-muted' />
+		<hr class="my-4 w-full border-t-px border-dotted text-muted" />
 
-		<div class='mb-4'>
-			<div class='flex items-center justify-between mb-2'>
-				<span class='text-muted/50 uppercase tracking-wider text-[9px]'>Code</span>
+		<div class="mb-4">
+			<div class="flex items-center justify-between mb-2">
+				<span class="text-muted/50 uppercase tracking-wider text-[9px]"
+					>Code</span
+				>
 				<button
-					id='dialog-copy-btn'
-					class='font-mono text-[9px] tracking-widest uppercase text-muted hover:text-foreground transition-colors cursor-pointer'>
+					id="dialog-copy-btn"
+					class="font-mono text-[9px] tracking-widest uppercase text-muted hover:text-foreground transition-colors cursor-pointer"
+				>
 					Copy
 				</button>
 			</div>
-			<div id='dialog-code-container' class='bg-surface border border-border rounded-md'>
+			<div
+				id="dialog-code-container"
+				class="bg-surface border border-border rounded-md"
+			>
 				<!-- Code HTML injected here -->
 			</div>
 		</div>
 
-		<div class='flex-1'>
-			<div class='text-muted/50 uppercase tracking-wider text-[9px] mb-2'>Description</div>
-			<div id='dialog-description' class='text-foreground/70 leading-relaxed'></div>
+		<div class="flex-1">
+			<div class="text-muted/50 uppercase tracking-wider text-[9px] mb-2">
+				Description
+			</div>
+			<div id="dialog-description" class="text-foreground/70 leading-relaxed">
+			</div>
 		</div>
 
-		<div class='border-t border-border/60 pt-3 mt-3 flex items-center justify-between'>
-			<span id='dialog-family' class='text-muted/50 uppercase tracking-widest text-[9px]'></span>
+		<div
+			class="border-t border-border/60 pt-3 mt-3 flex items-center justify-between"
+		>
+			<span
+				id="dialog-family"
+				class="text-muted/50 uppercase tracking-widest text-[9px]"></span>
 			<button
-				id='dialog-close-btn'
-				class='font-mono text-[9px] tracking-widest uppercase text-muted/50 hover:text-foreground transition-colors cursor-pointer'>
+				id="dialog-close-btn"
+				class="font-mono text-[9px] tracking-widest uppercase text-muted/50 hover:text-foreground transition-colors cursor-pointer"
+			>
 				Close
 			</button>
 		</div>
@@ -77,15 +94,31 @@ import DialogInfoGrid from "./Dialog/DialogInfoGrid.astro";
 
 	const sarmalCache = new Map<string, ReturnType<typeof createSarmal>>();
 
-	const dialog = document.getElementById("unified-curve-dialog") as HTMLDialogElement;
-	const canvas = document.getElementById("unified-curve-canvas") as HTMLCanvasElement;
-	const curveNameEl = document.getElementById("dialog-curve-name") as HTMLSpanElement;
-	const equationEl = document.getElementById("dialog-equation") as HTMLDivElement;
-	const codeContainerEl = document.getElementById("dialog-code-container") as HTMLDivElement;
-	const descriptionEl = document.getElementById("dialog-description") as HTMLDivElement;
+	const dialog = document.getElementById(
+		"unified-curve-dialog",
+	) as HTMLDialogElement;
+	const canvas = document.getElementById(
+		"unified-curve-canvas",
+	) as HTMLCanvasElement;
+	const curveNameEl = document.getElementById(
+		"dialog-curve-name",
+	) as HTMLSpanElement;
+	const equationEl = document.getElementById(
+		"dialog-equation",
+	) as HTMLDivElement;
+	const codeContainerEl = document.getElementById(
+		"dialog-code-container",
+	) as HTMLDivElement;
+	const descriptionEl = document.getElementById(
+		"dialog-description",
+	) as HTMLDivElement;
 	const familyEl = document.getElementById("dialog-family") as HTMLSpanElement;
-	const copyBtn = document.getElementById("dialog-copy-btn") as HTMLButtonElement;
-	const closeBtn = document.getElementById("dialog-close-btn") as HTMLButtonElement;
+	const copyBtn = document.getElementById(
+		"dialog-copy-btn",
+	) as HTMLButtonElement;
+	const closeBtn = document.getElementById(
+		"dialog-close-btn",
+	) as HTMLButtonElement;
 	const infoGridEl = document.getElementById("dialog-info-grid") as HTMLElement;
 
 	let currentCurveId: string | null = null;
@@ -107,14 +140,17 @@ import DialogInfoGrid from "./Dialog/DialogInfoGrid.astro";
 		});
 	}
 
-	function getOrCreateSarmal(curveId: string, color: string): ReturnType<typeof createSarmal> {
+	function getOrCreateSarmal(
+		curveId: string,
+		color: string,
+	): ReturnType<typeof createSarmal> {
 		if (!sarmalCache.has(curveId)) {
 			const curve = curves[curveId as CurveName];
 			const sarmal = createSarmal(canvas, curve, {
 				trailColor: color,
 				skeletonColor: "#1b1c1a",
 				headColor: color,
-				trailLength: 60
+				trailLength: 60,
 			});
 			sarmalCache.set(curveId, sarmal);
 		}
@@ -123,24 +159,26 @@ import DialogInfoGrid from "./Dialog/DialogInfoGrid.astro";
 
 	// ! deferred to avoid competing with critical rendering
 	function setupModalListeners() {
-		document.querySelectorAll<HTMLButtonElement>("[data-curve-trigger]").forEach((btn) => {
-			btn.addEventListener("click", () => {
-				const curveId = btn.dataset.curveId!;
-				const codeText = btn.dataset.codeText!;
-				const codeHtml = btn.dataset.codeHtml!;
-				const metadata: CurveMetadata = JSON.parse(btn.dataset.metadataJson!);
+		document
+			.querySelectorAll<HTMLButtonElement>("[data-curve-trigger]")
+			.forEach((btn) => {
+				btn.addEventListener("click", () => {
+					const curveId = btn.dataset.curveId!;
+					const codeText = btn.dataset.codeText!;
+					const codeHtml = btn.dataset.codeHtml!;
+					const metadata: CurveMetadata = JSON.parse(btn.dataset.metadataJson!);
 
-				currentCurveId = curveId;
-				currentCodeText = codeText;
+					currentCurveId = curveId;
+					currentCodeText = codeText;
 
-				populateDialog(metadata, codeHtml);
-				dialog.showModal();
+					populateDialog(metadata, codeHtml);
+					dialog.showModal();
 
-				const sarmal = getOrCreateSarmal(curveId, metadata.color);
-				sarmal.reset();
-				sarmal.play();
+					const sarmal = getOrCreateSarmal(curveId, metadata.color);
+					sarmal.reset();
+					sarmal.play();
+				});
 			});
-		});
 	}
 
 	// ! modal clicks aren't urgent on load
