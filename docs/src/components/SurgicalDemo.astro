@@ -6,7 +6,7 @@ interface Props {
 const { concept } = Astro.props;
 
 const btnBase =
-	"py-1.5 px-3 text-[0.68rem] font-mono rounded-sm cursor-pointer transition-colors whitespace-nowrap tracking-[0.01em]";
+	"py-1.5 px-3 text-[0.68rem] font-ui rounded-sm cursor-pointer transition-colors whitespace-nowrap tracking-[0.01em]";
 ---
 
 <div class="my-6" data-concept={concept}>
@@ -18,13 +18,13 @@ const btnBase =
 				</div>
 				<div class="w-42 shrink-0 border-l border-[#242522] bg-[#131412] py-4.5 px-4 flex flex-col justify-between">
 					<div class="flex flex-col gap-1">
-						<span class="text-[0.58rem] uppercase tracking-widest text-muted font-mono">
+						<span class="text-[0.58rem] uppercase tracking-widest text-muted font-ui">
 							state
 						</span>
 						<div class="flex items-center gap-1.75">
 							<div class="dot" data-role="dot" data-state="playing" />
 							<span
-								class="text-[0.82rem] text-background font-mono transition-colors duration-150"
+								class="text-[0.82rem] text-background font-ui transition-colors duration-150"
 								data-role="state-text"
 							>
 								playing
@@ -82,7 +82,7 @@ const btnBase =
 				</div>
 				<div class="border-t border-[#242522] bg-[#131412] py-2.5 px-3.5 flex items-center gap-3">
 					<div class="flex-1 flex flex-col gap-1 min-w-0">
-						<div class="flex items-center gap-1.75 text-[0.68rem] text-background font-mono">
+						<div class="flex items-center gap-1.75 text-[0.68rem] text-background font-ui">
 							<div class="dot" data-role="dot" data-state="playing" />
 							<span data-role="state-text">playing</span>
 						</div>
@@ -107,7 +107,7 @@ const btnBase =
 				</div>
 				<div class="border-t border-[#242522] bg-[#131412] py-2.5 px-3.5 flex items-center gap-3">
 					<div class="flex-1 flex flex-col gap-1 min-w-0">
-						<div class="flex items-center gap-1.75 text-[0.68rem] text-background font-mono">
+						<div class="flex items-center gap-1.75 text-[0.68rem] text-background font-ui">
 							<div class="dot" data-role="dot" data-state="playing" />
 							<span data-role="state-text">playing</span>
 						</div>

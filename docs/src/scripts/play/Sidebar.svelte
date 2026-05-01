@@ -226,7 +226,7 @@
 
     <div class="flex flex-col gap-2">
       <span
-        class="font-mono text-[10px] font-medium tracking-[0.12em] uppercase text-muted-gray"
+        class="font-ui text-[10px] font-medium tracking-[0.12em] uppercase text-muted-gray"
         >Trail style</span
       >
       <select
@@ -245,7 +245,7 @@
         <!-- Trail swatch -->
         <div class="flex-1 flex flex-col gap-1.5">
           <span
-            class="font-mono text-[10px] font-medium tracking-[0.12em] uppercase text-muted-gray"
+            class="font-ui text-[10px] font-medium tracking-[0.12em] uppercase text-muted-gray"
             >Trail</span
           >
           <div
@@ -287,7 +287,7 @@
         <!-- Head swatch -->
         <div class="flex-1 flex flex-col gap-1.5">
           <span
-            class="font-mono text-[10px] font-medium tracking-[0.12em] uppercase text-muted-gray"
+            class="font-ui text-[10px] font-medium tracking-[0.12em] uppercase text-muted-gray"
             >Head</span
           >
           <div
@@ -316,7 +316,7 @@
     {:else}
       <div class="flex flex-col gap-2">
         <span
-          class="font-mono text-[10px] font-medium tracking-[0.12em] uppercase text-muted-gray"
+          class="font-ui text-[10px] font-medium tracking-[0.12em] uppercase text-muted-gray"
           >Palette</span
         >
         <select

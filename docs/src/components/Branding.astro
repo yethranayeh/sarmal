@@ -5,27 +5,35 @@ const isAtHome = currentPath === "/";
 
 <a
 	href="/"
-	class="font-heading text-2xl text-foreground transition-colors group"
+	class="font-heading text-2xl text-foreground transition-colors group inline-flex items-center gap-1"
 >
+	<!-- <img
+		src="/favicon.svg"
+		alt=""
+		class="size-6 shrink-0 group-hover:rotate-45 duration-300 transition-transform"
+		aria-hidden="true"
+	/> -->
 	<span
-		class:list={[
-			'duration-300 transition-all [font-variation-settings:"wght"_var(--wght)]',
-			{
-				"text-primary group-hover:text-foreground [--wght:650] group-hover:[--wght:350]":
-					isAtHome,
-				"text-foreground group-hover:text-primary [--wght:350] group-hover:[--wght:650]":
-					!isAtHome,
-			},
-		]}>sarmal</span
-	><span
-		class:list={[
-			'[--wght:350] [font-variation-settings:"wght"_var(--wght)] transition-all duration-300',
-			{
-				"text-foreground group-hover:text-primary [--wght:350] group-hover:[--wght:650]":
-					isAtHome,
-				"text-primary group-hover:text-foreground [--wght:650] group-hover:[--wght:350]":
-					!isAtHome,
-			},
-		]}>.art</span
+		><span
+			class:list={[
+				'duration-300 transition-all [font-variation-settings:"wght"_var(--wght)]',
+				{
+					"text-primary group-hover:text-foreground [--wght:650] group-hover:[--wght:350]":
+						isAtHome,
+					"text-foreground group-hover:text-primary [--wght:350] group-hover:[--wght:650]":
+						!isAtHome,
+				},
+			]}>sarmal</span
+		><span
+			class:list={[
+				'[--wght:350] [font-variation-settings:"wght"_var(--wght)] transition-all duration-300',
+				{
+					"text-foreground group-hover:text-primary [--wght:350] group-hover:[--wght:650]":
+						isAtHome,
+					"text-primary group-hover:text-foreground [--wght:650] group-hover:[--wght:350]":
+						!isAtHome,
+				},
+			]}>.art</span
+		></span
 	>
 </a>

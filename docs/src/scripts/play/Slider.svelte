@@ -27,7 +27,7 @@
 
 <div class="flex items-center gap-3">
   <span
-    class="w-24 font-mono text-[10px] font-medium tracking-[0.12em] uppercase text-muted-gray"
+    class="w-24 font-ui text-[10px] font-medium tracking-[0.12em] uppercase text-muted-gray"
     >{label}</span
   >
   <div class="relative h-3.5 flex items-center flex-1">
@@ -37,7 +37,7 @@
       style="width: {pct}%"
     ></div>
     <div
-      class="absolute w-3.5 h-3.5 rounded-full bg-surface-raised border border-border shadow-[0_1px_2px_rgba(27,28,26,0.08)] pointer-events-none"
+      class="absolute w-3.5 h-3.5 rounded-full bg-surface-raised border border-border shadow-[0_1px_2px_color-mix(in_srgb,var(--color-foreground)_8%,transparent)] pointer-events-none"
       style="left: calc({pct}% - 7px)"
     ></div>
     <input

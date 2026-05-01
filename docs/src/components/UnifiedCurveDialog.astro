@@ -8,7 +8,7 @@ import DialogInfoGrid from "./Dialog/DialogInfoGrid.astro";
 	<DialogShowcase slot="showcase" canvasId="unified-curve-canvas">
 		<div
 			slot="top-left"
-			class="absolute top-4 left-4 font-mono text-[9px] tracking-widest uppercase text-muted/60 leading-relaxed pointer-events-none"
+			class="absolute top-4 left-4 font-ui text-[9px] tracking-widest uppercase text-muted/60 leading-relaxed pointer-events-none"
 		>
 			<span id="dialog-curve-name" class="block"></span>
 		</div>
@@ -42,7 +42,7 @@ import DialogInfoGrid from "./Dialog/DialogInfoGrid.astro";
 				>
 				<button
 					id="dialog-copy-btn"
-					class="font-mono text-[9px] tracking-widest uppercase text-muted hover:text-foreground transition-colors cursor-pointer"
+					class="font-ui text-[9px] tracking-widest uppercase text-muted hover:text-foreground transition-colors cursor-pointer"
 				>
 					Copy
 				</button>
@@ -71,7 +71,7 @@ import DialogInfoGrid from "./Dialog/DialogInfoGrid.astro";
 				class="text-muted/50 uppercase tracking-widest text-[9px]"></span>
 			<button
 				id="dialog-close-btn"
-				class="font-mono text-[9px] tracking-widest uppercase text-muted/50 hover:text-foreground transition-colors cursor-pointer"
+				class="font-ui text-[9px] tracking-widest uppercase text-muted/50 hover:text-foreground transition-colors cursor-pointer"
 			>
 				Close
 			</button>
@@ -146,9 +146,12 @@ import DialogInfoGrid from "./Dialog/DialogInfoGrid.astro";
 	): ReturnType<typeof createSarmal> {
 		if (!sarmalCache.has(curveId)) {
 			const curve = curves[curveId as CurveName];
+			const foreground = getComputedStyle(document.documentElement)
+				.getPropertyValue("--color-foreground")
+				.trim();
 			const sarmal = createSarmal(canvas, curve, {
 				trailColor: color,
-				skeletonColor: "#1b1c1a",
+				skeletonColor: foreground,
 				headColor: color,
 				trailLength: 60,
 			});

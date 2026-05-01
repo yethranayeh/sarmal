@@ -5,11 +5,11 @@ const sizeInGB = (PACKAGE_SIZE / 1024 / 1024).toFixed(7);
 ---
 
 <footer
-	class="flex flex-col items-center md:flex-row justify-between bg-surface-raised w-full px-4 py-2 border-t border-border text-center"
+	class="flex flex-col gap-1 items-center md:flex-row justify-between bg-surface-raised w-full px-4 py-2 border-t border-border text-center"
 >
-	<p class="font-mono text-[10px] tracking-wider text-muted">
-		<span class="font-mono">{sizeInGB}</span>GB gzipped {SEPARATOR_DOT} MIT License
-		{SEPARATOR_DOT} © <span class="font-mono">2026</span>
+	<p class="text-[10px] tracking-wider text-muted">
+		<span class="font-ui">{sizeInGB}GB</span> gzipped {SEPARATOR_DOT} MIT License
+		{SEPARATOR_DOT} © <span class="font-ui">2026</span>
 	</p>
 
 	<div class="flex items-center gap-4">
@@ -17,7 +17,7 @@ const sizeInGB = (PACKAGE_SIZE / 1024 / 1024).toFixed(7);
 			href="https://www.npmjs.com/package/@sarmal/core"
 			target="_blank"
 			rel="noopener noreferrer"
-			class="font-mono text-xs tracking-wider uppercase text-muted hover:text-foreground transition-colors"
+			class="font-ui text-xs tracking-wider uppercase text-muted hover:text-foreground transition-colors"
 		>
 			NPM
 		</a>
@@ -25,7 +25,7 @@ const sizeInGB = (PACKAGE_SIZE / 1024 / 1024).toFixed(7);
 			href="https://github.com/yethranayeh/sarmal"
 			target="_blank"
 			rel="noopener noreferrer"
-			class="font-mono text-xs tracking-wider uppercase text-muted hover:text-foreground transition-colors"
+			class="font-ui text-xs tracking-wider uppercase text-muted hover:text-foreground transition-colors"
 		>
 			GitHub
 		</a>

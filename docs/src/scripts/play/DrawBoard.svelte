@@ -532,7 +532,7 @@
         100}%; transform: translate(-50%, -120%);"
     >
       <button
-        class="font-mono text-xs px-2 py-1 text-error hover:bg-surface-raised rounded transition-colors whitespace-nowrap cursor-pointer"
+        class="font-ui text-xs px-2 py-1 text-error hover:bg-surface-raised rounded transition-colors whitespace-nowrap cursor-pointer"
         onclick={() => deletePoint(popoverIndex!)}
       >
         Delete point

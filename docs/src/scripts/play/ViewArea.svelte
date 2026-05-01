@@ -13,7 +13,7 @@
 <section class="flex-1 relative bg-surface-raised overflow-hidden">
   <!-- dot grid decoration -->
   <div
-    class="absolute inset-0 bg-[radial-gradient(rgba(27,28,26,0.07)_0.8px,transparent_0.8px)] bg-size-[28px_28px] pointer-events-none"
+    class="absolute inset-0 bg-[radial-gradient(color-mix(in_srgb,var(--color-foreground)_7%,transparent)_0.8px,transparent_0.8px)] bg-size-[28px_28px] pointer-events-none"
   ></div>
 
   <!-- Square canvas inset -->
@@ -32,7 +32,7 @@
   <div class="absolute top-4 left-4 z-10 flex items-center gap-2">
     {#if !pg.sidebarVisible}
       <button
-        class="lg:hidden p-2 rounded-full bg-surface/90 backdrop-blur-md border border-border shadow-[0_1px_2px_rgba(27,28,26,0.04)] text-foreground cursor-pointer hover:text-primary transition-colors"
+        class="lg:hidden p-2 rounded-full bg-surface/90 backdrop-blur-md border border-border shadow-[0_1px_2px_color-mix(in_srgb,var(--color-foreground)_4%,transparent)] text-foreground cursor-pointer hover:text-primary transition-colors"
         onclick={() => (pg.sidebarVisible = true)}
         aria-label="Open controls"
       >
@@ -41,7 +41,7 @@
     {/if}
 
     <div
-      class="group inline-flex items-center bg-surface/90 backdrop-blur-md border border-border rounded-full p-0.75 gap-0.5 shadow-[0_1px_2px_rgba(27,28,26,0.04)]"
+      class="group inline-flex items-center bg-surface/90 backdrop-blur-md border border-border rounded-full p-0.75 gap-0.5 shadow-[0_1px_2px_color-mix(in_srgb,var(--color-foreground)_4%,transparent)]"
     >
       {#each ["math", "draw"] as mode}
         <button
@@ -79,7 +79,7 @@
       </button>
       {#if pg.shareStatus}
         <span
-          class="absolute right-0 top-9 whitespace-nowrap font-mono text-[10px] text-muted bg-surface-raised border border-border rounded px-2 py-1 shadow-[0_2px_8px_rgba(27,28,26,0.06)]"
+          class="absolute right-0 top-9 whitespace-nowrap font-ui text-[10px] text-muted bg-surface-raised border border-border rounded px-2 py-1 shadow-[0_2px_8px_color-mix(in_srgb,var(--color-foreground)_6%,transparent)]"
         >
           {pg.shareStatus}
         </span>

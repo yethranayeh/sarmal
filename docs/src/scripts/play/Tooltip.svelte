@@ -30,7 +30,7 @@
   <span
     class="absolute left-1/2 -translate-x-1/2 {placementClass}
            bg-surface-raised border border-border rounded px-2 py-1.5
-           shadow-[0_2px_8px_rgba(27,28,26,0.06)]
+           shadow-[0_2px_8px_color-mix(in_srgb,var(--color-foreground)_6%,transparent)]
            font-heading italic text-xs leading-relaxed text-muted-foreground
            opacity-0 group-hover:opacity-100
            transition-opacity duration-150

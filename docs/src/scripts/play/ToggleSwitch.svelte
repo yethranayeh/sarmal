@@ -31,7 +31,7 @@
         : 'bg-border'}"
     >
       <span
-        class="absolute top-0.5 w-3.5 h-3.5 bg-white rounded-full shadow-[0_1px_2px_rgba(0,0,0,0.15)] transition-[left] duration-150 {checked
+        class="absolute top-0.5 w-3.5 h-3.5 bg-surface-raised rounded-full shadow-[0_1px_2px_rgba(0,0,0,0.15)] transition-[left] duration-150 {checked
           ? 'left-4'
           : 'left-0.5'}"
       ></span>
@@ -46,7 +46,7 @@
     aria-label={ariaLabel}
   >
     <span
-      class="absolute top-0.5 w-3.5 h-3.5 bg-white rounded-full shadow-[0_1px_2px_rgba(0,0,0,0.15)] transition-[left] duration-150 {checked
+      class="absolute top-0.5 w-3.5 h-3.5 bg-surface-raised rounded-full shadow-[0_1px_2px_rgba(0,0,0,0.15)] transition-[left] duration-150 {checked
         ? 'left-4'
         : 'left-0.5'}"
     ></span>

@@ -7,17 +7,17 @@ interface Props {
 const { variant = "default", template = "solid" } = Astro.props;
 
 const config: Record<string, { kanji?: string; color: string }> = {
-	default: { color: "#c0143c" },
-	info: { kanji: "報", color: "#c0143c" },
-	tip: { kanji: "秘", color: "#97002a" },
-	warning: { kanji: "危", color: "#c0143c" },
-	error: { kanji: "誤", color: "#ba1a1a" },
-	success: { kanji: "達", color: "#c0143c" },
+	default: { color: "var(--color-primary)" },
+	info: { kanji: "報", color: "var(--color-primary)" },
+	tip: { kanji: "秘", color: "var(--color-accent)" },
+	warning: { kanji: "危", color: "var(--color-primary)" },
+	error: { kanji: "誤", color: "var(--color-error)" },
+	success: { kanji: "達", color: "var(--color-primary)" },
 };
 
 const { kanji, color } = config[variant] ?? config.default;
 const isDefault = variant === "default";
-const bgColor = template === "kanji" ? color : "#c0143c";
+const bgColor = template === "kanji" ? color : "var(--color-primary)";
 ---
 
 {

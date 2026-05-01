@@ -26,7 +26,7 @@
         <span class="text-primary">gesture</span>.
       </h2>
       <p
-        class="font-mono text-[11px] tracking-[0.04em] leading-[1.6] text-muted-gray mt-3"
+        class="font-ui text-[11px] tracking-[0.04em] leading-[1.6] text-muted-gray mt-3"
       >
         Click to place a point.<br />
         Three or more become a curve.

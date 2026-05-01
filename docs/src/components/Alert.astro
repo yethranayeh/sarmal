@@ -7,11 +7,11 @@ interface Props {
 }
 
 const variantConfig: Record<string, { label: string; accent: string }> = {
-	info: { label: "Info", accent: "#1d6fa4" },
-	tip: { label: "Tip", accent: "#2d6a4f" },
-	warning: { label: "Warning", accent: "#b45309" },
-	error: { label: "Error", accent: "#ba1a1a" },
-	success: { label: "Success", accent: "#2d6a4f" },
+	info: { label: "Info", accent: "var(--color-info)" },
+	tip: { label: "Tip", accent: "var(--color-tip)" },
+	warning: { label: "Warning", accent: "var(--color-warning)" },
+	error: { label: "Error", accent: "var(--color-error)" },
+	success: { label: "Success", accent: "var(--color-success)" },
 };
 
 const { variant = "info", label } = Astro.props;

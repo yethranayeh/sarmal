@@ -32,6 +32,8 @@ const {
 	curve = "lissajous32",
 	autoStart = true,
 	initialT,
+	// Canvas renderer requires resolved color values — CSS variables cannot be used as prop defaults.
+	// headColor matches --color-primary; trailColor/skeletonColor are blueprint-specific neutrals.
 	trailColor = "#3a3b37",
 	skeletonColor = "#b0aca4",
 	headColor = "#c0143c",
@@ -96,11 +98,12 @@ const id = `sbp-${Math.random().toString(36).slice(2, 8)}`;
 	import { createSarmalSVG, curves } from "@sarmal/core";
 	import type { CurveName, SVGSarmalOptions } from "@sarmal/core";
 
+	const _css = getComputedStyle(document.documentElement);
 	const ANNOT_COLORS = {
-		line: "#97002a",
-		ring: "#c0143c",
-		label: "#c0143c",
-		sub: "#7a7067",
+		line: _css.getPropertyValue("--color-accent").trim(),
+		ring: _css.getPropertyValue("--color-primary").trim(),
+		label: _css.getPropertyValue("--color-primary").trim(),
+		sub: _css.getPropertyValue("--color-muted").trim(),
 	};
 
 	// dx/dy: label offset from target center. lx/ly: line anchor within the label box.
@@ -353,14 +356,13 @@ const id = `sbp-${Math.random().toString(36).slice(2, 8)}`;
 
 				const primary = document.createElement("span");
 				primary.textContent = callout.label;
-				primary.className =
-					"text-[0.9rem] text-[#c0143c] leading-none font-mono";
+				primary.className = "text-[0.9rem] text-primary leading-none font-ui";
 				labelDiv.appendChild(primary);
 
 				if (callout.sub) {
 					const sub = document.createElement("span");
 					sub.textContent = callout.sub;
-					sub.className = "text-[0.58rem] text-[#7a7067] font-mono";
+					sub.className = "text-[0.58rem] text-muted font-ui";
 					labelDiv.appendChild(sub);
 				}
 

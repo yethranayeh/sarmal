@@ -48,5 +48,12 @@ export default defineConfig({
       weights: ["200", "300", "400", "500", "600", "700", "800"],
       styles: ["normal", "italic"],
     },
+    {
+      provider: fontProviders.google(),
+      name: "Figtree",
+      cssVariable: "--font-ui",
+      weights: ["300", "400", "500", "600", "700", "800", "900"],
+      styles: ["normal", "italic"],
+    },
   ],
 });
