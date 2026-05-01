@@ -42,11 +42,15 @@ const id = `sbp-${Math.random().toString(36).slice(2, 8)}`;
 
 <div
 	id={id}
+	style={[
+		height ? `--sb-h:${height}px` : '',
+		width ? `--sb-w:${width}px` : '',
+	].filter(Boolean).join(';')}
 	class:list={[
 		"sarmal-blueprint",
 		"relative",
-		height ? `h-[${height}px]` : "h-full",
-		width ? `w-[${width}px]` : "w-full",
+		height ? "h-(--sb-h)" : "h-full",
+		width ? "w-(--sb-w)" : "w-full",
 		"bg-surface",
 		"bg-[radial-gradient(circle,#d8d4ce_1.5px,transparent_1.5px)]",
 		"bg-size-[24px_24px]",

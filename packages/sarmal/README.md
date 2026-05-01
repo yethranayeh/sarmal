@@ -62,18 +62,7 @@ Or with **auto-init** without having to write any JS:
 
 ## Standard Curves
 
-| Name           | Description                                |
-| -------------- | ------------------------------------------ |
-| `artemis2`     | Artemis II free-return lunar trajectory    |
-| `epitrochoid7` | 7-lobed epitrochoid with dynamic variation |
-| `astroid`      | 4-cusped astroid                           |
-| `deltoid`      | 3-cusped deltoid                           |
-| `rose5`        | 5-petal rose curve                         |
-| `rose3`        | 3-petal rose curve                         |
-| `lissajous32`  | Lissajous 3:2 with live skeleton           |
-| `lissajous43`  | Lissajous 4:3 with live skeleton           |
-| `epicycloid3`  | 3-cusped epicycloid                        |
-| `lame`         | Lamé curve with live skeleton              |
+See [sarmal.art/docs#curves](https://sarmal.art/docs#curves) for the full list of built-in curves.
 
 ## Documentation
 

@@ -15,7 +15,7 @@ This is a monorepo of the **Sarmal** project, which aims to be a parametric curv
 
 - **[Homepage](https://sarmal.art)** | The semi-cliche marketing stuff
 - **[Playground](https://sarmal.art/play)** | A playground where you can struggle at math like me
-- **[Docs](https://sarmal.art/docs)** | A documentation page that *I would like to build* for info about getting into Sarmal
+- **[Docs](https://sarmal.art/docs)** | Documentation content regarding API, concepts, curves, changelog and more
 - **[Core README](./packages/sarmal/README.md)** | Having two READMEs is always better than none
 - **[React README](./packages/react/README.md)** | Now we have three
 
