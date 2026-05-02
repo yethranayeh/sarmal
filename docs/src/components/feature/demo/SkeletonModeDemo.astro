@@ -2,59 +2,48 @@
 const id = `skel-${Math.random().toString(36).slice(2, 8)}`;
 ---
 
-<div
-	id={id}
-	data-skeleton-mode-demo
-	class="my-6 content-auto max-w-xl rounded-lg overflow-hidden border border-border"
->
-	<div class="grid grid-cols-1 md:grid-cols-2 divide-x divide-border">
-		<div class="flex flex-col">
-			<div
-				class="flex items-center justify-between px-3 py-[0.35rem] border-b border-border bg-(--color-surface-raised)"
-			>
-				<span class="font-ui text-[0.63rem] text-foreground"
-					>skeleton: 'static'</span
-				>
-				<span class="font-ui text-[0.57rem] text-muted">drifts over time</span>
-			</div>
-			<svg class="skel-static-view w-full h-50 bg-surface"></svg>
-		</div>
-		<div class="flex flex-col">
-			<div
-				class="flex items-center justify-between px-3 py-[0.35rem] border-b border-border bg-(--color-surface-raised)"
-			>
-				<span class="font-ui text-[0.63rem] text-foreground"
-					>skeleton: 'live'</span
-				>
-				<span class="font-ui text-[0.57rem] text-muted">always matches</span>
-			</div>
-			<svg class="skel-live-view w-full h-50 bg-surface"></svg>
-		</div>
+<div id={id} class="content-auto max-w-xl overflow-hidden">
+	<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+		{
+			[
+				{ name: "static", desc: "drifts over time" },
+				{ name: "live", desc: "always matches" },
+			].map((mode) => (
+				<div class="flex flex-col rounded-lg overflow-hidden border border-border">
+					<div class="flex items-center justify-between px-3 py-[0.35rem] border-b border-border bg-(--color-surface-raised)">
+						<span class="font-ui text-[0.63rem] text-foreground">
+							skeleton: <span class="text-accent">'{mode.name}'</span>
+						</span>
+						<span class="font-ui text-[0.57rem] text-muted">{mode.desc}</span>
+					</div>
+					<svg
+						id={`demo-skeleton-${mode.name}`}
+						class="skel-static-view w-full h-50 bg-surface"
+					/>
+				</div>
+			))
+		}
 	</div>
 </div>
 
 <script>
-	import { createSarmalSVG, curves, palettes } from "@sarmal/core";
+	import { createSarmalSVG, lame, palettes } from "@sarmal/core";
+	const modes = ["static", "live"] as const;
 
-	document
-		.querySelectorAll<HTMLElement>("[data-skeleton-mode-demo]")
-		.forEach((wrapper) => {
-			const staticView =
-				wrapper.querySelector<SVGSVGElement>(".skel-static-view")!;
-			const liveView = wrapper.querySelector<SVGSVGElement>(".skel-live-view")!;
+	for (const mode of modes) {
+		const svg = document.querySelector<SVGSVGElement>(
+			`#demo-skeleton-${mode}`,
+		)!;
 
-			const staticCurve = { ...curves.lame, skeleton: "static" as const };
-
-			createSarmalSVG(staticView, staticCurve, {
+		createSarmalSVG(
+			svg,
+			{ ...lame, skeleton: mode },
+			{
 				trailColor: palettes.fire,
 				trailStyle: "gradient-static",
 				skeletonColor: "#000000",
-			});
-
-			createSarmalSVG(liveView, curves.lame, {
-				trailColor: palettes.fire,
-				trailStyle: "gradient-static",
-				skeletonColor: "#000000",
-			});
-		});
+				trailLength: 300,
+			},
+		);
+	}
 </script>

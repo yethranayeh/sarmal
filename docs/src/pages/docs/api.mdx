@@ -32,14 +32,14 @@ const sarmal = createSarmal(canvas, curves.rose3);
 
 | Option | Type | Default | Description |
 |--------|------|---------|-------------|
-| `trailLength` | `number` | `120` | Number of points in trail |
-| `skeletonColor` | `string` | `'#ffffff'` | Hex color string for the skeleton path. Use `"transparent"` to hide |
-| `trailColor` | `string \| string[]` | `'#ffffff'` | Hex color string for solid trails, or array of hex colors for gradients |
-| `headColor` | `string` | derived | Hex color string for the head dot. Omit to auto-follow trail color |
-| `headRadius` | `number` | `4` | Radius of the head dot in pixels |
-| `trailStyle` | `TrailStyle` | `'default'` | `'default'` \| `'gradient-static'` \| `'gradient-animated'` |
-| `autoStart` | `boolean` | `true` | Start the animation loop automatically on creation |
-| `initialT` | `number` | `undefined` | Initial position along the curve (t value). Calls `seek(initialT)` before first frame |
+| trailLength | `number` | `120` | Number of points in trail |
+| skeletonColor | `string` | `'#ffffff'` | Hex color string for the skeleton path. Use `"transparent"` to hide |
+| trailColor | `string \| string[]` | `'#ffffff'` | Hex color string for solid trails, or array of hex colors for gradients |
+| headColor | `string` | *derived* | Hex color string for the head dot. Omit to auto-follow trail color |
+| headRadius | `number` | `4` | Radius of the head dot in pixels |
+| trailStyle | `TrailStyle` | `'default'` | `'default'` \| `'gradient-static'` \| `'gradient-animated'` |
+| autoStart | `boolean` | `true` | Start the animation loop automatically on creation |
+| initialT | `number` | `undefined` | Initial position along the curve (t value). Calls `seek(initialT)` before first frame |
 
 ### Auto-start and initial position
 
@@ -66,8 +66,6 @@ const s4 = createSarmal(canvas, curves.lissajous32, {
 s4.play();
 ```
 
----
-
 ## createSarmalSVG
 
 Same API as `createSarmal`. First argument is an `<svg>` element. The renderer takes ownership of the targeted **svg** element.
@@ -83,8 +81,6 @@ const sarmal = createSarmalSVG(svg, curves.lissajous32);
 <Alert variant="info">
   `trailStyle` and `palette` work identically in both canvas and SVG renderers.
 </Alert>
-
----
 
 ## drawCurve
 
@@ -211,8 +207,6 @@ useEffect(() => {
   <button slot="controls" class="cdemo-btn cdemo-btn-danger" data-sarmal-action="destroy">Destroy</button>
 </ConceptDemo>
 
----
-
 ## Engine Control
 
 ### jump(t)
@@ -258,8 +252,6 @@ sarmal.seek(1, { step: 0.1 });
 |--------|------|---------|-------------|
 | `wrap` | `boolean` | `false` | Trail wraps around period boundary for a full trail everywhere |
 | `step` | `number` | `period / trailLength` | Time gap between trail points (deterministic, FPS-independent) |
-
----
 
 ## Animation Control
 
@@ -379,8 +371,6 @@ sarmal.setRenderOptions({ skeletonColor: "transparent" });
 
 **Validation:** Throws an error if *any* field fails validation. In case of a validation error, no fields will be mutated, so the animation continues on the previous valid state.
 
----
-
 ## Morphing
 
 ### morphTo(target)
@@ -419,8 +409,6 @@ await sarmal.morphTo(curves.artemis2);
 
 - Calling `morphTo()` mid-morph resolves the previous Promise *immediately*. The current interpolated state becomes `curveA` for the new morph while avoiding a visual jump
 - The transition flow for speed and morph run *independently*
-
----
 
 ## Curve Definition Schema
 
@@ -471,8 +459,6 @@ const myCurve: CurveDef = {
 
 **Not in the schema:** Color, trail style, rendering options, `trailLength`, and `scale` are renderer concerns, not curve concerns.
 
----
-
 ## Trail Styles
 
 | Style | Description |
@@ -504,8 +490,6 @@ const sarmal = createSarmal(canvas, curves.astroid, {
 <Alert variant="warning">
   Mismatched combinations (e.g. an array of colors with `"default"` trail style, or a color string with gradient styles) still produce a valid render, but output a console warning to inform that there is a mismatch. The selected `trailStyle` determines whether to use a single color, or the whole array (if available).
 </Alert>
-
----
 
 ## Built-in Palettes
 
@@ -558,8 +542,6 @@ const sarmal = createSarmal(canvas, curves.lissajous32, {
 
 9. **`pause()` during a speed transition**: The pending `setSpeedOver()` Promise rejects with `'Speed transition cancelled'`, but `userSpeedOverride` is *not* cleared. On `play()`, the animation does not resume with curve's default, but with the interpolated speed from when it had paused.
    - Call `resetSpeed()` after `pause()` to return to the natural rhythm.
-
----
 
 ## TypeScript Types
 

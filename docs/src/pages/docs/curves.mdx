@@ -6,7 +6,9 @@ order: 5
 description: Browse available curves and their parameters.
 ---
 
+import Badge from "../../components/Badge.astro";
 import Link from "../../components/Link.astro";
+import { SEPARATOR_DOT } from "../../variables";
 
 # Curve Catalog
 
@@ -19,45 +21,45 @@ Browse the built-in curves. Each curve has unique geometry, period, and behavior
 Some of the well-known and well-documented curves with easy to find mathematical definitions.
 > Their commonality does not take away from their inherent beauty
 
-### <Link href="/docs/curves/rose3">Rose (n=3)</Link>
+### <span class='inline-flex gap-4 items-center'><Link href="/docs/curves/rose3">Rose (n=3)</Link> {SEPARATOR_DOT} <Badge text="Rose" /></span>
 A 3-petaled rose curve with trifold symmetry. Also used as the Sarmal logo.
 
-### <Link href="/docs/curves/rose5">Rose (n=5)</Link>
+### <span class='inline-flex gap-4 items-center'><Link href="/docs/curves/rose5">Rose (n=5)</Link> {SEPARATOR_DOT} <Badge text="Rose" /></span>
 A 5-petaled rose curve with fivefold symmetry.
 
-### <Link href="/docs/curves/rose52">Rose (n=5/2)</Link>
-A 5-petaled rose with a fractional exponent that requires two full revolutions to close, producing elegant trail crossings through the center.
+### <span class='inline-flex gap-4 items-center'><Link href="/docs/curves/rose52">Rose (n=5/2)</Link> {SEPARATOR_DOT} <Badge text="Rose" /></span>
+A 5-petaled rose with period 4π — a fractional exponent requires two full revolutions to close, producing elegant trail crossings through the center.
 
-### <Link href="/docs/curves/epitrochoid7">Epitrochoid7</Link>
+### <span class='inline-flex gap-4 items-center'><Link href="/docs/curves/epitrochoid7">Epitrochoid7</Link> {SEPARATOR_DOT} <Badge text="Roulette" /></span>
 A roulette tracing 7 lobes with an animated distance parameter that creates organic motion.
 
-### <Link href="/docs/curves/astroid">Astroid</Link>
+### <span class='inline-flex gap-4 items-center'><Link href="/docs/curves/astroid">Astroid</Link> {SEPARATOR_DOT} <Badge text="Hypocycloid" /></span>
 A hypocycloid with 4 sharp cusps, forming a star-like shape within a square.
 
-### <Link href="/docs/curves/deltoid">Deltoid</Link>
+### <span class='inline-flex gap-4 items-center'><Link href="/docs/curves/deltoid">Deltoid</Link> {SEPARATOR_DOT} <Badge text="Hypocycloid" /></span>
 A 3-cusped hypocycloid tracing a triangle-like curve.
 
-### <Link href="/docs/curves/lissajous32">Lissajous 3:2</Link>
-A figure-eight-like curve with a slowly drifting phase that causes the skeleton to morph continuously.
+### <span class='inline-flex gap-4 items-center'><Link href="/docs/curves/lissajous32">Lissajous 3:2</Link> {SEPARATOR_DOT} <Badge text="Lissajous" /></span>
+A figure-eight-like curve with a slowly drifting phase and live skeleton.
 
-### <Link href="/docs/curves/lissajous43">Lissajous 4:3</Link>
-A more complex Lissajous pattern with 4:3 frequency ratio and drifting phase.
+### <span class='inline-flex gap-4 items-center'><Link href="/docs/curves/lissajous43">Lissajous 4:3</Link> {SEPARATOR_DOT} <Badge text="Lissajous" /></span>
+A more complex Lissajous pattern with 4:3 frequency ratio, drifting phase, and live skeleton.
 
-### <Link href="/docs/curves/epicycloid3">Epicycloid (n=3)</Link>
+### <span class='inline-flex gap-4 items-center'><Link href="/docs/curves/epicycloid3">Epicycloid (n=3)</Link> {SEPARATOR_DOT} <Badge text="Roulette" /></span>
 A 3-pointed star shape created by a point on a rolling circle.
 
-### <Link href="/docs/curves/lame">Lamé Curve</Link>
+### <span class='inline-flex gap-4 items-center'><Link href="/docs/curves/lame">Lamé Curve</Link> {SEPARATOR_DOT} <Badge text="Superellipse" /></span>
 A superellipse that morphs continuously between diamond, circle, and squircle shapes.
 
 
 
-### <Link href="/docs/curves/star">Star</Link>
+### <span class='inline-flex gap-4 items-center'><Link href="/docs/curves/star">Star</Link> {SEPARATOR_DOT} <Badge text="Fourier polar" /></span>
 A 5-pointed star built from Fourier harmonics in polar coordinates.
 
-### <Link href="/docs/curves/star4">Star (4-arm)</Link>
+### <span class='inline-flex gap-4 items-center'><Link href="/docs/curves/star4">Star (4-arm)</Link> {SEPARATOR_DOT} <Badge text="Fourier polar" /></span>
 A 4-pointed star using the same Fourier harmonic construction as Star.
 
-### <Link href="/docs/curves/star7">Star (7-arm)</Link>
+### <span class='inline-flex gap-4 items-center'><Link href="/docs/curves/star7">Star (7-arm)</Link> {SEPARATOR_DOT} <Badge text="Fourier polar" /></span>
 A 7-pointed star using the same Fourier harmonic construction as Star.
 
 ---
@@ -66,26 +68,5 @@ A 7-pointed star using the same Fourier harmonic construction as Star.
 
 These are mainly **tributes** to the impactful happenings of nature, humanity and univcerse. A recreation of shapes from the real world, whose <span class='text-muted hover:text-foreground duration-300 transition-all [font-variation-settings:"wght"_var(--wght)] [--wght:300] hover:[--wght:650] cursor-vertical-text'>silhouttes</span> carry a deeper meaning beyond their mathematical equations.
 
-### <Link href="/docs/curves/artemis2">Artemis II</Link>
+### <span class='inline-flex gap-4 items-center'><Link href="/docs/curves/artemis2">Artemis II</Link> {SEPARATOR_DOT} <Badge text="NASA" /></span>
 Modified lemniscate with two unequal lobes.
-
----
-
-## Quick Reference
-
-| Curve | Family | Key Feature |
-|-------|--------|-------------|
-| Rose (n=3) | Rose | 3 petals |
-| Rose (n=5) | Rose | 5 petals |
-| Rose (n=5/2) | Rose | 5 petals, period 4π |
-| Epitrochoid7 | Roulette | 7 lobes, animated parameter |
-| Astroid | Hypocycloid | 4 cusps |
-| Deltoid | Hypocycloid | 3 cusps |
-| Lissajous 3:2 | Lissajous | Phase drift, live skeleton |
-| Lissajous 4:3 | Lissajous | Phase drift, live skeleton |
-| Epicycloid (n=3) | Roulette | 3-pointed star |
-| Lamé Curve | Superellipse | Shape morphing |
-| Star | Fourier polar | 5-pointed star |
-| Star (4-arm) | Fourier polar | 4-pointed star |
-| Star (7-arm) | Fourier polar | 7-pointed star |
-| Artemis II | Free-return trajectory | Two unequal lobes |

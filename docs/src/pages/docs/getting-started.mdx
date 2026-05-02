@@ -35,18 +35,18 @@ The script scans for `canvas[data-sarmal]` and `svg[data-sarmal]` on page load a
 
 See <Link href="/docs/frameworks#cdn">CDN</Link> section in Framework Guides page for more details.
 
-## Your first spinner
+## Your first animated curve
 
-`createSarmal` is the fastest way to get a spinner on screen. You point it to a canvas element and pick a curve. The animation starts automatically:
+`createSarmal` is the fastest way to get an animated curve on screen. You point it to a canvas element and pick a curve. The animation starts automatically:
 
 ```html
-<canvas id="spinner" width="200" height="200"></canvas>
+<canvas id="sarmal" width="200" height="200"></canvas>
 ```
 
 ```ts
 import { createSarmal, curves } from "@sarmal/core";
 
-const canvas = document.getElementById("spinner") as HTMLCanvasElement;
+const canvas = document.getElementById("sarmal") as HTMLCanvasElement;
 const sarmal = createSarmal(canvas, curves.artemis2);
 ```
 

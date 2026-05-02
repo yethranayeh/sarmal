@@ -54,21 +54,21 @@ If neither is provided, the canvas falls back to **300x300** with a console warn
 
 | Prop | Type | Default | Description |
 |------|------|---------|-------------|
-| `curve` | `CurveDef` | - | **Required.** The curve definition. Must be a stable reference (module-level const or `useMemo`). |
-| `className` | `string` | - | Applied to the `<canvas>` element |
-| `style` | `CSSProperties` | - | Applied to the `<canvas>` element |
-| `width` | `number` | - | Canvas buffer width in CSS pixels. **Init-only.** |
-| `height` | `number` | - | Canvas buffer height in CSS pixels. **Init-only.** |
-| `autoStart` | `boolean` | `true` | Start the animation loop automatically. **Init-only.** |
-| `initialT` | `number` | `undefined` | Initial position along the curve. **Init-only.** |
-| `skeletonColor` | `string` | `'#ffffff'` | Hex color for the skeleton path |
-| `trailColor` | `string \| string[]` | `'#ffffff'` | Hex color or array of hex colors for gradient trails |
-| `headColor` | `string` | derived | Hex color for the head dot. Omit to auto-follow trail color |
-| `headRadius` | `number` | `4` | Radius of the head dot in pixels. Changeable at runtime via `setRenderOptions`. |
-| `trailLength` | `number` | `120` | Number of trail points. **Init-only.** |
-| `trailStyle` | `TrailStyle` | `'default'` | `'default'` \| `'gradient-static'` \| `'gradient-animated'` |
-| `morphDuration` | `number` | `300` | Duration of the morph transition when `curve` changes (ms) |
-| `onReady` | `(instance) => void` | - | Fired once after the instance is created. Store the reference if you need imperative control. |
+| curve<span class="text-accent">*</span> | `CurveDef` | - | <strong class="text-accent">Required.</strong> The curve definition. Must be a stable reference (module-level const or `useMemo`). |
+| className | `string` | - | Applied to the `<canvas>` element |
+| style | `CSSProperties` | - | Applied to the `<canvas>` element |
+| width | `number` | - | Canvas buffer width in CSS pixels. **Init-only.** |
+| height | `number` | - | Canvas buffer height in CSS pixels. **Init-only.** |
+| autoStart | `boolean` | `true` | Start the animation loop automatically. **Init-only.** |
+| initialT | `number` | `undefined` | Initial position along the curve. **Init-only.** |
+| skeletonColor | `string` | `'#ffffff'` | Hex color for the skeleton path |
+| trailColor | `string \| string[]` | `'#ffffff'` | Hex color or array of hex colors for gradient trails |
+| headColor | `string` | derived | Hex color for the head dot. Omit to auto-follow trail color |
+| headRadius | `number` | `4` | Radius of the head dot in pixels. Changeable at runtime via `setRenderOptions`. |
+| trailLength | `number` | `120` | Number of trail points. **Init-only.** |
+| trailStyle | `TrailStyle` | `'default'` | `'default'` \| `'gradient-static'` \| `'gradient-animated'` |
+| morphDuration | `number` | `300` | Duration of the morph transition when `curve` changes (ms) |
+| onReady | `(instance) => void` | - | Fired once after the instance is created. Store the reference if you need imperative control. |
 
 #### Curve stability
 
@@ -260,11 +260,11 @@ You can also use **jsDelivr**:
 
 #### Data Attributes
 
-Configure appearance and behavior through `data-*` attributes on the canvas element:
+Configure appearance and behavior through <code class="whitespace-nowrap">data-*</code> attributes on the canvas element:
 
 | Attribute | Type | Example | Description |
 |-----------|------|---------|-------------|
-| data-sarmal<span class="text-primary">*</span> | `string` | `"rose3"` | <strong class="text-primary">Required.</strong> The built-in curve name. |
+| data-sarmal<span class="text-accent">*</span> | `string` | `"rose3"` | <strong class="text-accent">Required.</strong> The built-in curve name. |
 | data-trail-color | `string \| string[]` | `"#ff6b6b"` or `'["#ff6b6b","#ffd93d","#6bcb77"]'` | Hex color or JSON array for gradient trails |
 | data-skeleton-color | `string` | `"#ffffff66"` | Hex color for the skeleton ghost path |
 | data-head-color | `string` | `"#ff0000"` | Hex color for the head dot |

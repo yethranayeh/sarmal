@@ -60,8 +60,6 @@ const sarmal = createSarmal(canvas, astroid, {
   In current implementation, canvas dimensions are captured at initialization. If the canvas is resized after creation, call `destroy()` and re-create the instance. This may be automatically handled in a future update.
 </Alert>
 
----
-
 ## SVG Renderer
 
 The SVG renderer generates DOM elements and updates them via `requestAnimationFrame`. It is ideal when you need vector graphics that are *independent* of resolution.
@@ -92,8 +90,6 @@ const sarmal = createSarmalSVG(svg, curves.lissajous32, {
   ariaLabel: "Loading data...",
 });
 ```
-
----
 
 ## When to Use Which
 

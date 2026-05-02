@@ -80,6 +80,10 @@
   border: 1px solid var(--color-border);
 }
 
+.prose p {
+  margin-bottom: 4px;
+}
+
 body {
   background-color: var(--color-background);
   color: var(--color-foreground);
@@ -209,11 +213,18 @@ h6 {
 
 .prose table {
   min-width: max-content;
+  margin: 0;
+  overscroll-behavior-x: contain;
+}
+
+.prose hr {
+  margin: 24px 0;
 }
 
 .astro-code,
 .astro-code span {
   color: var(--shiki-light);
+  margin: 12px 0;
 }
 
 @media (prefers-color-scheme: dark) {
