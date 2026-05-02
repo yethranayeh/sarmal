@@ -23,6 +23,7 @@ export interface PlaygroundState {
   showSkeleton: boolean;
   speed: number;
   trailLength: number;
+  headRadius: number;
   trailStyle: TrailStyle;
   trailColor: string;
   headColor: string;
@@ -54,6 +55,7 @@ export interface PlaygroundState {
   handleSpeedChange: (newSpeed: number) => void;
   handleTrailLengthChange: (newLength: number) => void;
   handleTrailLengthCommit: () => void;
+  handleHeadRadiusChange: (newRadius: number) => void;
   handleTrailColorChange: (newColor: string) => void;
   handleHeadColorChange: (newColor: string) => void;
   handleHeadColorAutoChange: (auto: boolean) => void;
@@ -78,10 +80,12 @@ export function createPlaygroundState(
     showSkeleton: true,
     speed: 1,
     trailLength: 120,
+    headRadius: 4,
     trailStyle: "default" as TrailStyle,
     trailColor: "#c0143c",
     headColor: "#c0143c",
     headColorAuto: true,
+    headRadiusAuto: true,
     palette: "bard" as SarmalPalette,
     presetId: "",
     shareStatus: null as string | null,
@@ -155,6 +159,7 @@ export function createPlaygroundState(
           state.trailColor,
         ),
         headColor: state.headColorAuto ? undefined : state.headColor,
+        headRadius: state.headRadiusAuto ? undefined : state.headRadius,
         trailLength: state.trailLength,
         speed: state.speed,
         trailStyle: state.trailStyle,
@@ -340,6 +345,14 @@ export function createPlaygroundState(
     }
   }
 
+  function handleHeadRadiusChange(newRadius: number) {
+    state.headRadius = newRadius;
+    state.headRadiusAuto = false;
+    if (state.currentMode === "math") {
+      state.instance?.setRenderOptions({ headRadius: newRadius });
+    }
+  }
+
   function handleTrailColorChange(newColor: string) {
     state.trailColor = newColor;
     if (state.currentMode === "math") {
@@ -439,7 +452,7 @@ export function createPlaygroundState(
     }
 
     const payload: SharedState = {
-      v: 1,
+      v: 2,
       mode: state.currentMode,
       code: state.currentMode === "draw" ? "" : state.currentCode,
       trailStyle: state.trailStyle,
@@ -447,6 +460,7 @@ export function createPlaygroundState(
       trailColor: state.trailColor,
       headColor: state.headColor,
       headColorAuto: state.headColorAuto,
+      headRadius: state.headRadius,
       trailLength: state.trailLength,
       speed: state.speed,
       showSkeleton: state.showSkeleton,
@@ -506,6 +520,10 @@ export function createPlaygroundState(
     }
     if (typeof saved.headColorAuto === "boolean") {
       state.headColorAuto = saved.headColorAuto;
+    }
+    if (typeof saved.headRadius === "number") {
+      state.headRadius = saved.headRadius;
+      state.headRadiusAuto = false;
     }
     if (typeof saved.trailLength === "number") {
       state.trailLength = saved.trailLength;
@@ -616,6 +634,12 @@ export function createPlaygroundState(
     },
     set trailLength(v) {
       state.trailLength = v;
+    },
+    get headRadius() {
+      return state.headRadius;
+    },
+    set headRadius(v) {
+      state.headRadius = v;
     },
     get trailStyle() {
       return state.trailStyle;
@@ -742,6 +766,7 @@ export function createPlaygroundState(
     handleSpeedChange,
     handleTrailLengthChange,
     handleTrailLengthCommit,
+    handleHeadRadiusChange,
     handleTrailColorChange,
     handleHeadColorChange,
     handleHeadColorAutoChange,

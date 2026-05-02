@@ -1052,6 +1052,56 @@ describe("validateRenderOptions", () => {
   });
 });
 
+describe("validateRenderOptions — headRadius", () => {
+  it("accepts a positive number", () => {
+    expect(() => validateRenderOptions({ headRadius: 5 })).not.toThrow();
+  });
+
+  it("rejects NaN", () => {
+    expect(() => validateRenderOptions({ headRadius: NaN })).toThrow(TypeError);
+  });
+
+  it("rejects Infinity", () => {
+    expect(() => validateRenderOptions({ headRadius: Infinity })).toThrow(TypeError);
+  });
+
+  it("rejects negative numbers", () => {
+    expect(() => validateRenderOptions({ headRadius: -1 })).toThrow(TypeError);
+  });
+
+  it("rejects zero", () => {
+    expect(() => validateRenderOptions({ headRadius: 0 })).toThrow(TypeError);
+  });
+
+  it("rejects non-number values", () => {
+    expect(() => validateRenderOptions({ headRadius: "5" as unknown as number })).toThrow(
+      TypeError,
+    );
+    expect(() => validateRenderOptions({ headRadius: true as unknown as number })).toThrow(
+      TypeError,
+    );
+    expect(() => validateRenderOptions({ headRadius: null as unknown as number })).toThrow(
+      TypeError,
+    );
+  });
+
+  it("is a known render option key (no 'unknown key' rejection)", () => {
+    expect(() => validateRenderOptions({ headRadius: 3 })).not.toThrow();
+  });
+
+  it("throws consistently on repeated invalid input (pure function, no hidden state)", () => {
+    // validateRenderOptions is a pure check — it cannot mutate anything. The
+    // test here is that after a throw, re-running the same payload still throws
+    // the same way (i.e. no hidden state was carried over).
+    const payload = {
+      trailColor: "#ff0000",
+      headRadius: NaN,
+    };
+    expect(() => validateRenderOptions(payload)).toThrow(TypeError);
+    expect(() => validateRenderOptions(payload)).toThrow(TypeError);
+  });
+});
+
 // ─── warnIfTrailColorMismatch ────────────────────────────────────────────────
 
 describe("warnIfTrailColorMismatch", () => {
@@ -1097,6 +1147,7 @@ describe("warnIfTrailColorMismatch", () => {
 function makeCanvasWithFillTracker(): {
   canvas: HTMLCanvasElement;
   fillStyles: string[];
+  arcRadii: number[];
 } {
   const canvas = document.createElement("canvas");
   canvas.width = 200;
@@ -1113,6 +1164,7 @@ function makeCanvasWithFillTracker(): {
     toJSON: () => {},
   });
   const fillStyles: string[] = [];
+  const arcRadii: number[] = [];
   let currentFillStyle = "";
   // biome-ignore lint/suspicious/noExplicitAny: minimal mock context for the test
   (canvas as any).getContext = (contextId: string) => {
@@ -1140,10 +1192,12 @@ function makeCanvasWithFillTracker(): {
       lineWidth: 1,
       globalAlpha: 1,
       drawImage: () => {},
-      arc: () => {},
+      arc: (_x: number, _y: number, r: number) => {
+        arcRadii.push(r);
+      },
     };
   };
-  return { canvas, fillStyles };
+  return { canvas, fillStyles, arcRadii };
 }
 
 describe("setRenderOptions on SarmalInstance (canvas)", () => {
@@ -1491,5 +1545,67 @@ describe("setRenderOptions orthogonality", () => {
     instance.destroy();
     await expect(morphPromise).rejects.toThrow("Instance destroyed during morph");
     vi.restoreAllMocks();
+  });
+
+  describe("headRadius runtime (canvas)", () => {
+    it("uses the auto-derived default headRadius at construction", () => {
+      vi.spyOn(globalThis, "requestAnimationFrame").mockImplementation(() => 1);
+      vi.spyOn(globalThis, "cancelAnimationFrame").mockImplementation(() => {});
+
+      const { canvas, arcRadii } = makeCanvasWithFillTracker();
+      const instance = createSarmal(canvas, testCircle, { autoStart: false });
+      instance.play();
+      instance.pause();
+
+      expect(arcRadii.length).toBeGreaterThan(0);
+      const defaultRadius = arcRadii[0]!;
+      expect(defaultRadius).toBeGreaterThanOrEqual(1);
+
+      instance.destroy();
+      vi.restoreAllMocks();
+    });
+
+    it("setRenderOptions({ headRadius }) changes the arc radius used by drawHead", () => {
+      vi.spyOn(globalThis, "requestAnimationFrame").mockImplementation(() => 1);
+      vi.spyOn(globalThis, "cancelAnimationFrame").mockImplementation(() => {});
+
+      const { canvas, arcRadii } = makeCanvasWithFillTracker();
+      const instance = createSarmal(canvas, testCircle, { autoStart: false });
+      instance.play();
+      instance.pause();
+
+      arcRadii.length = 0;
+      instance.setRenderOptions({ headRadius: 8 });
+      instance.play();
+      instance.pause();
+
+      expect(arcRadii.length).toBeGreaterThan(0);
+      expect(arcRadii[0]).toBe(8);
+
+      instance.destroy();
+      vi.restoreAllMocks();
+    });
+
+    it("invalid headRadius is fail-atomic (does not mutate current radius)", () => {
+      vi.spyOn(globalThis, "requestAnimationFrame").mockImplementation(() => 1);
+      vi.spyOn(globalThis, "cancelAnimationFrame").mockImplementation(() => {});
+
+      const { canvas, arcRadii } = makeCanvasWithFillTracker();
+      const instance = createSarmal(canvas, testCircle, { autoStart: false, headRadius: 5 });
+      instance.play();
+      instance.pause();
+
+      expect(() => instance.setRenderOptions({ headRadius: NaN })).toThrow();
+
+      arcRadii.length = 0;
+      instance.play();
+      instance.pause();
+
+      expect(arcRadii.length).toBeGreaterThan(0);
+      expect(arcRadii[0]).toBe(5);
+
+      instance.destroy();
+      vi.restoreAllMocks();
+    });
   });
 });

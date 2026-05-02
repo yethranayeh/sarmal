@@ -24,7 +24,7 @@ export type PlaygroundMode = "math" | "draw";
 export type CurveFn = (t: number, time: number, params: Record<string, number>) => Point;
 
 export interface SharedState {
-  v: 1;
+  v: 2;
   mode?: "math" | "draw";
   drawPoints?: Array<[number, number]>;
   code: string;
@@ -33,6 +33,7 @@ export interface SharedState {
   trailColor: string;
   headColor: string;
   headColorAuto: boolean;
+  headRadius: number;
   trailLength: number;
   speed: number;
   showSkeleton: boolean;
@@ -49,6 +50,7 @@ export interface PlaygroundRenderParams {
   trailColor: string | Array<string>;
   skeletonColor: string;
   headColor?: string;
+  headRadius?: number;
   trailLength: number;
   speed: number;
   trailStyle: TrailStyle;

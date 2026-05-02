@@ -287,6 +287,7 @@ const RENDER_OPTION_KEYS: ReadonlySet<string> = new Set([
   "headColor",
   "skeletonColor",
   "trailStyle",
+  "headRadius",
 ]);
 
 /**
@@ -323,6 +324,9 @@ export function validateRenderOptions(partial: RuntimeRenderOptions) {
   }
   if (partial.trailStyle !== undefined) {
     assertTrailStyle(partial.trailStyle);
+  }
+  if (partial.headRadius !== undefined) {
+    assertHeadRadius(partial.headRadius);
   }
 }
 
@@ -388,6 +392,19 @@ function assertTrailStyle(value: TrailStyle) {
     // TODO: perhaps make Trail Style inferred from a variable so it can be spread here to keep it dynamic.
     throw new RangeError(
       `[sarmal] setRenderOptions: trailStyle must be one of "default", "gradient-static", "gradient-animated", got ${JSON.stringify(value)}`,
+    );
+  }
+}
+
+function assertHeadRadius(value: number) {
+  if (typeof value !== "number") {
+    throw new TypeError(
+      `[sarmal] setRenderOptions: headRadius must be a number, got ${JSON.stringify(value)}`,
+    );
+  }
+  if (!Number.isFinite(value) || value <= 0) {
+    throw new TypeError(
+      `[sarmal] setRenderOptions: headRadius must be a finite positive number, got ${value}`,
     );
   }
 }

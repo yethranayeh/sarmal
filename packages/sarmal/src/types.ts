@@ -265,6 +265,10 @@ export interface RuntimeRenderOptions {
   /** 6-digit hex string, or `"transparent"` to hide the skeleton. */
   skeletonColor?: string;
   trailStyle?: TrailStyle;
+  /** Radius of the head dot.
+   * @default number Canvas default: auto-derived from container size with `getHeadDotRadius`
+   *                 SVG default: `1.5` viewBox units. */
+  headRadius?: number;
 }
 
 /**

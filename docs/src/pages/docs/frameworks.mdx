@@ -64,7 +64,7 @@ If neither is provided, the canvas falls back to **300x300** with a console warn
 | `skeletonColor` | `string` | `'#ffffff'` | Hex color for the skeleton path |
 | `trailColor` | `string \| string[]` | `'#ffffff'` | Hex color or array of hex colors for gradient trails |
 | `headColor` | `string` | derived | Hex color for the head dot. Omit to auto-follow trail color |
-| `headRadius` | `number` | `4` | Radius of the head dot in pixels. **Init-only.** |
+| `headRadius` | `number` | `4` | Radius of the head dot in pixels. Changeable at runtime via `setRenderOptions`. |
 | `trailLength` | `number` | `120` | Number of trail points. **Init-only.** |
 | `trailStyle` | `TrailStyle` | `'default'` | `'default'` \| `'gradient-static'` \| `'gradient-animated'` |
 | `morphDuration` | `number` | `300` | Duration of the morph transition when `curve` changes (ms) |
@@ -184,7 +184,7 @@ function useSarmal(
 <Alert variant="warning">
 Runtime visual options (`trailColor`, `headColor`, `skeletonColor`, `trailStyle`) passed in `options` are applied at creation but *not tracked* for changes.
 
-For reactive updates after mount, call `instance.current.setRenderOptions(...)` directly. Init options (`width`, `height`, `trailLength`, `headRadius`, `autoStart`, `initialT`) are tracked and trigger **destroy**+*recreate* on change.
+For reactive updates after mount, call `instance.current.setRenderOptions(...)` directly. Init options (`width`, `height`, `trailLength`, `autoStart`, `initialT`) are tracked and trigger **destroy**+*recreate* on change. `headRadius` is also tracked as an init option (prop changes recreate), but can be changed at runtime with `setRenderOptions` without a recreate.
 </Alert>
 
 ### SSR and Next.js App Router

@@ -17,6 +17,22 @@ Version history notes of the <Link href="#core">Core</Link> and the <Link href="
 
 ## Core
 
+### 0.22.0 - 02.05.2026
+
+`headRadius` is now a runtime option. `setRenderOptions({ headRadius })` can be called to change the head dot radius live, without rebuilding the instance.
+
+```ts
+// Before
+// headRadius was construction-only; changing it required reset
+createSarmal(canvas, curve, { headRadius: 6 })
+
+// After
+const instance = createSarmal(canvas, curve)
+instance.setRenderOptions({ headRadius: 6 })
+```
+
+`setRenderOptions` validates `headRadius` before applying it. Passing `NaN`, `±Infinity`, zero, a negative number, or a non-number type (string, boolean, null) throws `TypeError`.
+
 ### 0.21.0 - 02.05.2026
 
 Auto-init (`data-sarmal`) now supports `<svg>` elements. `data-sarmal` can be added to any `<svg>`. Then, the script picks the SVG renderer automatically. The API is identical to that of canvas. All `data-*` attributes work for both canvas and SVG.

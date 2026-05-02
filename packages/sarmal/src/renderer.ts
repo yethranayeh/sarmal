@@ -130,6 +130,7 @@ export function createRenderer(options: RendererOptions): SarmalInstance {
   // Store logical dimensions for boundary calculations
   let logicalWidth = canvas.width / dpr;
   let logicalHeight = canvas.height / dpr;
+  let headRadius = options.headRadius ?? getHeadDotRadius(logicalWidth, logicalHeight);
 
   let skeleton: Array<Point> = [];
   let skeletonCanvas: OffscreenCanvas | null = null;
@@ -295,7 +296,7 @@ export function createRenderer(options: RendererOptions): SarmalInstance {
 
     const x = head.x * scale + offsetX;
     const y = head.y * scale + offsetY;
-    const r = options.headRadius ?? getHeadDotRadius(logicalWidth, logicalHeight);
+    const r = headRadius;
 
     ctx.fillStyle = headColor;
     ctx.beginPath();
@@ -468,6 +469,10 @@ export function createRenderer(options: RendererOptions): SarmalInstance {
 
       if (partial.headColor !== undefined) {
         userHeadColor = partial.headColor;
+      }
+
+      if (partial.headRadius !== undefined) {
+        headRadius = partial.headRadius;
       }
 
       if (userHeadColor === null) {

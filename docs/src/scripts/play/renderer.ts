@@ -51,5 +51,9 @@ export function createInstance(
     rendererOptions.headColor = params.headColor;
   }
 
+  if (params.headRadius !== undefined) {
+    rendererOptions.headRadius = params.headRadius;
+  }
+
   return createRenderer(rendererOptions);
 }

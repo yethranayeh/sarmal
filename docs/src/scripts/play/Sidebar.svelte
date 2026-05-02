@@ -214,6 +214,16 @@
       onChange={pg.handleTrailLengthChange}
       onCommit={pg.handleTrailLengthCommit}
     />
+
+    <Slider
+      label="Head radius"
+      value={pg.headRadius}
+      min={1}
+      max={10}
+      step={0.5}
+      formatValue={(v) => v.toFixed(1)}
+      onChange={pg.handleHeadRadiusChange}
+    />
   </section>
 
   <!-- Style -->

@@ -370,6 +370,7 @@ sarmal.setRenderOptions({ skeletonColor: "transparent" });
 | `headColor` | `string \| null` | Hex color to orverride, or `null` to let it auto pick from trail color |
 | `skeletonColor` | `string` | Hex color, or `"transparent"` to hide |
 | `trailStyle` | `TrailStyle` | `'default'` \| `'gradient-static'` \| `'gradient-animated'` |
+| `headRadius` | `number` | Radius of the head dot. Canvas: CSS pixels auto-derived from container size by default. SVG: viewBox units (default `1.5`). |
 
 
 <Alert variant="warning">
@@ -604,6 +605,7 @@ interface RuntimeRenderOptions {
   headColor?: string | null;
   skeletonColor?: string;
   trailStyle?: TrailStyle;
+  headRadius?: number;
 }
 
 const palettes: {

@@ -251,6 +251,46 @@ describe("setRenderOptions — SVG attribute re-apply", () => {
 
     instance.destroy();
   });
+
+  describe("headRadius runtime (SVG)", () => {
+    it("uses the default SVG headRadius of 1.5 at construction", () => {
+      const container = makeContainer();
+      const instance = createSarmalSVG(container, testCircle, { autoStart: false });
+      const head = getHeadCircle(container);
+      expect(head.getAttribute("r")).toBe("1.5");
+      instance.destroy();
+    });
+
+    it("setRenderOptions({ headRadius }) updates the head circle's r attribute", () => {
+      const container = makeContainer();
+      const instance = createSarmalSVG(container, testCircle, { autoStart: false });
+      const head = getHeadCircle(container);
+
+      instance.setRenderOptions({ headRadius: 3 });
+      expect(head.getAttribute("r")).toBe("3");
+
+      instance.destroy();
+    });
+
+    it("changing headRadius does not affect trail path attributes", () => {
+      const container = makeContainer();
+      const instance = createSarmalSVG(container, testCircle, {
+        autoStart: false,
+        trailColor: "#ff0000",
+        trailStyle: "default",
+      });
+
+      const trailPaths = getTrailPaths(container);
+      const trailFillsBefore = trailPaths.map((p) => p.getAttribute("fill"));
+
+      instance.setRenderOptions({ headRadius: 5 });
+
+      const trailFillsAfter = trailPaths.map((p) => p.getAttribute("fill"));
+      expect(trailFillsAfter).toEqual(trailFillsBefore);
+
+      instance.destroy();
+    });
+  });
 });
 
 describe("SVG renderer — trail pool sizing", () => {

@@ -100,6 +100,7 @@ export function createSVGRenderer(options: SVGRendererOptions): SarmalInstance {
   // `null` means that head color is derived from `trailColor` & `trailStyle` and refreshed whenever either changes.
   let userHeadColor: string | null = options.headColor ?? null;
   let headColor: string = userHeadColor ?? resolveHeadColor(trailColor, trailStyle);
+  let headRadius = options.headRadius ?? 1.5;
 
   let trailSolid: string = resolveTrailMainColor(trailColor);
   let trailPalette: string[] = resolveTrailPalette(trailColor);
@@ -109,7 +110,6 @@ export function createSVGRenderer(options: SVGRendererOptions): SarmalInstance {
   warnIfTrailColorMismatch(trailColor, trailStyle);
 
   const viewSize = 100;
-  const headRadius = options.headRadius ?? 1.5;
   // Trail widths are in viewBox units (0–100 space),
   // so they need to be ~half the pixel-space defaults used by the canvas renderer
   const svgTrailMinWidth = 0.25;
@@ -465,6 +465,11 @@ export function createSVGRenderer(options: SVGRendererOptions): SarmalInstance {
       }
       if (partial.headColor !== undefined) {
         userHeadColor = partial.headColor;
+      }
+
+      if (partial.headRadius !== undefined) {
+        headRadius = partial.headRadius;
+        headCircle.setAttribute("r", String(headRadius));
       }
 
       if (userHeadColor === null) {
