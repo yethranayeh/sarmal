@@ -17,6 +17,19 @@ Version history notes of the <Link href="#core">Core</Link> and the <Link href="
 
 ## Core
 
+### 0.21.0 - 02.05.2026
+
+Auto-init (`data-sarmal`) now supports `<svg>` elements. `data-sarmal` can be added to any `<svg>`. Then, the script picks the SVG renderer automatically. The API is identical to that of canvas. All `data-*` attributes work for both canvas and SVG.
+
+```html
+<script src="https://unpkg.com/@sarmal/core/dist/auto-init.js"></script>
+
+<canvas data-sarmal="rose3" width="200" height="200"></canvas>
+<svg data-sarmal="rose3" style="width:200px; height:200px;"></svg>
+```
+
+SVG elements are sized with CSS. The renderer sets `viewBox="0 0 100 100"` automatically. `data-head-radius` uses viewBox units (0-100, default `1.5`) for SVG and CSS pixels (default `4`) for canvas.
+
 ### 0.20.0 - 02.05.2026
 
 New `drawCurve(points)` export converts hand-drawn control points into a `CurveDef` that the engine can animate. `evaluateCatmullRom(points, t)` is also exported for evaluating the closed Catmull-Rom spline at arbitrary parametric positions.

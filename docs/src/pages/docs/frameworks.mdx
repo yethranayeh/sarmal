@@ -231,4 +231,122 @@ function MySpinner() {
 
 ## CDN
 
-[WIP]
+Drop a sarmal into any HTML page *without* a build step.
+
+Two approaches:
+- **auto-init**: zero JavaScript
+- **ESM import**: programmatic use
+
+### Auto-Init
+
+Auto-init is Sarmal's **plug-n-play** option. Include the auto-init script and add `data-sarmal` attribute to any `<canvas>` or `<svg>` with your preferred curve:
+
+```html
+<script src="https://unpkg.com/@sarmal/core/dist/auto-init.js"></script>
+
+<canvas data-sarmal="rose3" width="200" height="200"></canvas>
+
+<!-- svg is sized with CSS -->
+<svg data-sarmal="rose3" style="width:200px; height:200px;"></svg>
+```
+
+The script waits for `DOMContentLoaded`, scans for all `canvas[data-sarmal]` and `svg[data-sarmal]` elements, and starts a spinner for each one using the built-in curve name as the attribute value. Canvas renderers use pixel-space dimensions; SVG renderers set `viewBox="0 0 100 100"` automatically and are sized with CSS. That's all you need to get it working. No additional JavaScript required.
+
+You can also use **jsDelivr**:
+
+```html
+<script src="https://cdn.jsdelivr.net/npm/@sarmal/core/dist/auto-init.js"></script>
+```
+
+#### Data Attributes
+
+Configure appearance and behavior through `data-*` attributes on the canvas element:
+
+| Attribute | Type | Example | Description |
+|-----------|------|---------|-------------|
+| data-sarmal<span class="text-primary">*</span> | `string` | `"rose3"` | <strong class="text-primary">Required.</strong> The built-in curve name. |
+| data-trail-color | `string \| string[]` | `"#ff6b6b"` or `'["#ff6b6b","#ffd93d","#6bcb77"]'` | Hex color or JSON array for gradient trails |
+| data-skeleton-color | `string` | `"#ffffff66"` | Hex color for the skeleton ghost path |
+| data-head-color | `string` | `"#ff0000"` | Hex color for the head dot |
+| data-head-radius | `number` | `"6"` | Radius of the head dot. **Canvas:** CSS pixels (default `4`). **SVG:** viewBox units, 0-100 (default `1.5`). |
+| data-trail-length | `number` | `"60"` | Number of trail points |
+| data-trail-style | `string` | `"gradient-animated"` | `"default"` \| `"gradient-static"` \| `"gradient-animated"` |
+| data-speed | `number` | `"0.5"` | Animation speed multiplier. `0.5` = half speed, `2` = double speed |
+
+```html
+<canvas
+  data-sarmal="rose5"
+  width="300"
+  height="300"
+  data-trail-color='["#ff6b6b","#ffd93d","#6bcb77"]'
+  data-trail-style="gradient-animated"
+  data-trail-length="80"
+  data-speed="0.75"
+></canvas>
+```
+
+<Alert variant="info">
+  The curve name must match one of the <Link href="/docs/curves">built-in curve names</Link> exactly. Custom curves are not supported through auto-init. Instead, you can use the ESM import approach for custom curves.
+</Alert>
+
+#### SVG Output
+
+To use svg with auto-init, add `data-sarmal` to an `<svg>` element and size it with CSS:
+
+```html
+<svg
+  data-sarmal="rose5"
+  style="width:300px; height:300px;"
+  data-trail-color="#ff6b6b"
+></svg>
+```
+
+The renderer sets `viewBox="0 0 100 100"` automatically, so coordinates are normalized. All `data-*` attributes work identically for both canvas and SVG. The script detects the element type and picks the right renderer.
+
+### ESM Import
+
+For full programmatic control, import from jsDelivr as an ES module:
+
+```html
+<script type="module">
+  import { createSarmal } from "https://cdn.jsdelivr.net/npm/@sarmal/core/+esm";
+  import { rose3 } from "https://cdn.jsdelivr.net/npm/@sarmal/core/+esm";
+
+  const canvas = document.getElementById("curve-canvas");
+  const sarmal = createSarmal(canvas, rose3, {
+    trailColor: "#a78bfa",
+    trailLength: 120,
+  });
+</script>
+```
+
+The `+esm` path resolves to the ESM build and supports named imports. This gives you access to the full API: `createSarmal`, `createSarmalSVG`, all `curves`, `palettes`, and the `createEngine` + `createRenderer` lower-level APIs.
+
+You can also use unpkg (the file paths are the same):
+
+```html
+<script type="module">
+  import { createSarmal } from "https://unpkg.com/@sarmal/core/dist/index.js";
+  import { rose3 } from "https://unpkg.com/@sarmal/core/dist/index.js";
+</script>
+```
+
+### SVG with CDN
+
+Combine the ESM import approach with `createSarmalSVG`:
+
+```html
+<svg id="sarmal-svg" style="width: 200px; height: 200px;"></svg>
+
+<script type="module">
+  import { createSarmalSVG } from "https://cdn.jsdelivr.net/npm/@sarmal/core/+esm";
+  import { astroid } from "https://cdn.jsdelivr.net/npm/@sarmal/core/+esm";
+
+  const svg = document.getElementById("sarmal-svg");
+  createSarmalSVG(svg, astroid, {
+    trailColor: "#a78bfa",
+  });
+</script>
+```
+
+The SVG renderer sets `viewBox="0 0 100 100"` automatically. Size the `<svg>` element with CSS. You don't need `width` or `height` attributes on the svg element itself.

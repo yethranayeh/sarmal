@@ -21,14 +21,19 @@ npm install @sarmal/core
 
 ## CDN Quick Start
 
-No build step? Drop in the auto-init script and add `data-sarmal` to any canvas:
+No build step? Drop in the auto-init script and add `data-sarmal` to any canvas or svg:
 
 ```html
 <script src="https://unpkg.com/@sarmal/core/dist/auto-init.js"></script>
+
 <canvas data-sarmal="artemis2" width="200" height="200"></canvas>
+
+<svg data-sarmal="artemis2" style="width:200px; height:200px;"></svg>
 ```
 
-The script scans for `canvas[data-sarmal]` on page load and starts a spinner for each one. Use any built-in curve name as the attribute value.
+The script scans for `canvas[data-sarmal]` and `svg[data-sarmal]` on page load and starts a spinner for each one. Use any built-in curve name as the attribute value.
+
+See <Link href="/docs/frameworks#cdn">CDN</Link> section in Framework Guides page for more details.
 
 ## Your first spinner
 

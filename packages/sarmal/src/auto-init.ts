@@ -1,11 +1,7 @@
 import type { TrailColor } from "./types";
 import type { CurveName } from "./curves";
 
-/**
- * Scans for `<canvas data-sarmal="curveName">` when DOMContentLoaded is triggered,
- *  and creates a Sarmal instance for each one
- */
-import { createSarmal } from "./index";
+import { createSarmal, createSarmalSVG } from "./index";
 import { curves } from "./curves";
 
 /**
@@ -31,38 +27,48 @@ function parseTrailColor(value: string): TrailColor {
   return value;
 }
 
-export function init() {
-  const canvases = document.querySelectorAll<HTMLCanvasElement>("canvas[data-sarmal]");
+function buildOptions(el: HTMLElement) {
+  return {
+    ...(el.dataset.trailColor && {
+      trailColor: parseTrailColor(el.dataset.trailColor),
+    }),
+    ...(el.dataset.skeletonColor && { skeletonColor: el.dataset.skeletonColor }),
+    ...(el.dataset.headColor && { headColor: el.dataset.headColor }),
+    ...(el.dataset.headRadius && { headRadius: parseFloat(el.dataset.headRadius) }),
+    ...(el.dataset.trailLength && { trailLength: parseInt(el.dataset.trailLength, 10) }),
+    ...(el.dataset.trailStyle && {
+      trailStyle: el.dataset.trailStyle as "default" | "gradient-static" | "gradient-animated",
+    }),
+  };
+}
 
-  canvases.forEach((canvas) => {
-    const curveName = canvas.getAttribute("data-sarmal");
+/**
+ * Scans for `<canvas data-sarmal="curveName">` and `<svg data-sarmal="curveName">`
+ *  when **DOMContentLoaded** is triggered, and creates a Sarmal instance for each one.
+ */
+export function init() {
+  const elements = document.querySelectorAll<HTMLElement>("canvas[data-sarmal], svg[data-sarmal]");
+
+  elements.forEach((el) => {
+    const curveName = el.getAttribute("data-sarmal");
     if (curveName == null) {
       return console.warn("[sarmal] curveName is required");
     }
 
-    const curveDef = curves[curveName as CurveName]; // just assume it is the correct string, it will be runtime checked anyway
+    const curveDef = curves[curveName as CurveName];
     if (!curveDef) {
       return console.error(`[sarmal] "${curveName}" is not a valid curve name`);
     }
 
-    const instance = createSarmal(canvas, curveDef, {
-      ...(canvas.dataset.trailColor && {
-        trailColor: parseTrailColor(canvas.dataset.trailColor),
-      }),
-      ...(canvas.dataset.skeletonColor && { skeletonColor: canvas.dataset.skeletonColor }),
-      ...(canvas.dataset.headColor && { headColor: canvas.dataset.headColor }),
-      ...(canvas.dataset.headRadius && { headRadius: parseFloat(canvas.dataset.headRadius) }),
-      ...(canvas.dataset.trailLength && { trailLength: parseInt(canvas.dataset.trailLength, 10) }),
-      ...(canvas.dataset.trailStyle && {
-        trailStyle: canvas.dataset.trailStyle as
-          | "default"
-          | "gradient-static"
-          | "gradient-animated",
-      }),
-    });
+    const options = buildOptions(el);
 
-    if (canvas.dataset.speed) {
-      instance.setSpeed(parseFloat(canvas.dataset.speed));
+    const instance =
+      el instanceof HTMLCanvasElement
+        ? createSarmal(el, curveDef, options)
+        : createSarmalSVG(el as unknown as SVGSVGElement, curveDef, options);
+
+    if (el.dataset.speed) {
+      instance.setSpeed(parseFloat(el.dataset.speed));
     }
   });
 }
