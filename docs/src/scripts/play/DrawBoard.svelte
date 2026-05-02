@@ -24,6 +24,7 @@
     initialPoints?: Array<DrawingSegment>;
     showControls?: boolean;
     onPointsChange?: (points: Array<DrawingSegment>) => void;
+    onSvgRef?: (el: SVGSVGElement | null) => void;
   }
 
   let {
@@ -37,7 +38,13 @@
     initialPoints = [],
     showControls = true,
     onPointsChange,
+    onSvgRef,
   }: Props = $props();
+
+  $effect(() => {
+    onSvgRef?.(svgElement ?? null);
+    return () => onSvgRef?.(null);
+  });
 
   const MAX_TRAIL_SEGMENTS = 200;
   /**
@@ -173,7 +180,7 @@
       : "",
   );
 
-  let svgElement: SVGSVGElement;
+  let svgElement = $state<SVGSVGElement>();
   let popoverElement: HTMLDivElement | undefined = $state(undefined);
   let dragStartX = 0;
   let dragStartY = 0;
@@ -181,6 +188,9 @@
   let isDraggingNewPoint = false;
 
   function getSvgPoint(clientX: number, clientY: number): DrawingSegment {
+    if (!svgElement) {
+      throw new Error("SVG element not mounted");
+    }
     const rect = svgElement.getBoundingClientRect();
     const x = -1 + (2 * (clientX - rect.left)) / rect.width;
     const y = -1 + (2 * (clientY - rect.top)) / rect.height;
@@ -192,12 +202,15 @@
     const target = e.target as Element;
 
     if (target.closest("circle")) {
-      // On the very small chance that the user clicks the animated curve's head
       return;
     }
 
     if (popoverIndex !== null) {
       popoverIndex = null;
+      return;
+    }
+
+    if (!svgElement) {
       return;
     }
 
@@ -208,7 +221,7 @@
     hasDragged = false;
     dragStartX = e.clientX;
     dragStartY = e.clientY;
-    svgElement.setPointerCapture(e.pointerId);
+    svgElement?.setPointerCapture(e.pointerId);
   }
 
   function handlePointPointerDown(e: PointerEvent, index: number) {

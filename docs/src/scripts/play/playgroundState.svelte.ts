@@ -13,7 +13,6 @@ import { onDestroy, onMount } from "svelte";
 import { palettes } from "@sarmal/core";
 import { buildCurveFn, extractBody, sampleCurveFn, isEachSamplesEqual } from "./curve";
 import { createInstance, getResolvedTrailColor, getResolvedSkeletonColor } from "./renderer";
-import { handleShare } from "./share";
 import { DEFAULT_CODE } from "./types";
 
 export interface PlaygroundState {
@@ -30,7 +29,6 @@ export interface PlaygroundState {
   headColorAuto: boolean;
   palette: SarmalPalette;
   presetId: string;
-  shareStatus: string | null;
   sidebarVisible: boolean;
   instance: ReturnType<typeof createInstance> | null;
   lastCompiledCode: string;
@@ -61,7 +59,6 @@ export interface PlaygroundState {
   handleHeadColorAutoChange: (auto: boolean) => void;
   handleTrailStyleChange: (newStyle: TrailStyle) => void;
   handlePaletteChange: (newPalette: SarmalPalette) => void;
-  handleShareClick: () => Promise<void>;
   previewRef: { current: SVGSVGElement | null };
   presets: PresetData[];
   PRESETS: Record<string, Preset>;
@@ -87,7 +84,6 @@ export function createPlaygroundState(
     headColorAuto: true,
     palette: "bard" as SarmalPalette,
     presetId: "",
-    shareStatus: null as string | null,
     sidebarVisible: false,
     instance: null as ReturnType<typeof createInstance> | null,
     lastCompiledCode: "",
@@ -436,52 +432,6 @@ export function createPlaygroundState(
     }
   }
 
-  async function handleShareClick() {
-    if (!state.currentCode && state.currentMode === "math") {
-      return;
-    }
-    if (state.currentMode === "draw" && drawPointCount < 3) {
-      return;
-    }
-
-    const payload: SharedState = {
-      v: 2,
-      mode: state.currentMode,
-      code: state.currentMode === "draw" ? "" : state.currentCode,
-      trailStyle: state.trailStyle,
-      palette: state.palette,
-      trailColor: state.trailColor,
-      headColor: state.headColor,
-      headColorAuto: state.headColorAuto,
-      ...(state.headRadius !== null ? { headRadius: state.headRadius } : {}),
-      trailLength: state.trailLength,
-      speed: state.speed,
-      showSkeleton: state.showSkeleton,
-    };
-
-    if (state.currentMode === "draw") {
-      payload.drawPoints = state.drawBoardRef?.getPoints();
-    }
-
-    const c = previewRef.current;
-    if (!c) {
-      return;
-    }
-
-    const result = await handleShare(c, payload);
-    if (result.ok) {
-      state.shareStatus = "Link copied. Expires in 90 days.";
-      setTimeout(() => {
-        state.shareStatus = null;
-      }, 3000);
-    } else {
-      state.shareStatus = result.error;
-      setTimeout(() => {
-        state.shareStatus = null;
-      }, 4000);
-    }
-  }
-
   async function restoreState(saved: SharedState) {
     if (saved.mode === "draw" && saved.drawPoints) {
       state.drawInitialPoints = saved.drawPoints;
@@ -669,12 +619,6 @@ export function createPlaygroundState(
     set presetId(v) {
       state.presetId = v;
     },
-    get shareStatus() {
-      return state.shareStatus;
-    },
-    set shareStatus(v) {
-      state.shareStatus = v;
-    },
     get sidebarVisible() {
       return state.sidebarVisible;
     },
@@ -764,7 +708,6 @@ export function createPlaygroundState(
     handleHeadColorAutoChange,
     handleTrailStyleChange,
     handlePaletteChange,
-    handleShareClick,
     get PRESETS() {
       return PRESETS;
     },

@@ -7,7 +7,7 @@
   let svgEl = $state<SVGSVGElement | null>(null);
 
   $effect(() => {
-    pg.previewRef.current = svgEl;
+    pg.previewRef.current = pg.currentMode === "math" ? svgEl : null;
     return () => {
       pg.previewRef.current = null;
     };

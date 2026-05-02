@@ -48,5 +48,8 @@
     initialPoints={pg.drawInitialPoints}
     showControls={pg.shouldShowDrawControls}
     onPointsChange={(pts: Array<DrawingSegment>) => (pg.drawPoints = pts)}
+    onSvgRef={(el) => {
+      pg.previewRef.current = pg.currentMode === "draw" ? el : null;
+    }}
   />
 {/if}

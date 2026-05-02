@@ -2,10 +2,11 @@
   import type { PlaygroundState } from "./playgroundState.svelte";
 
   import { getContext } from "svelte";
-  import { Share2, Trash, PanelLeft } from "@lucide/svelte";
+  import { Trash, PanelLeft } from "@lucide/svelte";
 
   import MathCanvas from "./MathCanvas.svelte";
   import DrawCanvas from "./DrawCanvas.svelte";
+  import ShareDropdown from "./ShareDropdown.svelte";
 
   const pg = getContext<PlaygroundState>("playground");
 </script>
@@ -68,23 +69,7 @@
 
   <!-- Floating: share / clear (top-right) -->
   <div class="absolute top-4 right-4 z-10 flex items-center gap-2">
-    <div class="relative">
-      <button
-        class="font-body text-xs px-3 py-1.5 inline-flex items-center gap-1.5 bg-white border border-border rounded text-foreground transition-colors cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
-        onclick={pg.handleShareClick}
-        disabled={pg.currentMode === "draw" && pg.drawPointCount < 3}
-      >
-        <Share2 class="w-3.5 h-3.5" />
-        Share
-      </button>
-      {#if pg.shareStatus}
-        <span
-          class="absolute right-0 top-9 whitespace-nowrap font-ui text-[10px] text-muted bg-surface-raised border border-border rounded px-2 py-1 shadow-[0_2px_8px_color-mix(in_srgb,var(--color-foreground)_6%,transparent)]"
-        >
-          {pg.shareStatus}
-        </span>
-      {/if}
-    </div>
+    <ShareDropdown />
     <button
       class="font-body text-xs px-3 py-1.5 inline-flex items-center gap-1.5 bg-primary text-white rounded hover:bg-primary/80 transition-colors cursor-pointer"
       onclick={pg.handleClear}
