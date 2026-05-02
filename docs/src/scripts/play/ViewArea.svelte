@@ -86,6 +86,14 @@
     >
       {pg.currentMode === "math" ? "Parametric" : "Hand-drawn"}
     </span>
+    {#if pg.currentMode === "draw"}
+      <div class="font-mono text-[10px] text-muted-gray mt-1.5 select-none">
+        <span>x</span><span class="text-primary">{pg.mouseSVGX.toFixed(2)}</span
+        >
+        <span>y</span><span class="text-primary">{pg.mouseSVGY.toFixed(2)}</span
+        >
+      </div>
+    {/if}
   </div>
 </section>
 

@@ -45,12 +45,16 @@
     skeletonColor={pg.resolvedSkeletonColor}
     headColor={pg.headColor}
     headColorAuto={pg.headColorAuto}
-    headRadius={(pg.headRadius ?? 0.5) * 0.056}
+    headRadius={(pg.headRadius ?? 0.5) * 0.02}
     initialPoints={pg.drawInitialPoints}
     showControls={pg.shouldShowDrawControls}
     onPointsChange={(pts: Array<DrawingSegment>) => (pg.drawPoints = pts)}
     onSvgRef={(el) => {
       pg.previewRef.current = pg.currentMode === "draw" ? el : null;
+    }}
+    onMouseMove={(x, y) => {
+      pg.mouseSVGX = x;
+      pg.mouseSVGY = y;
     }}
   />
 {/if}

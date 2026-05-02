@@ -14,7 +14,7 @@
 
 {#if label}
   <button
-    class="flex items-center justify-between cursor-pointer w-full"
+    class="flex items-center cursor-pointer gap-1"
     onclick={() => onChange(!checked)}
     aria-label={label}
   >

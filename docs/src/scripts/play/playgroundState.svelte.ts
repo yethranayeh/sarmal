@@ -40,6 +40,8 @@ export interface PlaygroundState {
   showDrawControls: boolean;
   drawPointCount: number;
   shouldShowDrawControls: boolean;
+  mouseSVGX: number;
+  mouseSVGY: number;
   paletteColors: string;
   isPaletteAnimated: boolean;
   showPalette: boolean;
@@ -93,6 +95,8 @@ export function createPlaygroundState(
     drawInitialPoints: undefined as Array<DrawingSegment> | undefined,
     drawPoints: [] as Array<DrawingSegment>,
     showDrawControls: true,
+    mouseSVGX: 0,
+    mouseSVGY: 0,
   });
 
   let debounceTimer: ReturnType<typeof setTimeout> | null = null;
@@ -673,6 +677,18 @@ export function createPlaygroundState(
     },
     set showDrawControls(v) {
       state.showDrawControls = v;
+    },
+    get mouseSVGX() {
+      return state.mouseSVGX;
+    },
+    set mouseSVGX(v) {
+      state.mouseSVGX = v;
+    },
+    get mouseSVGY() {
+      return state.mouseSVGY;
+    },
+    set mouseSVGY(v) {
+      state.mouseSVGY = v;
     },
     get drawPointCount() {
       return drawPointCount;

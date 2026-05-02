@@ -35,12 +35,39 @@ const currentPath = Astro.url.pathname.replace(/\/$/, "") || "/";
 					target={link.external ? "_blank" : undefined}
 					rel={link.external ? "noopener noreferrer" : undefined}
 					class:list={[
-						"inline-flex items-center gap-1 font-ui text-xs tracking-wider uppercase hover:text-foreground transition-colors",
+						"inline-flex items-center gap-1 font-ui text-xs tracking-wider uppercase group hover:text-foreground transition-colors",
 						colorClass,
 					]}
 				>
 					<Icon size={16} />
-					<span>{link.label}</span>
+					<span class="inline-flex flex-col">
+						<span class="inline-grid justify-items-center">
+							<span
+								class="[grid-area:1/1] invisible [font-variation-settings:'wght'_650]"
+								aria-hidden="true"
+							>
+								{link.label}
+							</span>
+							<span
+								class:list={[
+									'[grid-area:1/1] group-hover:-translate-y-0.5 transition-all [--wght:350] group-hover:[--wght:650] [font-variation-settings:"wght"_var(--wght)]',
+									{
+										"-translate-y-0.5 [--wght:650]": isActive,
+									},
+								]}
+							>
+								{link.label}
+							</span>
+						</span>
+						<span
+							class:list={[
+								"inline-block w-full h-0.5 opacity-0 group-hover:opacity-100 translate-y-0 group-hover:-translate-y-0.5 bg-current transition-all",
+								{
+									"opacity-100 translate-y-[-2px]": isActive,
+								},
+							]}
+						/>
+					</span>
 				</a>
 			);
 		})

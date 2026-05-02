@@ -26,6 +26,7 @@
     showControls?: boolean;
     onPointsChange?: (points: Array<DrawingSegment>) => void;
     onSvgRef?: (el: SVGSVGElement | null) => void;
+    onMouseMove?: (x: number, y: number) => void;
   }
 
   let {
@@ -36,11 +37,12 @@
     skeletonColor,
     headColor,
     headColorAuto = false,
-    headRadius = 0.028,
+    headRadius = 0.01,
     initialPoints = [],
     showControls = true,
     onPointsChange,
     onSvgRef,
+    onMouseMove,
   }: Props = $props();
 
   $effect(() => {
@@ -188,6 +190,7 @@
   let dragStartY = 0;
   let hasDragged = false;
   let isDraggingNewPoint = false;
+  let mouseSvgPoint = $state<[number, number] | null>(null);
 
   function getSvgPoint(clientX: number, clientY: number): DrawingSegment {
     if (!svgElement) {
@@ -237,9 +240,17 @@
   }
 
   function handlePointPointerMove(e: PointerEvent) {
-    if (dragIndex === null || !svgElement) {
+    if (!svgElement) {
       return;
     }
+    const [sx, sy] = getSvgPoint(e.clientX, e.clientY);
+    mouseSvgPoint = [sx, sy];
+    onMouseMove?.(sx, sy);
+
+    if (dragIndex === null) {
+      return;
+    }
+
     const dx = e.clientX - dragStartX;
     const dy = e.clientY - dragStartY;
 
@@ -248,8 +259,7 @@
     }
 
     if (hasDragged) {
-      const [x, y] = getSvgPoint(e.clientX, e.clientY);
-      points = points.map((p, i) => (i === dragIndex ? [x, y] : p));
+      points = points.map((p, i) => (i === dragIndex ? [sx, sy] : p));
     }
   }
 
@@ -271,6 +281,10 @@
     dragIndex = null;
     hasDragged = false;
     isDraggingNewPoint = false;
+  }
+
+  function handlePointerLeave() {
+    mouseSvgPoint = null;
   }
 
   function deletePoint(index: number) {
@@ -460,6 +474,7 @@
   onpointermove={showControls ? handlePointPointerMove : undefined}
   onpointerup={showControls ? handlePointPointerUp : undefined}
   onpointercancel={showControls ? handlePointerCancel : undefined}
+  onpointerleave={showControls ? handlePointerLeave : undefined}
   role="img"
   aria-label="Drawing board for placing curve control points"
 >
@@ -485,6 +500,22 @@
       stroke-dasharray="0.04 0.025"
       stroke-linejoin="round"
       opacity={isAnimating ? 0.18 : 0.28}
+      class={isAnimating ? "" : "text-foreground"}
+    />
+  {/if}
+
+  <!-- Guide line from last dot to mouse -->
+  {#if showControls && points.length >= 1 && mouseSvgPoint}
+    <line
+      x1={points[points.length - 1]![0]}
+      y1={points[points.length - 1]![1]}
+      x2={mouseSvgPoint[0]}
+      y2={mouseSvgPoint[1]}
+      stroke={isAnimating ? strokeColor : "currentColor"}
+      stroke-width="0.007"
+      stroke-dasharray="0.04 0.025"
+      stroke-linecap="round"
+      opacity={0.22}
       class={isAnimating ? "" : "text-foreground"}
     />
   {/if}

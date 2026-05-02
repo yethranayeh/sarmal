@@ -40,6 +40,7 @@
       </h2>
       {#if pg.currentMode === "draw" && pg.drawPointCount > 0}
         <ToggleSwitch
+          label={pg.showDrawControls ? "Visible" : "Hidden"}
           checked={pg.shouldShowDrawControls}
           onChange={(v) => (pg.showDrawControls = v)}
         />
@@ -181,7 +182,7 @@
   </section>
 
   <!-- Shape -->
-  <section class="pb-4 border-b border-border-subtle flex flex-col gap-4">
+  <section class="py-4 border-b border-border-subtle flex flex-col gap-4">
     <header class="flex items-baseline justify-between gap-3 whitespace-nowrap">
       <h2 class="font-heading text-[13px] font-medium text-foreground m-0">
         Shape
@@ -227,7 +228,7 @@
   </section>
 
   <!-- Style -->
-  <section class="flex flex-col gap-4">
+  <section class="pt-4 flex flex-col gap-4">
     <header class="flex items-baseline justify-between gap-3 whitespace-nowrap">
       <h2 class="font-heading text-[13px] font-medium text-foreground m-0">
         Style
