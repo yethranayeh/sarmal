@@ -45,6 +45,7 @@
     skeletonColor={pg.resolvedSkeletonColor}
     headColor={pg.headColor}
     headColorAuto={pg.headColorAuto}
+    headRadius={(pg.headRadius ?? 0.5) * 0.056}
     initialPoints={pg.drawInitialPoints}
     showControls={pg.shouldShowDrawControls}
     onPointsChange={(pts: Array<DrawingSegment>) => (pg.drawPoints = pts)}

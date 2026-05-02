@@ -9,7 +9,7 @@ import type {
 import type { Point, TrailStyle, SarmalPalette } from "@sarmal/core";
 import type { DrawingSegment } from "./types";
 
-import { onDestroy, onMount } from "svelte";
+import { onDestroy, onMount, tick } from "svelte";
 import { palettes } from "@sarmal/core";
 import { buildCurveFn, extractBody, sampleCurveFn, isEachSamplesEqual } from "./curve";
 import { createInstance, getResolvedTrailColor, getResolvedSkeletonColor } from "./renderer";
@@ -228,7 +228,9 @@ export function createPlaygroundState(
     history.replaceState(null, "", window.location.pathname);
   }
 
-  function handleModeSwitch(mode: PlaygroundMode) {
+  async function handleModeSwitch(mode: PlaygroundMode) {
+    state.currentMode = mode;
+
     if (mode === "draw") {
       if (state.instance) {
         state.instance.destroy();
@@ -238,13 +240,12 @@ export function createPlaygroundState(
       state.error = null;
       const result = buildCurveFn(state.currentCode);
       if (result.ok) {
-        rebuildInstance(result.fn);
         state.lastCompiledCode = state.currentCode;
         state.lastCompiledFn = result.fn;
+        await tick();
+        rebuildInstance(result.fn);
       }
     }
-
-    state.currentMode = mode;
 
     state.isSliding = false;
     requestAnimationFrame(() => {

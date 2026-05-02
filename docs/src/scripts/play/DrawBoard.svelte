@@ -21,6 +21,7 @@
     skeletonColor: string;
     headColor?: string;
     headColorAuto?: boolean;
+    headRadius?: number;
     initialPoints?: Array<DrawingSegment>;
     showControls?: boolean;
     onPointsChange?: (points: Array<DrawingSegment>) => void;
@@ -35,6 +36,7 @@
     skeletonColor,
     headColor,
     headColorAuto = false,
+    headRadius = 0.028,
     initialPoints = [],
     showControls = true,
     onPointsChange,
@@ -491,7 +493,12 @@
 
   <!-- Head dot -->
   {#if headPos}
-    <circle cx={headPos.x} cy={headPos.y} r="0.028" fill={resolvedHeadColor} />
+    <circle
+      cx={headPos.x}
+      cy={headPos.y}
+      r={headRadius}
+      fill={resolvedHeadColor}
+    />
   {/if}
 
   <!-- Control point dots -->
