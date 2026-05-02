@@ -67,11 +67,22 @@ const isAtHome = currentPath === "/";
 	href="/"
 	class="font-heading text-2xl text-foreground transition-colors group inline-flex items-center gap-1"
 >
+	<span
+		class:list={[
+			'duration-300 transition-all [font-variation-settings:"wght"_var(--wght)]',
+			{
+				"text-primary group-hover:text-foreground [--wght:650] group-hover:[--wght:350]":
+					isAtHome,
+				"text-foreground group-hover:text-primary [--wght:350] group-hover:[--wght:650]":
+					!isAtHome,
+			},
+		]}>sarmal</span
+	>
 	<svg
 		xmlns="http://www.w3.org/2000/svg"
 		viewBox="0 0 128 128"
 		class:list={[
-			"size-6 shrink-0 duration-300 transition-transform",
+			"size-6 shrink-0 duration-300 transition-transform -translate-x-2 group-hover:translate-x-0",
 			{
 				"text-primary group-hover:text-foreground group-hover:rotate-45":
 					isAtHome,
@@ -81,7 +92,7 @@ const isAtHome = currentPath === "/";
 		]}
 		aria-hidden="true"
 	>
-		<circle class="dot" cx="64" cy="64" r="8" fill="currentColor"></circle>
+		<circle class="dot" cx="64" cy="64" r="10" fill="currentColor"></circle>
 		<g class="petals text-primary">
 			{
 				petalData.map((petal) => (
@@ -98,29 +109,16 @@ const isAtHome = currentPath === "/";
 				))
 			}
 		</g>
-	</svg>
-	<span
-		><span
-			class:list={[
-				'duration-300 transition-all [font-variation-settings:"wght"_var(--wght)]',
-				{
-					"text-primary group-hover:text-foreground [--wght:650] group-hover:[--wght:350]":
-						isAtHome,
-					"text-foreground group-hover:text-primary [--wght:350] group-hover:[--wght:650]":
-						!isAtHome,
-				},
-			]}>sarmal</span
-		><span
-			class:list={[
-				'[--wght:350] [font-variation-settings:"wght"_var(--wght)] transition-all duration-300',
-				{
-					"text-foreground group-hover:text-primary [--wght:350] group-hover:[--wght:650]":
-						isAtHome,
-					"text-primary group-hover:text-foreground [--wght:650] group-hover:[--wght:350]":
-						!isAtHome,
-				},
-			]}>.art</span
-		></span
+	</svg><span
+		class:list={[
+			'[--wght:350] [font-variation-settings:"wght"_var(--wght)] transition-all duration-300 -ml-4 group-hover:-ml-1',
+			{
+				"text-foreground group-hover:text-primary [--wght:350] group-hover:[--wght:650]":
+					isAtHome,
+				"text-primary group-hover:text-foreground [--wght:650] group-hover:[--wght:350]":
+					!isAtHome,
+			},
+		]}>art</span
 	>
 </a>
 
