@@ -10,13 +10,13 @@ const { layout = "side" } = Astro.props;
 	layout === "side" && (
 		<div
 			data-ctx="concept-demo"
-			class="concept-demo my-6 flex max-w-150 bg-foreground border border-[#2e2f2c] rounded-lg overflow-hidden"
+			class="concept-demo my-6 flex max-w-150 bg-surface border border-border rounded-lg overflow-hidden"
 		>
 			<div class="flex-1 relative min-w-0">
 				<slot name="view" />
 			</div>
-			<div class="w-42 shrink-0 border-l border-[#242522] bg-[#131412] py-4.5 px-4 flex flex-col justify-between gap-4">
-				<div class="text-[0.63rem] text-[#b3ada7] leading-[1.85] font-mono">
+			<div class="w-42 shrink-0 border-l border-border-subtle bg-background py-4.5 px-4 flex flex-col justify-between gap-4">
+				<div class="text-[0.63rem] text-muted-foreground leading-[1.85] font-mono">
 					<slot name="info" />
 				</div>
 				<slot name="controls" />
@@ -29,13 +29,13 @@ const { layout = "side" } = Astro.props;
 	layout === "bottom" && (
 		<div
 			data-ctx="concept-demo"
-			class="concept-demo my-6 max-w-125 bg-foreground border border-[#2e2f2c] rounded-lg overflow-hidden"
+			class="concept-demo my-6 max-w-125 bg-surface border border-border rounded-lg overflow-hidden"
 		>
 			<div class="relative">
 				<slot name="view" />
 			</div>
-			<div class="border-t border-[#242522] bg-[#131412] py-2.5 px-3.5 flex items-center gap-3">
-				<div class="flex-1 flex flex-col gap-1 min-w-0 text-[0.68rem] font-mono">
+			<div class="border-t border-border-subtle bg-background py-2.5 px-3.5 flex items-center gap-3">
+				<div class="flex-1 flex flex-col gap-1 min-w-0 text-[0.68rem] text-muted-foreground font-mono">
 					<slot name="info" />
 				</div>
 				<slot name="controls" />
@@ -56,12 +56,13 @@ const { layout = "side" } = Astro.props;
 	}
 
 	.cdemo-dot[data-state="playing"] {
-		background: #ffffff;
-		box-shadow: 0 0 7px rgb(192 20 60 / 0.5);
+		background: var(--color-primary);
+		box-shadow: 0 0 7px
+			color-mix(in srgb, var(--color-primary) 50%, transparent);
 	}
 
 	.cdemo-dot[data-state="paused"] {
-		background: #5c5752;
+		background: var(--color-muted);
 		box-shadow: none;
 	}
 
@@ -98,13 +99,13 @@ const { layout = "side" } = Astro.props;
 
 	.cdemo-btn-ghost {
 		background: transparent;
-		color: #b3ada7;
-		border: 1px solid #2e2f2c;
+		color: var(--color-muted-foreground);
+		border: 1px solid var(--color-border);
 	}
 
 	.cdemo-btn-ghost:hover {
-		border-color: #3e3f3b;
-		color: var(--color-background);
+		border-color: var(--color-muted);
+		color: var(--color-foreground);
 	}
 
 	.cdemo-btn-ghost:disabled {
@@ -114,7 +115,7 @@ const { layout = "side" } = Astro.props;
 
 	.cdemo-btn-play {
 		background: var(--color-primary);
-		color: #ffffff;
+		color: var(--color-primary-foreground);
 		border: 1px solid var(--color-accent);
 	}
 
@@ -123,13 +124,13 @@ const { layout = "side" } = Astro.props;
 	}
 
 	.cdemo-btn-danger {
-		background: hsl(0 45% 14%);
-		color: hsl(0 65% 62%);
-		border: 1px solid hsl(0 45% 24%);
+		background: color-mix(in srgb, var(--color-error) 15%, transparent);
+		color: var(--color-error);
+		border: 1px solid color-mix(in srgb, var(--color-error) 28%, transparent);
 	}
 
 	.cdemo-btn-danger:hover {
-		background: hsl(0 45% 18%);
+		background: color-mix(in srgb, var(--color-error) 22%, transparent);
 	}
 
 	.cdemo-btn-danger:disabled {
@@ -138,8 +139,8 @@ const { layout = "side" } = Astro.props;
 	}
 
 	.concept-demo code {
-		color: #e0566e;
-		background: #242522;
+		color: var(--color-primary);
+		background: var(--color-surface);
 		padding: 1px 5px !important;
 		border-radius: 2px;
 		border: none !important;

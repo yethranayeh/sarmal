@@ -8,7 +8,7 @@ import DocsLayout from "../../../layouts/DocsLayout.astro";
 
 import MathEquation from "../../../components/MathEquation.astro";
 import Sarmal from "../../../components/Sarmal.astro";
-import CopyButton from "../../../components/CopyButton.astro";
+import CopyButton from "../../../components/CopyButton.svelte";
 import DotGrid from "../../../components/DotGrid.astro";
 import Link from "../../../components/Link.astro";
 
@@ -127,6 +127,7 @@ const trailColor = curve.color;
 			>
 				<CopyButton
 					code={`import { ${curve.curveKey} } from "${curve.importPath}";`}
+					client:load
 				/>
 			</div>
 		</div>
@@ -218,7 +219,7 @@ const trailColor = curve.color;
 			<div
 				class="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity"
 			>
-				<CopyButton code={usageSnippet} />
+				<CopyButton code={usageSnippet} client:load />
 			</div>
 		</div>
 
@@ -239,7 +240,7 @@ const trailColor = curve.color;
 			<div
 				class="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity"
 			>
-				<CopyButton code={reactSnippet} />
+				<CopyButton code={reactSnippet} client:load />
 			</div>
 		</div>
 	</section>

@@ -137,12 +137,12 @@ sarmal.play();
 ```
 
 <ConceptDemo>
-  <SarmalBlueprint slot="view" height={200} />
+  <SarmalBlueprint slot="view" height={200} trailColor="#c0143c" />
   <div slot="info">
     <span class="text-[0.58rem] uppercase tracking-widest text-muted font-mono">state</span>
     <div class="flex items-center gap-1.75 mt-1">
       <div class="cdemo-dot" data-sarmal-dot data-state="playing"></div>
-      <span class="text-[0.82rem] text-background font-mono" data-sarmal-state-text>playing</span>
+      <span class="text-[0.82rem] text-foreground font-mono" data-sarmal-state-text>playing</span>
     </div>
   </div>
   <button slot="controls" class="cdemo-btn cdemo-btn-ghost" data-sarmal-action="toggle">Pause</button>
@@ -173,9 +173,9 @@ sarmal.reset();
   <div slot="info">
     <div class="flex items-center gap-1.75">
       <div class="cdemo-dot" data-sarmal-dot data-state="playing"></div>
-      <span data-sarmal-state-text class="text-background">playing</span>
+      <span data-sarmal-state-text class="text-foreground">playing</span>
     </div>
-    <span class="text-[0.62rem] text-[#b3ada7]">reset() clears the trail and resets t to 0. The loop keeps running.</span>
+    <span class="text-[0.62rem] text-muted">reset() clears the trail and resets t to 0. The loop keeps running.</span>
   </div>
   <button slot="controls" class="cdemo-btn cdemo-btn-ghost" data-sarmal-action="reset">Reset</button>
 </ConceptDemo>
@@ -200,9 +200,9 @@ useEffect(() => {
   <div slot="info">
     <div class="flex items-center gap-1.75">
       <div class="cdemo-dot" data-sarmal-dot data-state="playing"></div>
-      <span data-sarmal-state-text class="text-background">playing</span>
+      <span data-sarmal-state-text class="text-foreground">playing</span>
     </div>
-    <span class="text-[0.62rem] text-[#b3ada7]">Stops the loop and removes the SVG. The instance cannot be restarted.</span>
+    <span class="text-[0.62rem] text-muted">Stops the loop and removes the SVG. The instance cannot be restarted.</span>
   </div>
   <button slot="controls" class="cdemo-btn cdemo-btn-danger" data-sarmal-action="destroy">Destroy</button>
 </ConceptDemo>

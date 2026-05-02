@@ -4,6 +4,7 @@ import SectionLabel from "./SectionLabel.astro";
 interface Props {
 	variant?: "info" | "tip" | "warning" | "error" | "success";
 	label?: string;
+	size?: "sm" | "md";
 }
 
 const variantConfig: Record<string, { label: string; accent: string }> = {
@@ -14,21 +15,33 @@ const variantConfig: Record<string, { label: string; accent: string }> = {
 	success: { label: "Success", accent: "var(--color-success)" },
 };
 
-const { variant = "info", label } = Astro.props;
+const { variant = "info", label, size = "md" } = Astro.props;
 const config = variantConfig[variant] ?? variantConfig.info;
 const resolvedLabel = label ?? config.label;
 ---
 
 <div
-	class='not-prose overflow-hidden rounded-sm bg-surface [&_span[style*="background-color"]]:bg-(--alert-accent)!'
-	style={`border: 1px solid ${config.accent}; border-left: 3px solid ${config.accent}; --alert-accent: ${config.accent};`}
+	class='sr-alert not-prose overflow-hidden [&_span[style*="background-color"]]:bg-(--alert-accent)!'
+	style={`border: 1px solid ${config.accent}; border-left-width: 3px; background: color-mix(in srgb, ${config.accent} 7%, var(--color-surface-raised)); --alert-accent: ${config.accent};`}
 >
-	<div class="border-b border-border-subtle px-2 md:px-4 py-2 md:py-2.5">
-		<SectionLabel label={resolvedLabel} variant={variant} template="kanji" />
+	<div class="px-2 md:px-4 py-2 md:py-2.5 [&_span]:text-(--alert-accent)">
+		<SectionLabel
+			label={resolvedLabel}
+			variant={variant}
+			template="kanji"
+			size={size}
+		/>
 	</div>
 	<div
-		class="prose prose-sm px-2 md:px-4 py-2 md:py-3 *:first:mt-0 *:last:mb-0 max-w-none"
+		class="prose prose-sm px-2 md:px-4 pb-2 md:pb-3 *:first:mt-0 *:last:mb-0 max-w-none"
 	>
 		<slot />
 	</div>
 </div>
+
+<style is:global>
+	.sr-alert .prose :not(pre) > code {
+		background: var(--color-surface-raised);
+		border-color: color-mix(in srgb, var(--alert-accent) 22%, transparent);
+	}
+</style>

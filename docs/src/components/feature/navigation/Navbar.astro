@@ -1,21 +1,24 @@
 ---
 import Branding from "../../Branding.astro";
+import ThemeToggle from "./ThemeToggle.svelte";
 ---
 
 <header class="bg-surface-raised w-full relative z-20">
-	<div class="w-full relative bg-white h-13 md:hidden">
+	<div class="w-full relative bg-surface-raised h-13 md:hidden">
 		<div class="z-10 relative flex items-center h-full w-max pl-4">
 			<Branding />
 		</div>
 	</div>
 
 	<div
-		class="flex items-center justify-between w-full h-13 px-4 py-2 isolate border-b border-border bg-white/70 md:bg-transparent backdrop-blur-sm md:backdrop-blur-none ring-1 md:ring-0 ring-black/5 fixed md:relative top-0"
+		class="flex items-center justify-between w-full h-13 px-4 py-2 isolate border-b border-border bg-surface-raised/70 md:bg-transparent backdrop-blur-sm md:backdrop-blur-none ring-1 md:ring-0 ring-black/5 fixed md:relative top-0"
 	>
 		<div>
 			<div class="hidden md:block"><Branding /></div>
 		</div>
 		<div class="flex items-center gap-4 z-20">
+			<ThemeToggle client:load />
+			<div class="w-px h-5 bg-border" aria-hidden="true"></div>
 			<slot name="nav" />
 			<slot />
 		</div>

@@ -30,99 +30,98 @@ import DemoDashboard from "./DemoDashboard.astro";
 			<div id="live-demo-dots" class="flex gap-2"></div>
 		</div>
 	</div>
-</section>
+	<script>
+		import type { DemoScenarioAPI } from "../../../lib/demo";
+		import { SLIDES, contentDuration } from "../../../lib/demo";
 
-<script>
-	import type { DemoScenarioAPI } from "../../../lib/demo";
-	import { SLIDES, contentDuration } from "../../../lib/demo";
-
-	// Create dots
-	const dotsEl = document.getElementById("live-demo-dots")!;
-	SLIDES.forEach(() => {
-		const dot = document.createElement("span");
-		dot.className = "w-1.5 h-1.5 rounded-full transition-all duration-300";
-		dot.style.backgroundColor = "rgba(255,255,255,0.15)";
-		dotsEl.appendChild(dot);
-	});
-	const dots = Array.from(dotsEl.querySelectorAll("span")) as HTMLElement[];
-
-	// Click to navigate
-	dots.forEach((dot, i) => {
-		dot.style.cursor = "pointer";
-		dot.addEventListener("click", () => {
-			idx = i;
-			showSlide(i);
+		// Create dots
+		const dotsEl = document.getElementById("live-demo-dots")!;
+		SLIDES.forEach(() => {
+			const dot = document.createElement("span");
+			dot.className = "w-1.5 h-1.5 rounded-full transition-all duration-300";
+			dot.style.backgroundColor = "rgba(255,255,255,0.15)";
+			dotsEl.appendChild(dot);
 		});
-	});
+		const dots = Array.from(dotsEl.querySelectorAll("span")) as HTMLElement[];
 
-	function setActiveDot(i: number) {
-		dots.forEach((d, j) => {
-			if (j === i) {
-				d.style.backgroundColor = SLIDES[j].color;
-				d.style.transform = "scale(1.4)";
-				d.style.opacity = "0.85";
-			} else {
-				d.style.backgroundColor = "rgba(255,255,255,0.15)";
-				d.style.transform = "scale(1)";
-				d.style.opacity = "1";
-			}
+		// Click to navigate
+		dots.forEach((dot, i) => {
+			dot.style.cursor = "pointer";
+			dot.addEventListener("click", () => {
+				idx = i;
+				showSlide(i);
+			});
 		});
-	}
 
-	function getScenario(id: string): DemoScenarioAPI | undefined {
-		return window.demoRegistry?.[id];
-	}
-
-	function cleanupAll() {
-		SLIDES.forEach((slide) => {
-			getScenario(slide.id)?.cleanup();
-		});
-	}
-
-	function showSlide(i: number) {
-		if (mainTimer) {
-			clearTimeout(mainTimer);
-			mainTimer = null;
-		}
-		cleanupAll();
-
-		// Hide all scenarios
-		document
-			.querySelectorAll<HTMLElement>("[data-scenario]")
-			.forEach((el) => el.classList.remove("active"));
-
-		// Show active scenario
-		document
-			.querySelector(`[data-scenario="${SLIDES[i].id}"]`)!
-			.classList.add("active");
-		setActiveDot(i);
-
-		// Start the scenario
-		const scenario = getScenario(SLIDES[i].id);
-		if (scenario) {
-			scenario.start(() => {
-				mainTimer = setTimeout(() => {
-					idx = (i + 1) % SLIDES.length;
-					showSlide(idx);
-				}, contentDuration());
+		function setActiveDot(i: number) {
+			dots.forEach((d, j) => {
+				if (j === i) {
+					d.style.backgroundColor = SLIDES[j].color;
+					d.style.transform = "scale(1.4)";
+					d.style.opacity = "0.85";
+				} else {
+					d.style.backgroundColor = "rgba(255,255,255,0.15)";
+					d.style.transform = "scale(1)";
+					d.style.opacity = "1";
+				}
 			});
 		}
-	}
 
-	let idx = 0;
-	let mainTimer: ReturnType<typeof setTimeout> | null = null;
+		function getScenario(id: string): DemoScenarioAPI | undefined {
+			return window.demoRegistry?.[id];
+		}
 
-	// Start on scroll into view
-	const card = document.getElementById("live-demo-card")!;
-	const observer = new IntersectionObserver(
-		(entries) => {
-			if (entries[0]?.isIntersecting) {
-				observer.disconnect();
-				// Small delay to allow scenario scripts to register
-				setTimeout(() => showSlide(0), 100);
+		function cleanupAll() {
+			SLIDES.forEach((slide) => {
+				getScenario(slide.id)?.cleanup();
+			});
+		}
+
+		function showSlide(i: number) {
+			if (mainTimer) {
+				clearTimeout(mainTimer);
+				mainTimer = null;
 			}
-		},
-		{ threshold: 0.1 },
-	);
-	observer.observe(card);
-</script>
+			cleanupAll();
+
+			// Hide all scenarios
+			document
+				.querySelectorAll<HTMLElement>("[data-scenario]")
+				.forEach((el) => el.classList.remove("active"));
+
+			// Show active scenario
+			document
+				.querySelector(`[data-scenario="${SLIDES[i].id}"]`)!
+				.classList.add("active");
+			setActiveDot(i);
+
+			// Start the scenario
+			const scenario = getScenario(SLIDES[i].id);
+			if (scenario) {
+				scenario.start(() => {
+					mainTimer = setTimeout(() => {
+						idx = (i + 1) % SLIDES.length;
+						showSlide(idx);
+					}, contentDuration());
+				});
+			}
+		}
+
+		let idx = 0;
+		let mainTimer: ReturnType<typeof setTimeout> | null = null;
+
+		// Start on scroll into view
+		const card = document.getElementById("live-demo-card")!;
+		const observer = new IntersectionObserver(
+			(entries) => {
+				if (entries[0]?.isIntersecting) {
+					observer.disconnect();
+					// Small delay to allow scenario scripts to register
+					setTimeout(() => showSlide(0), 100);
+				}
+			},
+			{ threshold: 0.1 },
+		);
+		observer.observe(card);
+	</script>
+</section>

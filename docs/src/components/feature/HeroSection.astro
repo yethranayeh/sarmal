@@ -2,7 +2,7 @@
 import { Code } from "astro:components";
 
 import SectionLabel from "../SectionLabel.astro";
-import CopyButton from "../CopyButton.astro";
+import CopyButton from "../CopyButton.svelte";
 import DotGrid from "../DotGrid.astro";
 
 import { codeThemes } from "../../lib/shiki";
@@ -53,7 +53,7 @@ const codeSnippet = `<script src="https://unpkg.com/@sarmal/core/dist/auto-init.
 				/>
 			</div>
 			<div class="w-full flex justify-end">
-				<CopyButton class="text-primary!" code={codeSnippet} />
+				<CopyButton class="text-primary!" code={codeSnippet} client:load />
 			</div>
 		</div>
 	</div>
@@ -69,28 +69,27 @@ const codeSnippet = `<script src="https://unpkg.com/@sarmal/core/dist/auto-init.
 			lissajous 4:3
 		</span>
 	</div>
+	<script>
+		import { createSarmal, curves, palettes } from "@sarmal/core";
+
+		const canvas = document.getElementById(
+			"hero-sarmal",
+		) as HTMLCanvasElement | null;
+		if (canvas) {
+			const sarmal = createSarmal(canvas, curves.lissajous43, {
+				skeletonColor: "#c8c5c0",
+				headRadius: 2.5,
+				trailStyle: "gradient-animated",
+				trailColor: palettes.bard,
+				trailLength: 150,
+			});
+
+			canvas.addEventListener("mouseenter", () => {
+				sarmal.setSpeedOver(0.3, 400).catch(() => {});
+			});
+			canvas.addEventListener("mouseleave", () => {
+				sarmal.setSpeedOver(1.0, 500).catch(() => {});
+			});
+		}
+	</script>
 </section>
-
-<script>
-	import { createSarmal, curves, palettes } from "@sarmal/core";
-
-	const canvas = document.getElementById(
-		"hero-sarmal",
-	) as HTMLCanvasElement | null;
-	if (canvas) {
-		const sarmal = createSarmal(canvas, curves.lissajous43, {
-			skeletonColor: "#c8c5c0",
-			headRadius: 2.5,
-			trailStyle: "gradient-animated",
-			trailColor: palettes.bard,
-			trailLength: 150,
-		});
-
-		canvas.addEventListener("mouseenter", () => {
-			sarmal.setSpeedOver(0.3, 400).catch(() => {});
-		});
-		canvas.addEventListener("mouseleave", () => {
-			sarmal.setSpeedOver(1.0, 500).catch(() => {});
-		});
-	}
-</script>

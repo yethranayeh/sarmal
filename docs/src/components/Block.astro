@@ -2,9 +2,10 @@
 interface Props {
 	variant?: "default" | "info" | "tip" | "warning" | "error" | "success";
 	template?: "solid" | "kanji";
+	size?: "sm" | "md";
 }
 
-const { variant = "default", template = "solid" } = Astro.props;
+const { variant = "default", template = "solid", size = "md" } = Astro.props;
 
 const config: Record<string, { kanji?: string; color: string }> = {
 	default: { color: "var(--color-primary)" },
@@ -18,17 +19,23 @@ const config: Record<string, { kanji?: string; color: string }> = {
 const { kanji, color } = config[variant] ?? config.default;
 const isDefault = variant === "default";
 const bgColor = template === "kanji" ? color : "var(--color-primary)";
+
+const sizeClass =
+	size === "sm" ? "w-3.5 h-3.5 text-[10px]" : "w-[18px] h-[18px] text-[12px]";
 ---
 
 {
 	isDefault ? (
 		<span
-			class="w-2.5 h-2.5 inline-block shrink-0"
+			class:list={[sizeClass, "inline-block shrink-0"]}
 			style={`background-color: ${bgColor}`}
 		/>
 	) : (
 		<span
-			class="inline-flex items-center justify-center w-4 h-4 shrink-0 font-sans text-[10px] leading-none text-white select-none"
+			class:list={[
+				sizeClass,
+				"inline-flex items-center justify-center shrink-0 font-heading leading-none text-white! select-none",
+			]}
 			style={`background-color: ${bgColor}`}
 		>
 			{kanji}

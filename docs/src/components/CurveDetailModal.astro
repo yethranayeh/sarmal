@@ -7,7 +7,7 @@ import { curves } from "@sarmal/core";
 import Dialog from "./Dialog/Dialog.astro";
 import DialogShowcase from "./Dialog/DialogShowcase.astro";
 import DialogInfoGrid from "./Dialog/DialogInfoGrid.astro";
-import CopyButton from "./CopyButton.astro";
+import CopyButton from "./CopyButton.svelte";
 
 import { codeThemes } from "../lib/shiki";
 import { curveMetadata } from "../data/curveMetadata";
@@ -74,7 +74,7 @@ const codeSnippet = `<canvas data-sarmal="${curveId}"></canvas>`;
 				<span class="text-muted/50 uppercase tracking-wider text-[9px]"
 					>Code</span
 				>
-				<CopyButton code={codeSnippet} variant="ghost" />
+				<CopyButton code={codeSnippet} variant="ghost" client:load />
 			</div>
 			<div class="bg-surface border border-border rounded-md">
 				<Code

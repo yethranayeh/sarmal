@@ -7,11 +7,14 @@
   import MathCanvas from "./MathCanvas.svelte";
   import DrawCanvas from "./DrawCanvas.svelte";
   import ShareDropdown from "./ShareDropdown.svelte";
+  import Button from "../../components/Button.svelte";
 
   const pg = getContext<PlaygroundState>("playground");
 </script>
 
-<section class="flex-1 relative bg-surface-raised overflow-hidden">
+<section
+  class="flex-1 relative bg-surface-raised dark:bg-surface overflow-hidden"
+>
   <!-- dot grid decoration -->
   <div
     class="absolute inset-0 bg-[radial-gradient(color-mix(in_srgb,var(--color-foreground)_7%,transparent)_0.8px,transparent_0.8px)] bg-size-[28px_28px] pointer-events-none"
@@ -70,13 +73,10 @@
   <!-- Floating: share / clear (top-right) -->
   <div class="absolute top-4 right-4 z-10 flex items-center gap-2">
     <ShareDropdown />
-    <button
-      class="font-body text-xs px-3 py-1.5 inline-flex items-center gap-1.5 bg-primary text-white rounded hover:bg-primary/80 transition-colors cursor-pointer"
-      onclick={pg.handleClear}
-    >
+    <Button active onclick={pg.handleClear} variant="ghost">
       <Trash class="w-3.5 h-3.5" />
       Clear
-    </button>
+    </Button>
   </div>
 
   <!-- Mode tag (bottom-left) -->

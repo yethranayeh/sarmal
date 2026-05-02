@@ -16,7 +16,7 @@
 
 {#if pg.drawPointCount === 0}
   <div
-    class="absolute inset-0 flex items-center justify-center pointer-events-none"
+    class="absolute inset-0 z-10 flex items-center justify-center pointer-events-none"
   >
     <div class="text-center max-w-85 px-6 select-none">
       <h2

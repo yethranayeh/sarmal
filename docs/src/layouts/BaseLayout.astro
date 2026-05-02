@@ -68,6 +68,18 @@ const canonicalUrl = canonical ?? new URL(Astro.url.pathname, SITE_URL).href;
 		<Font cssVariable="--font-heading" preload />
 		<Font cssVariable="--font-ui" preload />
 
+		<script is:inline>
+			(() => {
+				const theme = localStorage.getItem("theme");
+				if (theme === "dark") {
+					document.documentElement.classList.add("dark");
+				} else if (theme === "light") {
+					document.documentElement.classList.add("light");
+				} else if (window.matchMedia("(prefers-color-scheme: dark)").matches) {
+					document.documentElement.classList.add("dark");
+				}
+			})();
+		</script>
 		<slot name="head" />
 
 		<script

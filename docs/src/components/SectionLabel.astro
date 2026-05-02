@@ -5,14 +5,20 @@ interface Props {
 	label: string;
 	variant?: "default" | "info" | "tip" | "warning" | "error" | "success";
 	template?: "solid" | "kanji";
+	size?: "sm" | "md";
 }
 
-const { label, variant = "default", template = "solid" } = Astro.props;
+const {
+	label,
+	variant = "default",
+	template = "solid",
+	size = "md",
+} = Astro.props;
 ---
 
 <div class="flex items-center gap-2">
-	<Block variant={variant} template={template} />
-	<span class="font-ui text-[10px] tracking-widest uppercase text-muted"
+	<Block variant={variant} template={template} size={size} />
+	<span class="font-ui text-xs tracking-widest uppercase text-muted font-bold"
 		>{label}</span
 	>
 </div>

@@ -1,5 +1,6 @@
 ---
 import type { CurveName } from "@sarmal/core";
+import DotGrid from "./DotGrid.astro";
 
 export interface Callout {
 	target: "head" | "skeleton" | string;
@@ -58,13 +59,11 @@ const id = `sbp-${Math.random().toString(36).slice(2, 8)}`;
 		height ? "h-(--sb-h)" : "h-full",
 		width ? "w-(--sb-w)" : "w-full",
 		"bg-surface",
-		"bg-[radial-gradient(circle,#d8d4ce_1.5px,transparent_1.5px)]",
-		"bg-size-[24px_24px]",
-		"border",
-		"border-solid",
-		"border-border",
-		"rounded",
-		"shadow-[inset_0_0_0_1px_rgba(255,255,255,0.4)]",
+		// "border",
+		// "border-solid",
+		// "border-border",
+		// "rounded",
+		// "shadow-[inset_0_0_0_1px_rgba(255,255,255,0.4)]",
 	]}
 	data-curve={curve}
 	data-auto-start={String(autoStart)}
@@ -78,6 +77,7 @@ const id = `sbp-${Math.random().toString(36).slice(2, 8)}`;
 		: undefined}
 	data-callouts={JSON.stringify(callouts)}
 >
+	<DotGrid />
 	<svg class="absolute inset-0 w-full h-full"></svg>
 </div>
 
@@ -96,8 +96,9 @@ const id = `sbp-${Math.random().toString(36).slice(2, 8)}`;
 </style>
 
 <script>
-	import { createSarmalSVG, curves } from "@sarmal/core";
 	import type { CurveName, SVGSarmalOptions } from "@sarmal/core";
+
+	import { createSarmalSVG, curves } from "@sarmal/core";
 
 	const _css = getComputedStyle(document.documentElement);
 	const ANNOT_COLORS = {
@@ -266,11 +267,17 @@ const id = `sbp-${Math.random().toString(36).slice(2, 8)}`;
 			skeletonColor: wrapper.dataset.skeletonColor,
 			headColor: wrapper.dataset.headColor,
 		};
-		if (initialT !== undefined) opts.initialT = initialT;
-		if (wrapper.dataset.headRadius !== undefined)
+		if (initialT !== undefined) {
+			opts.initialT = initialT;
+		}
+
+		if (wrapper.dataset.headRadius !== undefined) {
 			opts.headRadius = parseFloat(wrapper.dataset.headRadius);
-		if (wrapper.dataset.trailLength !== undefined)
+		}
+
+		if (wrapper.dataset.trailLength !== undefined) {
 			opts.trailLength = parseFloat(wrapper.dataset.trailLength);
+		}
 
 		const curve = curves[curveName];
 		const instance = createSarmalSVG(svgEl, curve, opts);

@@ -1,6 +1,8 @@
 @import "tailwindcss";
 @plugin "@tailwindcss/typography";
 
+@custom-variant dark (&:where(.dark, .dark *));
+
 @theme {
   --color-background: #fbf9f5;
   --color-foreground: #1b1c1a;
@@ -38,6 +40,70 @@
   --radius-sm: 2px;
   --radius-md: 4px;
   --radius-lg: 8px;
+}
+
+@layer base {
+  :where(.dark, [data-theme="dark"]) {
+    --color-background: #131311;
+    --color-foreground: #f1ede4;
+
+    --color-surface: #1c1c19;
+    --color-surface-raised: #232320;
+
+    --color-border: #2e2e2a;
+    --color-border-subtle: #232320;
+
+    --color-primary: #e6536e;
+    --color-primary-foreground: #131311;
+
+    --color-accent: #ff7188;
+    --color-accent-foreground: #131311;
+
+    --color-muted: #9a8f84;
+    --color-muted-gray: #8a8580;
+    --color-muted-dark: #6e6862;
+    --color-muted-foreground: #b5a8a0;
+
+    --color-error: #ff7676;
+    --color-error-foreground: #131311;
+
+    --color-info: #6ab2da;
+    --color-tip: #7fc3a0;
+    --color-warning: #ddae5c;
+    --color-success: #7fc3a0;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :where(:root:not(.light, [data-theme="light"])) {
+      --color-background: #131311;
+      --color-foreground: #f1ede4;
+
+      --color-surface: #1c1c19;
+      --color-surface-raised: #232320;
+
+      --color-border: #2e2e2a;
+      --color-border-subtle: #232320;
+
+      --color-primary: #e6536e;
+      --color-primary-foreground: #131311;
+
+      --color-accent: #ff7188;
+      --color-accent-foreground: #131311;
+
+      --color-muted: #9a8f84;
+      --color-muted-gray: #8a8580;
+      --color-muted-dark: #6e6862;
+      --color-muted-foreground: #b5a8a0;
+
+      --color-error: #ff7676;
+      --color-error-foreground: #131311;
+
+      --color-info: #6ab2da;
+      --color-tip: #7fc3a0;
+      --color-warning: #ddae5c;
+      --color-success: #7fc3a0;
+    }
+  }
 }
 
 /* Prose theme overrides - binds typography plugin to design tokens */

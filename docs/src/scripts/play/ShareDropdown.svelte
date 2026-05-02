@@ -11,6 +11,7 @@
     FileCode,
     Share,
   } from "@lucide/svelte";
+  import Button from "../../components/Button.svelte";
 
   import {
     generateJSSnippet,
@@ -151,18 +152,21 @@
 </script>
 
 <div class="relative">
-  <button
-    class="font-body text-xs px-3 py-1.5 inline-flex items-center gap-1 bg-white border border-border rounded text-foreground transition-colors cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
+  <Button
+    variant="ghost"
     onclick={toggle}
     aria-expanded={open}
     aria-haspopup="menu"
   >
-    <Share class="size-3.5" />
+    {#snippet icon()}<Share class="size-4" />{/snippet}
     Export
-    <span class="transition-transform duration-150" class:rotate-180={open}>
-      <ChevronDown class="size-3" />
+    <span
+      class="transition-transform duration-150 ml-0.5"
+      class:rotate-180={open}
+    >
+      <ChevronDown class="size-3.5" />
     </span>
-  </button>
+  </Button>
 
   {#if status}
     <span
