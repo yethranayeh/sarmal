@@ -14,13 +14,16 @@
 
   let { presets, savedState }: Props = $props();
 
-  const canvasRef: { current: HTMLCanvasElement | null } = { current: null };
+  const previewRef: { current: SVGSVGElement | null } = {
+    current: null,
+  };
+
   let confirmDialog: {
     show: (title: string, message: string, onConfirm: () => void) => void;
   } | null = $state(null);
 
   const pg = createPlaygroundState(
-    canvasRef,
+    previewRef,
     (title, message, onConfirm) => {
       confirmDialog?.show(title, message, onConfirm);
     },

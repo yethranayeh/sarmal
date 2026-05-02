@@ -4,20 +4,19 @@
   import { getContext } from "svelte";
 
   const pg = getContext<PlaygroundState>("playground");
-  let canvas = $state<HTMLCanvasElement | null>(null);
+  let svgEl = $state<SVGSVGElement | null>(null);
 
   $effect(() => {
-    pg.canvasRef.current = canvas;
+    pg.previewRef.current = svgEl;
     return () => {
-      pg.canvasRef.current = null;
+      pg.previewRef.current = null;
     };
   });
 </script>
 
-<canvas
-  bind:this={canvas}
-  id="preview-canvas"
-  width="640"
-  height="640"
-  class="absolute inset-0 w-full h-full"
-></canvas>
+<svg
+  bind:this={svgEl}
+  class="absolute inset-0 w-full h-full {pg.currentMode === 'draw'
+    ? 'pointer-events-none'
+    : ''}"
+></svg>

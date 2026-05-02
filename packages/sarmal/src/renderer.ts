@@ -20,8 +20,9 @@ import {
   resolveTrailMainColor,
   validateRenderOptions,
   warnIfTrailColorMismatch,
-  getHeadDotRadius,
 } from "./renderer-shared";
+
+const getHeadDotRadius = (w: number, h: number) => Math.max(1, 3 * Math.sqrt(Math.min(w, h) / 160));
 
 export { computeTangent, computeNormal, TrailPoint } from "./renderer-shared";
 export { Rgb, palettes, hexToRgb, lerpRgb, getPaletteColor } from "./renderer-shared";

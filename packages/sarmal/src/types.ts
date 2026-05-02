@@ -266,8 +266,8 @@ export interface RuntimeRenderOptions {
   skeletonColor?: string;
   trailStyle?: TrailStyle;
   /** Radius of the head dot.
-   * @default number Canvas default: auto-derived from container size with `getHeadDotRadius`
-   *                 SVG default: `1.5` viewBox units. */
+   * - Canvas: CSS pixels. Auto-derived from container size if omitted.
+   * - SVG: viewBox units (0–100 space). Default: `0.5`. */
   headRadius?: number;
 }
 

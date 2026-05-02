@@ -17,6 +17,12 @@ Version history notes of the <Link href="#core">Core</Link> and the <Link href="
 
 ## Core
 
+### 0.23.0 - 02.05.2026
+
+The SVG renderer now calibrates trail width and skeleton stroke width to the container's physical pixel size at construction, so strokes render at a consistent apparent thickness regardless of container dimensions.
+
+The default `headRadius` for the SVG renderer changed from `1.5` to `0.5` viewBox units.
+
 ### 0.22.0 - 02.05.2026
 
 `headRadius` is now a runtime option. `setRenderOptions({ headRadius })` can be called to change the head dot radius live, without rebuilding the instance.
@@ -81,7 +87,7 @@ The renderer takes ownership of the targeted DOM element.
 
 The SVG renderer uses a fixed `viewBox="0 0 100 100"` and no longer reads pixel dimensions from the container. The default `headRadius` is now `2` (viewBox units). Override with `headRadius` if needed.
 
-`destroy()` no longer removes the caller's `<svg>` element — only the renderer's own child content is cleaned up.
+`destroy()` only cleans up the renderer's own child content. It no longer removes the caller's `<svg>` element.
 
 ### 0.18.0 - 28.04.2026
 

@@ -474,7 +474,3 @@ export function warnIfTrailColorMismatch(trailColor: TrailColor, trailStyle: Tra
     );
   }
 }
-
-/** Returns a pixel-space head dot radius based on viewport dimensions. The SVG renderer uses its own viewBox-unit constant instead. */
-export const getHeadDotRadius = (w: number, h: number) =>
-  Math.max(1, 3 * Math.sqrt(Math.min(w, h) / 160));

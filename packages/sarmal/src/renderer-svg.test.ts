@@ -253,11 +253,11 @@ describe("setRenderOptions — SVG attribute re-apply", () => {
   });
 
   describe("headRadius runtime (SVG)", () => {
-    it("uses the default SVG headRadius of 1.5 at construction", () => {
+    it("uses default headRadius of 1.5 viewBox units", () => {
       const container = makeContainer();
       const instance = createSarmalSVG(container, testCircle, { autoStart: false });
       const head = getHeadCircle(container);
-      expect(head.getAttribute("r")).toBe("1.5");
+      expect(head.getAttribute("r")).toBe("0.5");
       instance.destroy();
     });
 
@@ -290,6 +290,61 @@ describe("setRenderOptions — SVG attribute re-apply", () => {
 
       instance.destroy();
     });
+  });
+});
+
+describe("SVG renderer — container size calibration", () => {
+  it("produces smaller viewBox-unit stroke widths at 640px than at 200px", () => {
+    const container640 = makeContainer();
+    const mock640 = vi
+      .spyOn(container640, "getBoundingClientRect")
+      .mockReturnValue({ width: 640, height: 640 } as DOMRect);
+    const instance640 = createSarmalSVG(container640, testCircle, { autoStart: false });
+
+    const container200 = makeContainer();
+    const mock200 = vi
+      .spyOn(container200, "getBoundingClientRect")
+      .mockReturnValue({ width: 200, height: 200 } as DOMRect);
+    const instance200 = createSarmalSVG(container200, testCircle, { autoStart: false });
+
+    const skeleton640 = container640.querySelector("[data-sarmal-role='skeleton']");
+    const skeleton200 = container200.querySelector("[data-sarmal-role='skeleton']");
+    const sw640 = parseFloat(skeleton640!.getAttribute("stroke-width")!);
+    const sw200 = parseFloat(skeleton200!.getAttribute("stroke-width")!);
+    expect(sw640).toBeLessThan(sw200);
+
+    mock640.mockRestore();
+    mock200.mockRestore();
+    instance640.destroy();
+    instance200.destroy();
+  });
+
+  it("headRadius is container-size-independent: same input produces the same viewBox r", () => {
+    const container640 = makeContainer();
+    const mock640 = vi
+      .spyOn(container640, "getBoundingClientRect")
+      .mockReturnValue({ width: 640, height: 640 } as DOMRect);
+    const instance640 = createSarmalSVG(container640, testCircle, {
+      autoStart: false,
+      headRadius: 2,
+    });
+
+    const container200 = makeContainer();
+    const mock200 = vi
+      .spyOn(container200, "getBoundingClientRect")
+      .mockReturnValue({ width: 200, height: 200 } as DOMRect);
+    const instance200 = createSarmalSVG(container200, testCircle, {
+      autoStart: false,
+      headRadius: 2,
+    });
+
+    expect(getHeadCircle(container640).getAttribute("r")).toBe("2");
+    expect(getHeadCircle(container200).getAttribute("r")).toBe("2");
+
+    mock640.mockRestore();
+    mock200.mockRestore();
+    instance640.destroy();
+    instance200.destroy();
   });
 });
 

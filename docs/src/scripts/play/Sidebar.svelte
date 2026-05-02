@@ -217,10 +217,10 @@
 
     <Slider
       label="Head radius"
-      value={pg.headRadius}
-      min={1}
-      max={10}
-      step={0.5}
+      value={pg.headRadius ?? 0.5}
+      min={0.1}
+      max={1}
+      step={0.1}
       formatValue={(v) => v.toFixed(1)}
       onChange={pg.handleHeadRadiusChange}
     />

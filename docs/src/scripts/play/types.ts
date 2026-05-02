@@ -33,7 +33,7 @@ export interface SharedState {
   trailColor: string;
   headColor: string;
   headColorAuto: boolean;
-  headRadius: number;
+  headRadius?: number;
   trailLength: number;
   speed: number;
   showSkeleton: boolean;

@@ -39,11 +39,18 @@ The Canvas renderer is the default. It uses the HTML5 Canvas 2D API for renderin
 - Performance-critical scenarios (cached skeleton, efficient trail rendering)
 - Exporting frames as images
 
+**Accessibility note:** Canvas only renders pixels, so screen readers see *nothing*. Consider adding a visually hidden label outside the canvas element:
+
+```html
+<canvas id="spinner"></canvas>
+<span class="sr-only">Loading…</span>
+```
+
 ```ts
-import { createSarmal, curves, palettes } from "@sarmal/core";
+import { createSarmal, astroid, palettes } from "@sarmal/core";
 
 const canvas = document.getElementById("spinner") as HTMLCanvasElement;
-const sarmal = createSarmal(canvas, curves.artemis2, {
+const sarmal = createSarmal(canvas, astroid, {
   trailStyle: "gradient-animated",
   trailColor: palettes.bard,
 });
@@ -104,7 +111,6 @@ const sarmal = createSarmalSVG(svg, curves.lissajous32, {
 
 - You need to export frames as images
 - You have fixed dimensions and want maximum performance
-- You're building a game or canvas-heavy application
 
 ### Choose SVG when:
 

@@ -23,7 +23,7 @@ export interface PlaygroundState {
   showSkeleton: boolean;
   speed: number;
   trailLength: number;
-  headRadius: number;
+  headRadius: number | null;
   trailStyle: TrailStyle;
   trailColor: string;
   headColor: string;
@@ -62,13 +62,13 @@ export interface PlaygroundState {
   handleTrailStyleChange: (newStyle: TrailStyle) => void;
   handlePaletteChange: (newPalette: SarmalPalette) => void;
   handleShareClick: () => Promise<void>;
-  canvasRef: { current: HTMLCanvasElement | null };
+  previewRef: { current: SVGSVGElement | null };
   presets: PresetData[];
   PRESETS: Record<string, Preset>;
 }
 
 export function createPlaygroundState(
-  canvasRef: { current: HTMLCanvasElement | null },
+  previewRef: { current: SVGSVGElement | null },
   showConfirm: (title: string, message: string, onConfirm: () => void) => void,
   presets: PresetData[],
   savedState?: SharedState | null,
@@ -80,12 +80,11 @@ export function createPlaygroundState(
     showSkeleton: true,
     speed: 1,
     trailLength: 120,
-    headRadius: 4,
+    headRadius: null as number | null,
     trailStyle: "default" as TrailStyle,
     trailColor: "#c0143c",
     headColor: "#c0143c",
     headColorAuto: true,
-    headRadiusAuto: true,
     palette: "bard" as SarmalPalette,
     presetId: "",
     shareStatus: null as string | null,
@@ -142,8 +141,8 @@ export function createPlaygroundState(
       state.instance = null;
     }
 
-    const c = canvasRef.current;
-    if (!c) {
+    const c = previewRef.current;
+    if (!(c instanceof SVGSVGElement)) {
       return;
     }
 
@@ -159,7 +158,7 @@ export function createPlaygroundState(
           state.trailColor,
         ),
         headColor: state.headColorAuto ? undefined : state.headColor,
-        headRadius: state.headRadiusAuto ? undefined : state.headRadius,
+        headRadius: state.headRadius ?? undefined,
         trailLength: state.trailLength,
         speed: state.speed,
         trailStyle: state.trailStyle,
@@ -238,11 +237,6 @@ export function createPlaygroundState(
       if (state.instance) {
         state.instance.destroy();
         state.instance = null;
-      }
-
-      const c = canvasRef.current;
-      if (c) {
-        c.getContext("2d")?.clearRect(0, 0, c.width, c.height);
       }
     } else {
       state.error = null;
@@ -347,7 +341,6 @@ export function createPlaygroundState(
 
   function handleHeadRadiusChange(newRadius: number) {
     state.headRadius = newRadius;
-    state.headRadiusAuto = false;
     if (state.currentMode === "math") {
       state.instance?.setRenderOptions({ headRadius: newRadius });
     }
@@ -460,7 +453,7 @@ export function createPlaygroundState(
       trailColor: state.trailColor,
       headColor: state.headColor,
       headColorAuto: state.headColorAuto,
-      headRadius: state.headRadius,
+      ...(state.headRadius !== null ? { headRadius: state.headRadius } : {}),
       trailLength: state.trailLength,
       speed: state.speed,
       showSkeleton: state.showSkeleton,
@@ -470,7 +463,7 @@ export function createPlaygroundState(
       payload.drawPoints = state.drawBoardRef?.getPoints();
     }
 
-    const c = canvasRef.current;
+    const c = previewRef.current;
     if (!c) {
       return;
     }
@@ -523,7 +516,6 @@ export function createPlaygroundState(
     }
     if (typeof saved.headRadius === "number") {
       state.headRadius = saved.headRadius;
-      state.headRadiusAuto = false;
     }
     if (typeof saved.trailLength === "number") {
       state.trailLength = saved.trailLength;
@@ -776,7 +768,7 @@ export function createPlaygroundState(
     get PRESETS() {
       return PRESETS;
     },
-    canvasRef,
+    previewRef,
     presets,
   };
 }

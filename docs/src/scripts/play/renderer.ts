@@ -1,7 +1,7 @@
 import type { SarmalPalette, TrailStyle } from "@sarmal/core";
 import type { CurveFn, PlaygroundRenderParams } from "./types";
 
-import { createEngine, palettes, createRenderer } from "@sarmal/core";
+import { createEngine, palettes, createSVGRenderer } from "@sarmal/core";
 
 export function getResolvedTrailColor(style: TrailStyle, palette: SarmalPalette, color: string) {
   if (style !== "default") {
@@ -29,7 +29,7 @@ export function getResolvedSkeletonColor(
 }
 
 export function createInstance(
-  canvas: HTMLCanvasElement,
+  container: SVGSVGElement,
   fn: CurveFn,
   params: PlaygroundRenderParams,
   period = Math.PI * 2,
@@ -39,8 +39,8 @@ export function createInstance(
     params.trailLength,
   );
 
-  const rendererOptions: Parameters<typeof createRenderer>[0] = {
-    canvas,
+  const rendererOptions: Parameters<typeof createSVGRenderer>[0] = {
+    container,
     engine,
     trailColor: params.trailColor,
     skeletonColor: params.skeletonColor,
@@ -55,5 +55,5 @@ export function createInstance(
     rendererOptions.headRadius = params.headRadius;
   }
 
-  return createRenderer(rendererOptions);
+  return createSVGRenderer(rendererOptions);
 }

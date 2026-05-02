@@ -13,6 +13,8 @@ import type {
 import {
   DEFAULT_MORPH_DURATION_MS,
   DEFAULT_SKELETON_OPACITY,
+  TRAIL_MIN_WIDTH,
+  TRAIL_MAX_WIDTH,
   computeBoundaries,
   computeTrailQuad,
   enginePassthroughs,
@@ -38,6 +40,9 @@ export interface SVGSarmalOptions extends Omit<SVGRendererOptions, "container" |
   trailLength?: number;
 }
 const EMPTY_PARAMS: Record<string, number> = {};
+const SVG_DEFAULT_HEAD_RADIUS = 0.5; // viewBox units
+/** Pixel-space skeleton stroke width calibrated to viewBox units at construction like TRAIL_MIN/MAX_WIDTH. */
+const SKELETON_STROKE_WIDTH_PX = 1.5;
 
 /**
  * Threshold above which a console.warn suggests canvas for long SVG trails
@@ -100,7 +105,7 @@ export function createSVGRenderer(options: SVGRendererOptions): SarmalInstance {
   // `null` means that head color is derived from `trailColor` & `trailStyle` and refreshed whenever either changes.
   let userHeadColor: string | null = options.headColor ?? null;
   let headColor: string = userHeadColor ?? resolveHeadColor(trailColor, trailStyle);
-  let headRadius = options.headRadius ?? 1.5;
+  let headRadius: number; // assigned below after container size is read
 
   let trailSolid: string = resolveTrailMainColor(trailColor);
   let trailPalette: string[] = resolveTrailPalette(trailColor);
@@ -110,11 +115,23 @@ export function createSVGRenderer(options: SVGRendererOptions): SarmalInstance {
   warnIfTrailColorMismatch(trailColor, trailStyle);
 
   const viewSize = 100;
-  // Trail widths are in viewBox units (0–100 space),
-  // so they need to be ~half the pixel-space defaults used by the canvas renderer
-  const svgTrailMinWidth = 0.25;
-  const svgTrailMaxWidth = 1.25;
-  const svgSkeletonStrokeWidth = "0.75";
+
+  function getContainerPixelSize(): number {
+    const rect = container.getBoundingClientRect();
+    return rect.width && rect.height ? Math.min(rect.width, rect.height) : 200;
+  }
+
+  /**
+   * Trail widths and skeleton stroke are calibrated from pixel-space shared constants so that
+   *  strokes render at a consistent physical thickness regardless of container dimensions.
+   * ! headRadius is NOT calibrated. It is native viewBox units (see SVG_DEFAULT_HEAD_RADIUS).
+   */
+  const containerPx = getContainerPixelSize();
+  const svgTrailMinWidth = (TRAIL_MIN_WIDTH * viewSize) / containerPx;
+  const svgTrailMaxWidth = (TRAIL_MAX_WIDTH * viewSize) / containerPx;
+  const svgSkeletonStrokeWidth = String((SKELETON_STROKE_WIDTH_PX * viewSize) / containerPx);
+
+  headRadius = options.headRadius ?? SVG_DEFAULT_HEAD_RADIUS;
 
   container.setAttribute("viewBox", `0 0 ${viewSize} ${viewSize}`);
   container.setAttribute("role", "img");
