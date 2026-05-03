@@ -4,6 +4,7 @@
 
   import { createEngine, drawCurve } from "@sarmal/core";
   import { onDestroy, untrack } from "svelte";
+  import Button from "../../components/Button.svelte";
 
   import {
     computeNormal,
@@ -590,12 +591,9 @@
       style="left: {((point[0] + 1) / 2) * 100}%; top: {((point[1] + 1) / 2) *
         100}%; transform: translate(-50%, -120%);"
     >
-      <button
-        class="font-ui text-xs px-2 py-1 text-error hover:bg-surface-raised rounded transition-colors whitespace-nowrap cursor-pointer"
-        onclick={() => deletePoint(popoverIndex!)}
-      >
+      <Button variant="destructive" onclick={() => deletePoint(popoverIndex!)}>
         Delete point
-      </button>
+      </Button>
     </div>
   {/if}
 {/if}

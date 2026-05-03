@@ -1,4 +1,6 @@
 <script lang="ts">
+  import Button from "../../components/Button.svelte";
+
   let dialogEl = $state<HTMLDialogElement | null>(null);
   let title = $state("");
   let message = $state("");
@@ -48,18 +50,8 @@
       {message}
     </p>
     <div class="flex justify-end gap-3">
-      <button
-        class="font-body text-xs px-4 py-2 rounded bg-surface-raised border border-border text-foreground hover:bg-surface-raised/70 transition-colors cursor-pointer"
-        onclick={() => dialogEl?.close()}
-      >
-        Cancel
-      </button>
-      <button
-        class="font-body text-xs px-4 py-2 rounded bg-primary text-primary-foreground hover:bg-primary/80 transition-colors cursor-pointer"
-        onclick={handleConfirm}
-      >
-        Switch anyway
-      </button>
+      <Button variant="ghost" onclick={() => dialogEl?.close()}>Cancel</Button>
+      <Button variant="primary" onclick={handleConfirm}>Switch anyway</Button>
     </div>
   </div>
 </dialog>

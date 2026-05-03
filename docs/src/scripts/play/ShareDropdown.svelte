@@ -9,6 +9,7 @@
     ChevronDown,
     Code,
     FileCode,
+    Film,
     Share,
   } from "@lucide/svelte";
   import Button from "../../components/Button.svelte";
@@ -25,6 +26,7 @@
 
   import { handleShare } from "./share";
   import type { SharedState } from "./types";
+  import WebMExportDialog from "./WebMExportDialog.svelte";
 
   const pg = getContext<PlaygroundState>("playground");
 
@@ -69,6 +71,12 @@
 
   const svgDisabled = $derived(
     pg.currentMode === "draw" ? pg.drawPointCount < 3 : !pg.instance,
+  );
+
+  const webmSupported = $derived(typeof MediaRecorder !== "undefined");
+
+  const webmDisabled = $derived(
+    pg.currentMode === "draw" ? pg.drawPointCount < 3 : !pg.lastCompiledFn,
   );
 
   async function handleShareURL() {
@@ -160,6 +168,13 @@
         4000,
       );
     }
+  }
+
+  let webmDialog: WebMExportDialog | null = $state(null);
+
+  function handleExportWebM() {
+    close();
+    webmDialog?.open();
   }
 
   async function handleCopySVG() {
@@ -281,6 +296,17 @@
         <Braces class="size-4" />
         Copy as React
       </button>
+      {#if webmSupported}
+        <button
+          class="w-full text-left px-3 py-1.5 flex items-center gap-2 text-xs font-body hover:bg-surface transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+          role="menuitem"
+          disabled={webmDisabled}
+          onclick={handleExportWebM}
+        >
+          <Film class="size-4" />
+          Export as WebM
+        </button>
+      {/if}
       <div class="bg-border h-px mx-1 my-1" role="separator"></div>
       <button
         class="w-full text-left px-3 py-1.5 flex items-center gap-2 text-xs font-body hover:bg-surface transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
@@ -309,6 +335,8 @@
     </div>
   {/if}
 </div>
+
+<WebMExportDialog bind:this={webmDialog} />
 
 <svelte:window onkeydown={handleKeydown} />
 
