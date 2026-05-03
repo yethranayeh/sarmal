@@ -11,6 +11,16 @@
   import Tooltip from "./Tooltip.svelte";
 
   const pg = getContext<PlaygroundState>("playground");
+
+  let codeTextarea = $state<HTMLTextAreaElement>();
+  let lineGutter = $state<HTMLDivElement>();
+  let lineCount = $derived(pg.currentCode.split("\n").length);
+
+  function syncScroll() {
+    if (lineGutter && codeTextarea) {
+      lineGutter.scrollTop = codeTextarea.scrollTop;
+    }
+  }
 </script>
 
 <aside
@@ -85,14 +95,14 @@
         <div
           class="bg-surface-raised border {pg.error
             ? 'border-error'
-            : 'border-border'} rounded transition-colors focus-within:border-primary"
+            : 'border-border'} rounded transition-colors focus-within:border-primary overflow-hidden"
         >
           <div
             class="flex items-center gap-1.5 px-3 py-2 border-b border-border-subtle bg-surface font-mono text-[10.5px]"
           >
             <span class="text-primary font-semibold font-mono">function</span>
             <span class="text-muted-gray">(</span>
-            <Tooltip placement="bottom">
+            <Tooltip placement="bottom" class="-translate-x-1/4">
               {#snippet tooltip()}
                 <div class="space-y-1 min-w-60">
                   <p>
@@ -117,12 +127,27 @@
               >{`{`}</span
             >
           </div>
-          <textarea
-            bind:value={pg.currentCode}
-            oninput={pg.handleCodeChange}
-            spellcheck="false"
-            class="w-full px-3 py-2.5 font-mono text-xs leading-[1.55] text-foreground bg-transparent border-0 resize-none outline-none min-h-35 block"
-          ></textarea>
+          <div class="flex min-h-35">
+            <div
+              bind:this={lineGutter}
+              class="shrink-0 w-8 pt-2.5 pb-2.5 font-mono text-xs leading-[1.55] text-right select-none overflow-hidden border-r border-border-subtle text-muted-gray/45"
+              aria-hidden="true"
+            >
+              {#each { length: Math.max(lineCount, 1) } as _, i}
+                <div class="pr-2" style="font-variant-numeric: tabular-nums;">
+                  {i + 1}
+                </div>
+              {/each}
+            </div>
+            <textarea
+              bind:this={codeTextarea}
+              bind:value={pg.currentCode}
+              oninput={pg.handleCodeChange}
+              onscroll={syncScroll}
+              spellcheck="false"
+              class="w-full py-2.5 pr-3 pl-2 font-mono text-xs leading-[1.55] text-foreground bg-transparent border-0 resize-none outline-none block"
+            ></textarea>
+          </div>
           <div
             class="px-3 py-1 font-bold font-mono text-[11px] bg-surface text-primary"
           >
@@ -141,7 +166,7 @@
             >
             as a function of
             <span
-              class="font-mono font-bold not-italic text-[11px] text-primary"
+              class="pl-1 font-mono font-bold not-italic text-[11px] text-primary"
               >t</span
             >.
           </p>

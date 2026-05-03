@@ -3,24 +3,29 @@
   import { getContext } from "svelte";
 
   import Button from "../../components/Button.svelte";
+  import { Download, Film } from "@lucide/svelte";
   import {
     recordWebM,
     getWebMDurationSeconds,
     getWebMRawDurationSeconds,
   } from "./export";
+  import { SEPARATOR_DOT } from "../../variables";
 
   const pg = getContext<PlaygroundState>("playground");
 
   type DialogMode = "configure" | "rendering" | "ready";
+  type DurationMode = "period" | "custom";
 
   let dialogEl = $state<HTMLDialogElement | null>(null);
   let mode = $state<DialogMode>("configure");
-  let durationMode = $state<"period" | "custom">("period");
+  let durationMode = $state<DurationMode>("period");
   let customDuration = $state(4);
   let renderRatio = $state(0);
   let blob = $state<Blob | null>(null);
   let blobSize = $state("");
   let abortController = $state<AbortController | null>(null);
+  let previewUrl = $state<string | null>(null);
+  let isSliding = $state(false);
 
   $effect(() => {
     const el = dialogEl;
@@ -36,6 +41,16 @@
     return () => el.removeEventListener("cancel", handler);
   });
 
+  $effect(() => {
+    const b = blob;
+    if (b) {
+      const url = URL.createObjectURL(b);
+      previewUrl = url;
+      return () => URL.revokeObjectURL(url);
+    }
+    previewUrl = null;
+  });
+
   export function open() {
     mode = "configure";
     durationMode = "period";
@@ -44,6 +59,7 @@
     blob = null;
     blobSize = "";
     abortController = null;
+    previewUrl = null;
     dialogEl?.showModal();
   }
 
@@ -97,6 +113,15 @@
     URL.revokeObjectURL(url);
   }
 
+  function switchDurationMode(next: DurationMode) {
+    if (next === durationMode) return;
+    durationMode = next;
+    isSliding = true;
+    setTimeout(() => {
+      isSliding = false;
+    }, 450);
+  }
+
   async function handleExport() {
     const duration = getEffectiveDuration();
     mode = "rendering";
@@ -137,7 +162,7 @@
   onclick={handleBackdropClick}
 >
   <div
-    class="bg-surface border border-border rounded-lg w-[min(90vw,380px)] mx-auto my-auto p-6 shadow-xl"
+    class="bg-surface border border-border rounded-lg w-[min(90vw,400px)] mx-auto my-auto p-6 shadow-xl"
   >
     {#if mode === "configure"}
       <h3 class="font-heading text-lg font-medium text-foreground mb-2">
@@ -149,31 +174,61 @@
       </p>
 
       <div class="mb-6">
-        <div class="flex gap-2 mb-3">
-          <Button
-            variant={durationMode === "period" ? "primary" : "ghost"}
-            onclick={() => (durationMode = "period")}
+        <div
+          class="group relative inline-flex items-center bg-surface-raised backdrop-blur-md border border-border rounded-full p-0.75 gap-0.5 shadow-[0_1px_2px_color-mix(in_srgb,var(--color-foreground)_4%,transparent)]"
+        >
+          <button
+            class="px-4 py-1.5 rounded-full font-body text-[11px] font-semibold uppercase tracking-[0.08em] cursor-pointer transition-colors duration-300 bg-transparent {durationMode ===
+            'period'
+              ? 'text-primary-foreground'
+              : 'text-muted-foreground hover:text-foreground'}"
+            onclick={() => switchDurationMode("period")}
           >
-            One period
-          </Button>
-          <Button
-            variant={durationMode === "custom" ? "primary" : "ghost"}
-            onclick={() => (durationMode = "custom")}
+            One&nbsp;Period
+          </button>
+          <button
+            class="px-4 py-1.5 rounded-full font-body text-[11px] font-semibold uppercase tracking-[0.08em] cursor-pointer transition-colors duration-300 bg-transparent {durationMode ===
+            'custom'
+              ? 'text-primary-foreground'
+              : 'text-muted-foreground hover:text-foreground'}"
+            onclick={() => switchDurationMode("custom")}
           >
             Custom
-          </Button>
+          </button>
+          <div
+            class="bg-primary rounded-full absolute -z-1 h-7 {durationMode ===
+            'period'
+              ? 'left-1 w-27'
+              : 'left-[58%] w-20'} {isSliding ? 'is-sliding' : ''}"
+            style="transition: left 300ms cubic-bezier(0.34, 1.2, 0.64, 1), width 300ms cubic-bezier(0.34, 1.2, 0.64, 1);"
+          ></div>
         </div>
 
         {#if durationMode === "period"}
           {@const raw = getWebMRawDurationSeconds(pg)}
           {@const clamped = getWebMDurationSeconds(pg)}
-          <p class="font-body text-xs text-muted-foreground">
-            ~{raw.toFixed(1)}s{raw > 8
-              ? ` (limited to ${clamped.toFixed(1)}s)`
-              : ""}
+          <p
+            class="font-body text-xs text-muted-foreground mt-3 leading-relaxed"
+          >
+            Records one full loop of the curve
+            <span class="text-accent">(~{raw.toFixed(1)}s)</span>. Period
+            <span class="text-accent">&divide;</span> speed. The period defaults
+            to 2&pi; for custom curves. You can choose a preset with a declared
+            period for a different duration.
+            {#if raw > 8}
+              <br />Limited to
+              <span class="text-foreground/70">{clamped.toFixed(1)}s</span> (max 8s
+              cap).
+            {/if}
           </p>
         {:else}
-          <label class="flex items-center gap-2">
+          <p
+            class="font-body text-xs text-muted-foreground mt-3 leading-relaxed"
+          >
+            Choose any duration between 1 and 8 seconds. Shorter exports produce
+            smaller files.
+          </p>
+          <label class="flex items-center gap-2 mt-2">
             <span class="font-body text-xs text-muted-foreground">Seconds:</span
             >
             <input
@@ -195,7 +250,10 @@
 
       <div class="flex justify-end gap-3">
         <Button variant="ghost" onclick={handleCancelConfigure}>Cancel</Button>
-        <Button variant="primary" onclick={handleExport}>Export</Button>
+        <Button variant="primary" onclick={handleExport}>
+          {#snippet icon()}<Film class="w-3.5 h-3.5" />{/snippet}
+          Export
+        </Button>
       </div>
     {:else if mode === "rendering"}
       <h3 class="font-heading text-lg font-medium text-foreground mb-2">
@@ -221,15 +279,30 @@
       <h3 class="font-heading text-lg font-medium text-foreground mb-2">
         Ready
       </h3>
+
+      {#if previewUrl}
+        <video
+          src={previewUrl}
+          controls
+          autoplay
+          loop
+          muted
+          class="w-full rounded-md mb-4 bg-surface-raised"
+        ></video>
+      {/if}
+
       <p class="font-body text-xs text-muted-foreground leading-relaxed mb-6">
         {blobSize}
-        &#8226;
+        <span class="text-accent">{SEPARATOR_DOT}</span>
         {getEffectiveDuration().toFixed(1)}s
       </p>
 
       <div class="flex justify-end gap-3">
         <Button variant="ghost" onclick={handleCloseReady}>Close</Button>
-        <Button variant="primary" onclick={handleDownload}>Download</Button>
+        <Button variant="primary" onclick={handleDownload}>
+          {#snippet icon()}<Download class="w-3.5 h-3.5" />{/snippet}
+          Download
+        </Button>
       </div>
     {/if}
   </div>
@@ -248,6 +321,29 @@
       transition:
         opacity 200ms ease-out,
         transform 200ms ease-out;
+    }
+
+    .is-sliding {
+      animation: slide 450ms ease-out forwards;
+    }
+  }
+
+  @keyframes slide {
+    0% {
+      filter: blur(0px);
+      transform: scaleX(1);
+    }
+    20% {
+      filter: blur(1px);
+      transform: scaleX(1.03);
+    }
+    60% {
+      filter: blur(0.5px);
+      transform: scaleX(0.98);
+    }
+    100% {
+      filter: blur(0px);
+      transform: scaleX(1);
     }
   }
 </style>

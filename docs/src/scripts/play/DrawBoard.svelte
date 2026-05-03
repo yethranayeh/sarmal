@@ -4,7 +4,7 @@
 
   import { createEngine, drawCurve } from "@sarmal/core";
   import { onDestroy, untrack } from "svelte";
-  import Button from "../../components/Button.svelte";
+  import { Trash } from "@lucide/svelte";
 
   import {
     computeNormal,
@@ -186,7 +186,6 @@
   );
 
   let svgElement = $state<SVGSVGElement>();
-  let popoverElement: HTMLDivElement | undefined = $state(undefined);
   let dragStartX = 0;
   let dragStartY = 0;
   let hasDragged = false;
@@ -585,15 +584,27 @@
 {#if popoverIndex !== null}
   {@const point = points[popoverIndex]}
   {#if point}
+    <!-- svelte-ignore a11y_no_static_element_interactions -->
     <div
-      bind:this={popoverElement}
-      class="absolute z-10 bg-surface border border-border rounded-md shadow-lg p-2"
+      class="fixed inset-0 z-10"
+      onclick={() => (popoverIndex = null)}
+      role="presentation"
+    ></div>
+
+    <div
+      class="absolute z-20 bg-surface-raised/95 backdrop-blur-md border border-border rounded-lg shadow-[0_4px_16px_color-mix(in_srgb,var(--color-foreground)_8%,transparent)] py-1 select-none animate-popover-in"
       style="left: {((point[0] + 1) / 2) * 100}%; top: {((point[1] + 1) / 2) *
-        100}%; transform: translate(-50%, -120%);"
+        100}%;"
+      role="menu"
     >
-      <Button variant="destructive" onclick={() => deletePoint(popoverIndex!)}>
+      <button
+        class="w-full text-left px-3 py-1.5 flex items-center gap-2 text-xs font-body text-error hover:bg-surface transition-colors"
+        role="menuitem"
+        onclick={() => deletePoint(popoverIndex!)}
+      >
+        <Trash class="size-4" />
         Delete point
-      </Button>
+      </button>
     </div>
   {/if}
 {/if}
@@ -601,5 +612,22 @@
 <style>
   circle:focus {
     outline: none;
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .animate-popover-in {
+      animation: popover-in 150ms ease-out forwards;
+    }
+  }
+
+  @keyframes popover-in {
+    from {
+      opacity: 0;
+      transform: translate(-50%, -110%) scale(0.95);
+    }
+    to {
+      opacity: 1;
+      transform: translate(-50%, -120%) scale(1);
+    }
   }
 </style>

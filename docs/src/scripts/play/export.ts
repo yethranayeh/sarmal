@@ -486,9 +486,6 @@ export async function downloadPNG(svgEl: SVGSVGElement): Promise<void> {
         return;
       }
       ctx.scale(dpr, dpr);
-      // TODO: derive from design tokens instead of hardcoding when available
-      ctx.fillStyle = "#0d0d0d";
-      ctx.fillRect(0, 0, rect.width, rect.height);
       ctx.drawImage(img, 0, 0);
 
       canvas.toBlob((blob) => {
