@@ -73,7 +73,7 @@
   <!-- Floating: share / clear (top-right) -->
   <div class="absolute top-4 right-4 z-10 flex items-center gap-2">
     <ShareDropdown />
-    <Button active onclick={pg.handleClear} variant="ghost">
+    <Button variant="destructive" onclick={pg.handleClear}>
       <Trash class="w-3.5 h-3.5" />
       Clear
     </Button>

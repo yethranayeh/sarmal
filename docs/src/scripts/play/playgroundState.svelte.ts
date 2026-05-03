@@ -236,11 +236,19 @@ export function createPlaygroundState(
     state.currentMode = mode;
 
     if (mode === "draw") {
+      state.currentCode = DEFAULT_CODE;
+      state.lastCompiledCode = "";
+      state.lastCompiledFn = null;
+      state.error = null;
+      state.presetId = "";
+
       if (state.instance) {
         state.instance.destroy();
         state.instance = null;
       }
     } else {
+      state.showDrawControls = true;
+
       state.error = null;
       const result = buildCurveFn(state.currentCode);
       if (result.ok) {
@@ -266,7 +274,7 @@ export function createPlaygroundState(
       return;
     }
 
-    if (state.currentMode === "draw" && state.showDrawControls && drawPointCount >= 3) {
+    if (state.currentMode === "draw" && drawPointCount >= 3) {
       showConfirm(
         "Leave drawing mode?",
         `You have ${drawPointCount} control point${drawPointCount > 1 ? "s" : ""}. Switching to math mode will discard them.`,
