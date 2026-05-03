@@ -44,6 +44,7 @@ export interface DrawBoardExports {
   clearPoints: () => void;
   rebuildInstance: () => void;
   deletePointAt: (index: number) => void;
+  getSkeleton: () => Array<Point>;
 }
 
 export interface PlaygroundRenderParams {

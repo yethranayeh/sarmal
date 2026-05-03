@@ -18,6 +18,8 @@
     generateReactSnippet,
     generateStandaloneHTML,
     downloadPNG,
+    downloadSVG,
+    generateSVGString,
     copyToClipboard,
   } from "./export";
 
@@ -64,6 +66,10 @@
   );
 
   const pngDisabled = $derived(!pg.previewRef.current);
+
+  const svgDisabled = $derived(
+    pg.currentMode === "draw" ? pg.drawPointCount < 3 : !pg.instance,
+  );
 
   async function handleShareURL() {
     if (codeDisabled) {
@@ -139,6 +145,31 @@
     } catch (err) {
       showStatus(
         err instanceof Error ? err.message : "Failed to download",
+        4000,
+      );
+    }
+  }
+
+  function handleDownloadSVG() {
+    try {
+      downloadSVG(pg);
+      showStatus("Downloaded");
+    } catch (err) {
+      showStatus(
+        err instanceof Error ? err.message : "Failed to download SVG",
+        4000,
+      );
+    }
+  }
+
+  async function handleCopySVG() {
+    try {
+      const svgString = generateSVGString(pg);
+      const ok = await copyToClipboard(svgString);
+      showStatus(ok ? "Copied" : "Clipboard access denied", ok ? 2000 : 4000);
+    } catch (err) {
+      showStatus(
+        err instanceof Error ? err.message : "Failed to copy SVG",
         4000,
       );
     }
@@ -249,6 +280,31 @@
       >
         <Braces class="size-4" />
         Copy as React
+      </button>
+      <div class="bg-border h-px mx-1 my-1" role="separator"></div>
+      <button
+        class="w-full text-left px-3 py-1.5 flex items-center gap-2 text-xs font-body hover:bg-surface transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+        role="menuitem"
+        disabled={svgDisabled}
+        onclick={() => {
+          close();
+          handleDownloadSVG();
+        }}
+      >
+        <FileCode class="size-4" />
+        Download SVG
+      </button>
+      <button
+        class="w-full text-left px-3 py-1.5 flex items-center gap-2 text-xs font-body hover:bg-surface transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+        role="menuitem"
+        disabled={svgDisabled}
+        onclick={() => {
+          close();
+          handleCopySVG();
+        }}
+      >
+        <FileCode class="size-4" />
+        Copy as SVG
       </button>
     </div>
   {/if}

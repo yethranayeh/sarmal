@@ -24,7 +24,7 @@ const navLinks = links.length > 0 ? links : defaultLinks;
 const currentPath = Astro.url.pathname.replace(/\/$/, "") || "/";
 ---
 
-<nav class="flex items-center gap-4">
+<nav class="flex items-center gap-2 md:gap-4">
 	{
 		navLinks.map((link) => {
 			const isActive =

@@ -15,13 +15,13 @@ export type {
   RuntimeRenderOptions,
 } from "./types";
 export type { CurveName } from "./curves";
-export type { SarmalPalette } from "./renderer-shared";
+export type { SarmalPalette, BoundaryResult } from "./renderer-shared";
 
 export { createEngine } from "./engine";
 export { createRenderer } from "./renderer";
 export { createSVGRenderer, createSarmalSVG } from "./renderer-svg";
 export { curves } from "./curves";
-export { palettes } from "./renderer-shared";
+export { palettes, computeBoundaries } from "./renderer-shared";
 export { drawCurve, evaluateCatmullRom } from "./catmull-rom";
 export {
   artemis2,

@@ -141,12 +141,15 @@ export interface BoundaryResult {
  * ! Returns `null` if `pts` is empty
  * ! Throws if all points are identical
  *
- * Padding per side is `max(FIT_PADDING * dim, FIT_PADDING_MIN)`, so the stricter constraint wins
+ * Padding per side is `max(FIT_PADDING * dim, minPaddingPx)`, so the stricter constraint wins.
+ * `minPaddingPx` defaults to `FIT_PADDING_MIN` (4px) for pixel-space callers.
+ * Pass `0` when the logical space is itself a normalized viewBox (e.g. SVG export).
  */
 export function computeBoundaries(
   pts: Point[],
   logicalWidth: number,
   logicalHeight: number,
+  minPaddingPx = FIT_PADDING_MIN,
 ): BoundaryResult | null {
   if (pts.length === 0) return null;
 
@@ -184,8 +187,8 @@ export function computeBoundaries(
   const scaleXProportional = logicalWidth / (w * (1 + FIT_PADDING * 2));
   const scaleYProportional = logicalHeight / (h * (1 + FIT_PADDING * 2));
 
-  const scaleXMinPadding = (logicalWidth - FIT_PADDING_MIN * 2) / w;
-  const scaleYMinPadding = (logicalHeight - FIT_PADDING_MIN * 2) / h;
+  const scaleXMinPadding = (logicalWidth - minPaddingPx * 2) / w;
+  const scaleYMinPadding = (logicalHeight - minPaddingPx * 2) / h;
 
   const scale = Math.min(
     scaleXProportional,
@@ -213,6 +216,7 @@ export function enginePassthroughs(engine: Engine) {
     getSpeed: engine.getSpeed,
     resetSpeed: engine.resetSpeed,
     setSpeedOver: engine.setSpeedOver,
+    getSarmalSkeleton: engine.getSarmalSkeleton,
   };
 }
 

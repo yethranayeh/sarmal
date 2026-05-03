@@ -221,6 +221,11 @@ export interface SarmalInstance extends AnimationControls {
   /** Stops the animation and cleans up resources */
   destroy(): void;
   /**
+   * Returns the skeleton of the curve:
+   * The complete traversal over one full period, sampled at points from t=0 to t=period.
+   */
+  getSarmalSkeleton(): Array<Point>;
+  /**
    * Smoothly transitions from the current curve to `target`.
    * The trail naturally reflects the new curve as new points are added.
    * @param target The curve to transition to

@@ -31,7 +31,12 @@
   }
 </script>
 
-<Button variant="ghost" class="p-2!" onclick={toggle} aria-label="Toggle theme">
+<Button
+  variant="ghost"
+  class="p-0! md:p-2!"
+  onclick={toggle}
+  aria-label="Toggle theme"
+>
   {#snippet icon()}
     {#if resolved === "dark"}
       <Sun size={16} />

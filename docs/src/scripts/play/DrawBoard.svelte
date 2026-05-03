@@ -445,6 +445,10 @@
     buildEngine();
   }
 
+  export function getSkeleton(): Point[] {
+    return engine?.getSarmalSkeleton() ?? [];
+  }
+
   onDestroy(() => {
     stopLoop();
     engine = null;
@@ -501,6 +505,7 @@
       stroke-linejoin="round"
       opacity={isAnimating ? 0.18 : 0.28}
       class={isAnimating ? "" : "text-foreground"}
+      data-export-hidden
     />
   {/if}
 
@@ -517,6 +522,7 @@
       stroke-linecap="round"
       opacity={0.22}
       class={isAnimating ? "" : "text-foreground"}
+      data-export-hidden
     />
   {/if}
 
@@ -536,7 +542,7 @@
   {#if showControls}
     {#each points as point, i (i)}
       {@const isLast = i === points.length - 1}
-      <g class="cursor-pointer">
+      <g class="cursor-pointer" data-export-hidden>
         {#if isLast}
           <circle
             cx={point[0]}
