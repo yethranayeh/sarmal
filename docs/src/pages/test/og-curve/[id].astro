@@ -1,26 +1,66 @@
 ---
 import type { CurveName } from "@sarmal/core";
-
-import Branding from "../../../components/Branding.astro";
 import "../../../styles/globals.css";
 import { CURVE_DOCS } from "../../../data/curves";
+
+// Inline rose logo mark geometry (same math as Branding.astro, sized for a small badge icon)
+const TWO_PI = Math.PI * 2;
+type Pt = { x: number; y: number };
+function rose3(t: number): Pt {
+	const r = Math.cos(3 * t);
+	return { x: r * Math.cos(t), y: r * Math.sin(t) };
+}
+function samplePts(
+	fn: (t: number) => Pt,
+	t0: number,
+	t1: number,
+	n = 200,
+): Pt[] {
+	return Array.from({ length: n + 1 }, (_, i) => fn(t0 + ((t1 - t0) * i) / n));
+}
+type Box = { minX: number; maxX: number; minY: number; maxY: number };
+function boundingBox(pts: Pt[]): Box {
+	const xs = pts.map((p) => p.x);
+	const ys = pts.map((p) => p.y);
+	return {
+		minX: Math.min(...xs),
+		maxX: Math.max(...xs),
+		minY: Math.min(...ys),
+		maxY: Math.max(...ys),
+	};
+}
+const LOGO_SIZE = 24;
+const LOGO_PAD = 3;
+function fitPath(pts: Pt[], box: Box): string {
+	const rangeX = box.maxX - box.minX || 1;
+	const rangeY = box.maxY - box.minY || 1;
+	const available = LOGO_SIZE - 2 * LOGO_PAD;
+	const scale = Math.min(available / rangeX, available / rangeY);
+	const cx = (box.minX + box.maxX) / 2;
+	const cy = (box.minY + box.maxY) / 2;
+	const center = LOGO_SIZE / 2;
+	return pts
+		.map((p, i) => {
+			const px = (center + (p.x - cx) * scale).toFixed(2);
+			const py = (center + (p.y - cy) * scale).toFixed(2);
+			return `${i === 0 ? "M" : "L"}${px},${py}`;
+		})
+		.join(" ");
+}
+const logoBox = boundingBox(samplePts(rose3, 0, TWO_PI));
+const logoPetals = [0, TWO_PI / 3, (2 * TWO_PI) / 3].map((c) => ({
+	d: fitPath(samplePts(rose3, c - Math.PI / 6, c + Math.PI / 6), logoBox),
+}));
 
 export function getStaticPaths() {
 	return Object.keys(CURVE_DOCS).map((id) => ({ params: { id } }));
 }
 
 const { id } = Astro.params;
-
-if (!id) {
-	return new Response("Missing curve ID", { status: 400 });
-}
-
+if (!id) return new Response("Missing curve ID", { status: 400 });
 const curveKey = id as CurveName;
 const meta = CURVE_DOCS[curveKey];
-
-if (!meta) {
-	return new Response(`Unknown curve: ${id}`, { status: 404 });
-}
+if (!meta) return new Response(`Unknown curve: ${id}`, { status: 404 });
 ---
 
 <!doctype html>
@@ -36,46 +76,104 @@ if (!meta) {
 			rel="stylesheet"
 		/>
 	</head>
-	<body>
-		<canvas id="og-curve" class="absolute inset-0 w-300 h-157.5"></canvas>
+	<body class="w-300 h-157.5 overflow-hidden relative bg-[#0c0c0a]">
+		<!-- Subtle curve-color radial bloom on the right side where the card lives -->
 		<div
-			class="absolute inset-0 flex flex-col justify-end px-16 py-12 pointer-events-none"
+			class="absolute inset-0 pointer-events-none"
+			style={`background: radial-gradient(ellipse 55% 90% at 72% 50%, color-mix(in srgb, ${meta.color} 12%, transparent) 0%, transparent 100%)`}
+		>
+		</div>
+
+		<!-- Left text block -->
+		<div
+			class="absolute left-18 top-0 bottom-0 z-10 flex flex-col justify-center gap-2"
 		>
 			<h1
-				class="text-[72px] leading-normal font-black! font-body! text-shadow-md"
+				class="max-w-140 text-[72px] font-black leading-[0.92] tracking-tight"
 				style={`color: ${meta.color}`}
 			>
 				{meta.name}
 			</h1>
-			<div class="[&>a]:text-4xl!">
-				<Branding />
+
+			<!-- sarmal.art pill badge -->
+			<div
+				class="inline-flex w-fit items-center gap-2.5 rounded-full border border-foreground/10 bg-foreground/3 px-4 py-2 shadow-xs"
+			>
+				<svg
+					xmlns="http://www.w3.org/2000/svg"
+					viewBox={`0 0 ${LOGO_SIZE} ${LOGO_SIZE}`}
+					class="size-7 shrink-0"
+					style={`color: ${meta.color}`}
+					aria-hidden="true"
+				>
+					<circle cx={LOGO_SIZE / 2} cy={LOGO_SIZE / 2} r="1.5" fill="#c0143c"
+					></circle>
+					{
+						logoPetals.map((petal) => (
+							<path
+								d={petal.d}
+								pathLength="1"
+								stroke-width="1.5"
+								fill="none"
+								stroke="#c0143c"
+								stroke-linecap="round"
+								stroke-linejoin="round"
+							/>
+						))
+					}
+				</svg>
+				<span
+					class="text-2xl font-medium text-foreground"
+					style="font-family: 'Newsreader', serif"
+				>
+					sarmal<span class="text-[#c0143c]">.art</span>
+				</span>
 			</div>
+		</div>
+
+		<!-- Tilted card — the curve lives here -->
+		<div
+			class="absolute rounded-3xl overflow-hidden bg-[#141410] border border-white/7"
+			style={`width: 520px; top: -80px; bottom: -80px; right: -55px; transform: rotate(-9deg); box-shadow: 0 0 80px color-mix(in srgb, var(--curve-color) 15%, transparent), 0 24px 60px rgba(0,0,0,0.6)`}
+		>
+			<canvas id="og-curve" class="absolute inset-0 h-full w-full"></canvas>
 		</div>
 
 		<script>
 			import type { CurveName } from "@sarmal/core";
-			import { createSarmal, curves } from "@sarmal/core";
+			import { createEngine, createRenderer, curves } from "@sarmal/core";
 
-			const id = window.location.pathname.split("/").pop() ?? "";
+			const id =
+				window.location.pathname.split("/").filter(Boolean).pop() ?? "";
 			const curve = curves[id as CurveName];
-			if (!curve) {
-				throw new Error("Unknown curve: " + id);
-			}
+			if (!curve) throw new Error("Unknown curve: " + id);
 
 			const canvas = document.getElementById("og-curve") as HTMLCanvasElement;
 			const color =
 				getComputedStyle(document.documentElement)
 					.getPropertyValue("--curve-color")
-					.trim() || "#000";
+					.trim() || "#ffffff";
 
-			createSarmal(canvas, curve, {
+			const DENSITY = 300;
+			const period = curve.period!;
+			const speed = curve.speed ?? 1;
+
+			const engine = createEngine(curve, DENSITY);
+
+			// Speed-normalized step: advance covers period/DENSITY per sample regardless of
+			// curve speed, so the trail always spans exactly one full geometric period.
+			engine.seek(period * 0.9999, {
+				step: period / (DENSITY * speed),
+			});
+
+			createRenderer({
+				canvas,
+				engine,
 				autoStart: false,
-				initialT: curve.period! * 0.6,
 				trailColor: color,
-				skeletonColor: "#000000",
+				skeletonColor: color,
 				headColor: color,
-				headRadius: 4,
-				trailLength: 180,
+				headRadius: 6,
 			});
 		</script>
 	</body>

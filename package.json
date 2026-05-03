@@ -11,7 +11,8 @@
     "format": "pnpm -r format",
     "typecheck:functions": "pnpm --filter docs exec tsc --noEmit -p ../functions/tsconfig.json",
     "fix": "pnpm -r format && pnpm --filter docs exec prettier --write \"src/**/*.{svelte,astro}\" && pnpm -r lint && pnpm -r typecheck && pnpm typecheck:functions",
-    "generate-og": "npx tsx e2e/scripts/generate-og-images.ts"
+    "generate-og": "npx tsx e2e/scripts/generate-og-images.ts",
+    "simulate-og": "npx tsx e2e/scripts/simulate-og-platforms.ts"
   },
   "devDependencies": {
     "wrangler": "^4.85.0"
