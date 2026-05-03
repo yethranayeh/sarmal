@@ -6,6 +6,7 @@ export interface NavLink {
 	label: string;
 	external?: boolean;
 	active?: boolean;
+	matchPrefix?: boolean;
 	icon: typeof BookText;
 }
 interface Props {
@@ -15,7 +16,7 @@ interface Props {
 const { links = [] } = Astro.props;
 
 const defaultLinks: NavLink[] = [
-	{ href: "/docs", label: "Docs", icon: BookText },
+	{ href: "/docs", label: "Docs", icon: BookText, matchPrefix: true },
 	{ href: "/play", label: "Playground", icon: FlaskConical },
 ];
 
@@ -26,7 +27,11 @@ const currentPath = Astro.url.pathname.replace(/\/$/, "") || "/";
 <nav class="flex items-center gap-4">
 	{
 		navLinks.map((link) => {
-			const isActive = link.active ?? link.href === currentPath;
+			const isActive =
+				link.active ??
+				(link.matchPrefix
+					? currentPath === link.href || currentPath.startsWith(link.href + "/")
+					: currentPath === link.href);
 			const colorClass = isActive ? "text-primary" : "text-muted";
 			const Icon = link.icon;
 			return (

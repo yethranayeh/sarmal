@@ -18,13 +18,17 @@ function formatTrailColor(pg: PlaygroundState): string {
   if (pg.trailStyle !== "default") {
     const p = palettes[pg.palette];
     if (p) {
-      return `['${p.join("', '")}']`;
+      return `palettes.${pg.palette}`;
     }
     console.warn(
       `[export] Palette "${pg.palette}" not found — falling back to trailColor for export.`,
     );
   }
   return `'${pg.trailColor}'`;
+}
+
+function needsPalettesImport(pg: PlaygroundState): boolean {
+  return pg.trailStyle !== "default" && !!palettes[pg.palette];
 }
 
 function serializeCurveRef(pg: PlaygroundState): { ref: string; imports: string[] } {
@@ -121,6 +125,9 @@ export function generateJSSnippet(pg: PlaygroundState): string {
   const opts = serializeOptions(pg);
 
   const allImports = ["createSarmal", ...curveImports];
+  if (needsPalettesImport(pg)) {
+    allImports.push("palettes");
+  }
   const importLine = `import { ${allImports.join(", ")} } from '@sarmal/core'`;
 
   const lines = [importLine, "", `const curve = ${curveRef}`];
@@ -147,8 +154,12 @@ export function generateReactSnippet(pg: PlaygroundState): string {
 
   lines.push("import { useSarmalSVG } from '@sarmal/react'");
 
-  if (curveImports.length > 0) {
-    lines.push(`import { ${curveImports.join(", ")} } from '@sarmal/core'`);
+  const coreImports = [...curveImports];
+  if (needsPalettesImport(pg)) {
+    coreImports.push("palettes");
+  }
+  if (coreImports.length > 0) {
+    lines.push(`import { ${coreImports.join(", ")} } from '@sarmal/core'`);
   }
 
   lines.push("");
@@ -177,6 +188,9 @@ export function generateStandaloneHTML(pg: PlaygroundState): string {
   const opts = serializeOptions(pg);
 
   const allImports = ["createSarmal", ...curveImports];
+  if (needsPalettesImport(pg)) {
+    allImports.push("palettes");
+  }
   const cdnBase = `https://cdn.jsdelivr.net/npm/@sarmal/core@${VERSION}/+esm`;
 
   const jsLines = [
