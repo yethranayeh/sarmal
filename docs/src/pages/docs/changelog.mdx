@@ -17,6 +17,10 @@ Version history notes of the <Link href="#core">Core</Link> and the <Link href="
 
 ## Core
 
+### 0.24.0 - 03.05.2026
+
+New `pauseOnHidden` option (default `true`) automatically pauses sarmal instances when the browser tab is hidden and resumes them when it becomes visible again. If the tab is already hidden at construction time, `autoStart` is suppressed and the animation waits for the tab to become visible. Set `pauseOnHidden: false` to opt out.
+
 ### 0.23.0 - 02.05.2026
 
 The SVG renderer now calibrates trail width and skeleton stroke width to the container's physical pixel size at construction, so strokes render at a consistent apparent thickness regardless of container dimensions.

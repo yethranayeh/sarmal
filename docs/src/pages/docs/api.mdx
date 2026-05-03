@@ -40,6 +40,7 @@ const sarmal = createSarmal(canvas, curves.rose3);
 | trailStyle | `TrailStyle` | `'default'` | `'default'` \| `'gradient-static'` \| `'gradient-animated'` |
 | autoStart | `boolean` | `true` | Start the animation loop automatically on creation |
 | initialT | `number` | `undefined` | Initial position along the curve (t value). Calls `seek(initialT)` before first frame |
+| pauseOnHidden | `boolean` | `true` | Pauses when the browser tab is hidden and resumes when visible |
 
 ### Auto-start and initial position
 

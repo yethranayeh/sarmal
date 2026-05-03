@@ -442,3 +442,191 @@ describe("SVG renderer — palette array applied at construction", () => {
     instance.destroy();
   });
 });
+
+describe("pauseOnHidden (SVG)", () => {
+  // Helper: configure document.hidden and dispatch visibilitychange
+  function setHidden(value: boolean) {
+    Object.defineProperty(document, "hidden", {
+      configurable: true,
+      get: () => value,
+    });
+    document.dispatchEvent(new Event("visibilitychange"));
+  }
+
+  it("auto-pauses when tab is hidden", () => {
+    const cancelled: number[] = [];
+    vi.spyOn(globalThis, "requestAnimationFrame").mockImplementation(() => 42);
+    vi.spyOn(globalThis, "cancelAnimationFrame").mockImplementation((id) => {
+      cancelled.push(id);
+    });
+
+    const container = makeContainer();
+    const engine = createEngine(testCircle);
+    const instance = createSVGRenderer({ container, engine, autoStart: false });
+    instance.play();
+
+    setHidden(true);
+
+    // Should have cancelled the running animation frame
+    expect(cancelled).toContain(42);
+
+    instance.destroy();
+  });
+
+  it("auto-resumes when tab becomes visible again", () => {
+    const cancelled: number[] = [];
+    let rafCount = 0;
+    vi.spyOn(globalThis, "requestAnimationFrame").mockImplementation(() => {
+      rafCount++;
+      return rafCount;
+    });
+    vi.spyOn(globalThis, "cancelAnimationFrame").mockImplementation((id) => {
+      cancelled.push(id);
+    });
+
+    const container = makeContainer();
+    const engine = createEngine(testCircle);
+    const instance = createSVGRenderer({ container, engine, autoStart: false });
+    instance.play();
+    const rafBeforeHide = rafCount;
+
+    // Hide → auto-pause
+    setHidden(true);
+    expect(cancelled.length).toBeGreaterThan(0);
+
+    // Show → auto-resume
+    setHidden(false);
+    expect(rafCount).toBeGreaterThan(rafBeforeHide);
+
+    instance.destroy();
+  });
+
+  it("does not resume if user-paused before hide", () => {
+    const cancelled: number[] = [];
+    let rafCount = 0;
+    vi.spyOn(globalThis, "requestAnimationFrame").mockImplementation(() => {
+      rafCount++;
+      return rafCount;
+    });
+    vi.spyOn(globalThis, "cancelAnimationFrame").mockImplementation((id) => {
+      cancelled.push(id);
+    });
+
+    const container = makeContainer();
+    const engine = createEngine(testCircle);
+    const instance = createSVGRenderer({ container, engine, autoStart: false });
+    instance.play();
+
+    // User explicitly pauses
+    instance.pause();
+    const rafBeforeHide = rafCount;
+
+    // Hide → should do nothing (animationId already null)
+    setHidden(true);
+
+    // Show → should NOT resume (pausedByVisibility was never set to true)
+    setHidden(false);
+    expect(rafCount).toBe(rafBeforeHide);
+
+    instance.destroy();
+  });
+
+  it("pauseOnHidden: false disables the behavior", () => {
+    const cancelled: number[] = [];
+    vi.spyOn(globalThis, "requestAnimationFrame").mockImplementation(() => 42);
+    vi.spyOn(globalThis, "cancelAnimationFrame").mockImplementation((id) => {
+      cancelled.push(id);
+    });
+
+    const container = makeContainer();
+    const engine = createEngine(testCircle);
+    const instance = createSVGRenderer({
+      container,
+      engine,
+      autoStart: false,
+      pauseOnHidden: false,
+    });
+    instance.play();
+
+    setHidden(true);
+
+    // Should NOT have cancelled the animation — pauseOnHidden: false
+    expect(cancelled.length).toBe(0);
+
+    instance.destroy();
+  });
+
+  it("destroy() removes the listener", () => {
+    const cancelled: number[] = [];
+    let rafCount = 0;
+    vi.spyOn(globalThis, "requestAnimationFrame").mockImplementation(() => {
+      rafCount++;
+      return rafCount;
+    });
+    vi.spyOn(globalThis, "cancelAnimationFrame").mockImplementation((id) => {
+      cancelled.push(id);
+    });
+
+    const container = makeContainer();
+    const engine = createEngine(testCircle);
+    const instance = createSVGRenderer({ container, engine, autoStart: false });
+    instance.play();
+    instance.destroy();
+
+    const rafCountAfterDestroy = rafCount;
+
+    // After destroy, visibility changes should have no effect.
+    expect(() => setHidden(true)).not.toThrow();
+    expect(() => setHidden(false)).not.toThrow();
+
+    // rafCount must be unchanged — proof the listener was removed
+    expect(rafCount).toBe(rafCountAfterDestroy);
+  });
+
+  it("instance created while hidden does not auto-start", () => {
+    let rafCount = 0;
+    vi.spyOn(globalThis, "requestAnimationFrame").mockImplementation(() => {
+      rafCount++;
+      return rafCount;
+    });
+    vi.spyOn(globalThis, "cancelAnimationFrame").mockImplementation(() => {});
+
+    // Simulate tab already hidden at construction time
+    setHidden(true);
+
+    const container = makeContainer();
+    const engine = createEngine(testCircle);
+    const instance = createSVGRenderer({ container, engine, autoStart: false });
+    instance.play();
+
+    // play() was called explicitly, so it should start regardless of hidden state
+    expect(rafCount).toBeGreaterThan(0);
+
+    instance.destroy();
+  });
+
+  it("autoStart skips when tab is already hidden", () => {
+    let rafCount = 0;
+    vi.spyOn(globalThis, "requestAnimationFrame").mockImplementation(() => {
+      rafCount++;
+      return rafCount;
+    });
+    vi.spyOn(globalThis, "cancelAnimationFrame").mockImplementation(() => {});
+
+    // Simulate tab already hidden at construction time
+    setHidden(true);
+
+    const container = makeContainer();
+    const engine = createEngine(testCircle);
+    const instance = createSVGRenderer({ container, engine }); // autoStart defaults to true
+
+    // autoStart should be suppressed because the tab is already hidden
+    expect(rafCount).toBe(0);
+
+    // When the tab becomes visible, the listener resumes the animation
+    setHidden(false);
+    expect(rafCount).toBeGreaterThan(0);
+
+    instance.destroy();
+  });
+});

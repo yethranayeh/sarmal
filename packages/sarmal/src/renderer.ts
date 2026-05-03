@@ -143,6 +143,7 @@ export function createRenderer(options: RendererOptions): SarmalInstance {
   let offsetY = 0;
   let animationId: number | null = null;
   let lastTime = 0;
+  let pausedByVisibility = false;
 
   let morphResolve: (() => void) | null = null;
   let morphReject: ((error: Error) => void) | null = null;
@@ -418,6 +419,8 @@ export function createRenderer(options: RendererOptions): SarmalInstance {
         animationId = null;
       }
 
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+
       if (morphReject !== null) {
         morphReject(new Error("Instance destroyed during morph"));
         morphResolve = null;
@@ -488,8 +491,33 @@ export function createRenderer(options: RendererOptions): SarmalInstance {
     },
   };
 
-  if (shouldAutoStart) {
+  const pauseOnHidden = options.pauseOnHidden !== false;
+
+  function handleVisibilityChange() {
+    if (document.hidden) {
+      if (animationId !== null) {
+        instance.pause();
+        pausedByVisibility = true;
+      }
+    } else {
+      if (pausedByVisibility) {
+        pausedByVisibility = false;
+        instance.play();
+      }
+    }
+  }
+
+  if (pauseOnHidden) {
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+  }
+
+  // If the tab is already hidden at construction time, skip auto-start.
+  // The visibilitychange listener will resume when the tab becomes visible.
+  const actuallyAutoStart = shouldAutoStart && !(pauseOnHidden && document.hidden);
+  if (actuallyAutoStart) {
     instance.play();
+  } else if (shouldAutoStart) {
+    pausedByVisibility = true;
   }
 
   return instance;

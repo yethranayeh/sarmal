@@ -282,6 +282,12 @@ export interface BaseRendererOptions {
    */
   autoStart?: boolean;
   /**
+   * Whether to automatically pause the animation when the browser tab is hidden
+   *  and resume it when the tab becomes visible again.
+   * @default true
+   */
+  pauseOnHidden?: boolean;
+  /**
    * Initial position along the curve (t value). If provided, seek(initialT) is called before the first frame.
    * @default undefined (no seek performed, starts at t=0)
    */
