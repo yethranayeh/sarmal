@@ -125,7 +125,7 @@ const WEBM_MIN_DURATION = 1;
 const WEBM_MAX_DURATION = 8;
 const WEBM_FPS = 60;
 
-function resolveWebMCurve(pg: PlaygroundState): CurveDef {
+export function resolveWebMCurve(pg: PlaygroundState): CurveDef {
   if (pg.currentMode === "draw") {
     const pts = pg.drawBoardRef?.getPoints();
     if (!pts || pts.length < 3) {
@@ -154,7 +154,7 @@ function resolveWebMCurve(pg: PlaygroundState): CurveDef {
   };
 }
 
-function resolveWebMOptions(pg: PlaygroundState): SarmalOptions {
+export function resolveWebMOptions(pg: PlaygroundState): SarmalOptions {
   const opts: SarmalOptions = {
     trailColor: pg.resolvedTrailColor,
     skeletonColor: pg.resolvedSkeletonColor,

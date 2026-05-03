@@ -1,6 +1,7 @@
 <script lang="ts">
   import type { PlaygroundState } from "./playgroundState.svelte";
-  import { getContext } from "svelte";
+  import type { SarmalInstance } from "@sarmal/core";
+  import { getContext, tick } from "svelte";
 
   import Button from "../../components/Button.svelte";
   import { Download, Film } from "@lucide/svelte";
@@ -8,10 +9,30 @@
     recordWebM,
     getWebMDurationSeconds,
     getWebMRawDurationSeconds,
+    resolveWebMCurve,
+    resolveWebMOptions,
   } from "./export";
+  import { createSarmalSVG } from "@sarmal/core";
   import { SEPARATOR_DOT } from "../../variables";
 
   const pg = getContext<PlaygroundState>("playground");
+
+  const VB_W = 96;
+  const VB_H = 54;
+  const COLS = 48;
+  const ROWS = 27;
+  const CELL = VB_W / COLS;
+  const DOT_R = 0.55;
+  const RENDER_RADIUS = 7;
+  const TOTAL = COLS * ROWS;
+
+  // Fake theatrics so users can appreciate the visuals even on short videos :)
+  const MIN_RENDER_MS = 1500;
+
+  type DotGrid = {
+    circles: Array<Array<SVGCircleElement>>;
+    lit: Array<Array<boolean>>;
+  };
 
   type DialogMode = "configure" | "rendering" | "ready";
   type DurationMode = "period" | "custom";
@@ -26,6 +47,17 @@
   let abortController = $state<AbortController | null>(null);
   let previewUrl = $state<string | null>(null);
   let isSliding = $state(false);
+
+  let dotSvgEl = $state<SVGSVGElement | null>(null);
+  let sarmalSvgEl = $state<SVGSVGElement | null>(null);
+  let mirrorInstance: SarmalInstance | null = null;
+  let grid: DotGrid | null = null;
+  let animFrameId = 0;
+  let renderedCount = 0;
+  let renderDone = false;
+  let exportStartTime = 0;
+  let cUnlit = "";
+  let cRendered = "";
 
   $effect(() => {
     const el = dialogEl;
@@ -91,6 +123,7 @@
 
   function handleCancelRendering() {
     abortController?.abort();
+    cleanupMirror();
     mode = "configure";
   }
 
@@ -114,7 +147,9 @@
   }
 
   function switchDurationMode(next: DurationMode) {
-    if (next === durationMode) return;
+    if (next === durationMode) {
+      return;
+    }
     durationMode = next;
     isSliding = true;
     setTimeout(() => {
@@ -122,18 +157,188 @@
     }, 450);
   }
 
+  function hexToRgba(hex: string, alpha: number): string {
+    const r = parseInt(hex.slice(1, 3), 16);
+    const g = parseInt(hex.slice(3, 5), 16);
+    const b = parseInt(hex.slice(5, 7), 16);
+    return `rgba(${r},${g},${b},${alpha})`;
+  }
+
+  function createDots(svg: SVGSVGElement): DotGrid {
+    const circles: SVGCircleElement[][] = [];
+    const lit: boolean[][] = [];
+    const ns = "http://www.w3.org/2000/svg";
+
+    for (let r = 0; r < ROWS; r++) {
+      circles[r] = [];
+      lit[r] = [];
+      for (let c = 0; c < COLS; c++) {
+        lit[r]![c] = false;
+        const dot = document.createElementNS(ns, "circle");
+        dot.setAttribute("cx", String((c + 0.5) * CELL));
+        dot.setAttribute("cy", String((r + 0.5) * CELL));
+        dot.setAttribute("r", String(DOT_R));
+        dot.setAttribute("fill", cUnlit);
+        svg.appendChild(dot);
+        circles[r]![c] = dot;
+      }
+    }
+
+    return { circles, lit };
+  }
+
+  function trackHead() {
+    if (renderDone || !grid) {
+      return;
+    }
+
+    const head = sarmalSvgEl?.querySelector("[data-sarmal-role='head']");
+    if (!head) {
+      animFrameId = requestAnimationFrame(trackHead);
+      return;
+    }
+
+    const hx = parseFloat(head.getAttribute("cx") ?? "0");
+    const hy = parseFloat(head.getAttribute("cy") ?? "0");
+
+    if (!Number.isFinite(hx) || !Number.isFinite(hy)) {
+      animFrameId = requestAnimationFrame(trackHead);
+      return;
+    }
+
+    const dxHead = 21 + hx * 0.54;
+    const dyHead = hy * 0.54;
+
+    const cMin = Math.max(0, Math.floor((dxHead - RENDER_RADIUS) / CELL));
+    const cMax = Math.min(COLS - 1, Math.ceil((dxHead + RENDER_RADIUS) / CELL));
+    const rMin = Math.max(0, Math.floor((dyHead - RENDER_RADIUS) / CELL));
+    const rMax = Math.min(ROWS - 1, Math.ceil((dyHead + RENDER_RADIUS) / CELL));
+
+    const RR2 = RENDER_RADIUS * RENDER_RADIUS;
+    for (let r = rMin; r <= rMax; r++) {
+      for (let c = cMin; c <= cMax; c++) {
+        if (grid && !grid.lit[r]![c]) {
+          const dx = (c + 0.5) * CELL - dxHead;
+          const dy = (r + 0.5) * CELL - dyHead;
+          if (dx * dx + dy * dy <= RR2) {
+            grid.lit[r]![c] = true;
+            grid.circles[r]![c]!.setAttribute("fill", cRendered);
+            renderedCount++;
+          }
+        }
+      }
+    }
+
+    if (renderedCount < TOTAL && Math.random() < 0.65) {
+      const attempts = renderedCount > TOTAL * 0.85 ? 5 : 3;
+      for (let i = 0; i < attempts; i++) {
+        const cr = Math.floor(Math.random() * ROWS);
+        const cc = Math.floor(Math.random() * COLS);
+        if (grid && !grid.lit[cr]![cc]) {
+          grid.lit[cr]![cc] = true;
+          grid.circles[cr]![cc]!.setAttribute("fill", cRendered);
+          renderedCount++;
+        }
+      }
+    }
+
+    if (renderedCount >= TOTAL) {
+      renderDone = true;
+      return;
+    }
+
+    animFrameId = requestAnimationFrame(trackHead);
+  }
+
+  function forceCompleteDots() {
+    if (!grid) {
+      return;
+    }
+    for (let r = 0; r < ROWS; r++) {
+      for (let c = 0; c < COLS; c++) {
+        if (!grid.lit[r]![c]) {
+          grid.lit[r]![c] = true;
+          grid.circles[r]![c]!.setAttribute("fill", cRendered);
+          renderedCount++;
+        }
+      }
+    }
+    renderDone = true;
+  }
+
+  function cleanupMirror() {
+    if (animFrameId) {
+      cancelAnimationFrame(animFrameId);
+      animFrameId = 0;
+    }
+    if (mirrorInstance) {
+      mirrorInstance.destroy();
+      mirrorInstance = null;
+    }
+    if (sarmalSvgEl) {
+      sarmalSvgEl.innerHTML = "";
+    }
+    if (dotSvgEl) {
+      dotSvgEl.innerHTML = "";
+    }
+    grid = null;
+    renderedCount = 0;
+    renderDone = false;
+  }
+
+  function setupDotMatrix() {
+    if (!dotSvgEl || !sarmalSvgEl) {
+      return;
+    }
+
+    cUnlit = hexToRgba(pg.headColor, 0.09);
+    cRendered = hexToRgba(pg.headColor, 0.42);
+
+    dotSvgEl.innerHTML = "";
+    sarmalSvgEl.innerHTML = "";
+    grid = createDots(dotSvgEl);
+    renderedCount = 0;
+    renderDone = false;
+
+    const curve = resolveWebMCurve(pg);
+    const options = resolveWebMOptions(pg);
+
+    mirrorInstance = createSarmalSVG(sarmalSvgEl, curve, {
+      ...options,
+      skeletonColor: "transparent",
+    });
+
+    animFrameId = requestAnimationFrame(trackHead);
+  }
+
   async function handleExport() {
     const duration = getEffectiveDuration();
     mode = "rendering";
     renderRatio = 0;
+    exportStartTime = performance.now();
 
     const controller = new AbortController();
     abortController = controller;
 
     try {
+      await tick();
+      setupDotMatrix();
+
       blob = await recordWebM(pg, duration, controller.signal, (ratio) => {
         renderRatio = ratio;
       });
+
+      const elapsed = performance.now() - exportStartTime;
+      if (elapsed < MIN_RENDER_MS) {
+        await new Promise((r) => setTimeout(r, MIN_RENDER_MS - elapsed));
+      }
+
+      if (controller.signal.aborted) {
+        return;
+      }
+
+      forceCompleteDots();
+      cleanupMirror();
 
       const sizeMB = blob.size / (1024 * 1024);
       blobSize =
@@ -144,12 +349,12 @@
       mode = "ready";
     } catch (err) {
       if ((err as Error).name === "AbortError") {
+        cleanupMirror();
         return;
       }
 
+      cleanupMirror();
       mode = "configure";
-      // Error silently returns to configure
-      // TODO: no user feedback yet
     } finally {
       abortController = null;
     }
@@ -259,6 +464,22 @@
       <h3 class="font-heading text-lg font-medium text-foreground mb-2">
         Rendering&hellip;
       </h3>
+
+      <div class="mb-4">
+        <div
+          class="aspect-video bg-surface-raised dark:bg-surface rounded-md overflow-hidden relative border border-border"
+        >
+          <svg
+            bind:this={dotSvgEl}
+            class="absolute inset-0 w-full h-full"
+            viewBox="0 0 96 54"
+          ></svg>
+          <svg
+            bind:this={sarmalSvgEl}
+            class="absolute inset-0 w-full h-full pointer-events-none"
+          ></svg>
+        </div>
+      </div>
 
       <div class="mb-2">
         <div class="h-1.5 bg-surface-raised rounded-full overflow-hidden">
