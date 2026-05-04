@@ -6,6 +6,7 @@ order: 5
 description: Browse available curves and their parameters.
 ---
 
+import Alert from "../../components/Alert.astro";
 import Badge from "../../components/Badge.astro";
 import Link from "../../components/Link.astro";
 import { SEPARATOR_DOT } from "../../variables";
@@ -19,7 +20,8 @@ Browse the built-in curves. Each curve has unique geometry, period, and behavior
 ### Standard
 
 Some of the well-known and well-documented curves with easy to find mathematical definitions.
-> Their commonality does not take away from their inherent beauty
+
+<Alert variant="warning">Their commonality does not take away from their inherent beauty. So, please try to enjoy each curve *equally*, and <u>do not</u> show preference for any over the others.</Alert>
 
 ### <span class='inline-flex gap-4 items-center'><Link href="/docs/curves/rose3">Rose (n=3)</Link> {SEPARATOR_DOT} <Badge text="Rose" /></span>
 A 3-petaled rose curve with trifold symmetry. Also used as the Sarmal logo.

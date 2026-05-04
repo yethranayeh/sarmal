@@ -542,25 +542,27 @@
   {#if showControls}
     {#each points as point, i (i)}
       {@const isLast = i === points.length - 1}
-      <g class="cursor-pointer" data-export-hidden>
+      <g
+        class="cursor-pointer group"
+        data-export-hidden
+        data-is-last={String(isLast)}
+      >
         {#if isLast}
           <circle
             cx={point[0]}
             cy={point[1]}
-            r="0.072"
             fill={strokeColor}
             opacity="0.18"
-            class="pointer-events-none"
+            class="pointer-events-none [r:0.12px] md:[r:0.06px]"
           ></circle>
         {/if}
 
         <circle
+          data-is-last={String(isLast)}
           cx={point[0]}
           cy={point[1]}
-          r={isLast ? 0.052 : 0.045}
-          class="fill-surface-raised"
+          class="fill-surface-raised [r:0.060px] md:[r:0.025px] group-data-[is-last=true]:[r:0.070px] md:group-data-[is-last=true]:[r:0.035px] stroke-[0.015px] md:stroke-[0.01px] group-data-[is-last=true]:stroke-[0.018px] md:group-data-[is-last=true]:stroke-[0.012px]"
           stroke={strokeColor}
-          stroke-width={isLast ? 0.015 : 0.012}
           onpointerdown={(e) => handlePointPointerDown(e, i)}
           role="button"
           tabindex="0"
@@ -571,9 +573,8 @@
           <circle
             cx={point[0]}
             cy={point[1]}
-            r="0.022"
             fill={strokeColor}
-            class="pointer-events-none"
+            class="pointer-events-none [r:0.03px] md:[r:0.015px]"
           ></circle>
         {/if}
       </g>

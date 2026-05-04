@@ -71,7 +71,9 @@
   </div>
 
   <!-- Floating: share / clear (top-right) -->
-  <div class="absolute top-4 right-4 z-10 flex items-center gap-2">
+  <div
+    class="absolute top-auto md:top-4 bottom-4 md:bottom-auto right-4 z-10 flex items-center gap-0 md:gap-2"
+  >
     <ShareDropdown />
     <Button variant="destructive" onclick={pg.handleClear}>
       <Trash class="w-3.5 h-3.5" />
@@ -87,11 +89,23 @@
       {pg.currentMode === "math" ? "Parametric" : "Hand-drawn"}
     </span>
     {#if pg.currentMode === "draw"}
-      <div class="font-mono text-[10px] text-muted-gray mt-1.5 select-none">
-        <span>x</span><span class="text-primary">{pg.mouseSVGX.toFixed(2)}</span
+      <div
+        class="flex gap-2 font-mono text-[10px] text-muted-gray mt-1.5 select-none"
+      >
+        <div
+          class="w-12.5 p-1 border border-dashed border-border/50 bg-surface"
         >
-        <span>y</span><span class="text-primary">{pg.mouseSVGY.toFixed(2)}</span
+          <span class="pr-1">x</span><span class="text-primary"
+            >{pg.mouseSVGX.toFixed(2)}</span
+          >
+        </div>
+        <div
+          class="w-12.5 p-1 border border-dashed border-border/50 bg-surface"
         >
+          <span class="pr-1">y</span><span class="text-primary"
+            >{pg.mouseSVGY.toFixed(2)}</span
+          >
+        </div>
       </div>
     {/if}
   </div>

@@ -1,5 +1,6 @@
 <script lang="ts">
   import type { PlaygroundState } from "./playgroundState.svelte";
+  import type { SharedState } from "./types";
 
   import { getContext, onMount } from "svelte";
   import {
@@ -12,7 +13,6 @@
     Film,
     Share,
   } from "@lucide/svelte";
-  import Button from "../../components/Button.svelte";
 
   import {
     generateJSSnippet,
@@ -22,10 +22,10 @@
     downloadSVG,
     generateSVGString,
     copyToClipboard,
-  } from "./export";
-
+  } from "./export/index";
   import { handleShare } from "./share";
-  import type { SharedState } from "./types";
+
+  import Button from "../../components/Button.svelte";
   import WebMExportDialog from "./WebMExportDialog.svelte";
 
   const pg = getContext<PlaygroundState>("playground");
@@ -67,7 +67,10 @@
       (pg.currentMode === "draw" && pg.drawPointCount < 3),
   );
 
-  const pngDisabled = $derived(!pg.previewRef.current);
+  const pngDisabled = $derived(
+    !pg.previewRef.current ||
+      (pg.currentMode === "draw" ? pg.drawPointCount < 3 : !pg.instance),
+  );
 
   const svgDisabled = $derived(
     pg.currentMode === "draw" ? pg.drawPointCount < 3 : !pg.instance,
@@ -231,7 +234,7 @@
     ></div>
 
     <div
-      class="absolute right-0 top-full mt-1 z-20 bg-surface-raised/95 backdrop-blur-md border border-border rounded-lg shadow-[0_4px_16px_color-mix(in_srgb,var(--color-foreground)_8%,transparent)] min-w-52.5 py-1 origin-top-right select-none [&_svg]:size-4 [&_svg]:shrink-0"
+      class="absolute right-0 bottom-full mb-1 z-20 bg-surface-raised/95 backdrop-blur-md border border-border rounded-lg shadow-[0_4px_16px_color-mix(in_srgb,var(--color-foreground)_8%,transparent)] min-w-52.5 py-1 origin-bottom-right select-none [&_svg]:size-4 [&_svg]:shrink-0 md:top-full md:bottom-auto md:mt-1 md:mb-0 md:origin-top-right"
       class:animate-scale-in={open}
       role="menu"
     >

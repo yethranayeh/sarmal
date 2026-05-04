@@ -27,3 +27,4 @@ pnpm-debug.log*
 experimental/
 .wrangler
 e2e/test-results/**/*.md
+docs/public/og/platforms/*

@@ -21,7 +21,7 @@ const isDefault = variant === "default";
 const bgColor = template === "kanji" ? color : "var(--color-primary)";
 
 const sizeClass =
-	size === "sm" ? "w-3.5 h-3.5 text-[10px]" : "w-[18px] h-[18px] text-[12px]";
+	size === "sm" ? "w-3.5 h-3.5 text-[12px]" : "w-[18px] h-[18px] text-[14px]";
 ---
 
 {
@@ -34,7 +34,7 @@ const sizeClass =
 		<span
 			class:list={[
 				sizeClass,
-				"inline-flex items-center justify-center shrink-0 font-heading leading-none text-white! select-none",
+				"inline-flex items-center justify-center shrink-0 font-heading leading-none text-white! select-none pt-0.5",
 			]}
 			style={`background-color: ${bgColor}`}
 		>
