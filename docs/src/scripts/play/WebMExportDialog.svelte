@@ -11,7 +11,7 @@
     getWebMRawDurationSeconds,
     resolveWebMCurve,
     resolveWebMOptions,
-  } from "./export";
+  } from "./export/index";
   import { createSarmalSVG } from "@sarmal/core";
   import { SEPARATOR_DOT } from "../../variables";
 
