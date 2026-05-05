@@ -79,7 +79,7 @@ export function evaluateCatmullRom(points: Array<ControlPoint>, t: number): Poin
  *                ! Must contain at least 3 points.
  * @param opts    Optional overrides for the returned `CurveDef`.
  * @param opts.name  Display name for the curve. Defaults to `"drawn"`.
- * @returns       A `CurveDef` with `period: 2π`, `kind: "drawn"`, and the spline evaluator as its `fn`.
+ * @returns       A `CurveDef` with `period: 2π` and the spline evaluator as its `fn`.
  * @throws        If `points` has fewer than 3 entries.
  *
  * @example
@@ -120,6 +120,5 @@ export function drawCurve(points: Array<ControlPoint>, opts?: { name?: string })
     name: opts?.name ?? "drawn",
     fn: (t: number) => evaluateCatmullRom(pts, t),
     period: PERIOD,
-    kind: "drawn",
   };
 }

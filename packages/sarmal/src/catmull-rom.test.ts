@@ -146,8 +146,8 @@ describe("evaluateCatmullRom", () => {
 });
 
 describe("drawCurve", () => {
-  it("returns a CurveDef with name 'drawn', period 2π, and kind 'drawn'", () => {
-    const points: Array<ControlPoint> = [
+  it("returns a CurveDef with name 'drawn' and period 2π", () => {
+    const points: Array<[number, number]> = [
       [0, 0],
       [1, 0],
       [0.5, 0.5],
@@ -155,19 +155,17 @@ describe("drawCurve", () => {
     const def = drawCurve(points);
     expect(def.name).toBe("drawn");
     expect(def.period).toBe(2 * Math.PI);
-    expect(def.kind).toBe("drawn");
     expect(typeof def.fn).toBe("function");
   });
 
   it("accepts a custom name via opts", () => {
-    const points: Array<ControlPoint> = [
+    const points: Array<[number, number]> = [
       [0, 0],
       [1, 0],
       [0.5, 0.5],
     ];
     const def = drawCurve(points, { name: "my-shape" });
     expect(def.name).toBe("my-shape");
-    expect(def.kind).toBe("drawn");
   });
 
   it("is immune to mutation of the input array after creation", () => {

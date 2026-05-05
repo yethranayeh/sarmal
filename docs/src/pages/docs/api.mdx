@@ -85,7 +85,7 @@ const sarmal = createSarmalSVG(svg, curves.lissajous32);
 
 ## drawCurve
 
-Creates a `CurveDef` from hand-drawn control points. The points form a <Link href="/docs/concepts#closing-the-loop">closed loop</Link>. The last point connects back to the first, and the resulting closed Catmull-Rom spline passes smoothly through every point. The returned curve has `kind: "drawn"` set automatically.
+Creates a `CurveDef` from drawn control points. The points form a <Link href="/docs/concepts#closing-the-loop">closed loop</Link>. The last point connects back to the first, and the resulting closed Catmull-Rom spline passes smoothly through every point.
 
 ```ts
 import { createSarmal, drawCurve } from "@sarmal/core";
@@ -113,7 +113,7 @@ This is the same coordinate system the <Link href="/play">playground</Link>'s dr
 - Points are **copied** at construction — mutating the original array afterward has no effect on the curve.
 - Points can be anywhere within the normalized range. Values outside `[-1, 1]` are *valid* but may push the curve outside the visible area. A `console.warn` fires when points extend beyond ±2 to alert you of potential off-screen rendering.
 - **All points identical** produces a static dot. A `console.warn` fires to alert you of this degenerate input.
-- The returned `CurveDef` has `period: 2π` and `kind: "drawn"` and can be passed to `createSarmal`, `createSarmalSVG`, `morphTo`, or the lower-level engine constructor.
+- The returned `CurveDef` has `period: 2π` and can be passed to `createSarmal`, `createSarmalSVG`, `morphTo`, or the lower-level engine constructor.
 
 <Alert variant="tip">The built-in <Link href="/docs/curves/artemis2">Artemis II</Link> curve is a real-world example of a `drawCurve`-based curve — 21 control points defining a Catmull-Rom spline. Its source in `@sarmal/core/curves/artemis2` shows the pattern for making a drawn curve a reusable built-in.</Alert>
 

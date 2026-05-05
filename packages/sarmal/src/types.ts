@@ -47,13 +47,6 @@ export interface CurveDef {
    * @returns The point on the skeleton at time `t`
    */
   skeletonFn?: (t: number) => Point;
-  /**
-   * How the curve was created:
-   * - 'parametric': Defined by a mathematical parametric equation
-   * - 'drawn': Defined by control points
-   * @default "parametric"
-   */
-  kind?: "parametric" | "drawn";
 }
 
 export type JumpOptions = {
