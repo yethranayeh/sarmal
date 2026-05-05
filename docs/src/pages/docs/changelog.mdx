@@ -17,6 +17,45 @@ Version history notes of the <Link href="#core">Core</Link> and the <Link href="
 
 ## Core
 
+### 0.25.0 - 05.05.2026
+
+`CurveDef` now supports an optional `kind` field (`"parametric"` or `"drawn"`) to distinguish how a curve was created. `drawCurve()` sets `kind: "drawn"` automatically.
+
+```ts
+// Built-in parametric curves (kind omitted, defaults to "parametric")
+import { rose3 } from "@sarmal/core"
+
+// Built-in drawn curve
+import { artemis2 } from "@sarmal/core"
+// artemis2.kind === "drawn"
+
+// User-created drawn curves get kind: "drawn" automatically
+import { drawCurve } from "@sarmal/core"
+const curve = drawCurve([[-0.5, 0.3], [0.2, -0.8], [0.7, 0.4]])
+// curve.kind === "drawn"
+```
+
+The built-in <Link href="/docs/curves/artemis2">Artemis II</Link> curve is now a hand-drawn Catmull-Rom spline through 21 control points, replacing the previous simplistic approximation. It is the first built-in curve created with `drawCurve`.
+
+The <Link href="/docs/curves">curve catalog</Link> and curve detail pages now also display a kind badge to distinguish a built-in curve's origin.
+
+<Alert label="Breaking" variant="error">`drawCurve()` default name changed from `"custom"` to `"drawn"`. Also added an optional `name` parameter for custom display names.</Alert>
+
+```ts
+// Before
+const curve = drawCurve(points)
+curve.name  // "custom"
+
+// After
+const curve = drawCurve(points)
+curve.name  // "drawn"
+
+const named = drawCurve(points, { name: "Artemis II" })
+named.name  // "Artemis II"
+```
+
+`drawCurve()` now copies the input points array at construction. Mutating the caller's array after creation no longer affects the curve's shape. It also outputs a `console.warn` text when all control points are identical or when points extend far outside `[-1, 1]`.
+
 ### 0.24.0 - 03.05.2026
 
 New `pauseOnHidden` option (default `true`) automatically pauses sarmal instances when the browser tab is hidden and resumes them when it becomes visible again. If the tab is already hidden at construction time, `autoStart` is suppressed and the animation waits for the tab to become visible. Set `pauseOnHidden: false` to opt out.

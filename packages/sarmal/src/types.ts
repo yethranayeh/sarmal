@@ -3,6 +3,13 @@ export interface Point {
   y: number;
 }
 
+/**
+ * A control point for drawn curves, represented as a
+ *  normalized `[x, y]` tuple in `[-1, 1]` space,
+ *    matching the playground's draw-mode coordinate system.
+ */
+export type ControlPoint = [number, number];
+
 export interface CurveDef {
   name: string;
   /**
@@ -40,6 +47,13 @@ export interface CurveDef {
    * @returns The point on the skeleton at time `t`
    */
   skeletonFn?: (t: number) => Point;
+  /**
+   * How the curve was created:
+   * - 'parametric': Defined by a mathematical parametric equation
+   * - 'drawn': Defined by control points
+   * @default "parametric"
+   */
+  kind?: "parametric" | "drawn";
 }
 
 export type JumpOptions = {

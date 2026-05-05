@@ -1,11 +1,9 @@
 import type { CurveName } from "@sarmal/core";
 
-export interface CurveDocsMeta {
+interface CurveDocsMetaBase {
   name: string;
   color: string;
   family: string;
-  equation: string; // LaTeX for curve detail pages
-  equationSimple: string; // ASCII for modal dialogs
   description: string; // Short description for modals / DemoSection
   descriptionLong: string; // Longer description for curve detail pages
   features: string[];
@@ -15,28 +13,38 @@ export interface CurveDocsMeta {
   skeleton: string; // "static", "live", "custom (stabilized)"
 }
 
+interface ParametricCurveDocsMeta extends CurveDocsMetaBase {
+  kind: "parametric";
+  equation: string; // LaTeX for curve detail pages
+  equationSimple: string; // ASCII for modal dialogs
+}
+
+interface DrawnCurveDocsMeta extends CurveDocsMetaBase {
+  kind: "drawn";
+}
+
+export type CurveDocsMeta = ParametricCurveDocsMeta | DrawnCurveDocsMeta;
+
 export const CURVE_DOCS: Record<CurveName, CurveDocsMeta> = {
   artemis2: {
     name: "Artemis II",
     color: "#60a5fa",
     family: "Free-return trajectory",
-    equation:
-      "x = \\frac{\\cos(t)\\,(1 + 0.35\\cos(t))}{1 + \\sin^2(t)} - 0.175 \\\\ y = \\frac{\\sin(t)\\cos(t)\\,(1 + 0.15\\cos(t))}{1 + \\sin^2(t)}",
-    equationSimple:
-      "x = cos(t)·(1+0.35cos(t))/(1+sin²(t)) - 0.175, y = sin(t)cos(t)·(1+0.15cos(t))/(1+sin²(t))",
     description:
-      "Modified lemniscate with two unequal lobes. The iconic curve of the collection, tracing a path inspired by the Artemis II lunar free-return trajectory.",
+      "Hand-drawn Catmull-Rom spline through 21 control points, tracing a path inspired by the Artemis II lunar free-return trajectory.",
     descriptionLong:
-      "Modified lemniscate with two unequal lobes. The iconic curve of the collection, tracing a path inspired by the Artemis II lunar free-return trajectory.",
+      "Hand-drawn Catmull-Rom spline through 21 control points, tracing a path inspired by the Artemis II lunar free-return trajectory. The first built-in curve created with drawCurve.",
     features: [
-      "Two unequal lobes creating organic asymmetry",
-      "Based on NASA's Artemis II mission trajectory",
-      "Hero curve of the Sarmal collection",
+      "Hand-drawn using 21 control points in the playground",
+      "Closed Catmull-Rom spline passing through every point",
+      "Based on NASA's Artemis II mission trajectory outline",
+      "Demonstrates the drawCurve API as a built-in curve",
     ],
     importPath: "@sarmal/core/curves/artemis2",
     periodStr: "2π",
     speed: 0.7,
     skeleton: "static",
+    kind: "drawn",
   },
   epitrochoid7: {
     name: "Epitrochoid",
@@ -58,6 +66,7 @@ export const CURVE_DOCS: Record<CurveName, CurveDocsMeta> = {
     periodStr: "2π",
     speed: 1.4,
     skeleton: "custom (stabilized)",
+    kind: "parametric",
   },
   astroid: {
     name: "Astroid",
@@ -78,6 +87,7 @@ export const CURVE_DOCS: Record<CurveName, CurveDocsMeta> = {
     periodStr: "2π",
     speed: 1.1,
     skeleton: "static",
+    kind: "parametric",
   },
   deltoid: {
     name: "Deltoid",
@@ -96,6 +106,7 @@ export const CURVE_DOCS: Record<CurveName, CurveDocsMeta> = {
     periodStr: "2π",
     speed: 0.9,
     skeleton: "static",
+    kind: "parametric",
   },
   rose3: {
     name: "Rose (n=3)",
@@ -116,6 +127,7 @@ export const CURVE_DOCS: Record<CurveName, CurveDocsMeta> = {
     periodStr: "2π",
     speed: 1.15,
     skeleton: "static",
+    kind: "parametric",
   },
   rose5: {
     name: "Rose (n=5)",
@@ -136,6 +148,7 @@ export const CURVE_DOCS: Record<CurveName, CurveDocsMeta> = {
     periodStr: "2π",
     speed: 1.0,
     skeleton: "static",
+    kind: "parametric",
   },
   rose52: {
     name: "Rose (n=5/2)",
@@ -156,6 +169,7 @@ export const CURVE_DOCS: Record<CurveName, CurveDocsMeta> = {
     periodStr: "4π",
     speed: 0.8,
     skeleton: "static",
+    kind: "parametric",
   },
   lissajous32: {
     name: "Lissajous 3:2",
@@ -177,6 +191,7 @@ export const CURVE_DOCS: Record<CurveName, CurveDocsMeta> = {
     periodStr: "2π",
     speed: 2.0,
     skeleton: "live",
+    kind: "parametric",
   },
   lissajous43: {
     name: "Lissajous 4:3",
@@ -198,6 +213,7 @@ export const CURVE_DOCS: Record<CurveName, CurveDocsMeta> = {
     periodStr: "2π",
     speed: 1.8,
     skeleton: "live",
+    kind: "parametric",
   },
   epicycloid3: {
     name: "Epicycloid (n=3)",
@@ -218,6 +234,7 @@ export const CURVE_DOCS: Record<CurveName, CurveDocsMeta> = {
     periodStr: "2π",
     speed: 0.75,
     skeleton: "static",
+    kind: "parametric",
   },
   lame: {
     name: "Lamé Curve",
@@ -239,6 +256,7 @@ export const CURVE_DOCS: Record<CurveName, CurveDocsMeta> = {
     periodStr: "2π",
     speed: 1.0,
     skeleton: "live",
+    kind: "parametric",
   },
   star: {
     name: "Star",
@@ -258,6 +276,7 @@ export const CURVE_DOCS: Record<CurveName, CurveDocsMeta> = {
     periodStr: "2π",
     speed: 1.0,
     skeleton: "static",
+    kind: "parametric",
   },
   star4: {
     name: "Star (4-arm)",
@@ -277,6 +296,7 @@ export const CURVE_DOCS: Record<CurveName, CurveDocsMeta> = {
     periodStr: "2π",
     speed: 1.0,
     skeleton: "static",
+    kind: "parametric",
   },
   star7: {
     name: "Star (7-arm)",
@@ -296,6 +316,7 @@ export const CURVE_DOCS: Record<CurveName, CurveDocsMeta> = {
     periodStr: "2π",
     speed: 1.0,
     skeleton: "static",
+    kind: "parametric",
   },
 } as const;
 

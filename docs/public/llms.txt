@@ -32,7 +32,7 @@ sarmal.start()
 
 ## Available curves
 
-- `artemis2`: Artemis II free-return lunar trajectory approximation
+- `artemis2`: Artemis II free-return lunar trajectory curve drawn with Catmull-Rom spline
 - `epitrochoid7`: 7-lobed epitrochoid with a breathing distance parameter
 - `astroid`: 4-cusped hypocycloid (x=cos³t, y=sin³t)
 - `deltoid`: 3-cusped hypocycloid

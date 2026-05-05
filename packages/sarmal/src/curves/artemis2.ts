@@ -1,34 +1,32 @@
-import type { CurveDef } from "../types";
+import type { ControlPoint, CurveDef } from "../types";
 
-const TWO_PI = Math.PI * 2;
+import { drawCurve } from "../catmull-rom";
 
-/**
- * Artemis II free-return lunar trajectory
- * @see https://www.nasa.gov/wp-content/uploads/2025/09/artemis-ii-map-508.pdf
- * a = x-axis asymmetry (widens one lobe),
- * b = y-axis asymmetry,
- * ox = horizontal offset to visually center the shape
- */
-function artemis2Fn(t: number, _time: number, _params: Record<string, number>) {
-  const a = 0.35,
-    b = 0.15,
-    ox = 0.175;
-  const s = Math.sin(t),
-    c = Math.cos(t);
-  const denom = 1 + s * s;
-  return {
-    x: (c * (1 + a * c)) / denom - ox,
-    y: (s * c * (1 + b * c)) / denom,
-  };
-}
+const points: Array<ControlPoint> = [
+  [-0.44, -0.45],
+  [-0.53, -0.77],
+  [-0.82, -0.66],
+  [-0.82, -0.18],
+  [-0.25, -0.04],
+  [0.16, -0.49],
+  [-0.03, -0.87],
+  [-0.68, -0.94],
+  [-0.95, -0.61],
+  [-0.87, -0.0],
+  [-0.34, 0.21],
+  [0.27, -0.04],
+  [0.87, 0.06],
+  [0.87, 0.57],
+  [0.32, 0.66],
+  [-0.21, -0.43],
+  [-0.43, -0.81],
+  [-0.69, -0.84],
+  [-0.87, -0.66],
+  [-0.9, -0.47],
+  [-0.76, -0.35],
+];
 
-/**
- * Artemis II free-return lunar trajectory curve
- * Traces the path of the Orion spacecraft during the Artemis II mission
- */
 export const artemis2: CurveDef = {
-  name: "Artemis II",
-  fn: artemis2Fn,
-  period: TWO_PI,
+  ...drawCurve(points, { name: "Artemis II" }),
   speed: 0.7,
 };

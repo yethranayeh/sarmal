@@ -1,4 +1,4 @@
-import type { Point, CurveDef } from "./types";
+import type { ControlPoint, Point, CurveDef } from "./types";
 
 /**
  * One full loop around the spline maps to the parametric interval `[0, 2π)`,
@@ -37,7 +37,7 @@ function catmullRom1D(p0: number, p1: number, p2: number, p3: number, u: number)
  * @param t       Parametric position along the closed loop.  Wraps into `[0, 2π)` automatically, so values outside that range are remapped rather than rejected
  * @returns       The `(x, y)` position on the spline at time `t`
  */
-export function evaluateCatmullRom(points: Array<[number, number]>, t: number): Point {
+export function evaluateCatmullRom(points: Array<ControlPoint>, t: number): Point {
   const N = points.length;
 
   if (N === 0) {
@@ -77,8 +77,9 @@ export function evaluateCatmullRom(points: Array<[number, number]>, t: number): 
  * @param points  Array of control points in **normalized `[−1, 1]` space**,
  *                  matching the playground's draw-mode coordinate system.
  *                ! Must contain at least 3 points.
- * @returns       A `CurveDef` with `period: 2π` and the spline evaluator as its `fn`.
- *                `name` is set to `"custom"`.
+ * @param opts    Optional overrides for the returned `CurveDef`.
+ * @param opts.name  Display name for the curve. Defaults to `"drawn"`.
+ * @returns       A `CurveDef` with `period: 2π`, `kind: "drawn"`, and the spline evaluator as its `fn`.
  * @throws        If `points` has fewer than 3 entries.
  *
  * @example
@@ -94,14 +95,31 @@ export function evaluateCatmullRom(points: Array<[number, number]>, t: number): 
  * createSarmal(canvas, curve)
  * ```
  */
-export function drawCurve(points: Array<[number, number]>): CurveDef {
+export function drawCurve(points: Array<ControlPoint>, opts?: { name?: string }): CurveDef {
   if (points.length < 3) {
     throw new Error(`drawCurve requires at least 3 points, received ${points.length}.`);
   }
 
+  const first = points[0]!;
+  if (points.every((p) => p[0] === first[0] && p[1] === first[1])) {
+    console.warn(
+      "[sarmal].drawCurve: all control points are identical. The curve will be a single point.",
+    );
+  }
+
+  const maxAbs = points.reduce((m, p) => Math.max(m, Math.abs(p[0]), Math.abs(p[1])), 0);
+  if (maxAbs > 2) {
+    console.warn(
+      `[sarmal].drawCurve: control points extend to ±${maxAbs.toFixed(1)}, which may render off-screen. Coordinates should be in [-1, 1].`,
+    );
+  }
+
+  const pts = points.map(([x, y]) => [x, y] as ControlPoint);
+
   return {
-    name: "custom",
-    fn: (t: number) => evaluateCatmullRom(points, t),
+    name: opts?.name ?? "drawn",
+    fn: (t: number) => evaluateCatmullRom(pts, t),
     period: PERIOD,
+    kind: "drawn",
   };
 }

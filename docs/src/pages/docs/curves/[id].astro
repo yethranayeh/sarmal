@@ -7,6 +7,7 @@ import { ChevronsLeft, Hash } from "@lucide/astro";
 import DocsLayout from "../../../layouts/DocsLayout.astro";
 
 import MathEquation from "../../../components/MathEquation.astro";
+import CurveKindBadge from "../../../components/CurveKindBadge.astro";
 import Sarmal from "../../../components/Sarmal.astro";
 import CopyButton from "../../../components/CopyButton.svelte";
 import DotGrid from "../../../components/DotGrid.astro";
@@ -86,7 +87,10 @@ const trailColor = curve.color;
 			<a class="anchor-link" aria-hidden="true" tabindex="-1" href={`#${id}`}>
 				<Hash size={16} aria-hidden="true" />
 			</a>
-			{curve.name}
+			<span class="inline-flex gap-4 items-center">
+				{curve.name}
+				{curve.kind && <CurveKindBadge kind={curve.kind} />}
+			</span>
 		</h1>
 		<p class="lead">{curve.descriptionLong}</p>
 
@@ -134,13 +138,19 @@ const trailColor = curve.color;
 	</section>
 
 	<section>
-		<h2 id="equation">
-			<a class="anchor-link" aria-hidden="true" tabindex="-1" href="#equation">
+		<h2 id="src-info">
+			<a class="anchor-link" aria-hidden="true" tabindex="-1" href="#src-info">
 				<Hash size={16} aria-hidden="true" />
 			</a>
-			Equation
+			{curve.kind === "drawn" ? "Definition" : "Equation"}
 		</h2>
-		<MathEquation equation={curve.equation} />
+		{
+			curve.kind === "drawn" ? (
+				<p class="text-muted">{curve.descriptionLong}</p>
+			) : (
+				<MathEquation equation={curve.equation} />
+			)
+		}
 	</section>
 
 	<section>
@@ -161,6 +171,16 @@ const trailColor = curve.color;
 					<td class="py-2 font-medium">Family</td>
 					<td class="py-2 text-muted">{curve.family}</td>
 				</tr>
+				{
+					curve.kind && (
+						<tr class="border-b border-border">
+							<td class="py-2 font-medium">Kind</td>
+							<td class="py-2 text-muted">
+								<CurveKindBadge kind={curve.kind} />
+							</td>
+						</tr>
+					)
+				}
 				<tr class="border-b border-border">
 					<td class="py-2 font-medium">Period</td>
 					<td class="py-2 text-muted">{curve.periodStr}</td>
