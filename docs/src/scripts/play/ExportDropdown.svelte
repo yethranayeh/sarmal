@@ -2,7 +2,8 @@
   import type { PlaygroundState } from "./playgroundState.svelte";
   import type { SharedState } from "./types";
 
-  import { getContext, onMount } from "svelte";
+  import { getContext } from "svelte";
+  import { toast } from "svelte-sonner";
   import {
     Share2,
     ImageDown,
@@ -31,16 +32,6 @@
   const pg = getContext<PlaygroundState>("playground");
 
   let open = $state(false);
-  let status = $state<string | null>(null);
-  let statusTimer: ReturnType<typeof setTimeout> | null = null;
-
-  function showStatus(msg: string, duration = 3000) {
-    status = msg;
-    if (statusTimer) clearTimeout(statusTimer);
-    statusTimer = setTimeout(() => {
-      status = null;
-    }, duration);
-  }
 
   function toggle() {
     open = !open;
@@ -111,9 +102,9 @@
 
     const result = await handleShare(c, payload);
     if (result.ok) {
-      showStatus("Link copied. Expires in 90 days.");
+      toast.success("Link copied. Expires in 90 days.");
     } else {
-      showStatus(result.error, 4000);
+      toast.error(result.error);
     }
   }
 
@@ -121,9 +112,13 @@
     try {
       const snippet = generateJSSnippet(pg);
       const ok = await copyToClipboard(snippet);
-      showStatus(ok ? "Copied" : "Clipboard access denied", ok ? 2000 : 4000);
+      if (ok) {
+        toast.success("Copied");
+      } else {
+        toast.error("Clipboard access denied");
+      }
     } catch {
-      showStatus("Failed to generate snippet", 4000);
+      toast.error("Failed to generate snippet");
     }
   }
 
@@ -131,9 +126,13 @@
     try {
       const html = generateStandaloneHTML(pg);
       const ok = await copyToClipboard(html);
-      showStatus(ok ? "Copied" : "Clipboard access denied", ok ? 2000 : 4000);
+      if (ok) {
+        toast.success("Copied");
+      } else {
+        toast.error("Clipboard access denied");
+      }
     } catch {
-      showStatus("Failed to generate HTML", 4000);
+      toast.error("Failed to generate HTML");
     }
   }
 
@@ -141,9 +140,13 @@
     try {
       const snippet = generateReactSnippet(pg);
       const ok = await copyToClipboard(snippet);
-      showStatus(ok ? "Copied" : "Clipboard access denied", ok ? 2000 : 4000);
+      if (ok) {
+        toast.success("Copied");
+      } else {
+        toast.error("Clipboard access denied");
+      }
     } catch {
-      showStatus("Failed to generate snippet", 4000);
+      toast.error("Failed to generate snippet");
     }
   }
 
@@ -152,23 +155,19 @@
     if (!c) return;
     try {
       await downloadPNG(c);
-      showStatus("Downloaded");
+      toast.success("Downloaded");
     } catch (err) {
-      showStatus(
-        err instanceof Error ? err.message : "Failed to download",
-        4000,
-      );
+      toast.error(err instanceof Error ? err.message : "Failed to download");
     }
   }
 
   function handleDownloadSVG() {
     try {
       downloadSVG(pg);
-      showStatus("Downloaded");
+      toast.success("Downloaded");
     } catch (err) {
-      showStatus(
+      toast.error(
         err instanceof Error ? err.message : "Failed to download SVG",
-        4000,
       );
     }
   }
@@ -184,20 +183,16 @@
     try {
       const svgString = generateSVGString(pg);
       const ok = await copyToClipboard(svgString);
-      showStatus(ok ? "Copied" : "Clipboard access denied", ok ? 2000 : 4000);
+
+      if (ok) {
+        toast.success("Copied");
+      } else {
+        toast.error("Clipboard access denied");
+      }
     } catch (err) {
-      showStatus(
-        err instanceof Error ? err.message : "Failed to copy SVG",
-        4000,
-      );
+      toast.error(err instanceof Error ? err.message : "Failed to copy SVG");
     }
   }
-
-  onMount(() => {
-    return () => {
-      if (statusTimer) clearTimeout(statusTimer);
-    };
-  });
 </script>
 
 <div class="relative">
@@ -216,14 +211,6 @@
       <ChevronDown class="size-3.5" />
     </span>
   </Button>
-
-  {#if status}
-    <span
-      class="absolute right-0 top-9 whitespace-nowrap font-ui text-[10px] text-muted bg-surface-raised border border-border rounded px-2 py-1 shadow-[0_2px_8px_color-mix(in_srgb,var(--color-foreground)_6%,transparent)] z-30"
-    >
-      {status}
-    </span>
-  {/if}
 
   {#if open}
     <!-- svelte-ignore a11y_no_static_element_interactions -->

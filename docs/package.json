@@ -37,6 +37,7 @@
     "prettier-plugin-svelte": "^3.4.0",
     "rehype-autolink-headings": "^7.1.0",
     "svelte-check": "^4.4.6",
+    "svelte-sonner": "^1.1.1",
     "typescript": "^5.9.3",
     "vitest": "^4.1.2"
   },

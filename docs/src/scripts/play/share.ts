@@ -140,6 +140,6 @@ export async function handleShare(
 
     return { ok: true, url };
   } catch {
-    return { ok: false, error: "Couldn't create link. Try again." };
+    return { ok: false, error: "Couldn't create link. Please try again later." };
   }
 }

@@ -6,7 +6,7 @@
 
   import MathCanvas from "./MathCanvas.svelte";
   import DrawCanvas from "./DrawCanvas.svelte";
-  import ShareDropdown from "./ShareDropdown.svelte";
+  import ExportDropdown from "./ExportDropdown.svelte";
   import Button from "../../components/Button.svelte";
 
   const pg = getContext<PlaygroundState>("playground");
@@ -74,7 +74,7 @@
   <div
     class="absolute top-auto md:top-4 bottom-4 md:bottom-auto right-4 z-10 flex items-center gap-0 md:gap-2"
   >
-    <ShareDropdown />
+    <ExportDropdown />
     <Button variant="destructive" onclick={pg.handleClear}>
       <Trash class="w-3.5 h-3.5" />
       Clear
