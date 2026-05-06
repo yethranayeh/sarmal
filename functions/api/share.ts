@@ -3,13 +3,15 @@ interface Env {
 }
 
 interface SharedState {
-  v: 1;
+  v: 2;
   mode?: string;
   code: string;
   trailStyle: string;
   palette: string;
   trailColor: string;
   headColor: string;
+  headColorAuto: boolean;
+  headRadius?: number;
   trailLength: number;
   speed: number;
   showSkeleton: boolean;
@@ -27,14 +29,33 @@ function generateId(): string {
 }
 
 function isValidState(value: unknown): value is SharedState {
-  if (typeof value !== "object" || value === null) return false;
+  if (typeof value !== "object" || value === null) {
+    return false;
+  }
+
   const s = value as Record<string, unknown>;
-  if (s.v !== 1) return false;
-  if (typeof s.code !== "string" || s.code.length > MAX_CODE_LENGTH) return false;
+  if (s.v !== 2) {
+    return false;
+  }
+
+  if (typeof s.code !== "string" || s.code.length > MAX_CODE_LENGTH) {
+    return false;
+  }
+
   const isDrawMode = s.mode === "draw";
   if (isDrawMode) {
-    if (!Array.isArray(s.drawPoints) || s.drawPoints.length === 0 || s.drawPoints.length > MAX_DRAW_POINTS) return false;
-    return s.drawPoints.every((p) => Array.isArray(p) && p.length === 2 && typeof p[0] === "number" && typeof p[1] === "number");
+    if (
+      !Array.isArray(s.drawPoints) ||
+      s.drawPoints.length === 0 ||
+      s.drawPoints.length > MAX_DRAW_POINTS
+    ) {
+      return false;
+    }
+
+    return s.drawPoints.every(
+      (p) =>
+        Array.isArray(p) && p.length === 2 && typeof p[0] === "number" && typeof p[1] === "number",
+    );
   }
   return s.code.length > 0;
 }

@@ -32,7 +32,7 @@ function isValidState(value: unknown): value is SharedState {
 
   const s = value as Record<string, unknown>;
   return (
-    s.v === 1 && typeof s.code === "string" && s.code.length > 0 && s.code.length <= MAX_CODE_LENGTH
+    s.v === 2 && typeof s.code === "string" && s.code.length > 0 && s.code.length <= MAX_CODE_LENGTH
   );
 }
 
