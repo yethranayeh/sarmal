@@ -7,7 +7,6 @@ import BaseLayout from "./BaseLayout.astro";
 import Navbar from "../components/feature/navigation/Navbar.astro";
 import NavLinks from "../components/feature/navigation/NavLinks.astro";
 import DocNavLinks from "../components/feature/navigation/DocNavLinks.astro";
-import TableOfContents from "../components/TableOfContents.astro";
 
 interface DocFrontmatter {
 	title: string;
@@ -157,7 +156,6 @@ const topNavLinks = [
 				>
 					<slot />
 				</article>
-				<TableOfContents headings={headings ?? []} />
 			</div>
 		</main>
 	</div>
