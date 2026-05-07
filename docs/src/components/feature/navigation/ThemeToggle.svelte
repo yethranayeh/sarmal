@@ -1,16 +1,30 @@
 <script lang="ts">
-  import { Sun, Moon } from "@lucide/svelte";
+  import { Sun, Moon, SunMoon } from "@lucide/svelte";
   import Button from "../../Button.svelte";
 
-  let resolved = $state<"light" | "dark">("light");
+  type Preference = "light" | "dark" | "system";
+
+  let preference = $state<Preference>("system");
+
+  try {
+    const stored = localStorage.getItem("theme");
+    if (stored === "dark" || stored === "light" || stored === "system") {
+      preference = stored as Preference;
+    }
+  } catch {}
+
+  const resolved = $derived.by((): "light" | "dark" => {
+    if (preference !== "system") {
+      return preference;
+    }
+    if (typeof window === "undefined") {
+      return "light";
+    }
+    const isDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+    return isDark ? "dark" : "light";
+  });
 
   $effect(() => {
-    const stored = localStorage.getItem("theme");
-    if (stored === "dark" || stored === "light") {
-      resolved = stored;
-    } else if (window.matchMedia("(prefers-color-scheme: dark)").matches) {
-      resolved = "dark";
-    }
     apply(resolved);
   });
 
@@ -24,10 +38,23 @@
     }
   }
 
+  const modeLabel: Record<Preference, string> = {
+    light: "Light mode",
+    dark: "Dark mode",
+    system: "System preference",
+  };
+
   function toggle() {
-    resolved = resolved === "dark" ? "light" : "dark";
-    apply(resolved);
-    localStorage.setItem("theme", resolved);
+    if (preference === "system") {
+      preference = resolved === "dark" ? "light" : "dark";
+    } else if (preference === "light") {
+      preference = "dark";
+    } else {
+      preference = "system";
+    }
+    try {
+      localStorage.setItem("theme", preference);
+    } catch {}
   }
 </script>
 
@@ -35,13 +62,16 @@
   variant="ghost"
   class="p-0! md:p-2!"
   onclick={toggle}
-  aria-label="Toggle theme"
+  aria-label={`${modeLabel[preference]} — click to change`}
+  title={modeLabel[preference]}
 >
   {#snippet icon()}
-    {#if resolved === "dark"}
-      <Sun size={16} />
-    {:else}
+    {#if preference === "system"}
+      <SunMoon size={16} />
+    {:else if preference === "dark"}
       <Moon size={16} />
+    {:else}
+      <Sun size={16} />
     {/if}
   {/snippet}
 </Button>

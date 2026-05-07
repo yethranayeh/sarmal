@@ -7,6 +7,7 @@ import BaseLayout from "./BaseLayout.astro";
 import Navbar from "../components/feature/navigation/Navbar.astro";
 import NavLinks from "../components/feature/navigation/NavLinks.astro";
 import DocNavLinks from "../components/feature/navigation/DocNavLinks.astro";
+import TableOfContents from "../components/TableOfContents.astro";
 
 interface DocFrontmatter {
 	title: string;
@@ -26,7 +27,7 @@ type Props = Partial<MarkdownLayoutProps<DocFrontmatter>> & {
 	ogImage?: string;
 };
 
-const { frontmatter } = Astro.props;
+const { frontmatter, headings } = Astro.props;
 const title = frontmatter?.title ?? Astro.props.title ?? "";
 const description = frontmatter?.description ?? Astro.props.description ?? "";
 const ogTitle = frontmatter?.ogTitle ?? Astro.props.ogTitle;
@@ -68,7 +69,7 @@ const topNavLinks = [
 			class="hidden lg:block sticky top-0 w-64 shrink-0 h-screen bg-surface border-r border-border"
 			aria-label="Documentation navigation"
 		>
-			<nav class="p-4" aria-label="Documentation sections">
+			<nav class="pl-1" aria-label="Documentation sections">
 				<DocNavLinks currentPath={currentPath} />
 			</nav>
 		</aside>
@@ -148,11 +149,16 @@ const topNavLinks = [
 
 		<main class="flex-1 min-w-0 p-4 md:p-8">
 			<slot name="article-header" />
-			<article
-				class="prose max-w-3xl mx-auto lg:mx-0 prose-headings:font-medium"
+			<div
+				class="grid grid-cols-1 md:grid-cols-[1fr_minmax(0,48rem)_16rem] gap-x-8 items-start"
 			>
-				<slot />
-			</article>
+				<article
+					class="prose min-w-0 md:col-start-2 md:row-start-1 prose-headings:font-medium"
+				>
+					<slot />
+				</article>
+				<TableOfContents headings={headings ?? []} />
+			</div>
 		</main>
 	</div>
 </BaseLayout>

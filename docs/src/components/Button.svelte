@@ -58,6 +58,7 @@
     "aria-expanded"?: boolean;
     "aria-haspopup"?: "dialog" | "menu" | "grid" | "listbox" | "tree" | boolean;
     disabled?: boolean;
+    title?: string;
   }
 
   let {
