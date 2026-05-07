@@ -34,6 +34,9 @@ const {
 } = Astro.props;
 
 const canonicalUrl = canonical ?? new URL(Astro.url.pathname, SITE_URL).href;
+const resolvedOgImage = ogImage.startsWith("/")
+	? `${SITE_URL}${ogImage}`
+	: ogImage;
 ---
 
 <html lang="en">
@@ -52,7 +55,7 @@ const canonicalUrl = canonical ?? new URL(Astro.url.pathname, SITE_URL).href;
 		<meta property="og:url" content={canonicalUrl} />
 		<meta property="og:title" content={ogTitle} />
 		<meta property="og:description" content={ogDescription} />
-		<meta property="og:image" content={ogImage} />
+		<meta property="og:image" content={resolvedOgImage} />
 		<meta property="og:image:width" content="1200" />
 		<meta property="og:image:height" content="630" />
 		<meta property="og:image:alt" content={ogImageAlt} />
@@ -62,7 +65,7 @@ const canonicalUrl = canonical ?? new URL(Astro.url.pathname, SITE_URL).href;
 		<meta name="twitter:card" content="summary_large_image" />
 		<meta name="twitter:title" content={ogTitle} />
 		<meta name="twitter:description" content={ogDescription} />
-		<meta name="twitter:image" content={ogImage} />
+		<meta name="twitter:image" content={resolvedOgImage} />
 		<meta name="twitter:image:alt" content={ogImageAlt} />
 
 		<Font cssVariable="--font-heading" preload />
