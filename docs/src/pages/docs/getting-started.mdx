@@ -33,7 +33,7 @@ No build step? Drop in the auto-init script and add `data-sarmal` to any canvas 
 
 The script scans for `canvas[data-sarmal]` and `svg[data-sarmal]` on page load and starts a spinner for each one. Use any built-in curve name as the attribute value.
 
-See <Link href="/docs/frameworks#cdn">CDN</Link> section in Framework Guides page for more details.
+See <Link href="/docs/frameworks/#cdn">CDN</Link> section in Framework Guides page for more details.
 
 ## Your first animated curve
 
@@ -54,7 +54,7 @@ The instance animates immediately by default. Call `sarmal.pause()` to freeze th
 
 ## Choosing a curve
 
-While it is possible to create your very own <Link href="#custom-curves">custom curve</Link>, you might wish to skip the initial hassle. The `curves` export is an object with <Link href="/docs/curves">all the built-in curves</Link>, so you can pick from predefined curve definitions to get started right away:
+While it is possible to create your very own <Link href="#custom-curves">custom curve</Link>, you might wish to skip the initial hassle. The `curves` export is an object with <Link href="/docs/curves/">all the built-in curves</Link>, so you can pick from predefined curve definitions to get started right away:
 
 ```ts
 import { curves } from "@sarmal/core";
@@ -146,8 +146,8 @@ const wobble: CurveDef = {
 };
 ```
 
-See the <Link href="/docs/api#curve-definition-schema">Curve Definition Schema</Link> for the full list of options.
-You can also prototype your curve ideas in the <Link href="/play">Playground</Link> page.
+See the <Link href="/docs/api/#curve-definition-schema">Curve Definition Schema</Link> for the full list of options.
+You can also prototype your curve ideas in the <Link href="/play/">Playground</Link> page.
 
 ## Styling options
 
@@ -241,4 +241,4 @@ export default function App() {
 }
 ```
 
-See the <Link href="/docs/frameworks">Framework Guides</Link> for the full React API and SSR notes.
+See the <Link href="/docs/frameworks/">Framework Guides</Link> for the full React API and SSR notes.

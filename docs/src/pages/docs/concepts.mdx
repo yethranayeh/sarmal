@@ -71,7 +71,7 @@ The key idea is that you control _when_ the dot is at each position. You can spe
   <div class="order-2 md:order-1"><TPositionDemo /></div>
 </div>
 
-You can head to <Link href='/play'>the playground</Link> to experiment with parametric curves and try them out in real time.
+You can head to <Link href='/play/'>the playground</Link> to experiment with parametric curves and try them out in real time.
 
 ## The Skeleton
 
@@ -136,7 +136,7 @@ Watch the engine and renderer working together. The numbers on the right are raw
 - **t**: position along the curve (advances via `tick(dt)`, overridden with `seek(t)`)
 - **actualTime**: actual elapsed seconds (only advances with `tick()`, never with `seek()`)
 - Trail buffer: the last `N` points. It is a mutable, same array reference each tick
-- <Link href="/docs/getting-started#morphing-between-curves">Morphing state</Link>: when transitioning between curves
+- <Link href="/docs/getting-started/#morphing-between-curves">Morphing state</Link>: when transitioning between curves
 
 <Alert variant="info">
 The engine never touches pixels, canvas, SVG elements, colors, opacity, DPR, container dimensions.

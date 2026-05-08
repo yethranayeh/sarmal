@@ -16,12 +16,12 @@ interface Props {
 const { links = [] } = Astro.props;
 
 const defaultLinks: NavLink[] = [
-	{ href: "/docs", label: "Docs", icon: BookText, matchPrefix: true },
-	{ href: "/play", label: "Playground", icon: FlaskConical },
+	{ href: "/docs/", label: "Docs", icon: BookText, matchPrefix: true },
+	{ href: "/play/", label: "Playground", icon: FlaskConical },
 ];
 
 const navLinks = links.length > 0 ? links : defaultLinks;
-const currentPath = Astro.url.pathname.replace(/\/$/, "") || "/";
+const currentPath = Astro.url.pathname;
 ---
 
 <nav class="flex items-center gap-2 md:gap-4">
@@ -30,7 +30,7 @@ const currentPath = Astro.url.pathname.replace(/\/$/, "") || "/";
 			const isActive =
 				link.active ??
 				(link.matchPrefix
-					? currentPath === link.href || currentPath.startsWith(link.href + "/")
+					? currentPath === link.href || currentPath.startsWith(link.href)
 					: currentPath === link.href);
 			const colorClass = isActive ? "text-primary" : "text-muted";
 			const Icon = link.icon;

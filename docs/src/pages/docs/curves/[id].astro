@@ -29,14 +29,14 @@ export function getStaticPaths() {
 const { id } = Astro.params;
 
 if (!id) {
-	return Astro.redirect("/docs/curves");
+	return Astro.redirect("/docs/curves/");
 }
 
 const curveKey = id as CurveName;
 const meta = CURVE_DOCS[curveKey];
 
 if (!meta) {
-	return Astro.redirect("/docs/curves");
+	return Astro.redirect("/docs/curves/");
 }
 
 const curve: CurveData = {
@@ -72,7 +72,7 @@ const trailColor = curve.color;
 >
 	<div slot="article-header" class="w-full flex justify-end -mb-4 md:-mb-8">
 		<div class="flex flex-col gap-3">
-			<Link href="/docs/curves" class="group inline-flex items-center">
+			<Link href="/docs/curves/" class="group inline-flex items-center">
 				<ChevronsLeft
 					size={24}
 					class="opacity-75 [&>path:nth-child(1)]:transition-transform [&>path:nth-child(1)]:translate-x-1.75 group-hover:opacity-100 group-hover:-translate-x-2 group-hover:[&>path:nth-child(1)]:translate-x-0 transition-all"

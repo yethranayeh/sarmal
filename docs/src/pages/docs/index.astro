@@ -20,7 +20,7 @@ const docLinks = Object.entries(docModules)
 	.map(([path, mod]) => {
 		const slug = path.replace("./", "").replace(".mdx", "");
 		return {
-			href: `/docs/${slug}`,
+			href: `/docs/${slug}/`,
 			label: mod.frontmatter.title,
 			description: mod.frontmatter.description,
 			order: mod.frontmatter.order,
@@ -87,7 +87,7 @@ const docLinks = Object.entries(docModules)
 			Getting Started
 		</h2>
 		<p>
-			New to Sarmal? Start with the <Link href="/docs/getting-started"
+			New to Sarmal? Start with the <Link href="/docs/getting-started/"
 				>Getting Started</Link
 			> guide to install
 			<code>@sarmal/core</code> and render your first spinner in minutes.
@@ -117,7 +117,7 @@ const docLinks = Object.entries(docModules)
 	<hr />
 
 	<p>
-		Can't find what you're looking for? Check the <Link href="/play"
+		Can't find what you're looking for? Check the <Link href="/play/"
 			>Playground</Link
 		> to experiment live, or visit the
 		<Link href="https://github.com/yethranayeh/sarmal" external

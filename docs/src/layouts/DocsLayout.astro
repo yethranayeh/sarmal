@@ -35,8 +35,8 @@ const ogImage = frontmatter?.ogImage ?? Astro.props.ogImage;
 const currentPath = Astro.url.pathname;
 
 const topNavLinks = [
-	{ href: "/docs", label: "Docs", icon: BookText },
-	{ href: "/play", label: "Playground", icon: FlaskConical },
+	{ href: "/docs/", label: "Docs", icon: BookText },
+	{ href: "/play/", label: "Playground", icon: FlaskConical },
 ];
 ---
 
@@ -101,8 +101,8 @@ const topNavLinks = [
 						{
 							topNavLinks.map((link) => {
 								const isLinkActive =
-									link.href === "/docs"
-										? currentPath.startsWith("/docs")
+									link.href === "/docs/"
+										? currentPath.startsWith("/docs/")
 										: currentPath.startsWith(link.href);
 								const Icon = link.icon;
 								return (

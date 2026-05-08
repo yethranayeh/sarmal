@@ -26,12 +26,12 @@ const docModules = import.meta.glob<DocModule>("../../../pages/docs/*.mdx", {
 });
 
 const navItems: NavItem[] = [
-	{ href: "/docs", label: "Introduction", order: -1 },
+	{ href: "/docs/", label: "Introduction", order: -1 },
 	...Object.entries(docModules)
 		.map(([path, mod]) => {
 			const slug = path.replace("../../../pages/docs/", "").replace(".mdx", "");
 			return {
-				href: `/docs/${slug}`,
+				href: `/docs/${slug}/`,
 				label: mod.frontmatter.sidebarLabel,
 				order: mod.frontmatter.order,
 			};
@@ -40,8 +40,8 @@ const navItems: NavItem[] = [
 ];
 
 const isActive = (href: string) => {
-	if (href === "/docs") {
-		return currentPath === "/docs" || currentPath === "/docs/";
+	if (href === "/docs/") {
+		return currentPath === "/docs/";
 	}
 	return currentPath.startsWith(href);
 };
