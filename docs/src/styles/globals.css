@@ -335,5 +335,6 @@ html.dark .astro-code span {
 /* Firefox */
 html {
   scrollbar-width: thin;
+  scrollbar-gutter: stable;
   scrollbar-color: color-mix(in srgb, var(--color-muted) 30%, transparent) transparent;
 }

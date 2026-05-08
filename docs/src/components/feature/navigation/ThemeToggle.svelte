@@ -4,6 +4,7 @@
 
   type Preference = "light" | "dark" | "system";
 
+  let hydrated = $state(false);
   let preference = $state<Preference>("system");
 
   try {
@@ -12,6 +13,10 @@
       preference = stored as Preference;
     }
   } catch {}
+
+  $effect(() => {
+    hydrated = true;
+  });
 
   const resolved = $derived.by((): "light" | "dark" => {
     if (preference !== "system") {
@@ -66,12 +71,22 @@
   title={modeLabel[preference]}
 >
   {#snippet icon()}
-    {#if preference === "system"}
-      <SunMoon size={16} />
-    {:else if preference === "dark"}
-      <Moon size={16} />
-    {:else}
-      <Sun size={16} />
-    {/if}
+    <div class="relative h-4 w-4">
+      <SunMoon
+        size={16}
+        class="absolute inset-0 transition-opacity duration-500"
+        style={hydrated && preference === "system" ? "" : "opacity:0"}
+      />
+      <Moon
+        size={16}
+        class="absolute inset-0 transition-opacity duration-500"
+        style={hydrated && preference === "dark" ? "" : "opacity:0"}
+      />
+      <Sun
+        size={16}
+        class="absolute inset-0 transition-opacity duration-500"
+        style={hydrated && preference === "light" ? "" : "opacity:0"}
+      />
+    </div>
   {/snippet}
 </Button>
