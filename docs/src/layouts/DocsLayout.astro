@@ -7,6 +7,7 @@ import BaseLayout from "./BaseLayout.astro";
 import Navbar from "../components/feature/navigation/Navbar.astro";
 import NavLinks from "../components/feature/navigation/NavLinks.astro";
 import DocNavLinks from "../components/feature/navigation/DocNavLinks.astro";
+import TableOfContents from "../components/TableOfContents.astro";
 
 interface DocFrontmatter {
 	title: string;
@@ -149,13 +150,14 @@ const topNavLinks = [
 		<main class="flex-1 min-w-0 p-4 md:p-8">
 			<slot name="article-header" />
 			<div
-				class="grid grid-cols-1 md:grid-cols-[1fr_minmax(0,48rem)_16rem] gap-x-8 items-start"
+				class="flex flex-col md:flex-row md:justify-between items-start gap-8"
 			>
 				<article
-					class="prose min-w-0 md:col-start-2 md:row-start-1 prose-headings:font-medium"
+					class="prose flex-1 shrink-0 min-w-0 max-w-3xl prose-headings:font-medium"
 				>
 					<slot />
 				</article>
+				<TableOfContents headings={headings ?? []} />
 			</div>
 		</main>
 	</div>

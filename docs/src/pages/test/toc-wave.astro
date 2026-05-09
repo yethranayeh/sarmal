@@ -1,0 +1,714 @@
+---
+import "../../styles/globals.css";
+// Test page — TOC branch concept lab. Not linked from docs nav.
+// Design: winding S-curve path through each heading's midpoint (H2 at trunk column, H3 at branch column).
+// Trunk overlay is optional via slider — 0% = branch-only feel, higher = git-branch feel.
+---
+
+<!doctype html>
+<html lang="en">
+	<head>
+		<meta charset="UTF-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1" />
+		<title>TOC Branch — Concept Lab</title>
+		<style is:global>
+			input[type="range"] {
+				width: 100%;
+				height: 3px;
+				-webkit-appearance: none;
+				appearance: none;
+				background: var(--color-border);
+				border-radius: 2px;
+				outline: none;
+				cursor: pointer;
+			}
+
+			input[type="range"]::-webkit-slider-thumb {
+				-webkit-appearance: none;
+				width: 13px;
+				height: 13px;
+				border-radius: 50%;
+				background: var(--color-primary);
+				border: 2px solid var(--color-background);
+				box-shadow: 0 0 0 1px var(--color-primary);
+			}
+
+			.slider-header {
+				display: flex;
+				justify-content: space-between;
+			}
+
+			.slider-header span:first-child {
+				font-size: 11px;
+				color: var(--color-muted);
+			}
+
+			.slider-header span:last-child {
+				font-size: 11px;
+				color: var(--color-foreground);
+				font-variant-numeric: tabular-nums;
+			}
+
+			.slider-row {
+				display: flex;
+				flex-direction: column;
+				gap: 5px;
+			}
+
+			.toc-item.active {
+				color: var(--color-primary);
+				font-weight: 500;
+			}
+
+			.toc-item[data-depth="3"] {
+				font-size: 11.5px;
+			}
+		</style>
+	</head>
+	<body class="flex min-h-screen bg-background text-foreground font-body">
+		<aside
+			class="w-[252px] shrink-0 bg-surface border-r border-border p-5 px-4 flex flex-col gap-[22px] sticky top-0 h-screen overflow-y-auto"
+		>
+			<h1
+				class="text-[11px] font-semibold uppercase tracking-[0.12em] text-muted"
+			>
+				TOC Branch Lab
+			</h1>
+
+			<div>
+				<div
+					class="text-[10px] font-semibold uppercase tracking-[0.1em] text-muted mb-2.5"
+				>
+					Layout
+				</div>
+				<div class="flex flex-col gap-[13px]">
+					<div class="slider-row">
+						<div class="slider-header">
+							<span>Branch indent</span><span id="ix-val">30</span>
+						</div>
+						<input type="range" id="ix" min="12" max="60" value="30" />
+					</div>
+					<div class="slider-row">
+						<div class="slider-header">
+							<span>Curve size</span><span id="curve-val">20</span>
+						</div>
+						<input type="range" id="curve-h" min="2" max="40" value="20" />
+					</div>
+				</div>
+			</div>
+
+			<div>
+				<div
+					class="text-[10px] font-semibold uppercase tracking-[0.1em] text-muted mb-2.5"
+				>
+					Appearance
+				</div>
+				<div class="flex flex-col gap-[13px]">
+					<div class="slider-row">
+						<div class="slider-header">
+							<span>Rail opacity</span><span id="opacity-val">70%</span>
+						</div>
+						<input type="range" id="opacity" min="5" max="100" value="70" />
+					</div>
+					<div class="slider-row">
+						<div class="slider-header">
+							<span>Rail width</span><span id="rail-width-val">2.0</span>
+						</div>
+						<input
+							type="range"
+							id="rail-width"
+							min="0.5"
+							max="5"
+							step="0.5"
+							value="2.0"
+						/>
+					</div>
+					<div class="slider-row">
+						<div class="slider-header">
+							<span>H2 dot</span><span id="h2r-val">6.0</span>
+						</div>
+						<input
+							type="range"
+							id="h2r"
+							min="2"
+							max="10"
+							step="0.5"
+							value="6.0"
+						/>
+					</div>
+					<div class="slider-row">
+						<div class="slider-header">
+							<span>H3 dot</span><span id="h3r-val">5.5</span>
+						</div>
+						<input
+							type="range"
+							id="h3r"
+							min="1"
+							max="8"
+							step="0.5"
+							value="5.5"
+						/>
+					</div>
+					<div class="slider-row">
+						<div class="slider-header">
+							<span>Trunk overlay</span><span id="trunk-val">30%</span>
+						</div>
+						<input type="range" id="trunk" min="0" max="100" value="30" />
+					</div>
+					<div class="slider-row">
+						<label class="flex items-center gap-2 cursor-pointer">
+							<input type="checkbox" id="gooey-toggle" checked />
+							<span class="text-[11px] text-muted">Gooey merge</span>
+						</label>
+					</div>
+					<div class="slider-row">
+						<div class="slider-header">
+							<span>Blur radius</span><span id="blur-dev-val">5.0</span>
+						</div>
+						<input
+							type="range"
+							id="blur-dev"
+							min="0.5"
+							max="8"
+							step="0.5"
+							value="5"
+						/>
+					</div>
+					<div class="slider-row">
+						<div class="slider-header">
+							<span>Stretch</span><span id="stretch-val">1.3</span>
+						</div>
+						<input
+							type="range"
+							id="stretch"
+							min="1"
+							max="2.5"
+							step="0.1"
+							value="1.3"
+						/>
+					</div>
+				</div>
+			</div>
+
+			<div>
+				<div
+					class="text-[10px] font-semibold uppercase tracking-[0.1em] text-muted mb-2.5"
+				>
+					Simulate scroll
+				</div>
+				<div class="sliders">
+					<div class="slider-row">
+						<div class="slider-header">
+							<span>Position</span><span id="scroll-val">0%</span>
+						</div>
+						<input type="range" id="scroll-pos" min="0" max="100" value="0" />
+					</div>
+				</div>
+			</div>
+		</aside>
+
+		<main class="flex-1 flex items-start justify-center px-12 py-[52px]">
+			<div class="flex flex-col gap-[30px]">
+				<div
+					class="text-[10px] font-semibold uppercase tracking-[0.12em] text-muted"
+				>
+					On this page
+				</div>
+				<div class="relative w-[220px]" id="toc-wrap">
+					<svg
+						class="absolute left-0 top-0 pointer-events-none overflow-visible"
+						id="toc-svg"
+						aria-hidden="true"></svg>
+					<ul class="list-none relative z-10">
+						<li
+							class="toc-item py-1.5 pr-4 text-[12.5px] leading-[1.4] text-muted cursor-default transition-colors duration-200 select-none"
+							data-depth="2"
+						>
+							Introduction
+						</li>
+						<li
+							class="toc-item py-1.5 pr-4 text-[12.5px] leading-[1.4] text-muted cursor-default transition-colors duration-200 select-none"
+							data-depth="3"
+						>
+							What is Sarmal
+						</li>
+						<li
+							class="toc-item py-1.5 pr-4 text-[12.5px] leading-[1.4] text-muted cursor-default transition-colors duration-200 select-none"
+							data-depth="3"
+						>
+							Key Concepts
+						</li>
+						<li
+							class="toc-item py-1.5 pr-4 text-[12.5px] leading-[1.4] text-muted cursor-default transition-colors duration-200 select-none"
+							data-depth="2"
+						>
+							Getting Started
+						</li>
+						<li
+							class="toc-item py-1.5 pr-4 text-[12.5px] leading-[1.4] text-muted cursor-default transition-colors duration-200 select-none"
+							data-depth="3"
+						>
+							Installation
+						</li>
+						<li
+							class="toc-item py-1.5 pr-4 text-[12.5px] leading-[1.4] text-muted cursor-default transition-colors duration-200 select-none"
+							data-depth="2"
+						>
+							Configuration
+						</li>
+						<li
+							class="toc-item py-1.5 pr-4 text-[12.5px] leading-[1.4] text-muted cursor-default transition-colors duration-200 select-none"
+							data-depth="2"
+						>
+							API Reference
+						</li>
+						<li
+							class="toc-item py-1.5 pr-4 text-[12.5px] leading-[1.4] text-muted cursor-default transition-colors duration-200 select-none"
+							data-depth="3"
+						>
+							createSarmal
+						</li>
+						<li
+							class="toc-item py-1.5 pr-4 text-[12.5px] leading-[1.4] text-muted cursor-default transition-colors duration-200 select-none"
+							data-depth="2"
+						>
+							Examples
+						</li>
+					</ul>
+				</div>
+			</div>
+		</main>
+
+		<script>
+			/*
+			 * DESIGN: GIT-BRANCH TOC RAIL
+			 *
+			 * One continuous SVG path winds through every heading's vertical midpoint.
+			 * H2 headings sit at the left column (LX = trunk). H3 headings sit at a
+			 * rightward offset (IX = LX + s.ix = branch). The path moves between the
+			 * two columns with cubic S-curves, like git commits branching off main.
+			 *
+			 * Key invariant: static dots are placed at each heading's midpoint, and the
+			 * path passes through those exact coordinates. This means the traveling active
+			 * dot lands perfectly on top of the static dot when it reaches that heading —
+			 * alignment is guaranteed by construction, not by tuning.
+			 *
+			 * WHAT WAS TRIED FIRST (and why abandoned):
+			 *
+			 * 1. Serpentine (original design): zigzags left–right–left across the full
+			 *    width for every heading. Beautiful for 5–8 items but breaks at 20+ —
+			 *    the zigzag becomes visually noisy and the required width blows out.
+			 *
+			 * 2. Separate trunk + branch paths: draw a straight trunk line, then draw
+			 *    separate arc paths per H3 group alongside it. The problem: the traveling
+			 *    dot needed to ride a path element, but the visual was made of separate
+			 *    elements. This forced a hidden "ghost" merged path just for the dot, so
+			 *    the visual and the dot were decoupled. Merging them into one winding path
+			 *    eliminates that split entirely.
+			 *
+			 * 3. Trunk overlay: a straight trunk line CAN be drawn on top of the winding
+			 *    path as an optional overlay (the `trunkOpacity` slider). Keep it at 0 for
+			 *    the clean default. This preserves the git-branch aesthetic as an option
+			 *    without making it the primary structure.
+			 */
+
+			const LX = 8; // trunk column x (pixels from wrap left edge)
+			const TEXT_GAP = 5; // gap between dot right edge and text start
+			const PRIMARY = "#c0143c";
+			const BG = "#fbf9f5";
+			const SVG_NS = "http://www.w3.org/2000/svg";
+
+			const svgEl = document.getElementById("toc-svg") as SVGSVGElement;
+			const wrap = document.getElementById("toc-wrap")!;
+			const items = Array.from(
+				document.querySelectorAll<HTMLElement>(".toc-item"),
+			).map((el) => ({ el, depth: parseInt(el.dataset.depth ?? "2") }));
+
+			const s = {
+				ix: 30, // branch x offset from LX (IX = LX + ix)
+				curveH: 20, // bezier tension cap in px — controls corner tightness
+				opacity: 0.7,
+				railW: 2.0,
+				h2r: 6.0,
+				h3r: 5.5,
+				trunkOpacity: 0.3,
+				scroll: 0,
+				gooey: true,
+				stdDev: 5,
+				stretch: 1.3,
+			};
+
+			let lengthFracs: number[] = [];
+			let mergedPathEl: SVGPathElement | null = null;
+			let dotPositions: Array<{ x: number; y: number }> = [];
+
+			function rects() {
+				const wt = wrap.getBoundingClientRect().top;
+				return items.map(({ el }) => {
+					const r = el.getBoundingClientRect();
+					return {
+						top: r.top - wt,
+						bottom: r.bottom - wt,
+						mid: (r.top + r.bottom) / 2 - wt,
+					};
+				});
+			}
+
+			// H3 text indent is derived from the branch position, not set independently.
+			// H2 pad = LX + h2r + TEXT_GAP. H3 pad = LX + ix + h3r + TEXT_GAP.
+			// If you don't couple these, changing `ix` moves the dot but leaves the text
+			// behind, making the SVG and HTML feel disconnected.
+			function updatePadding() {
+				for (const { el, depth } of items) {
+					el.style.paddingLeft =
+						depth === 3
+							? `${LX + s.ix + s.h3r + TEXT_GAP}px`
+							: `${LX + s.h2r + TEXT_GAP}px`;
+				}
+			}
+
+			// One cubic bezier segment connects each consecutive pair of midpoints.
+			//
+			// The control point formula is:
+			//   C  px  (py + tension)  cx  (cy - tension)  cx  cy
+			//
+			// Both control points sit on the vertical axis of their respective endpoint,
+			// so the path leaves each point going straight down and arrives going straight
+			// down. All horizontal movement happens in the middle of the segment.
+			//
+			// `tension` is capped at curveH. When curveH is small (e.g. 2px), the control
+			// points are near the endpoints and the curve is almost a straight diagonal.
+			// When curveH equals gap/2 (the max), the curve is a full S that spends equal
+			// vertical distance on each column. The clamp also prevents Y reversals that
+			// would break the binary search in computeLengthFracs.
+			function buildPath(rs: ReturnType<typeof rects>) {
+				const IX = LX + s.ix;
+				const pts = items.map((item, i) => ({
+					x: item.depth === 3 ? IX : LX,
+					y: rs[i].mid,
+				}));
+				const d: string[] = [
+					`M ${pts[0].x} ${rs[0].top - 20}`,
+					`L ${pts[0].x} ${pts[0].y}`,
+				];
+				for (let i = 1; i < pts.length; i++) {
+					const p = pts[i - 1];
+					const c = pts[i];
+					const tension = Math.min((c.y - p.y) / 2, s.curveH);
+					d.push(
+						`C ${p.x} ${p.y + tension} ${c.x} ${c.y - tension} ${c.x} ${c.y}`,
+					);
+				}
+				d.push(`L ${pts[pts.length - 1].x} ${rs[rs.length - 1].bottom + 20}`);
+				return d.join(" ");
+			}
+
+			// The naive highlight approach — Math.round(scroll * (n-1) / (n-1)) — assigns
+			// equal scroll fractions to each heading. But path segments are NOT equal length:
+			// H2→H3 transitions cross columns (longer), H2→H2 stay vertical (shorter). So
+			// a linear fraction puts the highlight out of sync with the dot's actual position.
+			//
+			// Instead: for each heading, binary-search the path length where its midpoint Y
+			// is first reached. Return that as a fraction of total length. These fracs become
+			// the thresholds for when each heading becomes active.
+			//
+			// Assumes Y increases monotonically along the path — guaranteed because
+			// tension ≤ gap/2 means bezier control points never push Y backward.
+			function computeLengthFracs(
+				path: SVGPathElement,
+				rs: ReturnType<typeof rects>,
+			): number[] {
+				const total = path.getTotalLength();
+				if (total === 0) return items.map(() => 0);
+				return items.map((_, i) => {
+					const targetY = rs[i].mid;
+					let lo = 0,
+						hi = total;
+					for (let j = 0; j < 42; j++) {
+						const m = (lo + hi) / 2;
+						if (path.getPointAtLength(m).y < targetY) lo = m;
+						else hi = m;
+					}
+					return (lo + hi) / 2 / total;
+				});
+			}
+
+			function makePath(d: string, attrs: Record<string, string> = {}) {
+				const p = document.createElementNS(SVG_NS, "path");
+				p.setAttribute("d", d);
+				p.setAttribute("fill", "none");
+				p.setAttribute("stroke", PRIMARY);
+				p.setAttribute("stroke-width", String(s.railW));
+				p.setAttribute("stroke-linecap", "round");
+				p.setAttribute("stroke-linejoin", "round");
+				for (const [k, v] of Object.entries(attrs)) p.setAttribute(k, v);
+				return p;
+			}
+
+			function makeCircle(
+				cx: number,
+				cy: number,
+				r: number,
+				attrs: Record<string, string> = {},
+			) {
+				const c = document.createElementNS(SVG_NS, "circle");
+				c.setAttribute("cx", String(cx));
+				c.setAttribute("cy", String(cy));
+				c.setAttribute("r", String(r));
+				c.setAttribute("fill", PRIMARY);
+				for (const [k, v] of Object.entries(attrs)) c.setAttribute(k, v);
+				return c;
+			}
+
+			function makeEllipse(
+				rx: number,
+				ry: number,
+				attrs: Record<string, string> = {},
+			) {
+				const e = document.createElementNS(SVG_NS, "ellipse");
+				e.setAttribute("rx", String(rx));
+				e.setAttribute("ry", String(ry));
+				e.setAttribute("fill", PRIMARY);
+				for (const [k, v] of Object.entries(attrs)) e.setAttribute(k, v);
+				return e;
+			}
+
+			function render() {
+				const wrapW = wrap.getBoundingClientRect().width || 220;
+				const rs = rects();
+				const IX = LX + s.ix;
+				const svgH = rs[rs.length - 1].bottom + 40;
+
+				svgEl.setAttribute("width", String(wrapW));
+				svgEl.setAttribute("height", String(svgH));
+				svgEl.innerHTML = "";
+
+				updatePadding();
+
+				// stdDeviation=2: safe lower bound for dots as small as r=3.5 at opacity=0.8.
+				// At stdDeviation=4 the Gaussian spreads alpha thin enough that small dot centers
+				// fall below the 0.5 feColorMatrix threshold and snap to fully transparent.
+				if (s.gooey) {
+					const defs = document.createElementNS(SVG_NS, "defs");
+					const filter = document.createElementNS(SVG_NS, "filter");
+					filter.setAttribute("id", "goo-dots");
+					filter.setAttribute("color-interpolation-filters", "sRGB");
+					filter.setAttribute("x", "-50%");
+					filter.setAttribute("y", "-50%");
+					filter.setAttribute("width", "200%");
+					filter.setAttribute("height", "200%");
+
+					const blur = document.createElementNS(SVG_NS, "feGaussianBlur");
+					blur.setAttribute("in", "SourceGraphic");
+					blur.setAttribute("stdDeviation", String(s.stdDev));
+					blur.setAttribute("result", "blur");
+
+					const colorMatrix = document.createElementNS(SVG_NS, "feColorMatrix");
+					colorMatrix.setAttribute("in", "blur");
+					colorMatrix.setAttribute("type", "matrix");
+					// alpha = stdDev × 10, shift = −(alpha × 0.35): threshold held at 35% alpha as blur grows
+					const gAlpha = Math.round(s.stdDev * 10);
+					const gShift = +(-(gAlpha * 0.35)).toFixed(1);
+					colorMatrix.setAttribute(
+						"values",
+						`1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 ${gAlpha} ${gShift}`,
+					);
+					colorMatrix.setAttribute("result", "goo");
+
+					const composite = document.createElementNS(SVG_NS, "feComposite");
+					composite.setAttribute("in", "SourceGraphic");
+					composite.setAttribute("in2", "goo");
+					composite.setAttribute("operator", "atop");
+
+					filter.appendChild(blur);
+					filter.appendChild(colorMatrix);
+					filter.appendChild(composite);
+					defs.appendChild(filter);
+					svgEl.appendChild(defs);
+				}
+
+				// Trunk overlay: a straight line at LX drawn under the winding path.
+				// At opacity 0 (default) it's invisible and the winding path reads cleanly.
+				// Dialing it up reveals the "main branch always runs behind" git aesthetic.
+				if (s.trunkOpacity > 0) {
+					svgEl.appendChild(
+						makePath(`M ${LX} ${rs[0].top} L ${LX} ${svgH - 16}`, {
+							opacity: String(s.trunkOpacity),
+						}),
+					);
+				}
+
+				// SVG paints in source order (no z-index). Draw order: trunk → path → dots → active dot.
+				const pathD = buildPath(rs);
+				const winding = makePath(pathD, { opacity: String(s.opacity) });
+				svgEl.appendChild(winding);
+
+				dotPositions = items.map(({ depth }, i) => ({
+					x: depth === 3 ? IX : LX,
+					y: rs[i].mid,
+				}));
+				mergedPathEl = winding;
+
+				// computeLengthFracs must run after the path is in the DOM so getTotalLength works.
+				lengthFracs = computeLengthFracs(winding, rs);
+
+				// In gooey mode all circles go into a filtered <g> so the merge effect applies
+				// across the whole group. In default mode circles go directly into svgEl —
+				// identical to the original render so no compositing difference is introduced.
+				const baseR = s.h2r + 1.5;
+				if (s.gooey) {
+					const dotsGroup = document.createElementNS(SVG_NS, "g");
+					dotsGroup.setAttribute("filter", "url(#goo-dots)");
+					for (let i = 0; i < items.length; i++) {
+						if (items[i].depth === 2)
+							dotsGroup.appendChild(makeCircle(LX, rs[i].mid, s.h2r, {}));
+					}
+					for (let i = 0; i < items.length; i++) {
+						if (items[i].depth === 3)
+							dotsGroup.appendChild(makeCircle(IX, rs[i].mid, s.h3r, {}));
+					}
+					dotsGroup.appendChild(
+						makeEllipse(baseR, baseR, {
+							id: "active-dot",
+							transform: "translate(-99,-99)",
+						}),
+					);
+					svgEl.appendChild(dotsGroup);
+				} else {
+					for (let i = 0; i < items.length; i++) {
+						if (items[i].depth === 2)
+							svgEl.appendChild(makeCircle(LX, rs[i].mid, s.h2r, {}));
+					}
+					for (let i = 0; i < items.length; i++) {
+						if (items[i].depth === 3)
+							svgEl.appendChild(makeCircle(IX, rs[i].mid, s.h3r, {}));
+					}
+					svgEl.appendChild(
+						makeEllipse(baseR, baseR, {
+							id: "active-dot",
+							transform: "translate(-99,-99)",
+						}),
+					);
+				}
+				moveDot();
+			}
+
+			function moveDot() {
+				if (!mergedPathEl) return;
+				const totalLen = mergedPathEl.getTotalLength();
+				const scrollFrac = s.scroll / 100;
+				const currentLen = totalLen * scrollFrac;
+				const pt = mergedPathEl.getPointAtLength(currentLen);
+
+				const dot = document.getElementById("active-dot");
+				if (dot) {
+					// Find nearest static dot position for stretch orientation
+					let nearestDist = Infinity;
+					let nearestDx = 0,
+						nearestDy = 1;
+					for (const dp of dotPositions) {
+						const dist = Math.hypot(pt.x - dp.x, pt.y - dp.y);
+						if (dist < nearestDist) {
+							nearestDist = dist;
+							nearestDx = dp.x - pt.x;
+							nearestDy = dp.y - pt.y;
+						}
+					}
+
+					const STRETCH_RANGE = 40; // px
+					const baseR = s.h2r + 1.5;
+					const proximity = Math.max(0, 1 - nearestDist / STRETCH_RANGE);
+					const factor = 1 + (s.stretch - 1) * proximity;
+					const rx = baseR * factor;
+					const ry = baseR / Math.sqrt(factor); // area-conserving squash
+					const angleDeg = Math.atan2(nearestDy, nearestDx) * (180 / Math.PI);
+
+					dot.setAttribute("rx", String(rx));
+					dot.setAttribute("ry", String(ry));
+					dot.setAttribute(
+						"transform",
+						`translate(${pt.x}, ${pt.y}) rotate(${angleDeg})`,
+					);
+				}
+
+				// lengthFracs[i] is the path-length fraction at which heading i's midpoint Y
+				// is first reached. Iterating forward and keeping the last match gives us the
+				// heading whose threshold was most recently crossed — i.e. the active one.
+				// The -0.005 tolerance handles floating-point edge cases at scroll = 0.
+				let activeIdx = 0;
+				for (let i = 0; i < lengthFracs.length; i++) {
+					if (scrollFrac >= lengthFracs[i] - 0.005) activeIdx = i;
+				}
+				items.forEach(({ el }, i) =>
+					el.classList.toggle("active", i === activeIdx),
+				);
+			}
+
+			const RENDER_SLIDERS: [
+				string,
+				string,
+				keyof typeof s,
+				(v: string) => number,
+				(v: string) => string,
+			][] = [
+				["ix", "ix-val", "ix", Number, (v) => v],
+				["curve-h", "curve-val", "curveH", Number, (v) => v],
+				[
+					"rail-width",
+					"rail-width-val",
+					"railW",
+					Number,
+					(v) => (+v).toFixed(1),
+				],
+				["h2r", "h2r-val", "h2r", Number, (v) => (+v).toFixed(1)],
+				["h3r", "h3r-val", "h3r", Number, (v) => (+v).toFixed(1)],
+				["blur-dev", "blur-dev-val", "stdDev", Number, (v) => (+v).toFixed(1)],
+				["stretch", "stretch-val", "stretch", Number, (v) => (+v).toFixed(1)],
+			];
+
+			for (const [id, valId, key, parse, fmt] of RENDER_SLIDERS) {
+				document.getElementById(id)!.addEventListener("input", (e) => {
+					(s[key] as number) = parse((e.target as HTMLInputElement).value);
+					document.getElementById(valId)!.textContent = fmt(
+						(e.target as HTMLInputElement).value,
+					);
+					render();
+				});
+			}
+
+			document.getElementById("opacity")!.addEventListener("input", (e) => {
+				s.opacity = +(e.target as HTMLInputElement).value / 100;
+				document.getElementById("opacity-val")!.textContent =
+					(e.target as HTMLInputElement).value + "%";
+				render();
+			});
+
+			document.getElementById("trunk")!.addEventListener("input", (e) => {
+				s.trunkOpacity = +(e.target as HTMLInputElement).value / 100;
+				document.getElementById("trunk-val")!.textContent =
+					(e.target as HTMLInputElement).value + "%";
+				render();
+			});
+
+			document
+				.getElementById("gooey-toggle")!
+				.addEventListener("change", (e) => {
+					s.gooey = (e.target as HTMLInputElement).checked;
+					render();
+				});
+
+			document.getElementById("scroll-pos")!.addEventListener("input", (e) => {
+				s.scroll = +(e.target as HTMLInputElement).value;
+				document.getElementById("scroll-val")!.textContent =
+					(e.target as HTMLInputElement).value + "%";
+				moveDot();
+			});
+
+			// Double rAF: the first fires after JS but before paint (bounding rects are 0).
+			// The second fires after the first paint — by then elements are in the flow and
+			// getBoundingClientRect returns real pixel positions.
+			requestAnimationFrame(() => requestAnimationFrame(render));
+			new ResizeObserver(render).observe(wrap);
+		</script>
+	</body>
+</html>
