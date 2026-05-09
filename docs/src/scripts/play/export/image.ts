@@ -98,7 +98,13 @@ export function generateSVGString(pg: PlaygroundState): string {
       .map((p, i) => `${i === 0 ? "M" : "L"}${p.x.toFixed(4)} ${p.y.toFixed(4)}`)
       .join(" ") + " Z";
 
-  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="${SVG_VIEWBOX}"><path d="${d}" fill="none" stroke="currentColor" stroke-width="${SVG_STROKE_WIDTH}"/></svg>`;
+  const metadata =
+    pg.currentMode === "draw" && pg.drawPoints.length > 0
+      ? `<metadata><sarmal:source xmlns:sarmal="https://sarmal.art/ns/1.0" points="${JSON.stringify(pg.drawPoints)}"/></metadata>`
+      : // TODO: consider what kind of metadata would need to be attached for parametric curves
+        "";
+
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="${SVG_VIEWBOX}">${metadata}<path d="${d}" fill="none" stroke="currentColor" stroke-width="${SVG_STROKE_WIDTH}"/></svg>`;
 }
 
 export function downloadSVG(pg: PlaygroundState): void {

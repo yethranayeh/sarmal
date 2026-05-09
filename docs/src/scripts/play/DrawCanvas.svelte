@@ -3,10 +3,15 @@
   import type DrawBoardComponent from "./DrawBoard.svelte";
   import type { DrawingSegment } from "./types";
 
+  import { Import } from "@lucide/svelte";
   import { getContext } from "svelte";
+
+  import Button from "../../components/Button.svelte";
+  import SvgImportDialog from "./SvgImportDialog.svelte";
 
   const pg = getContext<PlaygroundState>("playground");
 
+  let dialogOpen = $state(false);
   let DrawBoard = $state<typeof DrawBoardComponent | null>(null);
 
   import("./DrawBoard.svelte").then((mod) => {
@@ -16,7 +21,7 @@
 
 {#if pg.drawPointCount === 0}
   <div
-    class="absolute inset-0 z-10 flex items-center justify-center pointer-events-none"
+    class="absolute inset-0 z-10 flex flex-col items-center justify-center pointer-events-none gap-6"
   >
     <div class="text-center max-w-85 px-6 select-none">
       <h2
@@ -32,6 +37,15 @@
         Three or more become a curve.
       </p>
     </div>
+
+    <Button
+      variant="outline"
+      class="pointer-events-auto ring-1"
+      onclick={() => (dialogOpen = true)}
+    >
+      <Import size={16} />
+      Import</Button
+    >
   </div>
 {/if}
 
@@ -55,6 +69,18 @@
     onMouseMove={(x, y) => {
       pg.mouseSVGX = x;
       pg.mouseSVGY = y;
+    }}
+  />
+{/if}
+
+{#if dialogOpen}
+  <SvgImportDialog
+    open={dialogOpen}
+    onClose={() => (dialogOpen = false)}
+    onImport={(points) => {
+      pg.drawInitialPoints = points;
+      pg.drawPoints = [...points];
+      dialogOpen = false;
     }}
   />
 {/if}

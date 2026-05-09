@@ -18,5 +18,7 @@ const curveEntries = Object.entries(curves).map(([id, def]) => ({
 	title={`Playground ${SEPARATOR_DOT} Sarmal`}
 	description="Type math, see it follow a path. Create your own sarmal loading indicators."
 >
-	<Playground client:only="svelte" presets={curveEntries} />
+	<div class="flex-1">
+		<Playground client:only="svelte" presets={curveEntries} />
+	</div>
 </BaseLayout>

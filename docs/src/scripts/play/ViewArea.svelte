@@ -90,17 +90,17 @@
     </span>
     {#if pg.currentMode === "draw"}
       <div
-        class="flex gap-2 font-mono text-[10px] text-muted-gray mt-1.5 select-none"
+        class="flex gap-2 font-mono text-[10px] text-muted-gray mt-1.5 select-none tabular-nums"
       >
         <div
-          class="w-12.5 p-1 border border-dashed border-border/50 bg-surface"
+          class="w-13 p-1 inline-flex justify-between border border-dashed border-border/50 bg-surface"
         >
           <span class="pr-1">x</span><span class="text-primary"
             >{pg.mouseSVGX.toFixed(2)}</span
           >
         </div>
         <div
-          class="w-12.5 p-1 border border-dashed border-border/50 bg-surface"
+          class="w-13 p-1 inline-flex justify-between border border-dashed border-border/50 bg-surface"
         >
           <span class="pr-1">y</span><span class="text-primary"
             >{pg.mouseSVGY.toFixed(2)}</span

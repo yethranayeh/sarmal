@@ -3,12 +3,14 @@
   import { tv, type VariantProps } from "tailwind-variants";
 
   export const buttonVariants = tv({
-    base: "font-ui cursor-pointer transition-colors inline-flex items-center gap-1.5 rounded-full px-4.5 py-2.5 text-[13px] font-semibold leading-none disabled:pointer-events-none disabled:opacity-50",
+    base: "font-ui cursor-pointer transition-all inline-flex items-center gap-1.5 rounded-full px-4.5 py-2.5 text-[13px] font-semibold leading-none disabled:pointer-events-none disabled:opacity-50",
     variants: {
       variant: {
         primary: "bg-primary text-primary-foreground hover:bg-accent",
         ghost: "text-foreground hover:bg-foreground/8",
         "ghost-inverted": "text-white/70 hover:text-white hover:bg-white/10",
+        outline:
+          "text-foreground hover:bg-foreground/8 ring-current/20 hover:ring-current/60",
         destructive: "text-error hover:bg-error/10",
       },
       active: {
