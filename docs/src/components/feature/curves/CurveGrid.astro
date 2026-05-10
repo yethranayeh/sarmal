@@ -39,22 +39,36 @@ function sampleClean(curveDef: CurveDef): Array<Point> {
 	const sample = curveDef.skeletonFn
 		? (t: number) => curveDef.skeletonFn!(t)
 		: (t: number) => curveDef.fn(t, 0, {});
+
 	return Array.from({ length: n }, (_, i) => sample((i / (n - 1)) * period));
+}
+
+function geometricPathLength(pts: Point[], scale: number): number {
+	let len = 0;
+	for (let i = 1; i < pts.length; i++) {
+		const dx = (pts[i].x - pts[i - 1].x) * scale;
+		const dy = (pts[i].y - pts[i - 1].y) * scale;
+		len += Math.sqrt(dx * dx + dy * dy);
+	}
+	return len;
 }
 
 const { section } = Astro.props;
 const ids = section === "standard" ? STANDARD_CURVES : ICONIC_CURVES;
 
-const entries = ids.map((id) => {
+const BASE_MS = 800;
+const MAX_MS = 2000;
+
+const entriesWithDuration = ids.map((id) => {
 	const meta = CURVE_DOCS[id];
 	const curveDef = curves[id];
 
-	// All pure math — safe to run at build time, no DOM needed.
 	const engine = createEngine(curveDef);
 	const ptsHiRes = engine.getSarmalSkeleton(); // used for accurate bounds only
 	const ptsClean = sampleClean(curveDef);
 	const b = computeBoundaries(ptsHiRes, 100, 100, 8);
 	const d = b ? toSVGPath(ptsClean, b.scale, b.offsetX, b.offsetY) : "";
+	const pathLen = b ? geometricPathLength(ptsClean, b.scale) : 0;
 
 	return {
 		id,
@@ -63,7 +77,27 @@ const entries = ids.map((id) => {
 		description: meta.description,
 		color: meta.color,
 		d,
+		pathLen,
 	};
+});
+
+const lengths = entriesWithDuration.map((e) => e.pathLen).filter((l) => l > 0);
+const minLen = Math.min(...lengths);
+const maxLen = Math.max(...lengths);
+const isSameLength = minLen === maxLen;
+
+const entries = entriesWithDuration.map(({ pathLen, ...rest }) => {
+	let duration: number;
+
+	if (pathLen <= 0) {
+		duration = BASE_MS;
+	} else if (isSameLength) {
+		duration = Math.round((BASE_MS + MAX_MS) / 2);
+	} else {
+		const ratio = Math.log(pathLen / minLen) / Math.log(maxLen / minLen);
+		duration = Math.round(BASE_MS + ratio * (MAX_MS - BASE_MS));
+	}
+	return { ...rest, duration };
 });
 ---
 
@@ -76,11 +110,11 @@ const entries = ids.map((id) => {
 	]}
 >
 	{
-		entries.map(({ id, name, family, description, color, d }) => (
+		entries.map(({ id, name, family, description, color, d, duration }) => (
 			<a
 				href={`/docs/curves/${id}/`}
 				class="curve-catalog-card flex items-center gap-4 bg-surface-raised/80 p-4 no-underline transition-colors duration-150 hover:bg-surface-raised"
-				style={`--curve-color: ${color}`}
+				style={`--curve-color: ${color}; --draw-duration: ${duration}ms`}
 			>
 				<div class="h-13 w-13 shrink-0 overflow-hidden rounded-md border border-border bg-background">
 					<svg
@@ -89,6 +123,7 @@ const entries = ids.map((id) => {
 						class="block h-full w-full"
 					>
 						<path class="path-skeleton" d={d} pathLength="1" />
+						<path class="path-draw" d={d} pathLength="1" />
 					</svg>
 				</div>
 				<div class="min-w-0 flex flex-col">
@@ -115,34 +150,33 @@ const entries = ids.map((id) => {
 </div>
 
 <style>
-	.path-skeleton {
+	.path-skeleton,
+	.path-draw {
 		fill: none;
-		stroke: var(--color-muted);
 		stroke-width: 2.5;
 		stroke-linecap: round;
 		stroke-linejoin: round;
-		stroke-dasharray: 1;
+		stroke-dasharray: 1 2;
+	}
+
+	.path-skeleton {
+		stroke: var(--color-muted);
 		stroke-dashoffset: 0;
 		opacity: 0.45;
 	}
 
-	@keyframes curve-redraw {
-		from {
-			stroke-dashoffset: 1;
-		}
-		to {
-			stroke-dashoffset: 0;
-		}
-	}
-
-	.curve-catalog-card:hover .path-skeleton {
+	.path-draw {
 		stroke: var(--curve-color);
+		stroke-dashoffset: 1;
 		opacity: 0.9;
+		transition: stroke-dashoffset 400ms ease;
 	}
 
 	@media (prefers-reduced-motion: no-preference) {
-		.curve-catalog-card:hover .path-skeleton {
-			animation: curve-redraw 1200ms cubic-bezier(0.075, 0.82, 0.165, 1);
+		.curve-catalog-card:hover .path-draw {
+			stroke-dashoffset: 0;
+			transition-duration: var(--draw-duration, 1200ms);
+			transition-timing-function: cubic-bezier(0.76, 0, 0.24, 1);
 		}
 	}
 </style>

@@ -29,7 +29,7 @@ export const CURVE_DOCS: Record<CurveName, CurveDocsMeta> = {
   artemis2: {
     name: "Artemis II",
     color: "#60a5fa",
-    family: "Free-return trajectory",
+    family: "NASA",
     description:
       "Hand-drawn Catmull-Rom spline through 21 control points, tracing a path inspired by the Artemis II lunar free-return trajectory.",
     descriptionLong:

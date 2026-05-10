@@ -183,13 +183,12 @@
               ? 'border-b border-border-subtle'
               : ''}"
           >
-            <span class="text-muted-gray">{String(i + 1).padStart(2, "0")}</span
-            >
-            <span
+            <span class="text-accent">{String(i + 1).padStart(2, "0")}</span>
+            <span class="text-foreground"
               ><span class="text-muted-gray">x</span>
               {point[0].toFixed(2)}</span
             >
-            <span
+            <span class="text-foreground"
               ><span class="text-muted-gray">y</span>
               {point[1].toFixed(2)}</span
             >
