@@ -72,8 +72,8 @@ function sampleCurveSkeleton(curveDef: CurveDef): Point[] {
   const pts: Point[] = Array.from({ length: samples });
 
   for (let i = 0; i < samples; i++) {
-    const t = (i / (samples - 1)) * period;
-    pts[i] = curveDef.skeletonFn ? curveDef.skeletonFn(t) : curveDef.fn(t, 0, EMPTY_PARAMS);
+    const phase = (i / (samples - 1)) * period;
+    pts[i] = curveDef.skeletonFn ? curveDef.skeletonFn(phase) : curveDef.fn(phase, 0, EMPTY_PARAMS);
   }
 
   return pts;
@@ -356,9 +356,9 @@ export function createSVGRenderer(options: SVGRendererOptions): SarmalInstance {
     }
   }
 
-  // Handle initialT option: seek to the specified position before first frame
-  if (options.initialT !== undefined) {
-    engine.seek(options.initialT);
+  // Handle initialPhase option: seek to the specified position before first frame
+  if (options.initialPhase !== undefined) {
+    engine.seek(options.initialPhase);
   }
 
   // Draw initial frame unconditionally (shows skeleton and initial position)

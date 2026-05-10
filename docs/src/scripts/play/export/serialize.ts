@@ -1,7 +1,7 @@
 import type { PlaygroundState } from "../playgroundState.svelte";
 import type { DrawingSegment } from "../types";
 
-import { drawCurve, palettes } from "@sarmal/core";
+import { palettes } from "@sarmal/core";
 import { getResolvedSkeletonColor } from "../renderer";
 import pkg from "../../../../../packages/sarmal/package.json";
 
@@ -51,7 +51,7 @@ export function serializeCurveRef(pg: PlaygroundState): { ref: string; imports: 
     .map((line) => (line ? `    ${line}` : ""))
     .join("\n");
   return {
-    ref: `{\n  name: 'custom',\n  fn: (t, time, params) => {\n${indented}\n  },\n}`,
+    ref: `{\n  name: 'custom',\n  fn: (phase, elapsed, params) => {\n${indented}\n  },\n}`,
     imports: [],
   };
 }

@@ -9,7 +9,7 @@ import { palettes } from "./renderer-shared";
 
 const testCircle: CurveDef = {
   name: "test-circle",
-  fn: (t) => ({ x: Math.cos(t), y: Math.sin(t) }),
+  fn: (phase) => ({ x: Math.cos(phase), y: Math.sin(phase) }),
   period: Math.PI * 2,
   speed: 1,
 };

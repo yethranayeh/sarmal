@@ -33,11 +33,11 @@ function catmullRom1D(p0: number, p1: number, p2: number, p3: number, u: number)
  *  and each segment uses a phantom predecessor / successor so the
  *    curve passes exactly through every control point.
  *
- * @param points  At least 1 point.  An empty array yields `(0, 0)`.  A single point returns that point for every `t`
- * @param t       Parametric position along the closed loop.  Wraps into `[0, 2π)` automatically, so values outside that range are remapped rather than rejected
- * @returns       The `(x, y)` position on the spline at time `t`
+ * @param points  At least 1 point.  An empty array yields `(0, 0)`.  A single point returns that point for every `phase`
+ * @param phase   Parametric position along the closed loop.  Wraps into `[0, 2π)` automatically, so values outside that range are remapped rather than rejected
+ * @returns       The `(x, y)` position on the spline at position `phase`
  */
-export function evaluateCatmullRom(points: Array<ControlPoint>, t: number): Point {
+export function evaluateCatmullRom(points: Array<ControlPoint>, phase: number): Point {
   const N = points.length;
 
   if (N === 0) {
@@ -48,15 +48,15 @@ export function evaluateCatmullRom(points: Array<ControlPoint>, t: number): Poin
     return { x: points[0]![0], y: points[0]![1] };
   }
 
-  t = ((t % PERIOD) + PERIOD) % PERIOD;
+  phase = ((phase % PERIOD) + PERIOD) % PERIOD;
 
   const segmentSize = PERIOD / N;
-  let i = Math.floor(t / segmentSize);
+  let i = Math.floor(phase / segmentSize);
   if (i >= N) {
     i = N - 1;
   }
 
-  let u = (t - i * segmentSize) / segmentSize;
+  let u = (phase - i * segmentSize) / segmentSize;
   u = Math.max(0, Math.min(1, u));
 
   const p0 = points[(i - 1 + N) % N]!;
@@ -118,7 +118,7 @@ export function drawCurve(points: Array<ControlPoint>, opts?: { name?: string })
 
   return {
     name: opts?.name ?? "drawn",
-    fn: (t: number) => evaluateCatmullRom(pts, t),
+    fn: (phase: number) => evaluateCatmullRom(pts, phase),
     period: PERIOD,
   };
 }

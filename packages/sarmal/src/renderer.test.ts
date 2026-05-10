@@ -63,7 +63,7 @@ globalThis.OffscreenCanvas = MockOffscreenCanvas;
 // Test fixture for renderer lifecycle tests
 const testCircle: CurveDef = {
   name: "test-circle",
-  fn: (t) => ({ x: Math.cos(t), y: Math.sin(t) }),
+  fn: (phase) => ({ x: Math.cos(phase), y: Math.sin(phase) }),
   period: Math.PI * 2,
   speed: 1,
 };
@@ -203,9 +203,9 @@ describe("computeBoundaries", () => {
     const steps = 315;
     const period = Math.PI * 2;
     for (let i = 0; i < steps; i++) {
-      const t = (i / (steps - 1)) * period;
-      const c = Math.cos(t);
-      const s = Math.sin(t);
+      const phase = (i / (steps - 1)) * period;
+      const c = Math.cos(phase);
+      const s = Math.sin(phase);
       pts.push({ x: c * c * c, y: s * s * s });
     }
     return pts;
@@ -813,32 +813,32 @@ describe("autoStart option", () => {
   });
 });
 
-describe("initialT option", () => {
-  it("seek is called with initialT before first frame", () => {
+describe("initialPhase option", () => {
+  it("seek is called with initialPhase before first frame", () => {
     const identityCurve: CurveDef = {
       name: "identity",
-      fn: (t, time) => ({ x: t, y: time }),
+      fn: (phase, elapsed) => ({ x: phase, y: elapsed }),
       period: 10,
       speed: 1,
     };
 
     const engine = createEngine(identityCurve);
-    const initialT = Math.PI;
+    const initialPhase = Math.PI;
 
-    // Create renderer with initialT - should seek to that position
-    createRenderer({ canvas: makeCanvas(), engine, autoStart: false, initialT });
+    // Create renderer with initialPhase - should seek to that position
+    createRenderer({ canvas: makeCanvas(), engine, autoStart: false, initialPhase });
 
-    // Verify the engine's internal state was seeked to initialT
-    // by checking that tick(0) returns the point at initialT
+    // Verify the engine's internal state was seeked to initialPhase
+    // by checking that tick(0) returns the point at initialPhase
     const trail = engine.tick(0);
     const head = trail[engine.trailCount - 1]!;
-    expect(head.x).toBeCloseTo(initialT % 10, 5);
+    expect(head.x).toBeCloseTo(initialPhase % 10, 5);
   });
 
-  it("initialT works with autoStart: true", () => {
+  it("initialPhase works with autoStart: true", () => {
     const identityCurve: CurveDef = {
       name: "identity",
-      fn: (t, time) => ({ x: t, y: time }),
+      fn: (phase, elapsed) => ({ x: phase, y: elapsed }),
       period: 10,
       speed: 1,
     };
@@ -846,15 +846,15 @@ describe("initialT option", () => {
     vi.spyOn(globalThis, "requestAnimationFrame").mockImplementation(() => 1);
 
     const engine = createEngine(identityCurve);
-    const initialT = 3.5;
+    const initialPhase = 3.5;
 
-    // Create with both autoStart: true and initialT
-    const renderer = createRenderer({ canvas: makeCanvas(), engine, initialT });
+    // Create with both autoStart: true and initialPhase
+    const renderer = createRenderer({ canvas: makeCanvas(), engine, initialPhase });
 
-    // The head should already be at initialT from the seek
+    // The head should already be at initialPhase from the seek
     const trail = engine.tick(0);
     const head = trail[engine.trailCount - 1]!;
-    expect(head.x).toBeCloseTo(initialT, 5);
+    expect(head.x).toBeCloseTo(initialPhase, 5);
 
     renderer.destroy();
     vi.restoreAllMocks();
@@ -934,7 +934,7 @@ describe("createSarmal() integration", () => {
 
     const anotherCurve: CurveDef = {
       name: "other",
-      fn: (t) => ({ x: Math.sin(t), y: Math.cos(t) }),
+      fn: (phase) => ({ x: Math.sin(phase), y: Math.cos(phase) }),
       period: Math.PI * 2,
       speed: 1,
     };
@@ -1531,7 +1531,7 @@ describe("setRenderOptions orthogonality", () => {
 
     const otherCurve: CurveDef = {
       name: "other",
-      fn: (t) => ({ x: Math.sin(t), y: Math.cos(t) }),
+      fn: (phase) => ({ x: Math.sin(phase), y: Math.cos(phase) }),
       period: Math.PI * 2,
       speed: 1,
     };

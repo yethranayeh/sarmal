@@ -116,9 +116,9 @@ import { createSarmal } from "@sarmal/core";
 
 const myCurve: CurveDef = {
   name: "circle",
-  fn: (t, time, params) => ({
-    x: Math.cos(t),
-    y: Math.sin(t),
+  fn: (phase, elapsed, params) => ({
+    x: Math.cos(phase),
+    y: Math.sin(phase),
   }),
   // period defaults to 2π, speed defaults to 1
 };
@@ -130,18 +130,18 @@ Only `name` and `fn` are required.
 
 {/* FIXME: Repetitive content. Same in concepts.mdx */}
 The `fn` receives three arguments:
-- `t` (position along the curve, 0 -> period),
-- `time` (elapsed seconds),
+- `phase` (position along the curve, 0 -> period),
+- `elapsed` (elapsed seconds),
 - `params` (reserved for now; always `{}`).
 
-For behavior that varies independently of curve position (e.g. oscillating a shape parameter) use `time`:
+For behavior that varies independently of curve position (e.g. oscillating a shape parameter) use `elapsed`:
 
 ```ts
 const wobble: CurveDef = {
   name: "wobble",
-  fn: (t, time, _params) => {
-    const r = 1 + 0.3 * Math.sin(time * 2); // radius pulses with real time
-    return { x: r * Math.cos(t), y: r * Math.sin(t) };
+  fn: (phase, elapsed, _params) => {
+    const r = 1 + 0.3 * Math.sin(elapsed * 2); // radius pulses with real time
+    return { x: r * Math.cos(phase), y: r * Math.sin(phase) };
   },
 };
 ```

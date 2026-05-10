@@ -18,7 +18,7 @@ export interface Callout {
 interface Props {
 	curve?: CurveName;
 	autoStart?: boolean;
-	initialT?: number;
+	initialPhase?: number;
 	trailColor?: string;
 	skeletonColor?: string;
 	headColor?: string;
@@ -32,7 +32,7 @@ interface Props {
 const {
 	curve = "lissajous32",
 	autoStart = true,
-	initialT,
+	initialPhase,
 	// Canvas renderer requires resolved color values — CSS variables cannot be used as prop defaults.
 	// headColor matches --color-primary; trailColor/skeletonColor are blueprint-specific neutrals.
 	trailColor = "#3a3b37",
@@ -59,15 +59,12 @@ const id = `sbp-${Math.random().toString(36).slice(2, 8)}`;
 		height ? "h-(--sb-h)" : "h-full",
 		width ? "w-(--sb-w)" : "w-full",
 		"bg-surface",
-		// "border",
-		// "border-solid",
-		// "border-border",
-		// "rounded",
-		// "shadow-[inset_0_0_0_1px_rgba(255,255,255,0.4)]",
 	]}
 	data-curve={curve}
 	data-auto-start={String(autoStart)}
-	data-initial-t={initialT !== undefined ? String(initialT) : undefined}
+	data-initial-phase={initialPhase !== undefined
+		? String(initialPhase)
+		: undefined}
 	data-trail-color={trailColor}
 	data-skeleton-color={skeletonColor}
 	data-head-color={headColor}
@@ -255,9 +252,9 @@ const id = `sbp-${Math.random().toString(36).slice(2, 8)}`;
 		const svgEl = wrapper.querySelector("svg") as SVGSVGElement;
 		const curveName = (wrapper.dataset.curve ?? "lissajous32") as CurveName;
 		const autoStart = wrapper.dataset.autoStart !== "false";
-		const initialT =
-			wrapper.dataset.initialT !== undefined
-				? parseFloat(wrapper.dataset.initialT)
+		const initialPhase =
+			wrapper.dataset.initialPhase !== undefined
+				? parseFloat(wrapper.dataset.initialPhase)
 				: undefined;
 		const callouts: Callout[] = JSON.parse(wrapper.dataset.callouts ?? "[]");
 
@@ -267,8 +264,8 @@ const id = `sbp-${Math.random().toString(36).slice(2, 8)}`;
 			skeletonColor: wrapper.dataset.skeletonColor,
 			headColor: wrapper.dataset.headColor,
 		};
-		if (initialT !== undefined) {
-			opts.initialT = initialT;
+		if (initialPhase !== undefined) {
+			opts.initialPhase = initialPhase;
 		}
 
 		if (wrapper.dataset.headRadius !== undefined) {

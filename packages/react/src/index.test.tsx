@@ -72,7 +72,7 @@ describe("useSarmal", () => {
       trailLength?: number;
       headRadius?: number;
       autoStart?: boolean;
-      initialT?: number;
+      initialPhase?: number;
     };
     morphOptions?: { morphDuration?: number };
   }) {
@@ -264,13 +264,13 @@ describe("useSarmal", () => {
     expect(mockCreateSarmal).toHaveBeenCalledTimes(2);
   });
 
-  it("destroys and recreates when initialT changes", () => {
+  it("destroys and recreates when initialPhase changes", () => {
     const { rerender } = render(
-      <TestHarness curve={circle} init={{ width: 200, height: 200, initialT: 0 }} />,
+      <TestHarness curve={circle} init={{ width: 200, height: 200, initialPhase: 0 }} />,
     );
     expect(mockCreateSarmal).toHaveBeenCalledTimes(1);
 
-    rerender(<TestHarness curve={circle} init={{ width: 200, height: 200, initialT: 0.5 }} />);
+    rerender(<TestHarness curve={circle} init={{ width: 200, height: 200, initialPhase: 0.5 }} />);
 
     expect(mockInstance.destroy).toHaveBeenCalledTimes(1);
     expect(mockCreateSarmal).toHaveBeenCalledTimes(2);
@@ -457,7 +457,12 @@ describe("useSarmalSVG", () => {
     morphOptions,
   }: {
     curve: CurveDef;
-    init?: { trailLength?: number; headRadius?: number; autoStart?: boolean; initialT?: number };
+    init?: {
+      trailLength?: number;
+      headRadius?: number;
+      autoStart?: boolean;
+      initialPhase?: number;
+    };
     morphOptions?: { morphDuration?: number };
   }) {
     const { svgRef, instance } = useSarmalSVG(curve, { trailColor: "#ff0000" }, init, morphOptions);
@@ -568,11 +573,11 @@ describe("useSarmalSVG", () => {
     expect(mockCreateSarmalSVG).toHaveBeenCalledTimes(2);
   });
 
-  it("destroys and recreates when initialT changes", () => {
-    const { rerender } = render(<SVGTestHarness curve={circle} init={{ initialT: 0 }} />);
+  it("destroys and recreates when initialPhase changes", () => {
+    const { rerender } = render(<SVGTestHarness curve={circle} init={{ initialPhase: 0 }} />);
     expect(mockCreateSarmalSVG).toHaveBeenCalledTimes(1);
 
-    rerender(<SVGTestHarness curve={circle} init={{ initialT: 0.5 }} />);
+    rerender(<SVGTestHarness curve={circle} init={{ initialPhase: 0.5 }} />);
 
     expect(mockInstance.destroy).toHaveBeenCalledTimes(1);
     expect(mockCreateSarmalSVG).toHaveBeenCalledTimes(2);

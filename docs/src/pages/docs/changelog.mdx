@@ -17,6 +17,31 @@ Version history notes of the <Link href="#core">Core</Link> and the <Link href="
 
 ## Core
 
+### 0.26.0 - 10.05.2026
+
+<Alert label="Breaking" variant="error">
+`CurveDef.fn` parameter names changed from `(t, time, params)` to `(phase, elapsed, params)`.
+</Alert>
+
+The `initialT` option on `createSarmal`, `createSarmalSVG`, and `@sarmal/react` is now `initialPhase`.
+The `jump(t)` and `seek(t)` parameter is now named `phase` (type unchanged).
+
+```ts
+// Before
+const circle: CurveDef = {
+  fn: (t, time, params) => ({ x: Math.cos(t), y: Math.sin(t) }),
+  period: Math.PI * 2,
+};
+createSarmal(canvas, circle, { initialT: Math.PI });
+
+// After
+const circle: CurveDef = {
+  fn: (phase, elapsed, params) => ({ x: Math.cos(phase), y: Math.sin(phase) }),
+  period: Math.PI * 2,
+};
+createSarmal(canvas, circle, { initialPhase: Math.PI });
+```
+
 ### 0.25.1 - 05.05.2026
 
 `drawCurve()` now accepts an optional `name` parameter for custom display names.
@@ -233,6 +258,17 @@ const sarmal = createSarmal(canvas, curves.artemis2, { initialT: Math.PI })
 ```
 
 ## React
+
+### 0.4.0 - 10.05.2026
+
+<Alert label="Breaking" variant="error">`initialT` init option renamed to `initialPhase` on both `<Sarmal>` and `<SarmalSVG>`. Also affects the `BaseInit` and `BaseSarmalProps` types.</Alert>
+
+```ts
+// Before
+<Sarmal curve={circle} initialT={Math.PI} />
+// After
+<Sarmal curve={circle} initialPhase={Math.PI} />
+```
 
 ### 0.3.0 - 01.05.2026
 

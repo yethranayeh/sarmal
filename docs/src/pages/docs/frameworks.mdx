@@ -60,7 +60,7 @@ If neither is provided, the canvas falls back to **300x300** with a console warn
 | width | `number` | - | Canvas buffer width in CSS pixels. **Init-only.** |
 | height | `number` | - | Canvas buffer height in CSS pixels. **Init-only.** |
 | autoStart | `boolean` | `true` | Start the animation loop automatically. **Init-only.** |
-| initialT | `number` | `undefined` | Initial position along the curve. **Init-only.** |
+| initialPhase | `number` | `undefined` | Initial position along the curve. **Init-only.** |
 | skeletonColor | `string` | `'#ffffff'` | Hex color for the skeleton path |
 | trailColor | `string \| string[]` | `'#ffffff'` | Hex color or array of hex colors for gradient trails |
 | headColor | `string` | derived | Hex color for the head dot. Omit to auto-follow trail color |
@@ -91,7 +91,7 @@ import { curves } from "@sarmal/core";
 const myCurve = useMemo(
   () => ({
     name: "circle",
-    fn: (t) => ({ x: Math.cos(t), y: Math.sin(t) }),
+    fn: (phase) => ({ x: Math.cos(phase), y: Math.sin(phase) }),
   }),
   [],
 );
@@ -102,7 +102,7 @@ const myCurve = useMemo(
 <Sarmal
   curve={{
     name: "circle",
-    fn: (t) => ({ x: Math.cos(t), y: Math.sin(t) }),
+    fn: (phase) => ({ x: Math.cos(phase), y: Math.sin(phase) }),
   }}
 />
 ```
@@ -172,7 +172,7 @@ function useSarmal(
     trailLength?: number;
     headRadius?: number;
     autoStart?: boolean;
-    initialT?: number;
+    initialPhase?: number;
   },
   morphOptions?: { morphDuration?: number },
 ): {
@@ -184,7 +184,7 @@ function useSarmal(
 <Alert variant="warning">
 Runtime visual options (`trailColor`, `headColor`, `skeletonColor`, `trailStyle`) passed in `options` are applied at creation but *not tracked* for changes.
 
-For reactive updates after mount, call `instance.current.setRenderOptions(...)` directly. Init options (`width`, `height`, `trailLength`, `autoStart`, `initialT`) are tracked and trigger **destroy**+*recreate* on change. `headRadius` is also tracked as an init option (prop changes recreate), but can be changed at runtime with `setRenderOptions` without a recreate.
+For reactive updates after mount, call `instance.current.setRenderOptions(...)` directly. Init options (`width`, `height`, `trailLength`, `autoStart`, `initialPhase`) are tracked and trigger **destroy**+*recreate* on change. `headRadius` is also tracked as an init option (prop changes recreate), but can be changed at runtime with `setRenderOptions` without a recreate.
 </Alert>
 
 ### SSR and Next.js App Router
@@ -212,7 +212,7 @@ For SVG rendering, use `<SarmalSVG>` and `useSarmalSVG`. The API mirrors the can
 - The `<svg>` element has no `width`/`height` attributes set. Size it entirely with CSS.
 - The renderer sets `viewBox="0 0 100 100"` automatically, so coordinates are normalized.
 - `className` and `style` apply to the `<svg>` element.
-- All init-time props are available: `trailLength`, `headRadius`, `autoStart`, `initialT`.
+- All init-time props are available: `trailLength`, `headRadius`, `autoStart`, `initialPhase`.
 
 ```tsx
 // Component

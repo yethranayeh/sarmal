@@ -376,9 +376,9 @@ export function createRenderer(options: RendererOptions): SarmalInstance {
     buildSkeletonCanvas();
   }
 
-  // Handle initialT option: seek to the specified position before first frame
-  if (options.initialT !== undefined) {
-    engine.seek(options.initialT);
+  // Handle initialPhase option: seek to the specified position before first frame
+  if (options.initialPhase !== undefined) {
+    engine.seek(options.initialPhase);
   }
 
   // Draw initial frame unconditionally (shows skeleton and initial position)

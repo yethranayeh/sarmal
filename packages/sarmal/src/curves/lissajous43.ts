@@ -2,11 +2,11 @@ import type { CurveDef } from "../types";
 
 const TWO_PI = Math.PI * 2;
 
-function lissajous43Fn(t: number, time: number, _params: Record<string, number>) {
-  const phi = time * 0.38;
+function lissajous43Fn(phase: number, elapsed: number, _params: Record<string, number>) {
+  const phi = elapsed * 0.38;
   return {
-    x: Math.sin(4 * t + phi),
-    y: Math.sin(3 * t),
+    x: Math.sin(4 * phase + phi),
+    y: Math.sin(3 * phase),
   };
 }
 

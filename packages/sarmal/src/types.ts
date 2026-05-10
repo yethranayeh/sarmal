@@ -14,11 +14,11 @@ export interface CurveDef {
   name: string;
   /**
    * The parametric function that defines the curve shape.
-   * @param t Current position along the curve, in [0, period)
-   * @param time Elapsed actual time in seconds. It is always increasing, and never resets on period wrap
+   * @param phase Current position along the curve, in [0, period)
+   * @param elapsed Elapsed actual time in seconds. It is always increasing, and never resets on period wrap
    * @param params Named parameter overrides. intentional forward-compatible parameter
    */
-  fn: (t: number, time: number, params: Record<string, number>) => Point;
+  fn: (phase: number, elapsed: number, params: Record<string, number>) => Point;
   /**
    * @default (Math.PI * 2)
    */
@@ -34,8 +34,8 @@ export interface CurveDef {
   version?: number;
   /**
    * Skeleton rendering mode:
-   * - 'static': Skeleton is computed once at init from `fn(t, 0)` and cached
-   * - 'live': Skeleton is recomputed each frame using `fn(t, actualTime)` specifically for curves whose shape drifts *over time*
+   * - 'static': Skeleton is computed once at init from `fn(phase, 0)` and cached
+   * - 'live': Skeleton is recomputed each frame using `fn(phase, actualTime)` specifically for curves whose shape drifts *over time*
    * @default "static"
    */
   skeleton?: "static" | "live";
@@ -43,10 +43,10 @@ export interface CurveDef {
    * An **override** function for computing a skeleton independent of `fn`
    * If provided, this function is used instead of `fn` to sample the skeleton,
    *  and the result is cached just like like 'static' mode
-   * @param t The parametric time value from `0` to `period`
-   * @returns The point on the skeleton at time `t`
+   * @param phase The parametric position along the curve (0 to period)
+   * @returns The point on the skeleton at position `phase`
    */
-  skeletonFn?: (t: number) => Point;
+  skeletonFn?: (phase: number) => Point;
 }
 
 export type JumpOptions = {
@@ -60,13 +60,13 @@ export type JumpOptions = {
 export type SeekOptions = {
   /**
    * When true, the trail wraps around the period boundary,
-   *  which results in a full trail even near `t=0`
-   * By default, the trail stops at `t=0`, which results in a partial trail near the start
+   *  which results in a full trail even near `phase=0`
+   * By default, the trail stops at `phase=0`, which results in a partial trail near the start
    * @default false
    */
   wrap?: boolean;
   /**
-   * Time gap between each trail point (in same units as `t`)
+   * Time gap between each trail point (in same units as `phase`)
    * Smaller value means a trail that is more dense
    * @default period / trailLength
    */
@@ -82,30 +82,30 @@ export type MorpStrategy = "raw" | "normalized";
  */
 export interface AnimationControls {
   /**
-   * Resets the simulation state, clearing the trail and reverting internal time `t` to 0
+   * Resets the simulation state, clearing the trail and reverting internal `phase` to 0
    * The next call to `tick` will start fresh from the beginning of the curve
    */
   reset(): void;
   /**
-   * Instantly moves the head to position `t`.
+   * Instantly moves the head to position `phase`.
    *
    * ! Does NOT update `actualTime`.
    *
    * Trail is left untouched by default. You can pass `clearTrail: true` to wipe it.
    * Use for morphing mid-flight or any time you don't need trail context.
-   * @param t The position to jump to (will be wrapped into [0, period))
+   * @param phase The position to jump to (will be wrapped into [0, period))
    */
-  jump(t: number, options?: JumpOptions): void;
+  jump(phase: number, options?: JumpOptions): void;
   /**
-   * Moves to `t` AND reconstructs the trail as if the animation naturally arrived there from `t=0`
+   * Moves to `phase` AND reconstructs the trail as if the animation naturally arrived there from `phase=0`
    * Also updates `actualTime` to match. Trail is always rebuilt from scratch
    * Use for initialisation or any jump where you want the trail to look meaningful
-   * @param t The position to seek to (will be wrapped into [0, period))
+   * @param phase The position to seek to (will be wrapped into [0, period))
    */
-  seek(t: number, options?: SeekOptions): void;
+  seek(phase: number, options?: SeekOptions): void;
   /**
    * Overrides the animation speed at runtime
-   * `0` freezes `t` but the loop keeps running
+   * `0` freezes `phase` but the loop keeps running
    * Negative values reverse traversal.
    *
    * ! Does NOT affect a curve's inherent speed given in CurveDef
@@ -144,8 +144,8 @@ export type MorphOptions = {
   duration?: number;
   /**
    * Strategy for lerping between curves with different periods:
-   * - 'normalized': maps `t` proportionally into each curve's period (smooth for all period ratios)
-   * - 'raw': uses the same `t` for both curves (can produce incoherent results for mismatched periods)
+   * - 'normalized': maps `phase` proportionally into each curve's period (smooth for all period ratios)
+   * - 'raw': uses the same `phase` for both curves (can produce incoherent results for mismatched periods)
    * @default 'normalized'
    */
   morphStrategy?: MorpStrategy;
@@ -154,8 +154,8 @@ export type MorphOptions = {
 export interface Engine extends AnimationControls {
   /**
    * Advances the Sarmal simulation by the given delta time (dt) in seconds.
-   * Internally, this increases the simulation time `t` by `speed * dt`,
-   *  wraps `t` at `period`, evaluates the curve's parametric function `fn(t)`,
+   * Internally, this increases the simulation `phase` by `speed * dt`,
+   *  wraps `phase` at `period`, evaluates the curve's parametric function `fn(phase)`,
    *  and appends the new point to the trail.
    * Returns the pre-allocated trail buffer, which has the *same* reference every call
    * ! Do not use `Array.length` to determine size
@@ -175,7 +175,7 @@ export interface Engine extends AnimationControls {
   /**
    * Returns the *skeleton* of the curve.
    * In technicality, it just represents the complete traversal of the curve over one full period,
-   *  which is sampled at points from `t=0` to `t=period`
+   *  which is sampled at points from `phase=0` to `phase=period`
    *
    * For "static" skeletons, this returns the same array on every call
    * For "live" skeletons, this returns a different array each frame
@@ -192,7 +192,7 @@ export interface Engine extends AnimationControls {
    * If called while a morph is already in progress,
    *  the interpolated state is frozen and becomes the new `curveA`
    * @param target The curve to transition to
-   * @param strategy 'normalized' maps t proportionally into each curve's period (default), 'raw' uses the same t
+   * @param strategy 'normalized' maps phase proportionally into each curve's period (default), 'raw' uses the same phase
    */
   startMorph(target: CurveDef, strategy?: MorpStrategy): void;
   /**
@@ -229,7 +229,7 @@ export interface SarmalInstance extends AnimationControls {
   destroy(): void;
   /**
    * Returns the skeleton of the curve:
-   * The complete traversal over one full period, sampled at points from t=0 to t=period.
+   * The complete traversal over one full period, sampled at points from phase=0 to phase=period.
    */
   getSarmalSkeleton(): Array<Point>;
   /**
@@ -237,7 +237,7 @@ export interface SarmalInstance extends AnimationControls {
    * The trail naturally reflects the new curve as new points are added.
    * @param target The curve to transition to
    * @param options.duration How long the morph takes in milliseconds (default: 300)
-   * @param options.morphStrategy 'normalized' uses proportional t mapping (default), 'raw' uses same t
+   * @param options.morphStrategy 'normalized' uses proportional phase mapping (default), 'raw' uses same phase
    * @returns Promise that resolves when the morph is complete
    */
   morphTo(target: CurveDef, options?: MorphOptions): Promise<void>;
@@ -300,10 +300,10 @@ export interface BaseRendererOptions {
    */
   pauseOnHidden?: boolean;
   /**
-   * Initial position along the curve (t value). If provided, seek(initialT) is called before the first frame.
-   * @default undefined (no seek performed, starts at t=0)
+   * Initial position along the curve (phase value). If provided, seek(initialPhase) is called before the first frame.
+   * @default undefined (no seek performed, starts at phase=0)
    */
-  initialT?: number;
+  initialPhase?: number;
   /**
    * @default '#ffffff'
    */

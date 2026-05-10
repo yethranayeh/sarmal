@@ -2,11 +2,11 @@ import type { CurveDef } from "../types";
 
 const TWO_PI = Math.PI * 2;
 
-function rose3Fn(t: number, _time: number, _params: Record<string, number>) {
-  const r = Math.cos(3 * t);
+function rose3Fn(phase: number, _elapsed: number, _params: Record<string, number>) {
+  const r = Math.cos(3 * phase);
   return {
-    x: r * Math.cos(t),
-    y: r * Math.sin(t),
+    x: r * Math.cos(phase),
+    y: r * Math.sin(phase),
   };
 }
 

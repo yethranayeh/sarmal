@@ -228,25 +228,25 @@ The `autoStart` option (default: `true`) controls whether the animation loop beg
 // Starts animating immediately (default)
 const s1 = createSarmal(canvas, curves.artemis2);
 
-// Created in a dormant state, so the canvas shows skeleton at t=0
+// Created in a dormant state, so the canvas shows skeleton at phase=0
 const s2 = createSarmal(canvas, curves.artemis2, { autoStart: false });
 s2.play(); // Start when ready
 ```
 
 ### Initial position
 
-The `initialT` option sets the starting position along the curve. It calls `seek()` internally, so the trail is reconstructed naturally:
+The `initialPhase` option sets the starting position along the curve. It calls `seek()` internally, so the trail is reconstructed naturally:
 
 ```ts
-// Start animating from t=π
-const s3 = createSarmal(canvas, curves.artemis2, { initialT: Math.PI });
+// Start animating from phase=π
+const s3 = createSarmal(canvas, curves.artemis2, { initialPhase: Math.PI });
 
 // Create at a specific position and keep it there until `play()` call
 const s4 = createSarmal(canvas, curves.artemis2, {
   autoStart: false,
-  initialT: Math.PI
+  initialPhase: Math.PI
 });
-// Canvas shows skeleton + trail at t=π
+// Canvas shows skeleton + trail at phase=π
 s4.play(); // Animation starts from there
 ```
 
@@ -255,14 +255,14 @@ s4.play(); // Animation starts from there
     slot="view"
     headRadius={2}
     autoStart={false}
-    initialT={Math.PI}
+    initialPhase={Math.PI}
     callouts={[{ target: "head", label: "t = π", sub: "initial position", static: true }]}
     trailColor="#c0143c"
   />
   <div slot="info">
-    <code>initialT: Math.PI</code><br />
+    <code>initialPhase: Math.PI</code><br />
     <code>autoStart: false</code><br /><br />
-    Dormant at creation. Trail pre-drawn to <code>t=π</code>. Play to animate from there.
+    Dormant at creation. Trail pre-drawn to <code>phase=π</code>. Play to animate from there.
   </div>
   <button slot="controls" class="cdemo-btn cdemo-btn-play" data-sarmal-action="toggle">Play</button>
 </ConceptDemo>

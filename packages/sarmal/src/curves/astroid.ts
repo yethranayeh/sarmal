@@ -2,9 +2,9 @@ import type { CurveDef } from "../types";
 
 const TWO_PI = Math.PI * 2;
 
-function astroidFn(t: number, _time: number, _params: Record<string, number>) {
-  const c = Math.cos(t);
-  const s = Math.sin(t);
+function astroidFn(phase: number, _elapsed: number, _params: Record<string, number>) {
+  const c = Math.cos(phase);
+  const s = Math.sin(phase);
   return {
     x: c * c * c,
     y: s * s * s,

@@ -16,7 +16,7 @@ const TWO_PI = Math.PI * 2;
  */
 const circle: CurveDef = {
   name: "test-circle",
-  fn: (t) => ({ x: Math.cos(t), y: Math.sin(t) }),
+  fn: (phase) => ({ x: Math.cos(phase), y: Math.sin(phase) }),
   period: TWO_PI,
   speed: 1,
 };
@@ -28,7 +28,7 @@ const circle: CurveDef = {
  */
 const identity: CurveDef = {
   name: "test-identity",
-  fn: (t, time) => ({ x: t, y: time }),
+  fn: (phase, elapsed) => ({ x: phase, y: elapsed }),
   period: 10,
   speed: 1,
 };
@@ -108,7 +108,7 @@ describe("tick(dt)", () => {
     expect(engine.trailCount).toBe(2); // only 2 valid entries
   });
 
-  it("the point at trail[trailCount-1] matches fn(t, actualTime) for the current tick", () => {
+  it("the point at trail[trailCount-1] matches fn(phase, actualTime) for the current tick", () => {
     const engine = createEngine(identity);
     engine.tick(3); // t=3, actualTime=3
     const trail = engine.tick(2); // t=5, actualTime=5
@@ -361,7 +361,7 @@ describe("edge cases", () => {
     // sampleT = (0 / 0) * period = NaN — all skeleton points are NaN
     const tinyPeriod: CurveDef = {
       name: "tiny",
-      fn: (t) => ({ x: t, y: t }),
+      fn: (phase) => ({ x: phase, y: phase }),
       period: 0.01,
     };
     const engine = createEngine(tinyPeriod);
@@ -377,9 +377,9 @@ describe("edge cases", () => {
     const captured: number[] = [];
     const identity10: CurveDef = {
       name: "identity-10",
-      fn: (t, time) => {
-        captured.push(t);
-        return { x: t, y: time };
+      fn: (phase, elapsed) => {
+        captured.push(phase);
+        return { x: phase, y: elapsed };
       },
       period: 10,
       speed: 1,
@@ -525,7 +525,7 @@ describe("getSarmalSkeleton() with skeleton modes", () => {
    */
   const drifting: CurveDef = {
     name: "drifting",
-    fn: (t, time) => ({ x: Math.cos(t), y: Math.sin(t + time * 0.1) }),
+    fn: (phase, elapsed) => ({ x: Math.cos(phase), y: Math.sin(phase + elapsed * 0.1) }),
     period: TWO_PI,
     speed: 1,
     skeleton: "live",
@@ -537,10 +537,13 @@ describe("getSarmalSkeleton() with skeleton modes", () => {
    */
   const withSkeletonFn: CurveDef = {
     name: "with-skeleton-fn",
-    fn: (t, time) => ({ x: Math.cos(t + time * 0.5), y: Math.sin(t + time * 0.5) }),
+    fn: (phase, elapsed) => ({
+      x: Math.cos(phase + elapsed * 0.5),
+      y: Math.sin(phase + elapsed * 0.5),
+    }),
     period: TWO_PI,
     speed: 1,
-    skeletonFn: (t) => ({ x: Math.cos(t), y: Math.sin(t) }),
+    skeletonFn: (phase) => ({ x: Math.cos(phase), y: Math.sin(phase) }),
   };
 
   it("static skeleton (default) does not change when actualTime advances", () => {
@@ -606,14 +609,14 @@ describe("getSarmalSkeleton() with skeleton modes", () => {
 describe("morphAlpha state", () => {
   const xCurve: CurveDef = {
     name: "x-curve",
-    fn: (t) => ({ x: t, y: 0 }),
+    fn: (phase) => ({ x: phase, y: 0 }),
     period: 10,
     speed: 1,
   };
 
   const yCurve: CurveDef = {
     name: "y-curve",
-    fn: (t) => ({ x: 0, y: t }),
+    fn: (phase) => ({ x: 0, y: phase }),
     period: 10,
     speed: 1,
   };
@@ -648,14 +651,14 @@ describe("morphAlpha state", () => {
 describe("tick() during morph", () => {
   const xCurve: CurveDef = {
     name: "x-curve",
-    fn: (t) => ({ x: t, y: 0 }),
+    fn: (phase) => ({ x: phase, y: 0 }),
     period: 10,
     speed: 1,
   };
 
   const yCurve: CurveDef = {
     name: "y-curve",
-    fn: (t) => ({ x: 0, y: t }),
+    fn: (phase) => ({ x: 0, y: phase }),
     period: 10,
     speed: 1,
   };
@@ -663,13 +666,13 @@ describe("tick() during morph", () => {
   it("lerps speed from curveA to curveB during morph", () => {
     const slowCurve: CurveDef = {
       name: "slow",
-      fn: (t) => ({ x: t, y: 0 }),
+      fn: (phase) => ({ x: phase, y: 0 }),
       period: 10,
       speed: 1,
     };
     const fastCurve: CurveDef = {
       name: "fast",
-      fn: (t) => ({ x: t, y: 0 }),
+      fn: (phase) => ({ x: phase, y: 0 }),
       period: 10,
       speed: 3,
     };
@@ -687,13 +690,13 @@ describe("tick() during morph", () => {
   it("speed matches curveB exactly when morphAlpha reaches 1 (before completeMorph)", () => {
     const slowCurve: CurveDef = {
       name: "slow",
-      fn: (t) => ({ x: t, y: 0 }),
+      fn: (phase) => ({ x: phase, y: 0 }),
       period: 10,
       speed: 1,
     };
     const fastCurve: CurveDef = {
       name: "fast",
-      fn: (t) => ({ x: t, y: 0 }),
+      fn: (phase) => ({ x: phase, y: 0 }),
       period: 10,
       speed: 3,
     };
@@ -710,13 +713,13 @@ describe("tick() during morph", () => {
   it("morph between curves with different speeds produces finite, non-NaN output at every frame", () => {
     const slowCurve: CurveDef = {
       name: "slow",
-      fn: (t) => ({ x: Math.cos(t), y: Math.sin(t) }),
+      fn: (phase) => ({ x: Math.cos(phase), y: Math.sin(phase) }),
       period: TWO_PI,
       speed: 0.5,
     };
     const fastCurve: CurveDef = {
       name: "fast",
-      fn: (t) => ({ x: Math.cos(t), y: Math.sin(t) }),
+      fn: (phase) => ({ x: Math.cos(phase), y: Math.sin(phase) }),
       period: TWO_PI,
       speed: 3.0,
     };
@@ -798,7 +801,7 @@ describe("tick() during morph", () => {
     // At alpha=0 of new morph, output should equal frozen midpoint
     const diagonal: CurveDef = {
       name: "diagonal",
-      fn: (t) => ({ x: t, y: t }),
+      fn: (phase) => ({ x: phase, y: phase }),
       period: 10,
       speed: 1,
     };
@@ -817,7 +820,7 @@ describe("tick() during morph", () => {
   it("handles three sequential morph interrupts without NaN or errors", () => {
     const curveA: CurveDef = {
       name: "a",
-      fn: (t) => ({ x: Math.cos(t), y: Math.sin(t) }),
+      fn: (phase) => ({ x: Math.cos(phase), y: Math.sin(phase) }),
       period: TWO_PI,
       speed: 1,
     };
@@ -861,14 +864,14 @@ describe("tick() during morph", () => {
 describe("getSarmalSkeleton() during morph", () => {
   const xCurve: CurveDef = {
     name: "x-curve",
-    fn: (t) => ({ x: t, y: 0 }),
+    fn: (phase) => ({ x: phase, y: 0 }),
     period: 10,
     speed: 1,
   };
 
   const yCurve: CurveDef = {
     name: "y-curve",
-    fn: (t) => ({ x: 0, y: t }),
+    fn: (phase) => ({ x: 0, y: phase }),
     period: 10,
     speed: 1,
   };
@@ -903,13 +906,13 @@ describe("getSarmalSkeleton() during morph", () => {
     // → after completeMorph t must be remapped to π (not left at π/2)
     const circleA: CurveDef = {
       name: "circle-a",
-      fn: (t) => ({ x: Math.cos(t), y: Math.sin(t) }),
+      fn: (phase) => ({ x: Math.cos(phase), y: Math.sin(phase) }),
       period: Math.PI,
       speed: 1,
     };
     const curveB: CurveDef = {
       name: "curve-b",
-      fn: (t) => ({ x: Math.cos(t), y: Math.sin(t) }),
+      fn: (phase) => ({ x: Math.cos(phase), y: Math.sin(phase) }),
       period: Math.PI * 2,
       speed: 1,
     };
@@ -932,13 +935,13 @@ describe("getSarmalSkeleton() during morph", () => {
     // raw strategy: tB = t (same value for both curves), so t needs no remapping
     const halfCircle: CurveDef = {
       name: "half-circle",
-      fn: (t) => ({ x: Math.cos(t), y: Math.sin(t) }),
+      fn: (phase) => ({ x: Math.cos(phase), y: Math.sin(phase) }),
       period: Math.PI,
       speed: 1,
     };
     const fullCircle: CurveDef = {
       name: "full-circle",
-      fn: (t) => ({ x: Math.cos(t), y: Math.sin(t) }),
+      fn: (phase) => ({ x: Math.cos(phase), y: Math.sin(phase) }),
       period: Math.PI * 2,
       speed: 1,
     };
@@ -958,7 +961,7 @@ describe("getSarmalSkeleton() during morph", () => {
   it("live skeleton during morph still updates each call", () => {
     const liveX: CurveDef = {
       name: "live-x",
-      fn: (t, time) => ({ x: t + time, y: 0 }),
+      fn: (phase, elapsed) => ({ x: phase + elapsed, y: 0 }),
       period: 10,
       speed: 1,
       skeleton: "live",
@@ -1108,14 +1111,14 @@ describe("setSpeed() validation", () => {
 describe("setSpeed() persistence across morph", () => {
   const xCurve: CurveDef = {
     name: "x-curve",
-    fn: (t) => ({ x: t, y: 0 }),
+    fn: (phase) => ({ x: phase, y: 0 }),
     period: 10,
     speed: 1,
   };
 
   const yCurve: CurveDef = {
     name: "y-curve",
-    fn: (t) => ({ x: 0, y: t }),
+    fn: (phase) => ({ x: 0, y: phase }),
     period: 10,
     speed: 1,
   };
@@ -1350,7 +1353,7 @@ describe("setSpeedOver(speed, duration) — interruption", () => {
     // wrapping that morphTo() adds at the renderer level.
     const yCurve: CurveDef = {
       name: "y-curve",
-      fn: (t) => ({ x: 0, y: t }),
+      fn: (phase) => ({ x: 0, y: phase }),
       period: 10,
       speed: 1,
     };

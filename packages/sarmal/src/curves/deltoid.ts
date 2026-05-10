@@ -2,10 +2,10 @@ import type { CurveDef } from "../types";
 
 const TWO_PI = Math.PI * 2;
 
-function deltoidFn(t: number, _time: number, _params: Record<string, number>) {
+function deltoidFn(phase: number, _elapsed: number, _params: Record<string, number>) {
   return {
-    x: 2 * Math.cos(t) + Math.cos(2 * t),
-    y: 2 * Math.sin(t) - Math.sin(2 * t),
+    x: 2 * Math.cos(phase) + Math.cos(2 * phase),
+    y: 2 * Math.sin(phase) - Math.sin(2 * phase),
   };
 }
 

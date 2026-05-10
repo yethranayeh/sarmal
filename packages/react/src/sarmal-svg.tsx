@@ -18,7 +18,7 @@ const SarmalSVGInner = ({
   headRadius,
   trailLength,
   autoStart,
-  initialT,
+  initialPhase,
 }: SarmalSVGProps) => {
   const { svgRef, instance } = useSarmalSVG(
     curve,
@@ -32,7 +32,7 @@ const SarmalSVGInner = ({
       ...(headRadius !== undefined && { headRadius }),
       ...(trailLength !== undefined && { trailLength }),
       ...(autoStart !== undefined && { autoStart }),
-      ...(initialT !== undefined && { initialT }),
+      ...(initialPhase !== undefined && { initialPhase }),
     },
     morphDuration !== undefined ? { morphDuration } : undefined,
   );

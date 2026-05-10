@@ -20,7 +20,7 @@ const SarmalInner = ({
   headRadius,
   trailLength,
   autoStart,
-  initialT,
+  initialPhase,
 }: SarmalProps) => {
   const { canvasRef, instance } = useSarmal(
     curve,
@@ -36,7 +36,7 @@ const SarmalInner = ({
       ...(headRadius !== undefined && { headRadius }),
       ...(trailLength !== undefined && { trailLength }),
       ...(autoStart !== undefined && { autoStart }),
-      ...(initialT !== undefined && { initialT }),
+      ...(initialPhase !== undefined && { initialPhase }),
     },
     morphDuration !== undefined ? { morphDuration } : undefined,
   );

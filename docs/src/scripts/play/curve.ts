@@ -9,8 +9,8 @@ export function sampleCurveFn(fn: CurveFn) {
   const samples: Point[] = [];
 
   for (let i = 0; i < SAMPLE_N; i++) {
-    const t = (i / SAMPLE_N) * SAMPLE_PERIOD;
-    samples.push(fn(t, 0, {}));
+    const phase = (i / SAMPLE_N) * SAMPLE_PERIOD;
+    samples.push(fn(phase, 0, {}));
   }
 
   return samples;
@@ -30,7 +30,7 @@ export type BuildResult = { ok: true; fn: CurveFn } | { ok: false; error: string
 
 export function buildCurveFn(code: string): BuildResult {
   try {
-    const fn = new Function("t", "time", "params", code);
+    const fn = new Function("phase", "elapsed", "params", code);
     const result = fn(0, 0, {});
 
     if (typeof result !== "object" || result === null || !("x" in result) || !("y" in result)) {

@@ -15,9 +15,9 @@ describe("curves regression suite", () => {
       const period = curve.period ?? TWO_PI;
       const steps = 100;
       for (let i = 0; i <= steps; i++) {
-        const t = (i / steps) * period;
-        const time = t / (curve.speed ?? 1);
-        const point = curve.fn(t, time, {});
+        const phase = (i / steps) * period;
+        const elapsed = phase / (curve.speed ?? 1);
+        const point = curve.fn(phase, elapsed, {});
         expect(Number.isFinite(point.x)).toBe(true);
         expect(Number.isFinite(point.y)).toBe(true);
       }
@@ -29,7 +29,7 @@ describe("user-defined curves", () => {
   it("curve with period: undefined uses engine default of 2π", () => {
     const custom: CurveDef = {
       name: "custom",
-      fn: (t) => ({ x: Math.cos(t), y: Math.sin(t) }),
+      fn: (phase) => ({ x: Math.cos(phase), y: Math.sin(phase) }),
     };
     const engine = createEngine(custom);
     const skeleton = engine.getSarmalSkeleton();

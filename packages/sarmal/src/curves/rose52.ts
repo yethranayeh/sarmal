@@ -2,11 +2,11 @@ import type { CurveDef } from "../types";
 
 const FOUR_PI = Math.PI * 4;
 
-function rose52Fn(t: number, _time: number, _params: Record<string, number>) {
-  const r = Math.cos((5 / 2) * t);
+function rose52Fn(phase: number, _elapsed: number, _params: Record<string, number>) {
+  const r = Math.cos((5 / 2) * phase);
   return {
-    x: r * Math.cos(t),
-    y: r * Math.sin(t),
+    x: r * Math.cos(phase),
+    y: r * Math.sin(phase),
   };
 }
 

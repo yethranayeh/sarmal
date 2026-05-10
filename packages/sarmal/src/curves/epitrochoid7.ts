@@ -2,20 +2,20 @@ import type { CurveDef, Point } from "../types";
 
 const TWO_PI = Math.PI * 2;
 
-function epitrochoid7Fn(t: number, _time: number, _params: Record<string, number>) {
-  const d = 1.0 + 0.55 * Math.sin(t * 0.5);
+function epitrochoid7Fn(phase: number, _elapsed: number, _params: Record<string, number>) {
+  const d = 1.0 + 0.55 * Math.sin(phase * 0.5);
   return {
-    x: 7 * Math.cos(t) - d * Math.cos(7 * t),
-    y: 7 * Math.sin(t) - d * Math.sin(7 * t),
+    x: 7 * Math.cos(phase) - d * Math.cos(7 * phase),
+    y: 7 * Math.sin(phase) - d * Math.sin(7 * phase),
   };
 }
 
-function epitrochoid7SkeletonFn(t: number): Point {
+function epitrochoid7SkeletonFn(phase: number): Point {
   // average of the oscillating range for a stable base shape
   const d = 1.275;
   return {
-    x: 7 * Math.cos(t) - d * Math.cos(7 * t),
-    y: 7 * Math.sin(t) - d * Math.sin(7 * t),
+    x: 7 * Math.cos(phase) - d * Math.cos(7 * phase),
+    y: 7 * Math.sin(phase) - d * Math.sin(7 * phase),
   };
 }
 

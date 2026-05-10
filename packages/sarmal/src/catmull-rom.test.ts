@@ -271,8 +271,8 @@ describe("drawCurve", () => {
     ];
     const def = drawCurve(points);
 
-    for (let t = 0; t <= 2 * Math.PI; t += Math.PI / 4) {
-      const p = def.fn(t, 0, {});
+    for (let phase = 0; phase <= 2 * Math.PI; phase += Math.PI / 4) {
+      const p = def.fn(phase, 0, {});
       expect(Number.isFinite(p.x)).toBe(true);
       expect(Number.isFinite(p.y)).toBe(true);
     }

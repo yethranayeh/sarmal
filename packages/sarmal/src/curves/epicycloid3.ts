@@ -2,10 +2,10 @@ import type { CurveDef } from "../types";
 
 const TWO_PI = Math.PI * 2;
 
-function epicycloid3Fn(t: number, _time: number, _params: Record<string, number>) {
+function epicycloid3Fn(phase: number, _elapsed: number, _params: Record<string, number>) {
   return {
-    x: 4 * Math.cos(t) - Math.cos(4 * t),
-    y: 4 * Math.sin(t) - Math.sin(4 * t),
+    x: 4 * Math.cos(phase) - Math.cos(4 * phase),
+    y: 4 * Math.sin(phase) - Math.sin(4 * phase),
   };
 }
 

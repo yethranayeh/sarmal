@@ -84,7 +84,7 @@ class CircularBuffer {
 /**
  * Creates the core simulation engine for a sarmal
  *
- * it runs a clock (time `t`), asks the curve for the current Point position at that time,
+ * it runs a clock (`phase`), asks the curve for the current Point position at that time,
  *  and remembers the last N positions so the renderer can draw the trail
  *
  * The engine is only responsible for math coordinates,
@@ -135,7 +135,7 @@ export function createEngine(curveDef: CurveDef, trailLength: number = 120): Eng
 
   let curve = resolveCurve(curveDef);
   const trail = new CircularBuffer(trailLength);
-  let t = 0;
+  let phase = 0;
   let actualTime = 0;
   let userSpeedOverride: number | null = null;
 
@@ -147,15 +147,17 @@ export function createEngine(curveDef: CurveDef, trailLength: number = 120): Eng
   // Speed transition state which is `null` when not transitioning
   let _speedTransition: SpeedTransition | null = null;
 
-  /** Samples a resolved curve's skeleton at position `sampleT` */
-  function sampleSkeleton(c: ResolvedCurve, sampleT: number): Point {
+  /** Samples a resolved curve's skeleton at position `samplePhase` */
+  function sampleSkeleton(c: ResolvedCurve, samplePhase: number): Point {
     if (c.skeletonFn) {
-      return c.skeletonFn(sampleT);
+      return c.skeletonFn(samplePhase);
     }
+
     if (c.skeleton === "live") {
-      return c.fn(sampleT, actualTime, EMPTY_PARAMS);
+      return c.fn(samplePhase, actualTime, EMPTY_PARAMS);
     }
-    return c.fn(sampleT, 0, EMPTY_PARAMS);
+
+    return c.fn(samplePhase, 0, EMPTY_PARAMS);
   }
 
   return {
@@ -177,16 +179,17 @@ export function createEngine(curveDef: CurveDef, trailLength: number = 120): Eng
       if (morphCurveB !== null && _morphAlpha !== null) {
         effectiveSpeed = lerp(effectiveSpeed, morphCurveB.speed, _morphAlpha);
       }
-      t = (t + effectiveSpeed * deltaTime) % curve.period;
+      phase = (phase + effectiveSpeed * deltaTime) % curve.period;
       actualTime += deltaTime;
 
       if (morphCurveB !== null && _morphAlpha !== null) {
-        const a = curve.fn(t, actualTime, EMPTY_PARAMS);
-        const tB = _morphStrategy === "normalized" ? (t / curve.period) * morphCurveB.period : t;
-        const b = morphCurveB.fn(tB, actualTime, EMPTY_PARAMS);
+        const a = curve.fn(phase, actualTime, EMPTY_PARAMS);
+        const phaseB =
+          _morphStrategy === "normalized" ? (phase / curve.period) * morphCurveB.period : phase;
+        const b = morphCurveB.fn(phaseB, actualTime, EMPTY_PARAMS);
         trail.push(a.x + (b.x - a.x) * _morphAlpha, a.y + (b.y - a.y) * _morphAlpha);
       } else {
-        const point = curve.fn(t, actualTime, EMPTY_PARAMS);
+        const point = curve.fn(phase, actualTime, EMPTY_PARAMS);
         trail.push(point.x, point.y);
       }
 
@@ -210,24 +213,28 @@ export function createEngine(curveDef: CurveDef, trailLength: number = 120): Eng
     },
 
     reset() {
-      t = 0;
+      phase = 0;
       actualTime = 0;
       trail.clear();
     },
 
-    jump(newT: number, { clearTrail = false }: JumpOptions = {}) {
-      t = ((newT % curve.period) + curve.period) % curve.period;
+    jump(newPhase: number, { clearTrail = false }: JumpOptions = {}) {
+      phase = ((newPhase % curve.period) + curve.period) % curve.period;
+
       if (clearTrail) {
         trail.clear();
       }
     },
 
-    seek(targetT: number, { wrap = false, step = curve.period / trailLength }: SeekOptions = {}) {
+    seek(
+      targetPhase: number,
+      { wrap = false, step = curve.period / trailLength }: SeekOptions = {},
+    ) {
       const advance = curve.speed * step;
-      const target = ((targetT % curve.period) + curve.period) % curve.period;
+      const target = ((targetPhase % curve.period) + curve.period) % curve.period;
       const targetTime = target / curve.speed;
 
-      t = target;
+      phase = target;
       actualTime = targetTime;
       trail.clear();
 
@@ -235,10 +242,10 @@ export function createEngine(curveDef: CurveDef, trailLength: number = 120): Eng
       const count = wrap ? trailLength : Math.min(trailLength, pointsFromStart);
 
       for (let i = count - 1; i >= 0; i--) {
-        const sampleT = target - i * advance;
-        const wrappedT = ((sampleT % curve.period) + curve.period) % curve.period;
-        const time = targetTime - i * step;
-        const point = curve.fn(wrappedT, time, EMPTY_PARAMS);
+        const samplePhase = target - i * advance;
+        const wrappedPhase = ((samplePhase % curve.period) + curve.period) % curve.period;
+        const elapsed = targetTime - i * step;
+        const point = curve.fn(wrappedPhase, elapsed, EMPTY_PARAMS);
 
         trail.push(point.x, point.y);
       }
@@ -255,13 +262,14 @@ export function createEngine(curveDef: CurveDef, trailLength: number = 120): Eng
 
         curve = {
           ...frozenB,
-          fn: (sampleT: number, time: number, params: Record<string, number>) => {
-            const a = frozenA.fn(sampleT, time, params);
-            const tB =
+          fn: (samplePhase: number, elapsed: number, params: Record<string, number>) => {
+            const a = frozenA.fn(samplePhase, elapsed, params);
+            const phaseB =
               frozenStrategy === "normalized"
-                ? (sampleT / frozenA.period) * frozenB.period
-                : sampleT;
-            const b = frozenB.fn(tB, time, params);
+                ? (samplePhase / frozenA.period) * frozenB.period
+                : samplePhase;
+            const b = frozenB.fn(phaseB, elapsed, params);
+
             return {
               x: a.x + (b.x - a.x) * frozenAlpha,
               y: a.y + (b.y - a.y) * frozenAlpha,
@@ -281,11 +289,11 @@ export function createEngine(curveDef: CurveDef, trailLength: number = 120): Eng
 
     completeMorph() {
       if (morphCurveB !== null) {
-        // Normalized strategy drives `curveB` at `tB` = `(t / periodA) * periodB`
-        // Remap `t` so the trail continues from the same position on `curveB`,
-        //  not from a raw `t` value that belongs to `curveA`'s smaller range.
+        // Normalized strategy drives `curveB` at `phaseB` = `(phase / periodA) * periodB`
+        // Remap `phase` so the trail continues from the same position on `curveB`,
+        //  not from a raw `phase` value that belongs to `curveA`'s smaller range.
         if (_morphStrategy === "normalized" && curve.period !== morphCurveB.period) {
-          t = (t / curve.period) * morphCurveB.period;
+          phase = (phase / curve.period) * morphCurveB.period;
         }
         curve = morphCurveB;
       }
@@ -300,13 +308,13 @@ export function createEngine(curveDef: CurveDef, trailLength: number = 120): Eng
 
       if (morphCurveB !== null && _morphAlpha !== null) {
         for (let i = 0; i < steps; i++) {
-          const sampleT = (i / (steps - 1)) * curve.period;
-          const a = sampleSkeleton(curve, sampleT);
-          const tB =
+          const samplePhase = (i / (steps - 1)) * curve.period;
+          const a = sampleSkeleton(curve, samplePhase);
+          const phaseB =
             _morphStrategy === "normalized"
-              ? (sampleT / curve.period) * morphCurveB.period
-              : sampleT;
-          const b = sampleSkeleton(morphCurveB, tB);
+              ? (samplePhase / curve.period) * morphCurveB.period
+              : samplePhase;
+          const b = sampleSkeleton(morphCurveB, phaseB);
 
           points[i] = {
             x: a.x + (b.x - a.x) * _morphAlpha,
@@ -317,8 +325,8 @@ export function createEngine(curveDef: CurveDef, trailLength: number = 120): Eng
       }
 
       for (let i = 0; i < steps; i++) {
-        const sampleT = (i / (steps - 1)) * curve.period;
-        points[i] = sampleSkeleton(curve, sampleT);
+        const samplePhase = (i / (steps - 1)) * curve.period;
+        points[i] = sampleSkeleton(curve, samplePhase);
       }
 
       return points;

@@ -18,7 +18,7 @@ export interface BaseInit {
   /** @init */
   autoStart?: boolean;
   /** @init */
-  initialT?: number;
+  initialPhase?: number;
 }
 
 /**
@@ -50,7 +50,7 @@ export interface BaseSarmalProps {
   /** changing after mount recreates the instance and resets the trail */
   autoStart?: boolean;
   /** changing after mount recreates the instance and resets the trail */
-  initialT?: number;
+  initialPhase?: number;
 }
 
 /** Props for `<Sarmal>`. Extends {@link BaseSarmalProps} with canvas buffer sizing. */

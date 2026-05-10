@@ -93,15 +93,15 @@ const id = `tpos-${Math.random().toString(36).slice(2, 8)}`;
 
 			const instance = createSarmalSVG(view, curves.astroid, {
 				autoStart: false,
-				initialT: 0,
+				initialPhase: 0,
 				trailColor: palettes.bard,
 				trailStyle: "gradient-static",
 				skeletonColor: "#c8c4be",
 				headRadius: 2,
 			});
 
-			function updateCoords(t: number) {
-				const pt = curves.astroid.fn(t, 0, {});
+			function updateCoords(phase: number) {
+				const pt = curves.astroid.fn(phase, 0, {});
 				coordX.textContent = pt.x.toFixed(3);
 				coordY.textContent = pt.y.toFixed(3);
 			}

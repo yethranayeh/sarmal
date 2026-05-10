@@ -6,7 +6,7 @@ const TWO_PI = Math.PI * 2;
 
 const circle: CurveDef = {
   name: "bench-circle",
-  fn: (t) => ({ x: Math.cos(t), y: Math.sin(t) }),
+  fn: (phase) => ({ x: Math.cos(phase), y: Math.sin(phase) }),
   period: TWO_PI,
   speed: 1,
 };

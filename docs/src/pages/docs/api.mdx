@@ -6,6 +6,8 @@ order: 3
 description: Complete reference for all public methods, options, and the curve definition schema.
 ---
 
+import {ArrowRight} from "@lucide/astro";
+
 import Alert from "../../components/Alert.astro";
 import Link from "../../components/Link.astro";
 import SarmalBlueprint from "../../components/SarmalBlueprint.astro";
@@ -39,7 +41,7 @@ const sarmal = createSarmal(canvas, curves.rose3);
 | headRadius | `number` | `4` | Radius of the head dot in pixels |
 | trailStyle | `TrailStyle` | `'default'` | `'default'` \| `'gradient-static'` \| `'gradient-animated'` |
 | autoStart | `boolean` | `true` | Start the animation loop automatically on creation |
-| initialT | `number` | `undefined` | Initial position along the curve (t value). Calls `seek(initialT)` before first frame |
+| initialPhase | `number` | `undefined` | Initial position along the curve (t value). Calls `seek(initialPhase)` before first frame |
 | pauseOnHidden | `boolean` | `true` | Pauses when the browser tab is hidden and resumes when visible |
 
 ### Auto-start and initial position
@@ -51,7 +53,7 @@ By default, sarmal instances start animating immediately from `t=0`. You can con
 const s1 = createSarmal(canvas, curves.rose3);
 
 // Start automatically from t=Math.PI
-const s2 = createSarmal(canvas, curves.rose5, { initialT: Math.PI });
+const s2 = createSarmal(canvas, curves.rose5, { initialPhase: Math.PI });
 
 // Create dormant at t=0; call play() when ready
 const s3 = createSarmal(canvas, curves.deltoid, { autoStart: false });
@@ -60,7 +62,7 @@ s3.play();
 // Create dormant at t=Math.PI
 const s4 = createSarmal(canvas, curves.lissajous32, {
   autoStart: false,
-  initialT: Math.PI
+  initialPhase: Math.PI
 });
 
 // Canvas shows skeleton + trail at t=π position
@@ -420,7 +422,7 @@ await sarmal.morphTo(curves.artemis2);
 ```ts
 interface CurveDef {
   name: string;                      // Required: identifier for the curve
-  fn: (t, time, params) => Point;    // Required: parametric function
+  fn: (phase, elapsed, params) => Point;    // Required: parametric function
   period?: number;                   // Default: 2π
   speed?: number;                    // Default: 1 (radians per second)
   skeleton?: 'static' | 'live';      // Default: 'static'
@@ -428,10 +430,10 @@ interface CurveDef {
 }
 ```
 
-### fn(t, time, params)
+### fn(phase, elapsed, params)
 
-- **`t`**: Position along curve (0 -> period)
-- **`time`**: Actual elapsed seconds
+- **`phase`**: Position along curve (0 <ArrowRight size={14} class="inline" /> period)
+- **`elapsed`**: Actual elapsed seconds
 - **`params`**: Animated parameters object
 
 <Alert variant="warning">
@@ -441,7 +443,7 @@ interface CurveDef {
 ```ts
 const myCurve: CurveDef = {
   name: "circle",
-  fn: (t, time, params) => ({
+  fn: (phase, elapsed, params) => ({
     x: Math.cos(t),
     y: Math.sin(t),
   }),
@@ -454,8 +456,8 @@ const myCurve: CurveDef = {
 
 | Mode | Description |
 |------|-------------|
-| `'static'` | Skeleton is computed once at initialization from `fn(t, 0)` and cached. Use for curves with fixed shapes. |
-| `'live'` | Skeleton is recomputed *each frame* using `fn(t, actualTime)`. Use for curves whose shape drifts over time. |
+| `'static'` | Skeleton is computed once at initialization from `fn(phase, 0)` and cached. Use for curves with fixed shapes. |
+| `'live'` | Skeleton is recomputed *each frame* using `fn(phase, actualTime)`. Use for curves whose shape drifts over time. |
 | `skeletonFn` | Override function for computing a skeleton *independent* of `fn`. |
 
 <Alert variant="info">
@@ -559,7 +561,7 @@ interface Point {
 
 interface CurveDef {
   name: string;
-  fn: (t: number, time: number, params: Record<string, number>) => Point;
+  fn: (phase: number, elapsed: number, params: Record<string, number>) => Point;
   period?: number;
   speed?: number;
   skeleton?: "static" | "live";

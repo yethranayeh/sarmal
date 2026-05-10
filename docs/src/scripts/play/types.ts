@@ -3,8 +3,8 @@ import type { Point, TrailStyle } from "@sarmal/core";
 export type DrawingSegment = [number, number];
 
 export const DEFAULT_CODE = `return {
-  x: Math.cos(t),
-  y: Math.sin(t)
+  x: Math.cos(phase),
+  y: Math.sin(phase)
 }`;
 
 export interface PresetData {
@@ -21,7 +21,7 @@ export interface Preset {
 
 export type PlaygroundMode = "math" | "draw";
 
-export type CurveFn = (t: number, time: number, params: Record<string, number>) => Point;
+export type CurveFn = (phase: number, elapsed: number, params: Record<string, number>) => Point;
 
 export interface SharedState {
   v: 2;
