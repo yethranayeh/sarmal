@@ -81,13 +81,13 @@ if (!meta) return new Response(`Unknown curve: ${id}`, { status: 404 });
 		<!-- Subtle curve-color radial bloom on the right side where the card lives -->
 		<div
 			class="absolute inset-0 pointer-events-none"
-			style={`background: radial-gradient(ellipse 55% 90% at 72% 50%, color-mix(in srgb, ${meta.color} 12%, transparent) 0%, transparent 100%)`}
+			style={`background: radial-gradient(ellipse 55% 90% at 58% 50%, color-mix(in srgb, ${meta.color} 12%, transparent) 0%, transparent 100%)`}
 		>
 		</div>
 
 		<!-- Left text block -->
 		<div
-			class="absolute left-18 top-0 bottom-0 z-10 flex flex-col justify-center gap-2"
+			class="absolute left-70 top-0 bottom-0 z-10 flex flex-col justify-center gap-2"
 		>
 			<h1
 				class="max-w-140 text-[72px] font-black leading-[0.92] tracking-tight"
@@ -127,7 +127,7 @@ if (!meta) return new Response(`Unknown curve: ${id}`, { status: 404 });
 					class="text-2xl font-medium text-foreground"
 					style="font-family: 'Newsreader', serif"
 				>
-					sarmal<span class="text-[#c0143c]">.art</span>
+					sarmal<span class="text-primary">.art</span>
 				</span>
 			</div>
 		</div>
@@ -135,7 +135,7 @@ if (!meta) return new Response(`Unknown curve: ${id}`, { status: 404 });
 		<!-- Tilted card — the curve lives here -->
 		<div
 			class="absolute rounded-3xl overflow-hidden bg-[#141410] border border-white/7"
-			style={`width: 520px; top: -80px; bottom: -80px; right: -55px; transform: rotate(-9deg); box-shadow: 0 0 80px color-mix(in srgb, var(--curve-color) 15%, transparent), 0 24px 60px rgba(0,0,0,0.6)`}
+			style={`width: 460px; top: -80px; bottom: -80px; right: 280px; transform: rotate(-9deg); box-shadow: 0 0 80px color-mix(in srgb, var(--curve-color) 15%, transparent), 0 24px 60px rgba(0,0,0,0.6)`}
 		>
 			<canvas id="og-curve" class="absolute inset-0 h-full w-full"></canvas>
 		</div>
