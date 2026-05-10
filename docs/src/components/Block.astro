@@ -7,18 +7,28 @@ interface Props {
 
 const { variant = "default", template = "solid", size = "md" } = Astro.props;
 
-const config: Record<string, { kanji?: string; color: string }> = {
-	default: { color: "var(--color-primary)" },
-	info: { kanji: "報", color: "var(--color-primary)" },
-	tip: { kanji: "秘", color: "var(--color-accent)" },
-	warning: { kanji: "危", color: "var(--color-primary)" },
-	error: { kanji: "誤", color: "var(--color-error)" },
-	success: { kanji: "達", color: "var(--color-primary)" },
+const config: Record<string, { kanji?: string; token: string }> = {
+	default: { token: "primary" },
+	info: { kanji: "報", token: "primary" },
+	tip: { kanji: "秘", token: "accent" },
+	warning: { kanji: "危", token: "primary" },
+	error: { kanji: "誤", token: "error" },
+	success: { kanji: "達", token: "primary" },
 };
 
-const { kanji, color } = config[variant] ?? config.default;
+const { kanji, token } = config[variant] ?? config.default;
 const isDefault = variant === "default";
-const bgColor = template === "kanji" ? color : "var(--color-primary)";
+const colorToken = template === "kanji" ? token : "primary";
+
+const colorClasses: Record<string, string> = {
+	primary: "bg-primary text-primary-foreground",
+	accent: "bg-accent text-accent-foreground",
+	error: "bg-error text-error-foreground",
+};
+
+const blockClasses = isDefault
+	? "bg-primary"
+	: (colorClasses[colorToken] ?? "bg-primary text-primary-foreground");
 
 const sizeClass =
 	size === "sm" ? "w-3.5 h-3.5 text-[12px]" : "w-[18px] h-[18px] text-[14px]";
@@ -27,16 +37,15 @@ const sizeClass =
 {
 	isDefault ? (
 		<span
-			class:list={[sizeClass, "inline-block shrink-0"]}
-			style={`background-color: ${bgColor}`}
+			class:list={[sizeClass, "block-icon inline-block shrink-0", blockClasses]}
 		/>
 	) : (
 		<span
 			class:list={[
 				sizeClass,
-				"inline-flex items-center justify-center shrink-0 font-heading leading-none text-white! select-none pt-0.5",
+				"block-icon inline-flex items-center justify-center shrink-0 font-heading leading-none select-none pt-0.5",
+				blockClasses,
 			]}
-			style={`background-color: ${bgColor}`}
 		>
 			{kanji}
 		</span>

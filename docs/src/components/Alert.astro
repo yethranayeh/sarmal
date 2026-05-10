@@ -21,10 +21,12 @@ const resolvedLabel = label ?? config.label;
 ---
 
 <div
-	class='sr-alert not-prose overflow-hidden [&_span[style*="background-color"]]:bg-(--alert-accent)!'
+	class="sr-alert not-prose overflow-hidden [&_.block-icon]:bg-(--alert-accent)!"
 	style={`border: 1px solid ${config.accent}; border-left-width: 3px; background: color-mix(in srgb, ${config.accent} 7%, var(--color-surface-raised)); --alert-accent: ${config.accent};`}
 >
-	<div class="px-2 md:px-4 py-2 md:py-2.5 [&_span]:text-(--alert-accent)">
+	<div
+		class="px-2 md:px-4 py-2 md:py-2.5 [&_span:not(.block-icon)]:text-(--alert-accent)"
+	>
 		<SectionLabel
 			label={resolvedLabel}
 			variant={variant}
@@ -44,5 +46,18 @@ const resolvedLabel = label ?? config.label;
 	.sr-alert .prose :not(pre) > code {
 		background: var(--color-surface-raised);
 		border-color: color-mix(in srgb, var(--alert-accent) 22%, transparent);
+	}
+
+	/* TODO: must be a better way to handle these */
+	.sr-alert .prose a {
+		text-decoration-style: solid;
+	}
+	.sr-alert .prose a,
+	.sr-alert .prose a:hover {
+		color: var(--alert-accent);
+		text-decoration-line: underline;
+	}
+	.sr-alert .prose a:hover {
+		text-decoration-style: wavy;
 	}
 </style>

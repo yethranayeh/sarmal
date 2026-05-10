@@ -8,6 +8,7 @@
   --color-foreground: #1b1c1a;
 
   --color-surface: #f5f3ef;
+  --color-surface-muted: #766c64;
   --color-surface-raised: #ffffff;
 
   --color-border: #e4e2de;
@@ -53,7 +54,7 @@
     --color-border: #2e2e2a;
     --color-border-subtle: #232320;
 
-    --color-primary: #e6536e;
+    --color-primary: #ec5571;
     --color-primary-foreground: #131311;
 
     --color-accent: #ff7188;
@@ -64,7 +65,7 @@
     --color-muted-dark: #6e6862;
     --color-muted-foreground: #b5a8a0;
 
-    --color-error: #ff7676;
+    --color-error: #ff5151;
     --color-error-foreground: #131311;
 
     --color-info: #6ab2da;
@@ -79,12 +80,13 @@
       --color-foreground: #f1ede4;
 
       --color-surface: #1c1c19;
+      --color-surface-muted: #8f8279;
       --color-surface-raised: #232320;
 
       --color-border: #2e2e2a;
       --color-border-subtle: #232320;
 
-      --color-primary: #e6536e;
+      --color-primary: #ec5571;
       --color-primary-foreground: #131311;
 
       --color-accent: #ff7188;
@@ -95,7 +97,7 @@
       --color-muted-dark: #6e6862;
       --color-muted-foreground: #b5a8a0;
 
-      --color-error: #ff7676;
+      --color-error: #ff5151;
       --color-error-foreground: #131311;
 
       --color-info: #6ab2da;
@@ -132,9 +134,12 @@
 }
 
 .prose :not(pre) > code {
+  color: var(--alert-accent, var(--color-accent));
+  background-color: var(--color-surface-raised);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-sm);
   padding: 0px 4px;
+  font-family: monospace;
 
   &::before,
   &::after {

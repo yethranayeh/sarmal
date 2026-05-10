@@ -13,7 +13,11 @@ const svgId = `${id}-svg`;
 		class="flex flex-col md:flex-row gap-6 md:gap-30 justify-center items-center md:items-end"
 	>
 		<div class="flex flex-col items-center gap-3">
-			<canvas id={canvasId} width={200} height={200}></canvas>
+			<canvas
+				id={canvasId}
+				aria-label="visual sarmal depiction"
+				width={200}
+				height={200}></canvas>
 			<span class="font-ui text-[10px] tracking-[0.25em] uppercase text-muted"
 				>Canvas</span
 			>

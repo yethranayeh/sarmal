@@ -7,11 +7,7 @@ description: Browse available curves and their parameters.
 ---
 
 import Alert from "../../components/Alert.astro";
-import Badge from "../../components/Badge.astro";
-import Link from "../../components/Link.astro";
-import CurveKindBadge from "../../components/CurveKindBadge.astro";
-
-import { SEPARATOR_DOT } from "../../variables";
+import CurveGrid from "../../components/feature/curves/CurveGrid.astro";
 
 # Curve Catalog
 
@@ -25,122 +21,12 @@ Some of the well-known and well-documented curves with easy to find mathematical
 
 <Alert variant="warning">Their commonality does not take away from their inherent beauty. So, please try to enjoy each curve *equally*, and <u>do not</u> show preference for any over the others.</Alert>
 
-### Rose (n=3)
-<div class="inline-flex gap-4 items-center text-sm mt-1 mb-2">
-  <Link href="/docs/curves/rose3/"><Badge text="Rose" /></Link>
-  {SEPARATOR_DOT}
-  <CurveKindBadge kind="parametric" />
-</div>
-A 3-petaled rose curve with trifold symmetry. Also used as the Sarmal logo.
-
-### Rose (n=5)
-<div class="inline-flex gap-4 items-center text-sm mt-1 mb-2">
-  <Link href="/docs/curves/rose5/"><Badge text="Rose" /></Link>
-  {SEPARATOR_DOT}
-  <CurveKindBadge kind="parametric" />
-</div>
-A 5-petaled rose curve with fivefold symmetry.
-
-### Rose (n=5/2)
-<div class="inline-flex gap-4 items-center text-sm mt-1 mb-2">
-  <Link href="/docs/curves/rose52/"><Badge text="Rose" /></Link>
-  {SEPARATOR_DOT}
-  <CurveKindBadge kind="parametric" />
-</div>
-A 5-petaled rose with period 4π — a fractional exponent requires two full revolutions to close, producing elegant trail crossings through the center.
-
-### Astroid
-<div class="inline-flex gap-4 items-center text-sm mt-1 mb-2">
-  <Link href="/docs/curves/astroid/"><Badge text="Hypocycloid" /></Link>
-  {SEPARATOR_DOT}
-  <CurveKindBadge kind="parametric" />
-</div>
-A hypocycloid with 4 sharp cusps, forming a star-like shape within a square.
-
-### Deltoid
-<div class="inline-flex gap-4 items-center text-sm mt-1 mb-2">
-  <Link href="/docs/curves/deltoid/"><Badge text="Hypocycloid" /></Link>
-  {SEPARATOR_DOT}
-  <CurveKindBadge kind="parametric" />
-</div>
-A 3-cusped hypocycloid tracing a triangle-like curve.
-
-### Lissajous 3:2
-<div class="inline-flex gap-4 items-center text-sm mt-1 mb-2">
-  <Link href="/docs/curves/lissajous32/"><Badge text="Lissajous" /></Link>
-  {SEPARATOR_DOT}
-  <CurveKindBadge kind="parametric" />
-</div>
-A figure-eight-like curve with a slowly drifting phase and live skeleton.
-
-### Lissajous 4:3
-<div class="inline-flex gap-4 items-center text-sm mt-1 mb-2">
-  <Link href="/docs/curves/lissajous43/"><Badge text="Lissajous" /></Link>
-  {SEPARATOR_DOT}
-  <CurveKindBadge kind="parametric" />
-</div>
-A more complex Lissajous pattern with 4:3 frequency ratio, drifting phase, and live skeleton.
-
-### Epitrochoid7
-<div class="inline-flex gap-4 items-center text-sm mt-1 mb-2">
-  <Link href="/docs/curves/epitrochoid7/"><Badge text="Roulette" /></Link>
-  {SEPARATOR_DOT}
-  <CurveKindBadge kind="parametric" />
-</div>
-A roulette tracing 7 lobes with an animated distance parameter that creates organic motion.
-
-### Epicycloid (n=3)
-<div class="inline-flex gap-4 items-center text-sm mt-1 mb-2">
-  <Link href="/docs/curves/epicycloid3/"><Badge text="Roulette" /></Link>
-  {SEPARATOR_DOT}
-  <CurveKindBadge kind="parametric" />
-</div>
-A 3-pointed star shape created by a point on a rolling circle.
-
-### Lamé Curve
-<div class="inline-flex gap-4 items-center text-sm mt-1 mb-2">
-  <Link href="/docs/curves/lame/"><Badge text="Superellipse" /></Link>
-  {SEPARATOR_DOT}
-  <CurveKindBadge kind="parametric" />
-</div>
-A superellipse that morphs continuously between diamond, circle, and squircle shapes.
-
-
-
-### Star
-<div class="inline-flex gap-4 items-center text-sm mt-1 mb-2">
-  <Link href="/docs/curves/star/"><Badge text="Fourier polar" /></Link>
-  {SEPARATOR_DOT}
-  <CurveKindBadge kind="parametric" />
-</div>
-A 5-pointed star built from Fourier harmonics in polar coordinates.
-
-### Star (4-arm)
-<div class="inline-flex gap-4 items-center text-sm mt-1 mb-2">
-  <Link href="/docs/curves/star4/"><Badge text="Fourier polar" /></Link>
-  {SEPARATOR_DOT}
-  <CurveKindBadge kind="parametric" />
-</div>
-A 4-pointed star using the same Fourier harmonic construction as Star.
-
-### Star (7-arm)
-<div class="inline-flex gap-4 items-center text-sm mt-1 mb-2">
-  <Link href="/docs/curves/star7/"><Badge text="Fourier polar" /></Link>
-  {SEPARATOR_DOT}
-  <CurveKindBadge kind="parametric" />
-</div>
-A 7-pointed star using the same Fourier harmonic construction as Star.
+<CurveGrid section="standard" />
 
 ---
 
 ### Iconic
 
-These are mainly **tributes** to the impactful happenings of nature, humanity and univcerse. A recreation of shapes from the real world, whose <span class='text-muted hover:text-foreground duration-300 transition-all [font-variation-settings:"wght"_var(--wght)] [--wght:300] hover:[--wght:650] cursor-vertical-text'>silhouttes</span> carry a deeper meaning beyond their mathematical equations.
+These are mainly **tributes** to the impactful happenings of nature, humanity and universe. A recreation of shapes from the real world, whose <span class='text-muted hover:text-foreground duration-300 transition-all [font-variation-settings:"wght"_var(--wght)] [--wght:300] hover:[--wght:650] cursor-vertical-text'>silhouttes</span> carry a deeper meaning beyond their mathematical equations.
 
-### Artemis II
-<div class="inline-flex gap-4 items-center text-sm mt-1 mb-2">
-  <Link href="/docs/curves/artemis2/"><Badge text="NASA" /></Link>
-  {SEPARATOR_DOT}
-  <CurveKindBadge kind="drawn" />
-</div>
-As the *first* built-in curve of the Sarmal library, this is my <span class="text-muted">amateur</span> attempt at drawing the Artemis II mission trajectory as a Catmull-Rom spline using <Link href="/play/">Playground</Link>. I attempted to trace  the outline of the lunar free-return trajectory by referencing [Artemis II Flight Path Animations](https://svs.gsfc.nasa.gov/20412/) from NASA.
+<CurveGrid section="iconic" />

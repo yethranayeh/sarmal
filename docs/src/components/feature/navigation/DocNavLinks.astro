@@ -56,11 +56,11 @@ const isActive = (href: string) => {
 					<a
 						href={item.href}
 						class:list={[
-							'block px-3 py-2 border-l text-sm duration-300 transition-all [font-variation-settings:"wght"_var(--wght)]',
+							'block px-3 py-2 border-l-2 text-sm duration-300 transition-all [font-variation-settings:"wght"_var(--wght)]',
 							{
 								"text-primary border-primary bg-surface-raised font-medium [--wght:500]":
 									active,
-								"text-muted hover:text-foreground hover:bg-surface-raised border-border [--wght:350] hover:[--wght:500]":
+								"text-surface-muted hover:text-foreground hover:bg-surface-raised border-border [--wght:350] hover:[--wght:500]":
 									!active,
 							},
 						]}

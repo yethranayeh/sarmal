@@ -1,0 +1,79 @@
+---
+import { XIcon } from "@lucide/astro";
+
+import DocNavLinks from "./DocNavLinks.astro";
+
+import { navigationLinks } from "./constants";
+
+interface Props {
+	currentPath: string;
+}
+
+const { currentPath } = Astro.props;
+---
+
+<div id="mobile-menu-wrapper" class="group" data-open="false">
+	<!-- Mobile drawer (slides in from the right) -->
+	<div
+		id="mobile-drawer"
+		class="lg:hidden fixed inset-y-0 right-0 z-50 w-72 bg-surface border-l border-border transform translate-x-full group-data-[open=true]:translate-x-0 transition-transform duration-300 ease-in-out flex flex-col"
+		aria-label="Navigation menu"
+	>
+		<!-- Drawer header -->
+		<div
+			class="flex items-center justify-between px-4 py-2 border-b border-border shrink-0 bg-surface-raised"
+		>
+			<h2>Menu</h2>
+			<button
+				id="mobile-menu-close"
+				class="flex items-center justify-center w-9 h-9 rounded-md hover:bg-surface transition-colors"
+				aria-label="Close navigation menu"
+			>
+				<XIcon size={20} />
+			</button>
+		</div>
+
+		<!-- Top nav links -->
+		<div class="px-4 py-3 border-b border-border shrink-0">
+			<nav class="flex flex-col gap-1">
+				{
+					navigationLinks.map((link) => {
+						const isLinkActive =
+							link.href === "/docs/"
+								? currentPath.startsWith("/docs/")
+								: currentPath.startsWith(link.href);
+						const Icon = link.icon;
+						return (
+							<a
+								href={link.href}
+								class:list={[
+									"inline-flex items-center gap-2 py-2 rounded-md font-ui text-xs tracking-wider uppercase transition-colors hover:bg-surface-raised hover:text-foreground",
+									isLinkActive ? "text-primary" : "text-muted",
+								]}
+							>
+								<Icon size={16} />
+								<span>{link.label}</span>
+							</a>
+						);
+					})
+				}
+			</nav>
+		</div>
+
+		<!-- Sidebar doc links -->
+		<nav class="flex-1 overflow-y-auto p-4" aria-label="Documentation sections">
+			<p class="px-3 pb-2 text-xs font-ui tracking-widest uppercase text-muted">
+				Documentation
+			</p>
+			<DocNavLinks currentPath={currentPath} />
+		</nav>
+	</div>
+
+	<!-- Overlay -->
+	<div
+		id="sidebar-overlay"
+		class="fixed inset-0 bg-black/60 z-40 opacity-0 pointer-events-none group-data-[open=true]:opacity-100 group-data-[open=true]:pointer-events-auto transition-opacity duration-300 lg:hidden"
+		aria-hidden="true"
+	>
+	</div>
+</div>

@@ -1,0 +1,148 @@
+---
+import type { CurveDef, Point } from "@sarmal/core";
+
+import { createEngine, computeBoundaries, curves } from "@sarmal/core";
+
+import CurveKindBadge from "../../CurveKindBadge.astro";
+
+import { CURVE_DOCS } from "../../../data/curves";
+import { STANDARD_CURVES, ICONIC_CURVES } from "../../../data/curve-catalog";
+
+interface Props {
+	section: "standard" | "iconic";
+}
+
+function toSVGPath(
+	pts: Array<Point>,
+	scale: number,
+	ox: number,
+	oy: number,
+): string {
+	if (pts.length < 2) {
+		return "";
+	}
+
+	return (
+		pts
+			.map(
+				(p, i) =>
+					`${i === 0 ? "M" : "L"}${(p.x * scale + ox).toFixed(2)} ${(p.y * scale + oy).toFixed(2)}`,
+			)
+			.join(" ") + " Z"
+	);
+}
+
+// ! getSarmalSkeleton() uses ~50 pts/unit which is too dense at 52px.
+function sampleClean(curveDef: CurveDef): Array<Point> {
+	const period = curveDef.period ?? Math.PI * 2;
+	const n = Math.ceil(period * 15);
+	const sample = curveDef.skeletonFn
+		? (t: number) => curveDef.skeletonFn!(t)
+		: (t: number) => curveDef.fn(t, 0, {});
+	return Array.from({ length: n }, (_, i) => sample((i / (n - 1)) * period));
+}
+
+const { section } = Astro.props;
+const ids = section === "standard" ? STANDARD_CURVES : ICONIC_CURVES;
+
+const entries = ids.map((id) => {
+	const meta = CURVE_DOCS[id];
+	const curveDef = curves[id];
+
+	// All pure math — safe to run at build time, no DOM needed.
+	const engine = createEngine(curveDef);
+	const ptsHiRes = engine.getSarmalSkeleton(); // used for accurate bounds only
+	const ptsClean = sampleClean(curveDef);
+	const b = computeBoundaries(ptsHiRes, 100, 100, 8);
+	const d = b ? toSVGPath(ptsClean, b.scale, b.offsetX, b.offsetY) : "";
+
+	return {
+		id,
+		name: meta.name,
+		family: meta.family,
+		description: meta.description,
+		color: meta.color,
+		d,
+	};
+});
+---
+
+<div
+	class:list={[
+		"not-prose mt-6 grid gap-px border border-border bg-border",
+		{
+			"md:grid-cols-2": entries.length > 1, // TODO: should not be conditional after a new iconic curve is added to the library
+		},
+	]}
+>
+	{
+		entries.map(({ id, name, family, description, color, d }) => (
+			<a
+				href={`/docs/curves/${id}/`}
+				class="curve-catalog-card flex items-center gap-4 bg-surface-raised/80 p-4 no-underline transition-colors duration-150 hover:bg-surface-raised"
+				style={`--curve-color: ${color}`}
+			>
+				<div class="h-13 w-13 shrink-0 overflow-hidden rounded-md border border-border bg-background">
+					<svg
+						aria-label={`Drawing of ${name} curve`}
+						viewBox="0 0 100 100"
+						class="block h-full w-full"
+					>
+						<path class="path-skeleton" d={d} pathLength="1" />
+					</svg>
+				</div>
+				<div class="min-w-0 flex flex-col">
+					<div class="flex gap-1 justify-between">
+						<span class="font-heading leading-none text-[14px] font-medium text-foreground">
+							{name}
+						</span>
+						<CurveKindBadge
+							kind={
+								section === "standard" ? "parametric" : "drawn" // TODO: this only works for current state. There is no guarantee that standard ones will not have drawn curves or iconic ones will not have parametric ones
+							}
+						/>
+					</div>
+					<span class="font-mono leading-none text-[9px] tracking-widest uppercase text-muted">
+						{family}
+					</span>
+					<p class="mt-1.5 font-body text-[12px] leading-relaxed text-muted">
+						{description}
+					</p>
+				</div>
+			</a>
+		))
+	}
+</div>
+
+<style>
+	.path-skeleton {
+		fill: none;
+		stroke: var(--color-muted);
+		stroke-width: 2.5;
+		stroke-linecap: round;
+		stroke-linejoin: round;
+		stroke-dasharray: 1;
+		stroke-dashoffset: 0;
+		opacity: 0.45;
+	}
+
+	@keyframes curve-redraw {
+		from {
+			stroke-dashoffset: 1;
+		}
+		to {
+			stroke-dashoffset: 0;
+		}
+	}
+
+	.curve-catalog-card:hover .path-skeleton {
+		stroke: var(--curve-color);
+		opacity: 0.9;
+	}
+
+	@media (prefers-reduced-motion: no-preference) {
+		.curve-catalog-card:hover .path-skeleton {
+			animation: curve-redraw 1200ms cubic-bezier(0.075, 0.82, 0.165, 1);
+		}
+	}
+</style>
