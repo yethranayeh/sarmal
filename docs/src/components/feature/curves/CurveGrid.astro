@@ -38,7 +38,7 @@ function sampleClean(curveDef: CurveDef): Array<Point> {
 	const n = Math.ceil(period * 15);
 	const sample = curveDef.skeletonFn
 		? (t: number) => curveDef.skeletonFn!(t)
-		: (t: number) => curveDef.fn(t, 0, {});
+		: (phase: number) => curveDef.fn(phase, 0, {});
 
 	return Array.from({ length: n }, (_, i) => sample((i / (n - 1)) * period));
 }
@@ -103,9 +103,9 @@ const entries = entriesWithDuration.map(({ pathLen, ...rest }) => {
 
 <div
 	class:list={[
-		"not-prose mt-6 grid gap-px border border-border bg-border",
+		"not-prose mt-4 grid gap-px border border-border bg-border",
 		{
-			"md:grid-cols-2": entries.length > 1, // TODO: should not be conditional after a new iconic curve is added to the library
+			"lg:grid-cols-2": entries.length > 1, // TODO: should not be conditional after a new iconic curve is added to the library
 		},
 	]}
 >
@@ -113,7 +113,7 @@ const entries = entriesWithDuration.map(({ pathLen, ...rest }) => {
 		entries.map(({ id, name, family, description, color, d, duration }) => (
 			<a
 				href={`/docs/curves/${id}/`}
-				class="curve-catalog-card flex items-center gap-4 bg-surface-raised/80 p-4 no-underline transition-colors duration-150 hover:bg-surface-raised"
+				class="curve-catalog-card flex items-center gap-4 bg-surface-raised/80 p-4 no-underline hover:bg-surface-raised"
 				style={`--curve-color: ${color}; --draw-duration: ${duration}ms`}
 			>
 				<div class="h-13 w-13 shrink-0 overflow-hidden rounded-md border border-border bg-background">
@@ -126,7 +126,7 @@ const entries = entriesWithDuration.map(({ pathLen, ...rest }) => {
 						<path class="path-draw" d={d} pathLength="1" />
 					</svg>
 				</div>
-				<div class="min-w-0 flex flex-col">
+				<div class="min-w-0 w-full flex flex-col">
 					<div class="flex gap-1 justify-between">
 						<span class="font-heading leading-none text-[14px] font-medium text-foreground">
 							{name}
@@ -172,6 +172,12 @@ const entries = entriesWithDuration.map(({ pathLen, ...rest }) => {
 		transition: stroke-dashoffset 400ms ease;
 	}
 
+	@media (prefers-reduced-motion: reduce) {
+		.path-draw {
+			stroke-dashoffset: 0;
+		}
+	}
+
 	@media (prefers-reduced-motion: no-preference) {
 		.curve-catalog-card:hover .path-draw {
 			stroke-dashoffset: 0;
@@ -179,4 +185,40 @@ const entries = entriesWithDuration.map(({ pathLen, ...rest }) => {
 			transition-timing-function: cubic-bezier(0.76, 0, 0.24, 1);
 		}
 	}
+
+	@media (max-width: 767px) and (prefers-reduced-motion: no-preference) {
+		.scroll-draw .path-draw {
+			stroke-dashoffset: 0;
+			transition-duration: var(--draw-duration, 1200ms);
+			transition-timing-function: cubic-bezier(0.76, 0, 0.24, 1);
+		}
+	}
 </style>
+
+<script>
+	function setup() {
+		const mq = window.matchMedia(
+			"(max-width: 767px) and (prefers-reduced-motion: no-preference)",
+		);
+		if (!mq.matches) return;
+
+		const cards = document.querySelectorAll(".curve-catalog-card");
+		const observer = new IntersectionObserver(
+			(entries) => {
+				for (const entry of entries) {
+					if (entry.isIntersecting) {
+						entry.target.classList.add("scroll-draw");
+						observer.unobserve(entry.target);
+					}
+				}
+			},
+			{ threshold: 0.3 },
+		);
+
+		for (const card of cards) {
+			observer.observe(card);
+		}
+	}
+
+	setup();
+</script>

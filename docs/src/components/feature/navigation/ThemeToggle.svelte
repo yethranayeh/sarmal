@@ -7,15 +7,14 @@
   let hydrated = $state(false);
   let preference = $state<Preference>("system");
 
-  try {
-    const stored = localStorage.getItem("theme");
-    if (stored === "dark" || stored === "light" || stored === "system") {
-      preference = stored as Preference;
-    }
-  } catch {}
-
   $effect(() => {
     hydrated = true;
+    try {
+      const stored = localStorage.getItem("theme");
+      if (stored === "dark" || stored === "light" || stored === "system") {
+        preference = stored as Preference;
+      }
+    } catch {}
   });
 
   const resolved = $derived.by((): "light" | "dark" => {
