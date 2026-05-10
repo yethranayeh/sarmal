@@ -46,7 +46,7 @@ const svgId = `${id}-svg`;
 			const svgId = wrapper.dataset.svgId!;
 
 			const canvas = document.getElementById(canvasId) as HTMLCanvasElement;
-			const svgContainer = document.getElementById(svgId) as SVGSVGElement;
+			const svgContainer = document.getElementById(svgId) as unknown as SVGSVGElement;
 
 			if (!canvas || !svgContainer) return;
 

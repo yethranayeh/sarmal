@@ -7,7 +7,7 @@
     "build": "astro build",
     "preview": "astro preview",
     "astro": "astro",
-    "typecheck": "svelte-check --tsconfig ./tsconfig.json",
+    "typecheck": "astro check",
     "test": "vitest run",
     "test:watch": "vitest"
   },
