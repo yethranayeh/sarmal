@@ -31,6 +31,7 @@ export function parseSvgInput(raw: string): ParseResult {
 
   // sarmal metadata allows lossless import
   if (doc) {
+    // querySelector('sarmal\\:source') is inconsistent across browsers for namespaced elements — getElementsByTagNameNS is reliable
     const sources = doc.getElementsByTagNameNS("https://sarmal.art/ns/1.0", "source");
     if (sources.length > 0) {
       const pointsAttr = sources[0]!.getAttribute("points");
@@ -165,6 +166,7 @@ function samplePath(d: string, numPoints: number): DrawingSegment[] {
   const path = document.createElementNS(SVG_NAMESPACE, "path");
   path.setAttribute("d", d);
   svg.appendChild(path);
+  // ! detached <path> elements return unreliable values from getTotalLength() in some browsers
   document.body.appendChild(svg);
 
   try {

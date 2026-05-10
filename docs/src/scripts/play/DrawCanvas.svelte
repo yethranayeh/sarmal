@@ -78,6 +78,9 @@
     open={dialogOpen}
     onClose={() => (dialogOpen = false)}
     onImport={(points) => {
+      // drawInitialPoints flows into DrawBoard (input);
+      // drawPoints flows out
+      // ! both must be set to keep them in sync
       pg.drawInitialPoints = points;
       pg.drawPoints = [...points];
       dialogOpen = false;

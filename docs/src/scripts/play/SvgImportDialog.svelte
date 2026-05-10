@@ -10,6 +10,7 @@
     Import,
     TriangleAlert,
     TriangleDashed,
+    Upload,
     X,
   } from "@lucide/svelte";
 
@@ -29,6 +30,9 @@
   let parseStatus = $state<"idle" | "parsed" | "error">("idle");
   let parseResult = $state<ParseResult | null>(null);
   let dialogEl = $state<HTMLDialogElement | null>(null);
+  let fileInput = $state<HTMLInputElement | null>(null);
+  let isDragging = $state(false);
+  let fileError = $state<string | null>(null);
 
   const canImport = $derived(parseStatus === "parsed" && parseResult?.ok);
   const pointCount = $derived(parseResult?.ok ? parseResult.points.length : 0);
@@ -68,6 +72,8 @@
       input = "";
       parseStatus = "idle";
       parseResult = null;
+      isDragging = false;
+      fileError = null;
     }
   });
 
@@ -112,6 +118,52 @@
       onClose();
     }
   }
+
+  function readFile(file: File) {
+    if (file.type !== "image/svg+xml" && !file.name.endsWith(".svg")) {
+      fileError = "Only .svg files are supported.";
+      return;
+    }
+
+    fileError = null;
+    const reader = new FileReader();
+    reader.onload = () => {
+      if (typeof reader.result === "string") {
+        input = reader.result;
+      }
+    };
+    reader.onerror = () => {
+      fileError = "Could not read the file.";
+    };
+
+    reader.readAsText(file);
+  }
+
+  function handleFilePick(e: Event) {
+    const target = e.target as HTMLInputElement;
+    const file = target.files?.[0];
+    if (!file) {
+      return;
+    }
+
+    readFile(file);
+    target.value = "";
+  }
+
+  function triggerFilePick() {
+    fileInput?.click();
+  }
+
+  function handleDrop(e: DragEvent) {
+    e.preventDefault();
+    isDragging = false;
+    const file = e.dataTransfer?.files?.[0];
+    if (!file) {
+      return;
+    }
+
+    readFile(file);
+  }
 </script>
 
 <!-- svelte-ignore a11y_no_static_element_interactions -->
@@ -136,7 +188,7 @@
       </button>
     </div>
 
-    <p id="svg-import-disclaimer" class="text-xs font-ui">
+    <p id="svg-import-disclaimer" class="text-xs text-foreground font-ui">
       Curves exported from the playground import <span class="text-primary"
         >losslessly</span
       >. SVGs from other tools (Figma, Illustrator, etc.) will be
@@ -147,11 +199,57 @@
       bind:value={input}
       aria-describedby="svg-import-disclaimer"
       aria-invalid={parseStatus === "error"}
-      placeholder="Paste an SVG `d` attribute, a `<path>` element, or a full `<svg>` block&hellip;"
+      placeholder="Paste an SVG `d` attribute, a `<path>` element, or a full `<svg>` block"
       spellcheck="false"
       rows="6"
       class="w-full px-3 py-2.5 font-mono text-xs leading-loose text-foreground bg-surface-raised border border-border rounded-lg resize-none outline-none focus-visible:ring-1 focus-visible:ring-primary placeholder:text-muted-gray/50"
     ></textarea>
+
+    <input
+      bind:this={fileInput}
+      type="file"
+      accept=".svg"
+      onchange={handleFilePick}
+      class="hidden"
+    />
+
+    <!-- svelte-ignore a11y_no_static_element_interactions -->
+    <div
+      ondragenter={(e) => {
+        e.preventDefault();
+        isDragging = true;
+      }}
+      ondragover={(e) => e.preventDefault()}
+      ondragleave={(e) => {
+        const zone = e.currentTarget as HTMLElement;
+        if (!zone.contains(e.relatedTarget as Node)) {
+          isDragging = false;
+        }
+      }}
+      ondrop={handleDrop}
+      onclick={triggerFilePick}
+      onkeydown={(e) => {
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          triggerFilePick();
+        }
+      }}
+      role="button"
+      tabindex="0"
+      class="border-2 border-dashed rounded-lg py-4 px-4 flex items-center justify-center gap-2 cursor-pointer text-xs font-ui bg-background text-muted-gray transition-colors {isDragging
+        ? 'border-foreground bg-surface-raised text-foreground'
+        : 'border-border'}"
+    >
+      <Upload size={14} />
+      Drop an .svg file here, or click to browse
+    </div>
+
+    {#if fileError}
+      <div class="text-xs text-error font-ui flex items-center gap-1.5">
+        <TriangleAlert size={14} />
+        {fileError}
+      </div>
+    {/if}
 
     {#if showStatus}
       <div aria-live="polite" class="flex flex-col gap-2">
@@ -159,7 +257,7 @@
           <div
             class="text-xs text-error font-ui flex items-center leading-none gap-1.5"
           >
-            <TriangleAlert size={35} />
+            <TriangleAlert />
             {errorMessage}
           </div>
         {/if}
