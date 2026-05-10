@@ -196,9 +196,15 @@
     if (!svgElement) {
       throw new Error("SVG element not mounted");
     }
+
     const rect = svgElement.getBoundingClientRect();
-    const x = -1 + (2 * (clientX - rect.left)) / rect.width;
-    const y = -1 + (2 * (clientY - rect.top)) / rect.height;
+    const x = Number(
+      (-1 + (2 * (clientX - rect.left)) / rect.width).toFixed(3),
+    );
+    const y = Number(
+      (-1 + (2 * (clientY - rect.top)) / rect.height).toFixed(3),
+    );
+
     return [x, y];
   }
 
@@ -296,6 +302,23 @@
     deletePoint(index);
   }
 
+  export function updatePointAt(index: number, axis: 0 | 1, value: number) {
+    if (index < 0 || index >= points.length) {
+      return;
+    }
+
+    points = points.map((p, i) => {
+      if (i !== index) {
+        return p;
+      }
+
+      const updated: DrawingSegment = [...p];
+      updated[axis] = value;
+
+      return updated;
+    });
+  }
+
   function stopLoop() {
     if (rafId !== null) {
       cancelAnimationFrame(rafId);
@@ -342,6 +365,7 @@
   function buildEngine() {
     stopLoop();
     engine = null;
+
     for (const p of trailPathEls) {
       p.setAttribute("d", "");
     }
@@ -385,10 +409,16 @@
 
   let builtPoints: DrawingSegment[] = [];
 
-  // Rebuild engine when points stabilize and when they actually changed
+  /**
+   * Rebuild engine when points stabilize and when they actually changed.
+   * Debounced so rapid input (typed coordinates, arrow keys) doesn't restart
+   *  the animation on every keystroke
+   * ! The cleanup return cancels the previous timer each time the effect re-runs
+   */
   $effect(() => {
     const pts = points;
     const dragging = dragIndex;
+
     if (dragging !== null) {
       return;
     }
@@ -397,13 +427,17 @@
       return;
     }
 
-    if (pts.length >= 3) {
-      builtPoints = pts.map((p) => [p[0], p[1]]);
-      buildEngine();
-    } else {
-      builtPoints = [];
-      destroyEngine();
-    }
+    const timer = setTimeout(() => {
+      if (pts.length >= 3) {
+        builtPoints = pts.map((p) => [p[0], p[1]]);
+        buildEngine();
+      } else {
+        builtPoints = [];
+        destroyEngine();
+      }
+    }, 150);
+
+    return () => clearTimeout(timer);
   });
 
   // Sync speed to running engine without subscribing to engine.

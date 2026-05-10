@@ -10,6 +10,9 @@
   import Button from "../../components/Button.svelte";
 
   const pg = getContext<PlaygroundState>("playground");
+  const hasOutOfRangePoints = $derived(
+    pg.drawPoints.some((p) => p[0] < -1 || p[0] > 1 || p[1] < -1 || p[1] > 1),
+  );
 </script>
 
 <section
@@ -89,6 +92,13 @@
       {pg.currentMode === "math" ? "Parametric" : "Hand-drawn"}
     </span>
     {#if pg.currentMode === "draw"}
+      {#if hasOutOfRangePoints}
+        <p
+          class="font-ui italic text-xs text-warning mt-1 mb-1 select-none leading-tight max-w-44"
+        >
+          Points outside <code>[-1, 1]</code>
+        </p>
+      {/if}
       <div
         class="flex gap-2 font-mono text-[10px] text-muted-gray mt-1.5 select-none tabular-nums"
       >

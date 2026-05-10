@@ -61,6 +61,7 @@ export interface PlaygroundState {
   handleHeadColorAutoChange: (auto: boolean) => void;
   handleTrailStyleChange: (newStyle: TrailStyle) => void;
   handlePaletteChange: (newPalette: SarmalPalette) => void;
+  handleDrawPointChange: (index: number, axis: "x" | "y", value: number) => void;
   previewRef: { current: SVGSVGElement | null };
   presets: PresetData[];
   PRESETS: Record<string, Preset>;
@@ -445,6 +446,18 @@ export function createPlaygroundState(
     }
   }
 
+  function handleDrawPointChange(index: number, axis: "x" | "y", value: number) {
+    if (state.currentMode !== "draw") {
+      return;
+    }
+
+    if (isNaN(value)) {
+      return;
+    }
+
+    state.drawBoardRef?.updatePointAt(index, axis === "x" ? 0 : 1, Number(value.toFixed(3)));
+  }
+
   async function restoreState(saved: SharedState) {
     if (saved.mode === "draw" && saved.drawPoints) {
       state.drawInitialPoints = saved.drawPoints;
@@ -733,6 +746,7 @@ export function createPlaygroundState(
     handleHeadColorAutoChange,
     handleTrailStyleChange,
     handlePaletteChange,
+    handleDrawPointChange,
     get PRESETS() {
       return PRESETS;
     },

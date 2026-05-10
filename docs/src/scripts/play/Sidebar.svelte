@@ -15,10 +15,50 @@
   let codeTextarea = $state<HTMLTextAreaElement>();
   let lineGutter = $state<HTMLDivElement>();
   let lineCount = $derived(pg.currentCode.split("\n").length);
+  const hasOutOfRangePoints = $derived(
+    pg.drawPoints.some((p) => p[0] < -1 || p[0] > 1 || p[1] < -1 || p[1] > 1),
+  );
 
   function syncScroll() {
     if (lineGutter && codeTextarea) {
       lineGutter.scrollTop = codeTextarea.scrollTop;
+    }
+  }
+
+  function handlePointKeydown(
+    e: KeyboardEvent,
+    index: number,
+    axis: "x" | "y",
+  ) {
+    const target = e.target as HTMLInputElement;
+    let step = 0.01;
+
+    if (e.shiftKey) {
+      step = 0.1;
+    } else if (e.altKey) {
+      step = 0.001;
+    }
+
+    if (e.key === "ArrowUp") {
+      e.preventDefault();
+      const current = target.value === "" ? 0 : parseFloat(target.value);
+      if (isNaN(current)) {
+        return;
+      }
+
+      const next = current + step;
+      target.value = next.toFixed(3);
+      pg.handleDrawPointChange(index, axis, next);
+    } else if (e.key === "ArrowDown") {
+      e.preventDefault();
+      const current = target.value === "" ? 0 : parseFloat(target.value);
+      if (isNaN(current)) {
+        return;
+      }
+
+      const next = current - step;
+      target.value = next.toFixed(3);
+      pg.handleDrawPointChange(index, axis, next);
     }
   }
 </script>
@@ -56,6 +96,14 @@
         />
       {/if}
     </header>
+
+    {#if pg.currentMode === "draw" && hasOutOfRangePoints}
+      <p class="font-ui italic text-xs leading-normal text-warning mt-2">
+        Some points are outside the <code>[-1, 1]</code> range. They will
+        <strong>still render correctly</strong>. The bounding box is a reference
+        frame, not a hard limit.
+      </p>
+    {/if}
 
     {#if pg.currentMode === "math"}
       <div class="flex flex-col gap-3">
@@ -173,6 +221,34 @@
         {/if}
       </div>
     {:else if pg.drawPoints.length > 0}
+      {#snippet pointInput(
+        index: number,
+        axis: "x" | "y",
+        point: [number, number],
+      )}
+        {@const coord = axis === "x" ? 0 : 1}
+        {@const isOutOfRange = point[coord] < -1 || point[coord] > 1}
+        <label class="flex items-center gap-1 cursor-text">
+          <span class="text-muted-gray">{axis}</span>
+          <input
+            type="number"
+            step="any"
+            value={point[coord]}
+            class="w-full min-w-0 bg-transparent border-0 p-0 font-mono text-[11px] text-foreground outline-none [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none border-b border-muted/50 focus:border-muted"
+            class:text-warning={isOutOfRange}
+            oninput={(e) => {
+              const v = parseFloat((e.target as HTMLInputElement).value);
+
+              if (!isNaN(v)) {
+                pg.handleDrawPointChange(index, axis, v);
+              }
+            }}
+            onkeydown={(e) => handlePointKeydown(e, index, axis)}
+            aria-label="Point {index + 1} {axis}"
+          />
+        </label>
+      {/snippet}
+
       <div
         class="bg-surface-raised border border-border rounded-md overflow-hidden mt-4 max-h-56 overflow-y-auto"
       >
@@ -184,14 +260,8 @@
               : ''}"
           >
             <span class="text-accent">{String(i + 1).padStart(2, "0")}</span>
-            <span class="text-foreground"
-              ><span class="text-muted-gray">x</span>
-              {point[0].toFixed(2)}</span
-            >
-            <span class="text-foreground"
-              ><span class="text-muted-gray">y</span>
-              {point[1].toFixed(2)}</span
-            >
+            {@render pointInput(i, "x", point)}
+            {@render pointInput(i, "y", point)}
             <button
               class="cursor-pointer w-max rounded-full p-1 hover:bg-primary/10 transition-colors"
               onclick={() => pg.drawBoardRef?.deletePointAt(i)}

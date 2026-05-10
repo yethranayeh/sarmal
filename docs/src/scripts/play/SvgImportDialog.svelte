@@ -189,7 +189,7 @@
     </div>
 
     <p id="svg-import-disclaimer" class="text-xs text-foreground font-ui">
-      Curves exported from the playground import <span class="text-primary"
+      SVG curves exported from the playground import <span class="text-primary"
         >losslessly</span
       >. SVGs from other tools (Figma, Illustrator, etc.) will be
       <em>sampled</em>, so minor approximation should be expected.
