@@ -2,11 +2,11 @@
 layout: ../../layouts/DocsLayout.astro
 title: Changelog
 sidebarLabel: Changelog
-order: 7
+order: 8
 description: Version history and migration notes.
 ---
 
-import { ArrowRight } from "@lucide/astro";
+import { MoveRight } from "@lucide/astro";
 import Alert from "../../components/Alert.astro";
 import Link from "../../components/Link.astro";
 
@@ -16,6 +16,22 @@ import Link from "../../components/Link.astro";
 Version history notes of the <Link href="#core">Core</Link> and the <Link href="#react">React</Link> packages
 
 ## Core
+
+### 0.27.0 - 11.05.2026
+
+New `terminalSarmal(stream, curveDef, options?)` renders sarmal curves in the terminal using braille characters and ANSI colors. Import from `@sarmal/core/terminal`. It should be noted that this is a node-only subpath, which will be rejected by browser bundlers at build time.
+
+```ts
+import { terminalSarmal } from "@sarmal/core/terminal";
+import { deltoid } from "@sarmal/core";
+
+const stop = terminalSarmal(process.stdout, deltoid, { speed: 2.5 });
+// Ctrl+C or stop() to clean up
+```
+
+Each character cell covers a 2x4 braille dot grid. At the default size of 16 characters wide, you get a 32x32 effective dot grid. Colors degrade through <em>truecolor</em> <MoveRight class="inline" /> <em>256-color</em> <MoveRight class="inline" /> <em>monochrome</em> based on terminal capability. Trail fades from full brightness at the head to 15% at the tail.
+
+**New CLI**: `npx @sarmal/core` runs a random curve.
 
 ### 0.26.0 - 10.05.2026
 
@@ -224,8 +240,8 @@ const sarmal = createSarmalSVG(container, curves.astroid, {
 
 <Alert label="Breaking" variant="error">`SarmalInstance` methods `start()` and `stop()` are renamed to `play()` and `pause()` to match similar libraries</Alert>
 
-- `start()` <ArrowRight size={16} class="inline" /> `play()`
-- `stop()` <ArrowRight size={16} class="inline" /> `pause()`
+- `start()` <MoveRight size={16} class="inline" /> `play()`
+- `stop()` <MoveRight size={16} class="inline" /> `pause()`
 
 ---
 

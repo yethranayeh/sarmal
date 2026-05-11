@@ -1,6 +1,6 @@
 {
   "name": "@sarmal/core",
-  "version": "0.26.0",
+  "version": "0.27.0",
   "description": "Curve path based loading indicators and their renderer",
   "keywords": [
     "animation",
@@ -25,6 +25,9 @@
     "type": "git",
     "url": "git+https://github.com/yethranayeh/sarmal.git",
     "directory": "packages/sarmal"
+  },
+  "bin": {
+    "sarmal": "./dist/cli.js"
   },
   "files": [
     "dist",
@@ -56,6 +59,13 @@
     "./auto": {
       "import": "./dist/auto-init.js",
       "require": "./dist/auto-init.cjs"
+    },
+    "./terminal": {
+      "node": {
+        "import": "./dist/terminal.js",
+        "require": "./dist/terminal.cjs"
+      },
+      "types": "./dist/terminal.d.ts"
     }
   },
   "scripts": {

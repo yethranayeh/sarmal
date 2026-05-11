@@ -1,0 +1,109 @@
+---
+layout: ../../layouts/DocsLayout.astro
+title: Terminal & CLI
+sidebarLabel: Terminal & CLI
+order: 7
+description: Run sarmal curves in the terminal. npx @sarmal/core to see it in action.
+---
+
+import Alert from "../../components/Alert.astro";
+import Link from "../../components/Link.astro";
+
+# Terminal & CLI
+
+Your loading spinner works in the terminal, too.
+
+## Quick Try
+
+```bash
+npx @sarmal/core
+```
+
+That's all that's required to get one animating in your terminal. A random sarmal curve animates in your terminal using braille characters and ANSI colors. <kbd>Ctrl+C</kbd> to stop.
+
+```bash
+npx @sarmal/core --curve deltoid
+npx @sarmal/core --curve rose3 --speed 2.5 --verbose
+```
+
+## How It Works
+
+Each terminal character maps to a 2x4 braille dot grid (Unicode `U+2800`-`U+28FF`). At the default size of 16 characters wide, you get a 32x32 effective dot grid. The curve auto-fits into the available space same way the canvas and SVG renderers do.
+
+Color fading:
+
+| Capability | Detected by | Effect |
+|-----------|------------|--------|
+| Truecolor | `COLORTERM=truecolor` or `TERM=*-truecolor` | Smooth per-channel RGB dimming |
+| 256-color | `TERM=*-256color` | Nearest 216-color cube + 24 grayscale |
+| Monochrome | Fallback | Braille dot density fades toward tail |
+
+The trail fades from full brightness at the head to 15% at the tail, linearly interpolated per RGB channel. The head cell is always rendered at full brightness with the head color.
+
+## CLI Options
+
+```bash
+npx @sarmal/core [options]
+```
+
+| Flag | Type | Default | Description |
+|------|------|---------|-------------|
+| `--curve` | `string` | Random | Curve name: `deltoid`, `rose3`, `lissajous32`, etc. |
+| `--fps` | `number` | `30` | Frame rate |
+| `--speed` | `number` | Curve default | Animation speed multiplier |
+| `--size` | `number` | `16` | Spinner width in characters |
+| `--color` | `string` | `#ec5571` | Trail color as 6-digit hex |
+| `--verbose` | flag | off | Print curve name and hint above the spinner |
+| `--help` | flag | - | Show usage |
+
+## Node API
+
+Import `terminalSarmal` directly for programmatic use:
+
+```ts
+import { terminalSarmal } from "@sarmal/core/terminal";
+import { deltoid } from "@sarmal/core";
+
+const stop = terminalSarmal(process.stdout, deltoid, {
+  size: 20,
+  fps: 60,
+  speed: 3,
+  trailColor: "#ff6b6b",
+});
+
+// Later...
+stop();
+```
+
+### Options
+
+```ts
+interface TerminalSarmalOptions {
+  size?: number       // Width in chars. Default: 16 (32x32 dot grid)
+  fps?: number        // Default: 30
+  trailColor?: string // 6-digit hex. Default: "#ec5571"
+  headColor?: string  // 6-digit hex. Default: trailColor
+  speed?: number      // Default: curve's built-in speed
+}
+```
+
+### Environment Isolation
+
+The `./terminal` subpath export uses the `node` condition. Importing it in a browser project causes a build <strong class="text-error">failure</strong>. It will not be silently included. Terminal code is *never* bundled into browser builds.
+
+<Alert variant="info">
+  `terminalSarmal` will do nothing when stdout is piped or not a TTY. Running in CI or redirecting output will silently skip rendering.
+</Alert>
+
+### Lifecycle
+
+`terminalSarmal` returns a `stop()` function. Calling it:
+- Clears the animation interval
+- Restores the cursor
+- Moves the cursor past the spinner area
+
+**SIGINT** (<kbd>Ctrl+C</kbd>) does the same cleanup automatically.
+
+## Available Curves
+
+All 14 of <Link href="/docs/curves/">the built-in curves</Link> are available by name.

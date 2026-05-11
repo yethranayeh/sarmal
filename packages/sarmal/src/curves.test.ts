@@ -25,6 +25,28 @@ describe("curves regression suite", () => {
   }
 });
 
+describe("curve key lookup", () => {
+  const curveNames = Object.keys(curves) as CurveName[];
+
+  for (const name of curveNames) {
+    it(`key "${name}" is lowercase and findable`, () => {
+      expect(name).toBe(name.toLowerCase());
+      const key = curveNames.find((k) => k.toLowerCase() === name.toLowerCase());
+      expect(key).toBe(name);
+    });
+  }
+
+  it("unknown name returns undefined", () => {
+    expect(curveNames.find((k) => k.toLowerCase() === "nonexistent")).toBeUndefined();
+    expect(curveNames.find((k) => k.toLowerCase() === "")).toBeUndefined();
+  });
+
+  it("display names do not match keys", () => {
+    expect(curveNames.find((k) => k.toLowerCase() === "rose (n=3)")).toBeUndefined();
+    expect(curveNames.find((k) => k.toLowerCase() === "star (4-arm)")).toBeUndefined();
+  });
+});
+
 describe("user-defined curves", () => {
   it("curve with period: undefined uses engine default of 2π", () => {
     const custom: CurveDef = {
