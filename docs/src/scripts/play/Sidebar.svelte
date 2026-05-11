@@ -125,12 +125,12 @@
           class="font-heading italic text-xs leading-relaxed text-muted-foreground lg:hidden"
         >
           <span class="font-mono font-bold not-italic text-[11px] text-primary"
-            >t</span
+            >phase</span
           >
           {" "}position along curve (0 to period),
           {" "}
           <span class="font-mono font-bold not-italic text-[11px] text-primary"
-            >time</span
+            >elapsed</span
           >
           {" "}elapsed seconds,
           {" "}
@@ -154,10 +154,11 @@
               {#snippet tooltip()}
                 <div class="space-y-1 min-w-60">
                   <p>
-                    <span class="font-mono text-primary">t</span> position along curve
+                    <span class="font-mono text-primary">phase</span> position along
+                    curve
                   </p>
                   <p>
-                    <span class="font-mono text-primary">time</span> elapsed seconds
+                    <span class="font-mono text-primary">elapsed</span> elapsed seconds
                   </p>
                   <p>
                     <span class="font-mono text-primary">params</span> custom parameters
@@ -167,7 +168,7 @@
               <span
                 class="text-muted-foreground italic font-heading text-xs cursor-help"
               >
-                t, time, params
+                phase, elapsed, params
               </span>
             </Tooltip>
             <span class="text-muted-gray">)</span>
@@ -215,7 +216,7 @@
             as a function of
             <span
               class="pl-1 font-mono font-bold not-italic text-[11px] text-primary"
-              >t</span
+              >phase</span
             >.
           </p>
         {/if}

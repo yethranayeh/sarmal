@@ -1,6 +1,6 @@
 ---
 interface Props {
-	concept: "play-pause" | "initial-t" | "reset" | "destroy";
+	concept: "play-pause" | "initial-phase" | "reset" | "destroy";
 }
 
 const { concept } = Astro.props;
@@ -40,7 +40,7 @@ const btnBase =
 	}
 
 	{
-		concept === "initial-t" && (
+		concept === "initial-phase" && (
 			<div class="flex max-w-150 bg-foreground border border-[#2e2f2c] rounded-lg overflow-hidden">
 				<div class="flex-1 h-50 relative min-w-0" data-role="anim-col">
 					<svg class="w-full h-full" data-role="sarmal" />
@@ -62,7 +62,7 @@ const btnBase =
 						</>
 						Dormant at creation. Trail pre-drawn to{" "}
 						<code class="text-[#e0566e] bg-[#242522] px-1.25 py-px rounded-sm text-[0.6rem]">
-							t=π
+							phase=π
 						</code>
 						. Play to animate from there.
 					</div>
@@ -87,7 +87,7 @@ const btnBase =
 							<span data-role="state-text">playing</span>
 						</div>
 						<span class="text-[0.62rem] text-[#b3ada7] leading-[1.55]">
-							reset() clears the trail and resets t to 0. The loop keeps
+							reset() clears the trail and resets phase to 0. The loop keeps
 							running.
 						</span>
 					</div>
@@ -273,7 +273,7 @@ const btnBase =
 		});
 	}
 
-	/* ── Initial T (with annotation overlay) ─────────────── */
+	/* ── Initial Phase (with annotation overlay) ─────────────── */
 	function initInitialT(container: HTMLElement) {
 		const sarmalEl = container.querySelector<SVGSVGElement>(
 			'[data-role="sarmal"]',
@@ -366,7 +366,7 @@ const btnBase =
 				"gap:1px",
 			].join(";");
 			label.innerHTML = `
-				<span style="font-size:0.9rem;color:${ANNOT_COLORS.label};line-height:1;font-family:ui-monospace,'SF Mono',monospace;">t = π</span>
+				<span style="font-size:0.9rem;color:${ANNOT_COLORS.label};line-height:1;font-family:ui-monospace,'SF Mono',monospace;">phase = π</span>
 				<span style="font-size:0.58rem;color:${ANNOT_COLORS.sub};font-family:ui-monospace,'SF Mono',monospace;">initial position</span>
 			`;
 			animCol.appendChild(label);
@@ -456,7 +456,7 @@ const btnBase =
 				case "play-pause":
 					initPlayPause(container);
 					break;
-				case "initial-t":
+				case "initial-phase":
 					initInitialT(container);
 					break;
 				case "reset":
