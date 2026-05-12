@@ -37,7 +37,7 @@ function sampleClean(curveDef: CurveDef): Array<Point> {
 	const period = curveDef.period ?? Math.PI * 2;
 	const n = Math.ceil(period * 15);
 	const sample = curveDef.skeletonFn
-		? (t: number) => curveDef.skeletonFn!(t)
+		? (phase: number) => curveDef.skeletonFn!(phase)
 		: (phase: number) => curveDef.fn(phase, 0, {});
 
 	return Array.from({ length: n }, (_, i) => sample((i / (n - 1)) * period));
@@ -103,53 +103,117 @@ const entries = entriesWithDuration.map(({ pathLen, ...rest }) => {
 
 <div
 	class:list={[
-		"not-prose mt-4 grid gap-px border border-border bg-border",
+		"not-prose mt-4 grid gap-4",
 		{
 			"lg:grid-cols-2": entries.length > 1, // TODO: should not be conditional after a new iconic curve is added to the library
 		},
 	]}
+	data-glow-grid
 >
 	{
 		entries.map(({ id, name, family, description, color, d, duration }) => (
 			<a
 				href={`/docs/curves/${id}/`}
-				class="curve-catalog-card flex items-center gap-4 bg-surface-raised/80 p-4 no-underline hover:bg-surface-raised"
+				class="glow-card curve-catalog-card relative overflow-hidden no-underline select-none active:scale-[0.98] transition ring-1 ring-border bg-surface-raised/25"
 				style={`--curve-color: ${color}; --draw-duration: ${duration}ms`}
+				data-glow-card
 			>
-				<div class="h-13 w-13 shrink-0 overflow-hidden rounded-md border border-border bg-background">
-					<svg
-						aria-label={`Drawing of ${name} curve`}
-						viewBox="0 0 100 100"
-						class="block h-full w-full"
-					>
-						<path class="path-skeleton" d={d} pathLength="1" />
-						<path class="path-draw" d={d} pathLength="1" />
-					</svg>
-				</div>
-				<div class="min-w-0 w-full flex flex-col">
-					<div class="flex gap-1 justify-between">
-						<span class="font-heading leading-none text-[14px] font-medium text-foreground">
-							{name}
-						</span>
-						<CurveKindBadge
-							kind={
-								section === "standard" ? "parametric" : "drawn" // TODO: this only works for current state. There is no guarantee that standard ones will not have drawn curves or iconic ones will not have parametric ones
-							}
-						/>
+				<div class="glow-inner relative flex size-full overflow-hidden">
+					<div class="glow-icon-layer pointer-events-none absolute inset-0 flex items-center justify-center will-change-[transform,filter]">
+						<svg
+							aria-hidden="true"
+							viewBox="0 0 100 100"
+							class="glow-svg size-20"
+						>
+							<circle cx="50" cy="50" r="42" class="glow-fill" />
+							<path class="glow-path" d={d} />
+						</svg>
 					</div>
-					<span class="font-mono leading-none text-[9px] tracking-widest uppercase text-muted">
-						{family}
-					</span>
-					<p class="mt-1.5 font-body text-[12px] leading-relaxed text-muted">
-						{description}
-					</p>
+
+					<div class="z-1 relative flex items-center gap-4 p-4 flex-1">
+						<div class="h-13 w-13 shrink-0 overflow-hidden rounded-md border border-border bg-background">
+							<svg
+								aria-label={`Drawing of ${name} curve`}
+								viewBox="0 0 100 100"
+								class="block h-full w-full"
+							>
+								<path class="path-skeleton" d={d} pathLength="1" />
+								<path class="path-draw" d={d} pathLength="1" />
+							</svg>
+						</div>
+						<div class="min-w-0 w-full flex flex-col">
+							<div class="flex gap-1 justify-between">
+								<span class="font-heading leading-none text-[14px] font-medium text-foreground">
+									{name}
+								</span>
+								<CurveKindBadge
+									kind={
+										section === "standard" ? "parametric" : "drawn" // TODO: this only works for current state. There is no guarantee that standard ones will not have drawn curves or iconic ones will not have parametric ones
+									}
+								/>
+							</div>
+							<span class="font-mono leading-none text-[9px] tracking-widest uppercase text-muted">
+								{family}
+							</span>
+							<p class="mt-1.5 font-body text-[12px] leading-relaxed text-muted">
+								{description}
+							</p>
+						</div>
+					</div>
 				</div>
+
+				<div class="glow-border pointer-events-none absolute inset-0" />
 			</a>
 		))
 	}
 </div>
 
 <style>
+	/* Glow effects appropriated from https://chanhdai.com/components/glow-card-grid */
+	/* .glow-inner {
+		clip-path: inset(0 round var(--card-radius, 16px));
+	} */
+
+	.glow-icon-layer {
+		--move-x: calc(var(--pointer-x, -10) * 50%);
+		--move-y: calc(var(--pointer-y, -10) * 50%);
+		transform: translate(var(--move-x), var(--move-y))
+			scale(var(--card-icon-scale, 4));
+		filter: blur(var(--card-icon-blur, 25px))
+			brightness(var(--card-icon-brightness, 1.3))
+			saturate(var(--card-icon-saturate, 5));
+		opacity: var(--card-icon-opacity, 0.3);
+	}
+
+	.glow-fill {
+		fill: var(--curve-color);
+		opacity: 0.7;
+	}
+
+	.glow-path {
+		fill: none;
+		stroke: var(--curve-color);
+		stroke-width: 3;
+		stroke-linecap: round;
+		stroke-linejoin: round;
+	}
+
+	.glow-border {
+		border: var(--card-border-width, 3px) solid transparent;
+		/* border-radius: var(--card-radius, 16px); */
+		/* clip-path: inset(0 round var(--card-radius, 16px)); */
+		mask-image: linear-gradient(#fff 0 100%), linear-gradient(#fff 0 100%);
+		mask-origin: border-box, padding-box;
+		mask-clip: border-box, padding-box;
+		mask-composite: exclude;
+		-webkit-mask-composite: xor;
+		will-change: filter;
+		backdrop-filter: blur(var(--card-border-blur, 10px))
+			brightness(var(--card-border-brightness, 2.5))
+			contrast(var(--card-border-contrast, 2.5))
+			saturate(var(--card-border-saturate, 4.2));
+	}
+
 	.path-skeleton,
 	.path-draw {
 		fill: none;
@@ -196,7 +260,7 @@ const entries = entriesWithDuration.map(({ pathLen, ...rest }) => {
 </style>
 
 <script>
-	function setup() {
+	function setupScrollDraw() {
 		const mq = window.matchMedia(
 			"(max-width: 767px) and (prefers-reduced-motion: no-preference)",
 		);
@@ -220,5 +284,27 @@ const entries = entriesWithDuration.map(({ pathLen, ...rest }) => {
 		}
 	}
 
-	setup();
+	function setupGlow() {
+		const grids = document.querySelectorAll("[data-glow-grid]");
+		if (grids.length === 0) return;
+
+		document.addEventListener("pointermove", (event) => {
+			for (const grid of grids) {
+				const cards: NodeListOf<HTMLElement> =
+					grid.querySelectorAll("[data-glow-card]");
+				cards.forEach((card) => {
+					const rect = card.getBoundingClientRect();
+					const centerX = rect.left + rect.width / 2;
+					const centerY = rect.top + rect.height / 2;
+					const x = (event.clientX - centerX) / (rect.width / 2);
+					const y = (event.clientY - centerY) / (rect.height / 2);
+					card.style.setProperty("--pointer-x", x.toFixed(3));
+					card.style.setProperty("--pointer-y", y.toFixed(3));
+				});
+			}
+		});
+	}
+
+	setupScrollDraw();
+	setupGlow();
 </script>

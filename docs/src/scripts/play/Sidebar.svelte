@@ -125,17 +125,17 @@
           class="font-heading italic text-xs leading-relaxed text-muted-foreground lg:hidden"
         >
           <span class="font-mono font-bold not-italic text-[11px] text-primary"
-            >phase</span
+            >phase:</span
           >
           {" "}position along curve (0 to period),
           {" "}
           <span class="font-mono font-bold not-italic text-[11px] text-primary"
-            >elapsed</span
+            >elapsed:</span
           >
           {" "}elapsed seconds,
           {" "}
           <span class="font-mono font-bold not-italic text-[11px] text-primary"
-            >params</span
+            >params:</span
           >
           {" "}custom parameters
         </p>
@@ -152,16 +152,16 @@
             <span class="text-muted-gray">(</span>
             <Tooltip placement="bottom" class="-translate-x-1/4">
               {#snippet tooltip()}
-                <div class="space-y-1 min-w-60">
-                  <p>
-                    <span class="font-mono text-primary">phase</span> position along
+                <div class="space-y-1 min-w-40">
+                  <p class="whitespace-normal">
+                    <span class="font-mono text-primary">phase:</span> position along
                     curve
                   </p>
                   <p>
-                    <span class="font-mono text-primary">elapsed</span> elapsed seconds
+                    <span class="font-mono text-primary">elapsed:</span> elapsed seconds
                   </p>
                   <p>
-                    <span class="font-mono text-primary">params</span> custom parameters
+                    <span class="font-mono text-primary">params:</span> custom parameters
                   </p>
                 </div>
               {/snippet}
