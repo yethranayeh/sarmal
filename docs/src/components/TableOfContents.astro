@@ -243,6 +243,7 @@ const h3Pad = LX + IX_OFFSET + H3R + TEXT_GAP;
 		c.setAttribute("cy", String(cy));
 		c.setAttribute("r", String(r));
 		c.setAttribute("fill", "currentColor");
+		c.setAttribute("shape-rendering", "geometricPrecision");
 
 		for (const [k, v] of Object.entries(attrs)) {
 			c.setAttribute(k, v);
@@ -260,6 +261,7 @@ const h3Pad = LX + IX_OFFSET + H3R + TEXT_GAP;
 		e.setAttribute("rx", String(rx));
 		e.setAttribute("ry", String(ry));
 		e.setAttribute("fill", "currentColor");
+		e.setAttribute("shape-rendering", "geometricPrecision");
 
 		for (const [k, v] of Object.entries(attrs)) {
 			e.setAttribute(k, v);
@@ -356,6 +358,7 @@ const h3Pad = LX + IX_OFFSET + H3R + TEXT_GAP;
 		const baseR = H2R + 1.5;
 		const dotsGroup = document.createElementNS(SVG_NS, "g");
 		dotsGroup.setAttribute("filter", "url(#goo-dots)");
+		dotsGroup.setAttribute("style", "will-change: filter");
 
 		for (let i = 0; i < items.length; i++) {
 			if (items[i].depth === 2)

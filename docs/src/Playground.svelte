@@ -4,7 +4,6 @@
 
   import { createPlaygroundState } from "./scripts/play/playgroundState.svelte";
 
-  import { Toaster } from "./components/sonner";
   import Sidebar from "./scripts/play/Sidebar.svelte";
   import ViewArea from "./scripts/play/ViewArea.svelte";
   import ConfirmDialog from "./scripts/play/ConfirmDialog.svelte";
@@ -50,5 +49,4 @@
   <ViewArea />
 </div>
 
-<Toaster />
 <ConfirmDialog bind:this={confirmDialog} />

@@ -3,7 +3,6 @@
   import type { SharedState } from "./types";
 
   import { getContext } from "svelte";
-  import { toast } from "svelte-sonner";
   import {
     Share2,
     ImageDown,
@@ -73,10 +72,32 @@
     pg.currentMode === "draw" ? pg.drawPointCount < 3 : !pg.lastCompiledFn,
   );
 
+  type ItemResult = { status: "success" | "error"; label: string } | null;
+  let itemResult = $state<Record<string, ItemResult>>({});
+
+  function showItemResult(
+    key: string,
+    status: "success" | "error",
+    label: string,
+  ) {
+    itemResult[key] = { status, label };
+
+    setTimeout(() => {
+      itemResult[key] = null;
+    }, 2000);
+  }
+
+  function itemClass(key: string): string {
+    const f = itemResult[key];
+    const base =
+      "w-full text-left px-3 py-1.5 flex items-center gap-2 text-xs font-body transition-colors disabled:opacity-40 disabled:cursor-not-allowed";
+    if (f?.status === "success") return `${base} bg-success/10 text-success`;
+    if (f?.status === "error") return `${base} bg-error/10 text-error`;
+    return `${base} hover:bg-surface`;
+  }
+
   async function handleShareURL() {
-    if (codeDisabled) {
-      return;
-    }
+    if (codeDisabled) return;
 
     const payload: SharedState = {
       v: 2,
@@ -102,9 +123,9 @@
 
     const result = await handleShare(c, payload);
     if (result.ok) {
-      toast.success("Link copied. Expires in 90 days.");
+      showItemResult("share", "success", "Link copied");
     } else {
-      toast.error(result.error);
+      showItemResult("share", "error", "Failed");
     }
   }
 
@@ -112,13 +133,13 @@
     try {
       const snippet = generateJSSnippet(pg);
       const ok = await copyToClipboard(snippet);
-      if (ok) {
-        toast.success("Copied");
-      } else {
-        toast.error("Clipboard access denied");
-      }
+      showItemResult(
+        "copyCode",
+        ok ? "success" : "error",
+        ok ? "Copied" : "Clipboard denied",
+      );
     } catch {
-      toast.error("Failed to generate snippet");
+      showItemResult("copyCode", "error", "Failed");
     }
   }
 
@@ -126,13 +147,13 @@
     try {
       const html = generateStandaloneHTML(pg);
       const ok = await copyToClipboard(html);
-      if (ok) {
-        toast.success("Copied");
-      } else {
-        toast.error("Clipboard access denied");
-      }
+      showItemResult(
+        "copyHTML",
+        ok ? "success" : "error",
+        ok ? "Copied" : "Clipboard denied",
+      );
     } catch {
-      toast.error("Failed to generate HTML");
+      showItemResult("copyHTML", "error", "Failed");
     }
   }
 
@@ -140,13 +161,13 @@
     try {
       const snippet = generateReactSnippet(pg);
       const ok = await copyToClipboard(snippet);
-      if (ok) {
-        toast.success("Copied");
-      } else {
-        toast.error("Clipboard access denied");
-      }
+      showItemResult(
+        "copyReact",
+        ok ? "success" : "error",
+        ok ? "Copied" : "Clipboard denied",
+      );
     } catch {
-      toast.error("Failed to generate snippet");
+      showItemResult("copyReact", "error", "Failed");
     }
   }
 
@@ -155,19 +176,25 @@
     if (!c) return;
     try {
       await downloadPNG(c);
-      toast.success("Downloaded");
+      showItemResult("downloadPNG", "success", "Downloaded");
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Failed to download");
+      showItemResult(
+        "downloadPNG",
+        "error",
+        err instanceof Error ? err.message : "Failed",
+      );
     }
   }
 
   function handleDownloadSVG() {
     try {
       downloadSVG(pg);
-      toast.success("Downloaded");
+      showItemResult("downloadSVG", "success", "Downloaded");
     } catch (err) {
-      toast.error(
-        err instanceof Error ? err.message : "Failed to download SVG",
+      showItemResult(
+        "downloadSVG",
+        "error",
+        err instanceof Error ? err.message : "Failed",
       );
     }
   }
@@ -183,14 +210,17 @@
     try {
       const svgString = generateSVGString(pg);
       const ok = await copyToClipboard(svgString);
-
-      if (ok) {
-        toast.success("Copied");
-      } else {
-        toast.error("Clipboard access denied");
-      }
+      showItemResult(
+        "copySVG",
+        ok ? "success" : "error",
+        ok ? "Copied" : "Clipboard denied",
+      );
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Failed to copy SVG");
+      showItemResult(
+        "copySVG",
+        "error",
+        err instanceof Error ? err.message : "Failed",
+      );
     }
   }
 </script>
@@ -226,65 +256,50 @@
       role="menu"
     >
       <button
-        class="w-full text-left px-3 py-1.5 flex items-center gap-2 text-xs font-body hover:bg-surface transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+        class={itemClass("copyCode")}
         role="menuitem"
         disabled={codeDisabled}
-        onclick={() => {
-          close();
-          handleCopyCode();
-        }}
+        onclick={handleCopyCode}
       >
         <Code class="size-4" />
-        Copy as code
+        {itemResult["copyCode"]?.label ?? "Copy as code"}
       </button>
       <button
-        class="w-full text-left px-3 py-1.5 flex items-center gap-2 text-xs font-body hover:bg-surface transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+        class={itemClass("share")}
         role="menuitem"
         disabled={codeDisabled}
-        onclick={() => {
-          close();
-          handleShareURL();
-        }}
+        onclick={handleShareURL}
       >
         <Share2 class="size-4" />
-        Create shareable URL
+        {itemResult["share"]?.label ?? "Create shareable URL"}
       </button>
       <div class="bg-border h-px mx-1 my-1" role="separator"></div>
       <button
-        class="w-full text-left px-3 py-1.5 flex items-center gap-2 text-xs font-body hover:bg-surface transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+        class={itemClass("downloadPNG")}
         role="menuitem"
         disabled={pngDisabled}
-        onclick={() => {
-          close();
-          handleDownloadPNG();
-        }}
+        onclick={handleDownloadPNG}
       >
         <ImageDown class="size-4" />
-        Download PNG
+        {itemResult["downloadPNG"]?.label ?? "Download PNG"}
       </button>
       <button
-        class="w-full text-left px-3 py-1.5 flex items-center gap-2 text-xs font-body hover:bg-surface transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+        class={itemClass("copyHTML")}
         role="menuitem"
         disabled={codeDisabled}
-        onclick={() => {
-          close();
-          handleCopyHTML();
-        }}
+        onclick={handleCopyHTML}
       >
         <FileCode class="size-4" />
-        Copy as HTML
+        {itemResult["copyHTML"]?.label ?? "Copy as HTML"}
       </button>
       <button
-        class="w-full text-left px-3 py-1.5 flex items-center gap-2 text-xs font-body hover:bg-surface transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+        class={itemClass("copyReact")}
         role="menuitem"
         disabled={codeDisabled}
-        onclick={() => {
-          close();
-          handleCopyReact();
-        }}
+        onclick={handleCopyReact}
       >
         <Braces class="size-4" />
-        Copy as React
+        {itemResult["copyReact"]?.label ?? "Copy as React"}
       </button>
       {#if webmSupported}
         <button
@@ -299,28 +314,22 @@
       {/if}
       <div class="bg-border h-px mx-1 my-1" role="separator"></div>
       <button
-        class="w-full text-left px-3 py-1.5 flex items-center gap-2 text-xs font-body hover:bg-surface transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+        class={itemClass("downloadSVG")}
         role="menuitem"
         disabled={svgDisabled}
-        onclick={() => {
-          close();
-          handleDownloadSVG();
-        }}
+        onclick={handleDownloadSVG}
       >
         <FileCode class="size-4" />
-        Download SVG
+        {itemResult["downloadSVG"]?.label ?? "Download SVG"}
       </button>
       <button
-        class="w-full text-left px-3 py-1.5 flex items-center gap-2 text-xs font-body hover:bg-surface transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+        class={itemClass("copySVG")}
         role="menuitem"
         disabled={svgDisabled}
-        onclick={() => {
-          close();
-          handleCopySVG();
-        }}
+        onclick={handleCopySVG}
       >
         <FileCode class="size-4" />
-        Copy as SVG
+        {itemResult["copySVG"]?.label ?? "Copy as SVG"}
       </button>
     </div>
   {/if}

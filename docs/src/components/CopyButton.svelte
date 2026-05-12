@@ -27,7 +27,7 @@
   onclick={handleClick}
   data-copied={copied ? "" : undefined}
   class={[
-    "group relative cursor-pointer transition-colors p-1 size-5.5",
+    "group relative cursor-pointer transition-colors p-1 size-5.5 will-change-[transform,filter,opacity]",
     variant === "ghost-inverted" &&
       "text-foreground/70 hover:text-foreground dark:text-white/50 dark:hover:text-white",
     variant !== "ghost-inverted" && "text-muted hover:text-foreground",
