@@ -42,6 +42,9 @@ export function brailleChar(bits: number) {
 }
 
 export function brailleBit(row: number, col: number) {
+  if (row < 0 || row >= BRAILLE_BIT.length || col < 0 || col >= (BRAILLE_BIT[0]?.length ?? 0)) {
+    return 0;
+  }
   return BRAILLE_BIT[row]![col]!;
 }
 
@@ -79,15 +82,11 @@ export function detectColor(): ColorCapability {
     return "truecolor";
   }
 
-  if (colorterm !== "") {
-    return "256-color";
+  if (term === "" || term === "linux" || term === "dumb") {
+    return "monochrome";
   }
 
-  if (term !== "" && term !== "linux" && term !== "dumb") {
-    return "256-color";
-  }
-
-  return "monochrome";
+  return "256-color";
 }
 
 export function rgbTo256(r: number, g: number, b: number) {
@@ -107,12 +106,13 @@ export function rgbTo256(r: number, g: number, b: number) {
 }
 
 export function dimColor(hex: string, brightness: number): Rgb {
+  const clamped = Math.max(0, Math.min(1, brightness));
   const c = hexToRgb(hex);
 
   return {
-    r: Math.round(c.r * brightness),
-    g: Math.round(c.g * brightness),
-    b: Math.round(c.b * brightness),
+    r: Math.max(0, Math.min(255, Math.round(c.r * clamped))),
+    g: Math.max(0, Math.min(255, Math.round(c.g * clamped))),
+    b: Math.max(0, Math.min(255, Math.round(c.b * clamped))),
   };
 }
 
@@ -270,11 +270,7 @@ function renderMonochromeFrame(
         continue;
       }
 
-      if (cell.isHead) {
-        line += "\u28FF";
-      } else {
-        line += brailleChar(cell.bits);
-      }
+      line += brailleChar(cell.bits);
     }
     lines.push(line);
   }

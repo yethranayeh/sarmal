@@ -17,6 +17,26 @@ Version history notes of the <Link href="#core">Core</Link> and the <Link href="
 
 ## Core
 
+### 0.28.0 - 12.05.2026
+
+<Alert label="Breaking" variant="error">The `--name` CLI flag is renamed to `--curve`.</Alert>
+
+
+```ts
+// Before
+npx @sarmal/core --name deltoid --verbose
+
+// After
+npx @sarmal/core --curve deltoid --verbose
+```
+
+- `brailleBit(row, col)` now returns `0` instead of throwing for out-of-range coordinates.
+- `dimColor(hex, brightness)` now clamps `brightness` to `[0, 1]` and each RGB channel to `[0, 255]`.
+- Fixed `detectColor()` where a non-empty `COLORTERM` combined with `TERM=linux` incorrectly returned `"256-color"` instead of `"monochrome"`.
+- Dropped the filled-block head indicator (`⣿`) in monochrome terminal mode The head now renders as the same braille dot pattern as the rest of the trail.
+- Both `@sarmal/core` and `@sarmal/react` now have a `prepublishOnly` script that rebuilds `dist/` before every publish, preventing stale build artifacts from shipping.
+   > The breaking rename change was never supposed happen but I realized too late that I published a stale build...
+
 ### 0.27.0 - 11.05.2026
 
 New `terminalSarmal(stream, curveDef, options?)` renders sarmal curves in the terminal using braille characters and ANSI colors. Import from `@sarmal/core/terminal`. It should be noted that this is a node-only subpath, which will be rejected by browser bundlers at build time.
@@ -31,7 +51,7 @@ const stop = terminalSarmal(process.stdout, deltoid, { speed: 2.5 });
 
 Each character cell covers a 2x4 braille dot grid. At the default size of 16 characters wide, you get a 32x32 effective dot grid. Colors degrade through <em>truecolor</em> <MoveRight class="inline" /> <em>256-color</em> <MoveRight class="inline" /> <em>monochrome</em> based on terminal capability. Trail fades from full brightness at the head to 15% at the tail.
 
-**New CLI**: `npx @sarmal/core` runs a random curve.
+**New CLI**: `npx @sarmal/core` runs a random curve. Pass `--name <id>` to pick a specific curve, `--fps <num>`, `--speed <num>`, `--size <num>`, `--color <hex>`, and `--verbose`.
 
 ### 0.26.0 - 10.05.2026
 

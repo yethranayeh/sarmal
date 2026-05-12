@@ -1,6 +1,6 @@
 {
   "name": "@sarmal/core",
-  "version": "0.27.0",
+  "version": "0.28.0",
   "description": "Curve path based loading indicators and their renderer",
   "keywords": [
     "animation",
@@ -71,6 +71,7 @@
   "scripts": {
     "build": "tsup",
     "dev": "tsup --watch",
+    "prepublishOnly": "tsup",
     "typecheck": "tsc --noEmit",
     "lint": "oxlint",
     "format": "oxfmt",
