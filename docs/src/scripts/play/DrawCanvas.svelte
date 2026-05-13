@@ -7,6 +7,7 @@
   import { getContext } from "svelte";
 
   import Button from "../../components/Button.svelte";
+  import EmptyStateGesture from "./EmptyStateGesture.svelte";
   import SvgImportDialog from "./SvgImportDialog.svelte";
 
   const pg = getContext<PlaygroundState>("playground");
@@ -23,20 +24,7 @@
   <div
     class="absolute inset-0 z-10 flex flex-col items-center justify-center pointer-events-none gap-6"
   >
-    <div class="text-center max-w-85 px-6 select-none">
-      <h2
-        class="font-heading italic text-[26px] leading-tight font-normal text-muted-dark m-0"
-      >
-        <span class="select-text">Begin</span> with a
-        <span class="text-primary">gesture</span>.
-      </h2>
-      <p
-        class="font-ui text-[11px] tracking-[0.04em] leading-[1.6] text-muted-gray mt-3"
-      >
-        Click to place a point.<br />
-        Three or more become a curve.
-      </p>
-    </div>
+    <EmptyStateGesture />
 
     <Button
       variant="outline"
