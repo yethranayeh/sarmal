@@ -33,6 +33,9 @@
     "./Sarmal.svelte": "./src/Sarmal.svelte",
     "./SarmalSVG.svelte": "./src/SarmalSVG.svelte"
   },
+  "publishConfig": {
+    "access": "public"
+  },
   "scripts": {
     "build": "tsup",
     "dev": "tsup --watch",
