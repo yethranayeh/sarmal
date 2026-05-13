@@ -17,5 +17,8 @@
   "devDependencies": {
     "wrangler": "^4.85.0"
   },
-  "packageManager": "pnpm@9.15.0"
+  "packageManager": "pnpm@10.30.3",
+  "pnpm": {
+    "onlyBuiltDependencies": []
+  }
 }
