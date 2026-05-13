@@ -13,7 +13,7 @@ import Link from "../../components/Link.astro";
 
 # Changelog
 
-Version history notes of the <Link href="#core">Core</Link> and the <Link href="#react">React</Link> packages
+Version history notes of the <Link href="#core">Core</Link>, <Link href="#react">React</Link>, and <Link href="#svelte">Svelte</Link> packages
 
 ## Core
 
@@ -356,3 +356,20 @@ import { curves } from "@sarmal/core";
 ```
 
 Peer dependencies: `react >= 18` and `@sarmal/core`. Each source file is marked with `"use client"` for SSR compatibility.
+
+## Svelte
+
+### 0.1.0 - 14.05.2026
+
+`@sarmal/svelte` is a new package that provides a Svelte5 wrapper over `@sarmal/core`. It exports a `<Sarmal>` component for drop-in usage, a `useSarmal` composable for imperative control, and a `sarmal` action for idiomatic Svelte patterns. SVG is supported through the mirror exports `<SarmalSVG>`, `useSarmalSVG`, and `sarmalSVG`.
+
+```svelte
+<script>
+  import { Sarmal } from "@sarmal/svelte";
+  import { curves } from "@sarmal/core";
+</script>
+
+<Sarmal curve={curves.rose3} />
+```
+
+Peer dependencies: `svelte >= 5` and `@sarmal/core`. All composable files use the `.svelte.ts` extension. $effect never runs on the server, so no SSR guards are needed.

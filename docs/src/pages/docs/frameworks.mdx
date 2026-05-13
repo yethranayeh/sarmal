@@ -3,7 +3,7 @@ layout: ../../layouts/DocsLayout.astro
 title: Framework Guides
 sidebarLabel: Framework Guides
 order: 6
-description: Framework integration guides for React and CDN usage.
+description: Framework integration guides for React, Svelte, and CDN usage.
 ---
 
 import Alert from "../../components/Alert.astro";
@@ -228,6 +228,225 @@ function MySpinner() {
   return <svg ref={svgRef} />;
 }
 ```
+
+## Svelte
+
+The `@sarmal/svelte` package provides a thin Svelte 5 wrapper over `@sarmal/core`. It ships three exports per renderer: a component, a composable, and an action.
+
+### Installation
+
+```bash
+npm install @sarmal/core @sarmal/svelte
+```
+
+### The Component
+
+The quickest way to get a spinner on screen in Svelte 5:
+
+```svelte
+<script>
+  import { Sarmal } from "@sarmal/svelte";
+  import { curves } from "@sarmal/core";
+</script>
+
+<Sarmal curve={curves.rose3} />
+```
+
+The component renders a `<canvas>` element. Like the React wrapper, you can pass explicit `width` and `height` props or rely on a sized parent container.
+
+```svelte
+<!-- Explicit dimensions -->
+<Sarmal curve={curves.rose3} width={200} height={200} />
+
+<!-- Or a sized parent -->
+<div style="width: 200px; height: 200px;">
+  <Sarmal curve={curves.rose3} />
+</div>
+```
+
+If neither is provided, the canvas falls back to **300x300** with a console warning. `width` and `height` are set during initialization. Changing them after mount **destroys** and *recreates* the instance.
+
+#### Props
+
+| Prop | Type | Default | Description |
+|------|------|---------|-------------|
+| curve<span class="text-accent">*</span> | `CurveDef` | - | <strong class="text-accent">Required.</strong> The curve definition. Must be a stable reference (module-level const). |
+| class | `string` | - | Applied to the `<canvas>` element |
+| style | `string` | - | Applied to the `<canvas>` element |
+| width | `number` | - | Canvas buffer width in CSS pixels. **Init-only.** |
+| height | `number` | - | Canvas buffer height in CSS pixels. **Init-only.** |
+| autoStart | `boolean` | `true` | Start the animation loop automatically. **Init-only.** |
+| initialPhase | `number` | `undefined` | Initial position along the curve. **Init-only.** |
+| skeletonColor | `string` | `'#ffffff'` | Hex color for the skeleton path |
+| trailColor | `string \| string[]` | `'#ffffff'` | Hex color or array of hex colors for gradient trails |
+| headColor | `string` | derived | Hex color for the head dot. Omit to auto-follow trail color |
+| headRadius | `number` | `4` | Radius of the head dot in pixels. **Init-only.** Changeable at runtime via `setRenderOptions`. |
+| trailLength | `number` | `120` | Number of trail points. **Init-only.** |
+| trailStyle | `TrailStyle` | `'default'` | `'default'` \| `'gradient-static'` \| `'gradient-animated'` |
+| morphDuration | `number` | `300` | Duration of the morph transition when `curve` changes (ms) |
+| instance | `SarmalInstance \| null` | - | <strong>Bindable.</strong> Use `bind:instance` to get the live `SarmalInstance`. |
+| onready | `(instance) => void` | - | Callback fired once after the instance is created. |
+
+#### Curve stability
+
+The `curve` prop must be a **stable reference**.
+
+<Alert variant="warning" label="Do not define it inline">
+  The component cannot deep-compare curves because they contain functions.
+</Alert>
+
+Use a module-level constant:
+
+```svelte
+<script>
+  import { Sarmal } from "@sarmal/svelte";
+  import { curves } from "@sarmal/core";
+
+  // GOOD: module-level constant
+  let curve = $state(curves.rose3);
+
+  // Later: morph to a different curve
+  curve = curves.deltoid;
+</script>
+
+<Sarmal curve={curve} />
+```
+
+#### Curve morphing
+
+When the `curve` prop changes, the spinner smoothly transitions using `morphTo`. The `morphDuration` prop controls how long the transition takes:
+
+```svelte
+<script>
+  import { Sarmal } from "@sarmal/svelte";
+  import { curves } from "@sarmal/core";
+
+  let curve = $state(curves.astroid);
+
+  function switchCurve() {
+    curve = curves.deltoid; // morphs over 300ms (default)
+  }
+</script>
+
+<Sarmal curve={curve} morphDuration={800} />
+```
+
+#### Imperative control
+
+Use `bind:instance` or the `onready` callback to get the `SarmalInstance` for manual control:
+
+```svelte
+<script>
+  import { Sarmal } from "@sarmal/svelte";
+  import { curves } from "@sarmal/core";
+  import type { SarmalInstance } from "@sarmal/core";
+
+  let sarmal = $state<SarmalInstance | null>(null);
+
+  function pauseIt() {
+    sarmal?.pause();
+  }
+</script>
+
+<Sarmal curve={curves.rose3} bind:instance={sarmal} />
+```
+
+### The Action
+
+The `sarmal` action is the most idiomatic Svelte primitive for attaching a sarmal to a `<canvas>` element. It preserves full access to Svelte's own directives on the element:
+
+```svelte
+<script>
+  import { sarmal } from "@sarmal/svelte";
+  import { curves } from "@sarmal/core";
+
+  let options = $state({ curve: curves.rose3, trailColor: "#a78bfa" });
+</script>
+
+<canvas width={200} height={200} use:sarmal={options} />
+```
+
+The action responds to option changes via its `update` callback. Init-time options trigger destroy + recreate, the `curve` option triggers `morphTo`, and runtime visual options trigger `setRenderOptions`.
+
+### `useSarmal` Composable
+
+For full control over the canvas element and instance lifecycle:
+
+```svelte
+<script>
+  import { useSarmal } from "@sarmal/svelte";
+  import { curves } from "@sarmal/core";
+
+  let canvas = $state<HTMLCanvasElement | null>(null);
+  const { instance } = useSarmal(
+    () => canvas,
+    () => curves.rose3,
+  );
+</script>
+
+<canvas bind:this={canvas} width={200} height={200} />
+```
+
+The composable takes **getter functions** so it can reactively track changes. The signature:
+
+```ts
+function useSarmal(
+  canvasElement: HTMLCanvasElement | null,
+  getCurve: () => CurveDef,
+  getOptions?: () => Partial<SarmalOptions>,
+  getInit?: () => CanvasInit,
+  getMorphDuration?: () => number | undefined,
+): {
+  get instance(): SarmalInstance | null;
+}
+```
+
+<Alert variant="warning">
+  Runtime visual options (`trailColor`, `headColor`, `skeletonColor`, `trailStyle`) passed in `getOptions` are applied at creation and tracked for reactive updates via `setRenderOptions`. Init options (`width`, `height`, `trailLength`, `autoStart`, `initialPhase`) trigger **destroy**+*recreate* on change. `headRadius` is tracked as an init option (prop changes recreate) but can be changed at runtime with `setRenderOptions` without a recreate.
+</Alert>
+
+### SVG Output
+
+For SVG rendering, use `<SarmalSVG>`, `useSarmalSVG`, and the `sarmalSVG` action. The API mirrors the canvas variants:
+
+```svelte
+<!-- Component -->
+<script>
+  import { SarmalSVG } from "@sarmal/svelte";
+  import { curves } from "@sarmal/core";
+</script>
+
+<SarmalSVG curve={curves.rose3} style="width: 200px; height: 200px;" />
+
+<!-- Action -->
+<script>
+  import { sarmalSVG } from "@sarmal/svelte";
+  import { curves } from "@sarmal/core";
+
+  let opts = $state({ curve: curves.astroid, trailColor: "#a78bfa" });
+</script>
+
+<svg use:sarmalSVG={opts} style="width: 200px; height: 200px;" />
+
+<!-- Composable -->
+<script>
+  import { useSarmalSVG } from "@sarmal/svelte";
+
+  let svg = $state<SVGSVGElement | null>(null);
+  const { instance } = useSarmalSVG(
+    () => svg,
+    () => curves.astroid,
+  );
+</script>
+
+<svg bind:this={svg} style="width: 200px; height: 200px;" />
+```
+
+The SVG renderer sets `viewBox="0 0 100 100"` automatically. Size the `<svg>` element with CSS. No `width`/`height` props needed as SVG already scales naturally.
+
+### SSR and SvelteKit
+
+No special configuration is needed. The `$effect` rune never runs during server-side rendering, and `createSarmal` is only called inside `$effect` blocks. No `"use client"` directives or `typeof window` guards are required.
 
 ## CDN
 
