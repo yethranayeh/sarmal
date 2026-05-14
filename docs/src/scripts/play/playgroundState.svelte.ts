@@ -565,29 +565,6 @@ export function createPlaygroundState(
   async function restoreState(saved: SharedState) {
     const isLegacy = (saved as { v?: number }).v !== SHARE_STATE_VERSION;
 
-    if (saved.mode === "draw" && saved.drawPoints) {
-      state.drawInitialPoints = saved.drawPoints;
-      state.drawPoints = [...saved.drawPoints];
-      state.codeWasMigrated = false;
-      state.currentMode = "draw";
-    } else {
-      const rawCode = saved.code;
-      const code = isLegacy ? migrateLegacyCode(rawCode) : rawCode;
-      state.codeWasMigrated = isLegacy && code !== rawCode;
-      state.currentCode = code;
-      state.error = null;
-      state.activePeriod = saved.activePeriod ?? Math.PI * 2;
-      const sandboxResult = await compileSandboxed(saved.code, state.activePeriod);
-      if (sandboxResult.ok) {
-        rebuildInstance(sandboxResult.fn, state.activePeriod);
-        state.lastCompiledCode = saved.code;
-        state.lastCompiledFn = sandboxResult.fn;
-        state.lastCompiledSamples = sandboxResult.dedupSamples;
-      } else if (sandboxResult.error !== "Superseded") {
-        state.error = sandboxResult.error;
-      }
-    }
-
     if (saved.trailStyle) {
       state.trailStyle = saved.trailStyle as TrailStyle;
     }
@@ -614,6 +591,29 @@ export function createPlaygroundState(
     }
     if (typeof saved.showSkeleton === "boolean" && saved.showSkeleton !== state.showSkeleton) {
       state.showSkeleton = saved.showSkeleton;
+    }
+
+    if (saved.mode === "draw" && saved.drawPoints) {
+      state.drawInitialPoints = saved.drawPoints;
+      state.drawPoints = [...saved.drawPoints];
+      state.codeWasMigrated = false;
+      state.currentMode = "draw";
+    } else {
+      const rawCode = saved.code;
+      const code = isLegacy ? migrateLegacyCode(rawCode) : rawCode;
+      state.codeWasMigrated = isLegacy && code !== rawCode;
+      state.currentCode = code;
+      state.error = null;
+      state.activePeriod = saved.activePeriod ?? Math.PI * 2;
+      const sandboxResult = await compileSandboxed(saved.code, state.activePeriod);
+      if (sandboxResult.ok) {
+        rebuildInstance(sandboxResult.fn, state.activePeriod);
+        state.lastCompiledCode = saved.code;
+        state.lastCompiledFn = sandboxResult.fn;
+        state.lastCompiledSamples = sandboxResult.dedupSamples;
+      } else if (sandboxResult.error !== "Superseded") {
+        state.error = sandboxResult.error;
+      }
     }
   }
 
