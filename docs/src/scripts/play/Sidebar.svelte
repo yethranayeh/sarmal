@@ -198,12 +198,7 @@
           <span class="font-mono font-bold not-italic text-[11px] text-primary"
             >elapsed:</span
           >
-          {" "}elapsed seconds,
-          {" "}
-          <span class="font-mono font-bold not-italic text-[11px] text-primary"
-            >params:</span
-          >
-          {" "}custom parameters
+          {" "}elapsed seconds
         </p>
 
         <div
@@ -226,15 +221,12 @@
                   <p>
                     <span class="font-mono text-primary">elapsed:</span> elapsed seconds
                   </p>
-                  <p>
-                    <span class="font-mono text-primary">params:</span> custom parameters
-                  </p>
                 </div>
               {/snippet}
               <span
                 class="text-muted-foreground italic font-heading text-xs cursor-help"
               >
-                phase, elapsed, params
+                phase, elapsed
               </span>
             </Tooltip>
             <span class="text-muted-gray">)</span>

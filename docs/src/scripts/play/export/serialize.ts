@@ -51,7 +51,7 @@ export function serializeCurveRef(pg: PlaygroundState): { ref: string; imports: 
     .map((line) => (line ? `    ${line}` : ""))
     .join("\n");
   return {
-    ref: `{\n  name: 'custom',\n  fn: (phase, elapsed, params) => {\n${indented}\n  },\n}`,
+    ref: `{\n  name: 'custom',\n  fn: (phase, elapsed) => {\n${indented}\n  },\n}`,
     imports: [],
   };
 }
