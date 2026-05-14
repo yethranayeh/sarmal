@@ -5,13 +5,16 @@ import BaseLayout from "../layouts/BaseLayout.astro";
 import Playground from "../Playground.svelte";
 
 import { SEPARATOR_DOT } from "../variables";
+import { CURVE_DOCS, type CurveUrlId } from "../data/curves";
 
-const curveEntries = Object.entries(curves).map(([id, def]) => ({
-	id,
-	name: def.name,
-	fn: def.fn.toString(),
-	period: def.period ?? Math.PI * 2,
-}));
+const curveEntries = Object.entries(curves)
+	.filter(([id]) => CURVE_DOCS[id as CurveUrlId]?.kind !== "drawn")
+	.map(([id, def]) => ({
+		id,
+		name: def.name,
+		fn: def.fn.toString(),
+		period: def.period ?? Math.PI * 2,
+	}));
 ---
 
 <BaseLayout

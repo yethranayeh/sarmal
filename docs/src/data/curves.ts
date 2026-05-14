@@ -321,7 +321,7 @@ export const CURVE_DOCS: Record<CurveName, CurveDocsMeta> = {
 } as const;
 
 export const CURVE_URL_IDS = Object.keys(CURVE_DOCS) as CurveName[];
-
+export type CurveUrlId = (typeof CURVE_URL_IDS)[number];
 export function lookupByUrl(urlId: string): CurveDocsMeta | undefined {
   return CURVE_DOCS[urlId as CurveName];
 }
