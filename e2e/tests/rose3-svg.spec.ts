@@ -11,7 +11,7 @@ import { test, expect } from '@playwright/test';
  * - Symmetric curve (3-petal rose)
  */
 test('rose3 svg renders correctly', async ({ page }) => {
-  await page.goto('/test/visual/rose3-svg');
+  await page.goto('/test/visual/rose3-svg/');
 
   const container = page.locator('#svg-container');
 

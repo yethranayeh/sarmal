@@ -11,7 +11,7 @@ import { test, expect } from '@playwright/test';
  * - Trail ribbon (SVG paths) with color
  */
 test('rose3 svg gradient renders correctly', async ({ page }) => {
-  await page.goto('/test/visual/rose3-svg-gradient');
+  await page.goto('/test/visual/rose3-svg-gradient/');
 
   const container = page.locator('#svg-container');
 

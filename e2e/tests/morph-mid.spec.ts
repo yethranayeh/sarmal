@@ -10,7 +10,7 @@ import { test, expect } from '@playwright/test';
  * - Skeleton rendering during morph
  */
 test('morph mid-frame renders correctly', async ({ page }) => {
-  await page.goto('/test/visual/morph-mid');
+  await page.goto('/test/visual/morph-mid/');
 
   const canvas = page.locator('#morph-canvas');
 

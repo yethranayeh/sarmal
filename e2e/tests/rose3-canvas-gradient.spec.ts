@@ -11,7 +11,7 @@ import { test, expect } from '@playwright/test';
  * - Trail ribbon with color
  */
 test('rose3 canvas gradient renders correctly', async ({ page }) => {
-  await page.goto('/test/visual/rose3-canvas-gradient');
+  await page.goto('/test/visual/rose3-canvas-gradient/');
 
   const canvas = page.locator('#rose3-canvas-gradient');
 

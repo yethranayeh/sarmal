@@ -14,7 +14,7 @@ import { test, expect } from '@playwright/test';
  * the container. This forces applyDprSizing to correctly set inline styles.
  */
 test('canvas element display size stays at logical dimensions despite DPR scaling', async ({ page }) => {
-  await page.goto('/test/visual/dpr-sizing');
+  await page.goto('/test/visual/dpr-sizing/');
 
   const canvas = page.locator('#dpr-test-canvas');
 
@@ -50,7 +50,7 @@ test('canvas element display size stays at logical dimensions despite DPR scalin
 });
 
 test('canvas renders correctly at all DPR levels', async ({ page }) => {
-  await page.goto('/test/visual/dpr-sizing');
+  await page.goto('/test/visual/dpr-sizing/');
 
   const canvas = page.locator('#dpr-test-canvas');
 

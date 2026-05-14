@@ -11,7 +11,7 @@ import { test, expect } from '@playwright/test';
  * - Symmetric curve (3-petal rose)
  */
 test('rose3 canvas renders correctly', async ({ page }) => {
-  await page.goto('/test/visual/rose3-canvas');
+  await page.goto('/test/visual/rose3-canvas/');
 
   const canvas = page.locator('#rose3-canvas');
 

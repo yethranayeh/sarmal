@@ -11,7 +11,7 @@ import { test, expect } from '@playwright/test';
  * - Symmetric curve with cusps
  */
 test('astroid renders correctly', async ({ page }) => {
-  await page.goto('/test/visual/astroid');
+  await page.goto('/test/visual/astroid/');
 
   const canvas = page.locator('#astroid-canvas');
 
