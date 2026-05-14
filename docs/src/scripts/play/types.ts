@@ -37,6 +37,7 @@ export interface SharedState {
   trailLength: number;
   speed: number;
   showSkeleton: boolean;
+  activePeriod?: number;
 }
 
 export interface DrawBoardExports {

@@ -32,6 +32,7 @@ export interface PlaygroundState {
   headColorAuto: boolean;
   palette: SarmalPalette;
   presetId: string;
+  activePeriod: number;
   sidebarVisible: boolean;
   instance: ReturnType<typeof createInstance> | null;
   lastCompiledCode: string;
@@ -91,6 +92,7 @@ export function createPlaygroundState(
     headColorAuto: true,
     palette: "bard" as SarmalPalette,
     presetId: "",
+    activePeriod: Math.PI * 2,
     sidebarVisible: false,
     instance: null as ReturnType<typeof createInstance> | null,
     lastCompiledCode: "",
@@ -131,6 +133,7 @@ export function createPlaygroundState(
     }
 
     state.presetId = curveId;
+    state.activePeriod = preset.period;
     state.sidebarVisible = false;
     const body = extractBody(preset.fn);
     state.currentCode = body;
@@ -275,7 +278,7 @@ export function createPlaygroundState(
         return;
       }
 
-      const sandboxResult = await compileSandboxed(state.currentCode, Math.PI * 2);
+      const sandboxResult = await compileSandboxed(state.currentCode, state.activePeriod);
       if (!sandboxResult.ok) {
         if (sandboxResult.error !== "Superseded") {
           state.error = sandboxResult.error;
@@ -291,7 +294,7 @@ export function createPlaygroundState(
         return;
       }
 
-      rebuildInstance(sandboxResult.fn);
+      rebuildInstance(sandboxResult.fn, state.activePeriod);
       state.lastCompiledCode = state.currentCode;
       state.lastCompiledFn = sandboxResult.fn;
       state.lastCompiledSamples = sandboxResult.dedupSamples;
@@ -303,6 +306,7 @@ export function createPlaygroundState(
       state.currentCode = "";
       state.error = null;
       state.presetId = "";
+      state.activePeriod = Math.PI * 2;
 
       if (state.instance) {
         state.instance.destroy();
@@ -337,13 +341,13 @@ export function createPlaygroundState(
       state.showDrawControls = true;
 
       state.error = null;
-      const sandboxResult = await compileSandboxed(state.currentCode, Math.PI * 2);
+      const sandboxResult = await compileSandboxed(state.currentCode, state.activePeriod);
       if (sandboxResult.ok) {
         state.lastCompiledCode = state.currentCode;
         state.lastCompiledFn = sandboxResult.fn;
         state.lastCompiledSamples = sandboxResult.dedupSamples;
         await tick();
-        rebuildInstance(sandboxResult.fn);
+        rebuildInstance(sandboxResult.fn, state.activePeriod);
       } else if (sandboxResult.error !== "Superseded") {
         state.error = sandboxResult.error;
       }
@@ -428,9 +432,9 @@ export function createPlaygroundState(
 
   async function handleTrailLengthCommit() {
     if (state.currentMode === "math") {
-      const sandboxResult = await compileSandboxed(state.currentCode, Math.PI * 2);
+      const sandboxResult = await compileSandboxed(state.currentCode, state.activePeriod);
       if (sandboxResult.ok) {
-        rebuildInstance(sandboxResult.fn);
+        rebuildInstance(sandboxResult.fn, state.activePeriod);
       }
     } else {
       state.drawBoardRef?.rebuildInstance();
@@ -555,9 +559,10 @@ export function createPlaygroundState(
     } else {
       state.currentCode = saved.code;
       state.error = null;
-      const sandboxResult = await compileSandboxed(saved.code, Math.PI * 2);
+      state.activePeriod = saved.activePeriod ?? Math.PI * 2;
+      const sandboxResult = await compileSandboxed(saved.code, state.activePeriod);
       if (sandboxResult.ok) {
-        rebuildInstance(sandboxResult.fn);
+        rebuildInstance(sandboxResult.fn, state.activePeriod);
         state.lastCompiledCode = saved.code;
         state.lastCompiledFn = sandboxResult.fn;
         state.lastCompiledSamples = sandboxResult.dedupSamples;
@@ -776,6 +781,12 @@ export function createPlaygroundState(
     },
     set lastCompiledSamples(v) {
       state.lastCompiledSamples = v;
+    },
+    get activePeriod() {
+      return state.activePeriod;
+    },
+    set activePeriod(v) {
+      state.activePeriod = v;
     },
     get isSliding() {
       return state.isSliding;
