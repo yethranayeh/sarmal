@@ -119,7 +119,7 @@ const entries = entriesWithDuration.map(({ pathLen, ...rest }) => {
 				data-glow-card
 			>
 				<div class="glow-inner relative flex size-full overflow-hidden">
-					<div class="glow-icon-layer pointer-events-none absolute inset-0 flex items-center justify-center will-change-[transform,filter]">
+					<div class="glow-icon-layer pointer-events-none absolute inset-0 flex items-center justify-center will-change-[transform]">
 						<svg
 							aria-hidden="true"
 							viewBox="0 0 100 100"
@@ -207,7 +207,6 @@ const entries = entriesWithDuration.map(({ pathLen, ...rest }) => {
 		mask-clip: border-box, padding-box;
 		mask-composite: exclude;
 		-webkit-mask-composite: xor;
-		will-change: filter;
 		backdrop-filter: blur(var(--card-border-blur, 10px))
 			brightness(var(--card-border-brightness, 2.5))
 			contrast(var(--card-border-contrast, 2.5))
