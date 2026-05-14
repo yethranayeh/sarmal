@@ -2,9 +2,12 @@
   import type { TrailStyle, SarmalPalette } from "@sarmal/core";
   import type { PlaygroundState } from "./playgroundState.svelte";
 
-  import { getContext } from "svelte";
+  import { getContext, onMount } from "svelte";
   import { palettes } from "@sarmal/core";
-  import { Link, MoveRight, Replace, Unlink, XIcon } from "@lucide/svelte";
+  import { Link, MoveRight, Unlink, XIcon } from "@lucide/svelte";
+  import { CodeJar } from "codejar";
+  import Prism from "prismjs";
+  import "prismjs/components/prism-javascript";
 
   import Slider from "./Slider.svelte";
   import ToggleSwitch from "./ToggleSwitch.svelte";
@@ -12,18 +15,56 @@
 
   const pg = getContext<PlaygroundState>("playground");
 
-  let codeTextarea = $state<HTMLTextAreaElement>();
+  let codeEditor = $state<HTMLDivElement>();
   let lineGutter = $state<HTMLDivElement>();
   let lineCount = $derived(pg.currentCode.split("\n").length);
+  let jar: ReturnType<typeof CodeJar>;
   const hasOutOfRangePoints = $derived(
     pg.drawPoints.some((p) => p[0] < -1 || p[0] > 1 || p[1] < -1 || p[1] > 1),
   );
 
   function syncScroll() {
-    if (lineGutter && codeTextarea) {
-      lineGutter.scrollTop = codeTextarea.scrollTop;
+    if (lineGutter && codeEditor) {
+      lineGutter.scrollTop = codeEditor.scrollTop;
     }
   }
+
+  onMount(() => {
+    if (!codeEditor) {
+      return;
+    }
+
+    function highlight(editor: HTMLElement) {
+      const code = editor.textContent ?? "";
+      editor.innerHTML = Prism.highlight(
+        code,
+        Prism.languages.javascript,
+        "javascript",
+      );
+    }
+
+    jar = CodeJar(codeEditor, highlight, {
+      tab: "  ",
+      addClosing: true,
+      spellcheck: false,
+    });
+
+    jar.onUpdate((code: string) => {
+      pg.currentCode = code;
+      pg.handleCodeChange();
+    });
+
+    jar.updateCode(pg.currentCode, false);
+
+    return () => jar.destroy();
+  });
+
+  $effect(() => {
+    const code = pg.currentCode;
+    if (jar && jar.toString() !== code) {
+      jar.updateCode(code, false);
+    }
+  });
 
   function handlePointKeydown(
     e: KeyboardEvent,
@@ -213,14 +254,11 @@
                 </div>
               {/each}
             </div>
-            <textarea
-              bind:this={codeTextarea}
-              bind:value={pg.currentCode}
-              oninput={pg.handleCodeChange}
+            <div
+              bind:this={codeEditor}
               onscroll={syncScroll}
-              spellcheck="false"
-              class="w-full py-2.5 pr-3 pl-2 font-mono text-xs leading-[1.55] text-foreground bg-transparent border-0 resize-none outline-none block"
-            ></textarea>
+              class="w-full py-2.5 pr-3 pl-2 font-mono text-xs leading-[1.55] text-foreground bg-transparent resize-none outline-none block [&_.token.keyword]:text-primary [&_.token.function]:text-[#2563eb] [&_.token.string]:text-[#059669] [&_.token.number]:text-[#d97706] [&_.token.comment]:text-muted-gray [&_.token.operator]:text-muted-gray [&_.token.punctuation]:text-muted-gray [&_.token.builtin]:text-[#7c3aed] [&_.token.boolean]:text-primary [&_.token.class-name]:text-[#2563eb]"
+            ></div>
           </div>
           <div
             class="px-3 py-1 font-bold font-mono text-[11px] bg-surface text-primary"
