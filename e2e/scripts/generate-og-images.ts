@@ -35,7 +35,7 @@ async function main() {
   let fail = 0;
 
   for (const id of CURVE_IDS) {
-    const url = `${BASE_URL}/test/og-curve/${id}`;
+    const url = `${BASE_URL}/test/og-curve/${id}/`;
     const outPath = resolve(OUTPUT_DIR, `${id}.png`);
 
     try {
