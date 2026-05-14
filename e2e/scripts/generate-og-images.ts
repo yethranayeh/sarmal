@@ -14,7 +14,7 @@ import { fileURLToPath } from "url";
 const SCRIPT_DIR = dirname(fileURLToPath(import.meta.url));
 const BASE_URL = "http://localhost:4321";
 const VIEWPORT = { width: 1200, height: 630 };
-const DEVICE_SCALE_FACTOR = 2;
+const DEVICE_SCALE_FACTOR = 1;
 const OUTPUT_DIR = resolve(SCRIPT_DIR, "../../docs/public/og/curves");
 
 const CURVE_IDS = Object.keys(curves);

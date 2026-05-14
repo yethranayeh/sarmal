@@ -29,3 +29,5 @@ experimental/
 e2e/test-results/**/*.md
 docs/public/og/platforms/*
 backup/
+test-results/
+scripts/*.sh

@@ -15,7 +15,7 @@ const BASE_URL = "http://localhost:4321";
 const OUTPUT_DIR = resolve(SCRIPT_DIR, "../../docs/public/og/platforms");
 
 const CURVE = process.argv[2] ?? "rose3";
-const PAGE_URL = `${BASE_URL}/test/og/platform-sim?curve=${CURVE}`;
+const PAGE_URL = `${BASE_URL}/test/og/platform-sim/?curve=${CURVE}`;
 
 const PLATFORM_IDS = [
   { id: "facebook", label: "Facebook Feed", width: 560, height: 750 },
@@ -77,10 +77,7 @@ async function main() {
       ok++;
     } catch (err) {
       fail++;
-      console.error(
-        `    FAILED ${platform.label}:`,
-        err instanceof Error ? err.message : err,
-      );
+      console.error(`    FAILED ${platform.label}:`, err instanceof Error ? err.message : err);
     } finally {
       await context.close().catch(() => {});
     }
