@@ -1,4 +1,6 @@
 ---
+import { ChevronDown } from "@lucide/astro";
+
 interface Heading {
 	depth: number;
 	slug: string;
@@ -15,17 +17,24 @@ const tocItems = headings.filter((h) => h.depth === 2 || h.depth === 3);
 // Mirror JS constants so initial padding matches what JS will set to avoid flash
 const LX = 8;
 const IX_OFFSET = 30;
-const H2R = 6.0;
+const H2R = 6.9;
 const H3R = 5.5;
 const TEXT_GAP = 5;
 const h2Pad = LX + H2R + TEXT_GAP;
 const h3Pad = LX + IX_OFFSET + H3R + TEXT_GAP;
+
+const h2sWithChildren = new Set<string>();
+let _h2 = "";
+for (const h of tocItems) {
+	if (h.depth === 2) _h2 = h.slug;
+	else if (h.depth === 3 && _h2) h2sWithChildren.add(_h2);
+}
 ---
 
 {
 	tocItems.length > 0 && (
 		<nav
-			class="sticky top-5 shrink-0 self-start hidden md:flex md:flex-col w-42"
+			class="group sticky top-5 shrink-0 self-start hidden md:flex md:flex-col w-42"
 			aria-label="Table of contents"
 		>
 			<div>
@@ -35,7 +44,7 @@ const h3Pad = LX + IX_OFFSET + H3R + TEXT_GAP;
 				<div id="toc-rail" class="relative w-full">
 					<svg
 						id="toc-svg"
-						class="absolute left-0 top-0 pointer-events-none overflow-visible text-primary"
+						class="absolute left-0 top-0 z-10 pointer-events-none overflow-visible text-primary"
 						aria-hidden="true"
 					/>
 					<ul role="list" id="toc-list" class="relative list-none p-0 m-0">
@@ -43,15 +52,27 @@ const h3Pad = LX + IX_OFFSET + H3R + TEXT_GAP;
 							const isH3 = heading.depth === 3;
 							return (
 								<li
-									class:list="group relative"
+									class="relative"
 									data-heading-slug={heading.slug}
 									data-depth={heading.depth}
 								>
+									{!isH3 && h2sWithChildren.has(heading.slug) && (
+										<button
+											class="toc-chevron group/btn absolute inset-y-0 -left-0.5 z-20 flex cursor-pointer items-center justify-center opacity-0 text-background transition-opacity duration-150 group-hover:opacity-100 focus-visible:opacity-100"
+											style={{ width: `${h2Pad}px` }}
+											aria-expanded="true"
+											data-slug={heading.slug}
+										>
+											<span class="flex transition-transform duration-300 group-aria-[expanded=false]/btn:-rotate-90">
+												<ChevronDown size={16} stroke-width={2.5} />
+											</span>
+										</button>
+									)}
 									<a
 										href={`#${heading.slug}`}
 										style={{ paddingLeft: `${isH3 ? h3Pad : h2Pad}px` }}
 										class:list={[
-											"toc-link block py-1 text-sm leading-[1.4] no-underline transition-colors duration-200 break-anywhere",
+											"block py-1 text-sm leading-[1.4] no-underline transition-colors duration-200 break-anywhere aria-current:text-primary aria-current:font-medium",
 											isH3 ? "text-muted text-xs" : "text-foreground",
 										]}
 									>
@@ -68,13 +89,6 @@ const h3Pad = LX + IX_OFFSET + H3R + TEXT_GAP;
 	)
 }
 
-<style>
-	.toc-link.toc-active {
-		color: var(--color-primary);
-		font-weight: 500;
-	}
-</style>
-
 <script>
 	const ACTIVE_LINE = 80;
 	const LX = 8;
@@ -83,7 +97,7 @@ const h3Pad = LX + IX_OFFSET + H3R + TEXT_GAP;
 	const CURVE_H = 20;
 	const OPACITY = 0.7;
 	const RAIL_W = 2.0;
-	const H2R = 6.0;
+	const H2R = 6.9;
 	const H3R = 5.5;
 	const TRUNK_OPACITY = 0.3;
 	const STD_DEV = 5;
@@ -115,19 +129,34 @@ const h3Pad = LX + IX_OFFSET + H3R + TEXT_GAP;
 		depth: parseInt(el.dataset.depth ?? "2"),
 	}));
 
+	// H2 slugs whose H3 children are currently collapsed
+	const collapsedH2s = new Set<string>();
+
 	let totalLen = 0;
 	let mergedPathEl: SVGPathElement | null = null;
 	let dotPositions: Array<{ x: number; y: number }> = [];
 	let headingScrollPositions: number[] = [];
 	let lengthFracs: number[] = [];
 
-	function rects() {
+	// Returns items minus H3s whose parent H2 is in collapsedH2s.
+	function getEffectiveItems() {
+		let lastH2Slug = "";
+		return items.filter(({ el, depth }) => {
+			if (depth === 2) {
+				lastH2Slug = el.dataset.headingSlug ?? "";
+				return true;
+			}
+			return !collapsedH2s.has(lastH2Slug);
+		});
+	}
+
+	function rects(itemList: typeof items = items) {
 		if (!railContainer) {
 			return [];
 		}
 
 		const wt = railContainer.getBoundingClientRect().top;
-		return items.map(({ el }) => {
+		return itemList.map(({ el }) => {
 			const r = el.getBoundingClientRect();
 			return {
 				top: r.top - wt,
@@ -151,9 +180,12 @@ const h3Pad = LX + IX_OFFSET + H3R + TEXT_GAP;
 	// One cubic bezier segment per consecutive pair of heading midpoints.
 	// Control points sit on the vertical axis of their endpoint so the path
 	// leaves and arrives going straight down; horizontal travel is in the middle.
-	function buildPath(rs: ReturnType<typeof rects>) {
+	function buildPath(
+		rs: ReturnType<typeof rects>,
+		itemList: typeof items = items,
+	) {
 		const IX = LX + IX_OFFSET;
-		const pts = items.map((item, i) => ({
+		const pts = itemList.map((item, i) => ({
 			x: item.depth === 3 ? IX : LX,
 			y: rs[i].mid,
 		}));
@@ -179,13 +211,14 @@ const h3Pad = LX + IX_OFFSET + H3R + TEXT_GAP;
 	function computeLengthFracs(
 		path: SVGPathElement,
 		rs: ReturnType<typeof rects>,
+		itemList: typeof items = items,
 	): number[] {
 		const total = path.getTotalLength();
 		if (total === 0) {
-			return items.map(() => 0);
+			return itemList.map(() => 0);
 		}
 
-		return items.map((_, i) => {
+		return itemList.map((_, i) => {
 			const targetY = rs[i].mid;
 			let lo = 0,
 				hi = total;
@@ -276,15 +309,16 @@ const h3Pad = LX + IX_OFFSET + H3R + TEXT_GAP;
 			return;
 		}
 
-		const rs = rects();
+		const effectiveItems = getEffectiveItems();
+		const effectiveRects = rects(effectiveItems);
 
-		if (!rs.length) {
+		if (!effectiveRects.length) {
 			return;
 		}
 
 		const wrapW = railContainer.getBoundingClientRect().width || 256;
 		const IX = LX + IX_OFFSET;
-		const svgH = rs[rs.length - 1].bottom + 40;
+		const svgH = effectiveRects[effectiveRects.length - 1].bottom + 40;
 
 		svgEl.setAttribute("width", String(wrapW));
 		svgEl.setAttribute("height", String(svgH));
@@ -333,26 +367,99 @@ const h3Pad = LX + IX_OFFSET + H3R + TEXT_GAP;
 		// Trunk overlay: straight line at LX behind the winding path.
 		if (TRUNK_OPACITY > 0) {
 			svgEl.appendChild(
-				makePath(`M ${LX} ${rs[0].top} L ${LX} ${svgH - 16}`, {
+				makePath(`M ${LX} ${effectiveRects[0].top} L ${LX} ${svgH - 16}`, {
 					opacity: String(TRUNK_OPACITY),
 				}),
 			);
 		}
 
-		// SVG paints in source order. Draw order: trunk → winding path → dots → active dot.
-		const pathD = buildPath(rs);
+		// SVG paints in source order. Draw order: trunk, winding path, dots, active dot
+		const pathD = buildPath(effectiveRects, effectiveItems);
 		const winding = makePath(pathD, { opacity: String(OPACITY) });
 		svgEl.appendChild(winding);
 
-		dotPositions = items.map(({ depth }, i) => ({
+		dotPositions = effectiveItems.map(({ depth }, i) => ({
 			x: depth === 3 ? IX : LX,
-			y: rs[i].mid,
+			y: effectiveRects[i].mid,
 		}));
 		mergedPathEl = winding;
 		totalLen = winding.getTotalLength();
 
-		lengthFracs = computeLengthFracs(winding, rs);
+		const effectiveLengthFracs = computeLengthFracs(
+			winding,
+			effectiveRects,
+			effectiveItems,
+		);
+
+		// Map item object references → their index in effectiveItems
+		const effectiveIndexOf = new Map<(typeof items)[number], number>();
+		effectiveItems.forEach((item, i) => effectiveIndexOf.set(item, i));
+
 		headingScrollPositions = computeHeadingScrollPositions();
+
+		// Build full lengthFracs for ALL items (including collapsed H3s).
+		// Collapsed H3s are remapped proportionally to the trunk segment between their bounding H2s, preserving relative scroll timing.
+		lengthFracs = items.map((item, i) => {
+			const effIdx = effectiveIndexOf.get(item);
+			if (effIdx !== undefined) return effectiveLengthFracs[effIdx];
+
+			// Collapsed H3: find bounding H2s in items[]
+			let parentH2Idx = -1;
+			for (let j = i - 1; j >= 0; j--) {
+				if (items[j].depth === 2) {
+					parentH2Idx = j;
+					break;
+				}
+			}
+			let nextH2Idx = -1;
+			for (let j = i + 1; j < items.length; j++) {
+				if (items[j].depth === 2) {
+					nextH2Idx = j;
+					break;
+				}
+			}
+
+			const parentEffIdx =
+				parentH2Idx >= 0 ? effectiveIndexOf.get(items[parentH2Idx]) : undefined;
+			const nextEffIdx =
+				nextH2Idx >= 0 ? effectiveIndexOf.get(items[nextH2Idx]) : undefined;
+
+			const parentFrac =
+				parentEffIdx !== undefined ? effectiveLengthFracs[parentEffIdx] : 0;
+			const nextFrac =
+				nextEffIdx !== undefined ? effectiveLengthFracs[nextEffIdx] : 1;
+
+			const parentScroll =
+				parentH2Idx >= 0 ? headingScrollPositions[parentH2Idx] : 0;
+			const nextScroll =
+				nextH2Idx >= 0
+					? headingScrollPositions[nextH2Idx]
+					: headingScrollPositions[headingScrollPositions.length - 1];
+
+			const scrollRange = nextScroll - parentScroll;
+			const t =
+				scrollRange > 0
+					? Math.min(
+							1,
+							Math.max(
+								0,
+								(headingScrollPositions[i] - parentScroll) / scrollRange,
+							),
+						)
+					: 0;
+
+			return parentFrac + t * (nextFrac - parentFrac);
+		});
+
+		// Show/hide H3 list items based on their parent H2's collapsed state
+		let lastH2Slug = "";
+		for (const { el, depth } of items) {
+			if (depth === 2) {
+				lastH2Slug = el.dataset.headingSlug ?? "";
+			} else {
+				el.classList.toggle("hidden", collapsedH2s.has(lastH2Slug));
+			}
+		}
 
 		// All circles and the active ellipse go into a filtered group so the
 		// gooey merge effect applies across the whole set.
@@ -360,14 +467,14 @@ const h3Pad = LX + IX_OFFSET + H3R + TEXT_GAP;
 		const dotsGroup = document.createElementNS(SVG_NS, "g");
 		dotsGroup.setAttribute("filter", "url(#goo-dots)");
 
-		for (let i = 0; i < items.length; i++) {
-			if (items[i].depth === 2)
-				dotsGroup.appendChild(makeCircle(LX, rs[i].mid, H2R));
+		for (let i = 0; i < effectiveItems.length; i++) {
+			if (effectiveItems[i].depth === 2)
+				dotsGroup.appendChild(makeCircle(LX, effectiveRects[i].mid, H2R));
 		}
 
-		for (let i = 0; i < items.length; i++) {
-			if (items[i].depth === 3)
-				dotsGroup.appendChild(makeCircle(IX, rs[i].mid, H3R));
+		for (let i = 0; i < effectiveItems.length; i++) {
+			if (effectiveItems[i].depth === 3)
+				dotsGroup.appendChild(makeCircle(IX, effectiveRects[i].mid, H3R));
 		}
 
 		dotsGroup.appendChild(
@@ -448,11 +555,22 @@ const h3Pad = LX + IX_OFFSET + H3R + TEXT_GAP;
 			if (scrollFrac >= lengthFracs[i] - 0.005) activeIdx = i;
 		}
 
+		// If active item is a collapsed H3, promote to parent H2
+		if (items[activeIdx].depth === 3) {
+			for (let j = activeIdx - 1; j >= 0; j--) {
+				if (items[j].depth === 2) {
+					if (collapsedH2s.has(items[j].el.dataset.headingSlug ?? "")) {
+						activeIdx = j;
+					}
+					break;
+				}
+			}
+		}
+
 		for (const { el } of items) {
 			const isActive = el === items[activeIdx].el;
 			const a = el.querySelector("a");
 			if (a) {
-				a.classList.toggle("toc-active", isActive);
 				a.setAttribute("aria-current", isActive ? "true" : "false");
 			}
 		}
@@ -469,6 +587,19 @@ const h3Pad = LX + IX_OFFSET + H3R + TEXT_GAP;
 		if (article) {
 			ro.observe(article);
 		}
+	}
+
+	// One-time click listeners on chevron buttons — never recreated on render
+	const chevronBtns = nav?.querySelectorAll<HTMLButtonElement>(".toc-chevron");
+	for (const btn of chevronBtns ?? []) {
+		btn.addEventListener("click", () => {
+			const slug = btn.dataset.slug ?? "";
+			const expanding = btn.getAttribute("aria-expanded") === "false";
+			btn.setAttribute("aria-expanded", expanding ? "true" : "false");
+			if (expanding) collapsedH2s.delete(slug);
+			else collapsedH2s.add(slug);
+			render();
+		});
 	}
 
 	let raf = 0;
