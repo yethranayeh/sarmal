@@ -2,8 +2,11 @@ interface Env {
   SARMAL_SHARES: KVNamespace;
 }
 
+// ! Must stay in sync with SHARE_STATE_VERSION in docs/src/scripts/play/types.ts
+const SHARE_STATE_VERSION = 3;
+
 interface SharedState {
-  v: 2;
+  v: typeof SHARE_STATE_VERSION;
   mode?: string;
   code: string;
   trailStyle: string;
@@ -34,7 +37,7 @@ function isValidState(value: unknown): value is SharedState {
   }
 
   const s = value as Record<string, unknown>;
-  if (s.v !== 2) {
+  if (s.v !== SHARE_STATE_VERSION) {
     return false;
   }
 

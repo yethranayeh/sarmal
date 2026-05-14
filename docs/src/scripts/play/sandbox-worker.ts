@@ -147,12 +147,9 @@ type CompileReturn =
   | { ok: false; error: string };
 function compile(code: string): CompileReturn {
   try {
-    const fn = new Function("phase", "elapsed", "params", code) as (
-      phase: number,
-      elapsed: number,
-      params: Record<string, number>,
-    ) => Point;
-    const result = fn(0, 0, EMPTY_PARAMS);
+    // "t" and "time" are legacy aliases for "phase" and "elapsed", kept for backward compatibility with share links saved before the parameter rename.
+    const rawFn = new Function("phase", "elapsed", "params", "t", "time", code);
+    const result = rawFn(0, 0, EMPTY_PARAMS, 0, 0) as Point;
 
     if (typeof result !== "object" || result === null || !("x" in result) || !("y" in result)) {
       return { ok: false, error: "fn must return { x, y }" };
@@ -162,6 +159,11 @@ function compile(code: string): CompileReturn {
       return { ok: false, error: "fn must return numeric x and y" };
     }
 
+    const fn: (phase: number, elapsed: number, params: Record<string, number>) => Point = (
+      phase,
+      elapsed,
+      params,
+    ) => rawFn(phase, elapsed, params, phase, elapsed) as Point;
     return { ok: true, fn };
   } catch (err: unknown) {
     return { ok: false, error: (err as Error).message };

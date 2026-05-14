@@ -1,6 +1,7 @@
 <script lang="ts">
   import type { PlaygroundState } from "./playgroundState.svelte";
   import type { SharedState } from "./types";
+  import { SHARE_STATE_VERSION } from "./types";
 
   import { getContext } from "svelte";
   import {
@@ -99,7 +100,7 @@
     if (codeDisabled) return;
 
     const payload: SharedState = {
-      v: 2,
+      v: SHARE_STATE_VERSION,
       mode: pg.currentMode,
       code: pg.currentMode === "draw" ? "" : pg.currentCode,
       trailStyle: pg.trailStyle,

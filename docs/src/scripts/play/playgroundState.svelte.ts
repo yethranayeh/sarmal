@@ -16,7 +16,7 @@ import { buildCurveFn, extractBody, sampleCurveFn, isEachSamplesEqual } from "./
 import { createInstance, getResolvedTrailColor, getResolvedSkeletonColor } from "./renderer";
 import { compile, preSample, createLookupFn, createEvalLoop, createSandboxWorker } from "./sandbox";
 
-import { DEFAULT_CODE } from "./types";
+import { DEFAULT_CODE, SHARE_STATE_VERSION } from "./types";
 
 export interface PlaygroundState {
   currentMode: PlaygroundMode;
@@ -39,6 +39,7 @@ export interface PlaygroundState {
   lastCompiledFn: CurveFn | null;
   lastCompiledSamples: Point[] | null;
   isSliding: boolean;
+  codeWasMigrated: boolean;
   drawBoardRef: DrawBoardExports | null;
   drawInitialPoints: Array<DrawingSegment> | undefined;
   drawPoints: Array<DrawingSegment>;
@@ -99,6 +100,7 @@ export function createPlaygroundState(
     lastCompiledFn: null as CurveFn | null,
     lastCompiledSamples: null as Point[] | null,
     isSliding: false,
+    codeWasMigrated: false,
     drawBoardRef: null as DrawBoardExports | null,
     drawInitialPoints: undefined as Array<DrawingSegment> | undefined,
     drawPoints: [] as Array<DrawingSegment>,
@@ -268,6 +270,7 @@ export function createPlaygroundState(
   function handleCodeChange() {
     state.error = null;
     state.presetId = "";
+    state.codeWasMigrated = false;
 
     if (debounceTimer) {
       clearTimeout(debounceTimer);
@@ -550,14 +553,28 @@ export function createPlaygroundState(
     state.drawBoardRef?.updatePointAt(index, axis === "x" ? 0 : 1, Number(value.toFixed(3)));
   }
 
+  function migrateLegacyCode(code: string): string {
+    // Pass 1: rename any existing 'phase'/'elapsed' identifiers to avoid collision with the incoming parameter names we're about to inject.
+    const intermediate = code
+      .replace(/\bphase\b/g, "legacy_phase")
+      .replace(/\belapsed\b/g, "legacy_elapsed");
+    // Pass 2: replace old parameter names with canonical ones.
+    return intermediate.replace(/\bt\b/g, "phase").replace(/\btime\b/g, "elapsed");
+  }
+
   async function restoreState(saved: SharedState) {
+    const isLegacy = (saved as { v?: number }).v !== SHARE_STATE_VERSION;
+
     if (saved.mode === "draw" && saved.drawPoints) {
       state.drawInitialPoints = saved.drawPoints;
       state.drawPoints = [...saved.drawPoints];
-
+      state.codeWasMigrated = false;
       state.currentMode = "draw";
     } else {
-      state.currentCode = saved.code;
+      const rawCode = saved.code;
+      const code = isLegacy ? migrateLegacyCode(rawCode) : rawCode;
+      state.codeWasMigrated = isLegacy && code !== rawCode;
+      state.currentCode = code;
       state.error = null;
       state.activePeriod = saved.activePeriod ?? Math.PI * 2;
       const sandboxResult = await compileSandboxed(saved.code, state.activePeriod);
@@ -835,6 +852,9 @@ export function createPlaygroundState(
     },
     get shouldShowDrawControls() {
       return shouldShowDrawControls;
+    },
+    get codeWasMigrated() {
+      return state.codeWasMigrated;
     },
     get paletteColors() {
       return paletteColors;

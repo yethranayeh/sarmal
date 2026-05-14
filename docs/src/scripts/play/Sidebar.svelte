@@ -4,7 +4,7 @@
 
   import { getContext } from "svelte";
   import { palettes } from "@sarmal/core";
-  import { Link, Unlink, XIcon } from "@lucide/svelte";
+  import { Link, MoveRight, Replace, Unlink, XIcon } from "@lucide/svelte";
 
   import Slider from "./Slider.svelte";
   import ToggleSwitch from "./ToggleSwitch.svelte";
@@ -120,6 +120,31 @@
             <option value={curve.id}>{curve.name}</option>
           {/each}
         </select>
+
+        {#if pg.codeWasMigrated}
+          <div
+            class="font-ui italic text-xs leading-normal text-warning space-y-1"
+          >
+            <p>This code was automatically updated from an older format:</p>
+            <div>
+              <div class="flex items-center gap-1">
+                <code class="line-through">t</code><MoveRight
+                  class="inline size-4"
+                /><code class="font-semibold">phase</code>
+              </div>
+              <div class="flex items-center gap-1">
+                <code class="line-through">time</code><MoveRight
+                  class="inline size-4"
+                /><code class="font-semibold">elapsed</code>
+              </div>
+            </div>
+            <p>
+              Any variable names that clashed were renamed with a <code
+                class="font-semibold">legacy_</code
+              > prefix.
+            </p>
+          </div>
+        {/if}
 
         <p
           class="font-heading italic text-xs leading-relaxed text-muted-foreground lg:hidden"

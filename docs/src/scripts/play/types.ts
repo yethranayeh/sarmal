@@ -23,8 +23,11 @@ export type PlaygroundMode = "math" | "draw";
 
 export type CurveFn = (phase: number, elapsed: number, params: Record<string, number>) => Point;
 
+// ! Must stay in sync with SHARE_STATE_VERSION in functions/api/share.ts
+export const SHARE_STATE_VERSION = 3 as const;
+
 export interface SharedState {
-  v: 2;
+  v: typeof SHARE_STATE_VERSION;
   mode?: "math" | "draw";
   drawPoints?: Array<[number, number]>;
   code: string;

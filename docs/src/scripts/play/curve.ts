@@ -34,13 +34,15 @@ export type BuildResult = { ok: true; fn: CurveFn } | { ok: false; error: string
 
 export function buildCurveFn(code: string): BuildResult {
   try {
-    const fn = new Function("phase", "elapsed", "params", code);
-    const result = fn(0, 0, {});
+    // "t" and "time" are legacy aliases for "phase" and "elapsed", kept for backward compatibility with share links saved before the parameter rename.
+    const rawFn = new Function("phase", "elapsed", "params", "t", "time", code);
+    const result = rawFn(0, 0, {}, 0, 0);
 
     if (typeof result !== "object" || result === null || !("x" in result) || !("y" in result)) {
       throw new Error("fn must return { x, y }");
     }
-    return { ok: true, fn: fn as CurveFn };
+    const fn: CurveFn = (phase, elapsed, params) => rawFn(phase, elapsed, params, phase, elapsed);
+    return { ok: true, fn };
   } catch (err: unknown) {
     return { ok: false, error: (err as Error).message };
   }
