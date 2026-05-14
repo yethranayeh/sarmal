@@ -11,8 +11,11 @@ import type { DrawingSegment } from "./types";
 
 import { onDestroy, onMount, tick } from "svelte";
 import { palettes } from "@sarmal/core";
+
 import { buildCurveFn, extractBody, sampleCurveFn, isEachSamplesEqual } from "./curve";
 import { createInstance, getResolvedTrailColor, getResolvedSkeletonColor } from "./renderer";
+import { compile, preSample, createLookupFn, createEvalLoop, createSandboxWorker } from "./sandbox";
+
 import { DEFAULT_CODE } from "./types";
 
 export interface PlaygroundState {
@@ -33,6 +36,7 @@ export interface PlaygroundState {
   instance: ReturnType<typeof createInstance> | null;
   lastCompiledCode: string;
   lastCompiledFn: CurveFn | null;
+  lastCompiledSamples: Point[] | null;
   isSliding: boolean;
   drawBoardRef: DrawBoardExports | null;
   drawInitialPoints: Array<DrawingSegment> | undefined;
@@ -47,14 +51,14 @@ export interface PlaygroundState {
   showPalette: boolean;
   resolvedTrailColor: string | string[];
   resolvedSkeletonColor: string;
-  loadPreset: (curveId: string) => void;
+  loadPreset: (curveId: string) => Promise<void>;
   handleCodeChange: () => void;
   handleClear: () => void;
   switchMode: (mode: PlaygroundMode) => void;
   handleSkeletonToggle: () => void;
   handleSpeedChange: (newSpeed: number) => void;
   handleTrailLengthChange: (newLength: number) => void;
-  handleTrailLengthCommit: () => void;
+  handleTrailLengthCommit: () => Promise<void>;
   handleHeadRadiusChange: (newRadius: number) => void;
   handleTrailColorChange: (newColor: string) => void;
   handleHeadColorChange: (newColor: string) => void;
@@ -91,6 +95,7 @@ export function createPlaygroundState(
     instance: null as ReturnType<typeof createInstance> | null,
     lastCompiledCode: "",
     lastCompiledFn: null as CurveFn | null,
+    lastCompiledSamples: null as Point[] | null,
     isSliding: false,
     drawBoardRef: null as DrawBoardExports | null,
     drawInitialPoints: undefined as Array<DrawingSegment> | undefined,
@@ -102,6 +107,9 @@ export function createPlaygroundState(
 
   let debounceTimer: ReturnType<typeof setTimeout> | null = null;
   let slideTimer: ReturnType<typeof setTimeout> | null = null;
+  let sandboxWorker: Worker | null = null;
+  let evalLoopDispose: (() => void) | null = null;
+  let compileVersion = 0;
 
   const drawPointCount = $derived(state.drawPoints.length);
   const shouldShowDrawControls = $derived(state.showDrawControls || drawPointCount < 3);
@@ -116,7 +124,7 @@ export function createPlaygroundState(
     ),
   );
 
-  function loadPreset(curveId: string) {
+  async function loadPreset(curveId: string) {
     const preset = PRESETS[curveId];
     if (!preset) {
       return;
@@ -128,12 +136,25 @@ export function createPlaygroundState(
     state.currentCode = body;
     state.error = null;
 
-    const result = buildCurveFn(body);
-    if (result.ok) {
-      rebuildInstance(result.fn, preset.period);
-      state.lastCompiledCode = body;
-      state.lastCompiledFn = result.fn;
+    // quick one first
+    const localResult = buildCurveFn(body);
+    if (!localResult.ok) {
+      state.error = localResult.error;
+      return;
     }
+
+    const sandboxResult = await compileSandboxed(body, preset.period);
+    if (!sandboxResult.ok) {
+      if (sandboxResult.error !== "Superseded") {
+        state.error = sandboxResult.error;
+      }
+      return;
+    }
+
+    rebuildInstance(sandboxResult.fn, preset.period);
+    state.lastCompiledCode = body;
+    state.lastCompiledFn = sandboxResult.fn;
+    state.lastCompiledSamples = sandboxResult.dedupSamples;
   }
 
   function rebuildInstance(fn: CurveFn, period = Math.PI * 2) {
@@ -168,6 +189,79 @@ export function createPlaygroundState(
     );
   }
 
+  /**
+   * Compiles user code in the Web Worker sandbox when available.
+   *
+   * When the Worker is available, it is the **only** compilation path.
+   * ! Failed Worker compiles never fall through to main-thread execution. The error is surfaced directly.
+   * The `buildCurveFn` fallback exists solely for environments without Worker support.
+   *
+   * - Static curves: Sampled into a lookup table. The Worker **stands down** after sampling.
+   * - Dynamic curves: The Worker stays live, evaluating per-frame through `postMessage`.
+   * - No Worker support: falls back to main-thread `buildCurveFn`.
+   *
+   * ! Uses a version counter to discard stale results when the user edits code faster than the Worker can respond.
+   */
+  async function compileSandboxed(
+    code: string,
+    period: number,
+  ): Promise<{ ok: true; fn: CurveFn; dedupSamples: Point[] } | { ok: false; error: string }> {
+    const myVersion = ++compileVersion;
+
+    if (sandboxWorker) {
+      try {
+        const discardedResult = { ok: false, error: "Superseded" } as const;
+
+        const result = await compile(sandboxWorker, code);
+        if (myVersion !== compileVersion) {
+          return discardedResult;
+        }
+
+        if (!result.ok) {
+          evalLoopDispose?.();
+          evalLoopDispose = null;
+          return { ok: false, error: result.error };
+        }
+
+        if (!result.isTimeVariant) {
+          evalLoopDispose?.();
+          evalLoopDispose = null;
+          const samples = await preSample(sandboxWorker, period);
+          if (myVersion !== compileVersion) {
+            return discardedResult;
+          }
+          return {
+            ok: true,
+            fn: createLookupFn(samples, period),
+            dedupSamples: result.dedupSamples,
+          };
+        }
+
+        // Dynamic curve: pre-sample skeleton at elapsed=0 for valid initial bounding box
+        evalLoopDispose?.();
+        const skeletonSamples = await preSample(sandboxWorker, period);
+        if (myVersion !== compileVersion) {
+          return discardedResult;
+        }
+
+        const loop = createEvalLoop(sandboxWorker, skeletonSamples, period);
+        evalLoopDispose = loop.dispose;
+        return { ok: true, fn: loop.proxyFn, dedupSamples: result.dedupSamples };
+      } catch {
+        evalLoopDispose?.();
+        evalLoopDispose = null;
+        return { ok: false, error: "Sandbox compilation failed" };
+      }
+    }
+
+    // No Worker support: compile on main thread
+    const result = buildCurveFn(code);
+    if (result.ok) {
+      return { ok: true, fn: result.fn, dedupSamples: sampleCurveFn(result.fn) };
+    }
+    return { ok: false, error: result.error };
+  }
+
   function handleCodeChange() {
     state.error = null;
     state.presetId = "";
@@ -176,41 +270,31 @@ export function createPlaygroundState(
       clearTimeout(debounceTimer);
     }
 
-    debounceTimer = setTimeout(() => {
+    debounceTimer = setTimeout(async () => {
       if (state.currentCode === state.lastCompiledCode) {
         return;
       }
 
-      const result = buildCurveFn(state.currentCode);
-      if (!result.ok) {
-        state.error = result.error;
-        return;
-      }
-
-      let oldSamples: Point[] | undefined;
-      try {
-        if (state.lastCompiledFn) {
-          oldSamples = sampleCurveFn(state.lastCompiledFn);
+      const sandboxResult = await compileSandboxed(state.currentCode, Math.PI * 2);
+      if (!sandboxResult.ok) {
+        if (sandboxResult.error !== "Superseded") {
+          state.error = sandboxResult.error;
         }
-      } catch {
-        // Old function throws at some samples; treat as different
-      }
-
-      let newSamples: Point[] | undefined;
-      try {
-        newSamples = sampleCurveFn(result.fn);
-      } catch {
-        state.error = "Curve function produces invalid output for some values";
         return;
       }
 
-      if (oldSamples && newSamples && isEachSamplesEqual(oldSamples, newSamples)) {
+      if (
+        state.lastCompiledSamples &&
+        isEachSamplesEqual(state.lastCompiledSamples, sandboxResult.dedupSamples)
+      ) {
+        state.lastCompiledCode = state.currentCode;
         return;
       }
 
-      rebuildInstance(result.fn);
+      rebuildInstance(sandboxResult.fn);
       state.lastCompiledCode = state.currentCode;
-      state.lastCompiledFn = result.fn;
+      state.lastCompiledFn = sandboxResult.fn;
+      state.lastCompiledSamples = sandboxResult.dedupSamples;
     }, 150);
   }
 
@@ -226,6 +310,7 @@ export function createPlaygroundState(
       }
       state.lastCompiledCode = "";
       state.lastCompiledFn = null;
+      state.lastCompiledSamples = null;
     } else {
       state.drawBoardRef?.clearPoints();
       state.showDrawControls = true;
@@ -240,6 +325,7 @@ export function createPlaygroundState(
       state.currentCode = DEFAULT_CODE;
       state.lastCompiledCode = "";
       state.lastCompiledFn = null;
+      state.lastCompiledSamples = null;
       state.error = null;
       state.presetId = "";
 
@@ -251,12 +337,15 @@ export function createPlaygroundState(
       state.showDrawControls = true;
 
       state.error = null;
-      const result = buildCurveFn(state.currentCode);
-      if (result.ok) {
+      const sandboxResult = await compileSandboxed(state.currentCode, Math.PI * 2);
+      if (sandboxResult.ok) {
         state.lastCompiledCode = state.currentCode;
-        state.lastCompiledFn = result.fn;
+        state.lastCompiledFn = sandboxResult.fn;
+        state.lastCompiledSamples = sandboxResult.dedupSamples;
         await tick();
-        rebuildInstance(result.fn);
+        rebuildInstance(sandboxResult.fn);
+      } else if (sandboxResult.error !== "Superseded") {
+        state.error = sandboxResult.error;
       }
     }
 
@@ -337,12 +426,11 @@ export function createPlaygroundState(
     state.trailLength = newLength;
   }
 
-  function handleTrailLengthCommit() {
+  async function handleTrailLengthCommit() {
     if (state.currentMode === "math") {
-      const result = buildCurveFn(state.currentCode);
-
-      if (result.ok) {
-        rebuildInstance(result.fn);
+      const sandboxResult = await compileSandboxed(state.currentCode, Math.PI * 2);
+      if (sandboxResult.ok) {
+        rebuildInstance(sandboxResult.fn);
       }
     } else {
       state.drawBoardRef?.rebuildInstance();
@@ -467,11 +555,14 @@ export function createPlaygroundState(
     } else {
       state.currentCode = saved.code;
       state.error = null;
-      const result = buildCurveFn(saved.code);
-      if (result.ok) {
-        rebuildInstance(result.fn);
+      const sandboxResult = await compileSandboxed(saved.code, Math.PI * 2);
+      if (sandboxResult.ok) {
+        rebuildInstance(sandboxResult.fn);
         state.lastCompiledCode = saved.code;
-        state.lastCompiledFn = result.fn;
+        state.lastCompiledFn = sandboxResult.fn;
+        state.lastCompiledSamples = sandboxResult.dedupSamples;
+      } else if (sandboxResult.error !== "Superseded") {
+        state.error = sandboxResult.error;
       }
     }
 
@@ -514,10 +605,20 @@ export function createPlaygroundState(
     if (slideTimer) {
       clearTimeout(slideTimer);
     }
+
+    if (sandboxWorker) {
+      evalLoopDispose?.();
+      sandboxWorker.terminate();
+      sandboxWorker = null;
+      evalLoopDispose = null;
+    }
   });
 
   onMount(async () => {
     window.addEventListener("beforeunload", handleBeforeUnload);
+
+    // Worker should be ready before the user types anything
+    sandboxWorker = createSandboxWorker();
 
     if (savedState) {
       restoreState(savedState);
@@ -538,11 +639,12 @@ export function createPlaygroundState(
       }
     }
 
-    const result = buildCurveFn(DEFAULT_CODE);
-    if (result.ok) {
-      rebuildInstance(result.fn);
+    const sandboxResult = await compileSandboxed(DEFAULT_CODE, Math.PI * 2);
+    if (sandboxResult.ok) {
+      rebuildInstance(sandboxResult.fn);
       state.lastCompiledCode = DEFAULT_CODE;
-      state.lastCompiledFn = result.fn;
+      state.lastCompiledFn = sandboxResult.fn;
+      state.lastCompiledSamples = sandboxResult.dedupSamples;
     }
   });
 
@@ -668,6 +770,12 @@ export function createPlaygroundState(
     },
     set lastCompiledFn(v) {
       state.lastCompiledFn = v;
+    },
+    get lastCompiledSamples() {
+      return state.lastCompiledSamples;
+    },
+    set lastCompiledSamples(v) {
+      state.lastCompiledSamples = v;
     },
     get isSliding() {
       return state.isSliding;

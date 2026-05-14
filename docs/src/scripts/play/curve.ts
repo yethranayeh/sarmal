@@ -17,6 +17,10 @@ export function sampleCurveFn(fn: CurveFn) {
 }
 
 export function isEachSamplesEqual(a: Point[], b: Point[]) {
+  if (a.length !== b.length) {
+    return false;
+  }
+
   for (let i = 0; i < a.length; i++) {
     if (Math.abs(a[i].x - b[i].x) > SAMPLE_EPSILON || Math.abs(a[i].y - b[i].y) > SAMPLE_EPSILON) {
       return false;
