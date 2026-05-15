@@ -45,7 +45,7 @@
 		</div>
 
 		<script>
-			import { createSarmal, curves } from "@sarmal/core";
+			import { createSarmal, curves, palettes } from "@sarmal/core";
 
 			const canvas = document.getElementById(
 				"rose3-canvas-gradient",
@@ -54,7 +54,7 @@
 				autoStart: false,
 				initialPhase: Math.PI,
 				trailStyle: "gradient-animated",
-				palette: "bard",
+				trailColor: palettes.bard,
 				skeletonColor: "#888888",
 				headRadius: 4,
 				trailLength: 120,

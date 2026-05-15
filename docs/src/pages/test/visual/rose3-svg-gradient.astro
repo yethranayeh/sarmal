@@ -38,7 +38,7 @@
 		<svg id="svg-container"></svg>
 
 		<script>
-			import { createSarmalSVG, curves } from "@sarmal/core";
+			import { createSarmalSVG, curves, palettes } from "@sarmal/core";
 
 			const container = document.getElementById(
 				"svg-container",
@@ -47,7 +47,7 @@
 				autoStart: false,
 				initialPhase: Math.PI,
 				trailStyle: "gradient-animated",
-				palette: "bard",
+				trailColor: palettes.bard,
 				skeletonColor: "#888888",
 				headRadius: 4,
 				trailLength: 120,

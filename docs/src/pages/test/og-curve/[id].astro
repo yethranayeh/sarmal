@@ -1,7 +1,8 @@
 ---
-import type { CurveName } from "@sarmal/core";
+import { curves, type CurveName } from "@sarmal/core";
 import "../../../styles/globals.css";
 import { CURVE_DOCS } from "../../../data/curves";
+import { ArrowRight } from "@lucide/astro";
 
 // Inline rose logo mark geometry (same math as Branding.astro, sized for a small badge icon)
 const TWO_PI = Math.PI * 2;
@@ -87,23 +88,25 @@ if (!meta) return new Response(`Unknown curve: ${id}`, { status: 404 });
 
 		<!-- Left text block -->
 		<div
-			class="absolute left-70 top-0 bottom-0 z-10 flex flex-col justify-center gap-2"
+			class="absolute left-75 top-0 bottom-0 right-100 z-10 flex flex-col justify-between gap-5 py-10"
 		>
-			<h1
-				class="max-w-140 text-[56px] font-black leading-[0.92] tracking-tight"
-				style={`color: ${meta.color}; text-shadow: 0 0 10px #0c0c0a, 0 0 2px #0c0c0a, 0 0 1px #0c0c0a`}
-			>
-				{meta.name}
-			</h1>
+			<div class="flex justify-end w-full">
+				<h1
+					class="max-w-140 text-[56px] font-bold! leading-[0.92] tracking-tight"
+					style={`color: ${meta.color}; text-shadow: 0 0 10px #0c0c0a, 0 0 2px #0c0c0a, 0 0 1px #0c0c0a`}
+				>
+					{meta.name}
+				</h1>
+			</div>
 
 			<!-- sarmal.art pill badge -->
 			<div
-				class="inline-flex w-fit items-center gap-2.5 rounded-full border border-foreground/10 bg-foreground/3 px-4 py-2 shadow-xs"
+				class="inline-flex w-fit items-center gap-1 rounded-full border border-foreground/10 bg-foreground/3 px-4 py-2 shadow-xs"
 			>
 				<svg
 					xmlns="http://www.w3.org/2000/svg"
 					viewBox={`0 0 ${LOGO_SIZE} ${LOGO_SIZE}`}
-					class="size-7 shrink-0"
+					class="size-12 shrink-0"
 					style={`color: ${meta.color}`}
 					aria-hidden="true"
 				>
@@ -124,18 +127,28 @@ if (!meta) return new Response(`Unknown curve: ${id}`, { status: 404 });
 					}
 				</svg>
 				<span
-					class="text-2xl font-medium text-foreground"
+					class="text-[40px] font-medium text-foreground"
 					style="font-family: 'Newsreader', serif"
 				>
-					sarmal<span class="text-primary">.art</span>
+					sarmal<span class="text-primary ml-2">.art</span>
 				</span>
+			</div>
+			<div class="w-full flex justify-end ml-20">
+				<p
+					class="text-2xl text-white font-black tracking-wide"
+					style={`text-shadow: 0 0 2px #0c0c0a, -1px 0 0px #0c0c0a, 0 1px 1px #0c0c0a`}
+				>
+					Explore {Object.keys(curves).length - 1} more curves <ArrowRight
+						class="inline size-5"
+					/>
+				</p>
 			</div>
 		</div>
 
 		<!-- Tilted card — the curve lives here -->
 		<div
 			class="absolute rounded-3xl overflow-hidden bg-[#141410] border border-white/7"
-			style={`width: 460px; top: -80px; bottom: -80px; right: 280px; transform: rotate(-9deg); box-shadow: 0 0 80px color-mix(in srgb, var(--curve-color) 15%, transparent), 0 24px 60px rgba(0,0,0,0.6)`}
+			style={`width: 460px; top: -80px; bottom: -80px; right: 250px; transform: rotate(-9deg); box-shadow: 0 0 80px color-mix(in srgb, var(--curve-color) 15%, transparent), 0 24px 60px rgba(0,0,0,0.6)`}
 		>
 			<canvas id="og-curve" class="absolute inset-0 h-full w-full"></canvas>
 		</div>
