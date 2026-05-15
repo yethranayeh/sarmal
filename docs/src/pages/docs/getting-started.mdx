@@ -62,6 +62,10 @@ const sarmal = createSarmal(canvas, curves.artemis2);
 
 The instance animates immediately by default. Call `sarmal.pause()` to freeze the animation in place and `sarmal.play()` to resume. Call `sarmal.destroy()` when you're done (unmount, navigation, etc.).
 
+<Alert variant="tip" label="Got a prediction machine in the loop?">
+  Sarmal is compatible with [TanStack Intent](https://tanstack.com/intent/latest/docs/overview). You can run `npx @tanstack/intent@latest install` to make Claudia and other robots be able to pick up the full API context automatically. An [llms.txt](https://sarmal.art/llms.txt) is also available for tools that use that convention.
+</Alert>
+
 ## Choosing a curve
 
 While it is possible to create your very own <Link href="#custom-curves">custom curve</Link>, you might wish to skip the initial hassle. The `curves` export is an object with <Link href="/docs/curves/">all the built-in curves</Link>, so you can pick from predefined curve definitions to get started right away:
@@ -138,11 +142,7 @@ const sarmal = createSarmal(canvas, myCurve);
 
 Only `name` and `fn` are required.
 
-{/* FIXME: Repetitive content. Same in concepts.mdx */}
-The `fn` receives three arguments:
-- `phase` (position along the curve, 0 -> period),
-- `elapsed` (elapsed seconds),
-- `params` (reserved for now; always `{}`).
+`fn` receives `(phase, elapsed, params)`. See <Link href="/docs/concepts/#engine">Engine</Link> for details on each argument.
 
 For behavior that varies independently of curve position (e.g. oscillating a shape parameter) use `elapsed`:
 

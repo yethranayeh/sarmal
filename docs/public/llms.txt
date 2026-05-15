@@ -3,7 +3,10 @@
 > Parametric curve renderer for loading indicators. Beautiful spinners from two lines of math.
 
 Sarmal is a tiny, zero-dependency JavaScript library that renders animated
-loading indicators by tracing parametric curves on an HTML canvas element.
+loading indicators by tracing parametric curves on an HTML canvas or SVG element.
+
+Sarmal is a [TanStack Intent](https://tanstack.com/intent/latest/docs/overview)-compatible
+package. Claude Code and other Intent-aware tools load the full API context automatically.
 
 ## Quick start
 
@@ -11,7 +14,7 @@ loading indicators by tracing parametric curves on an HTML canvas element.
 
 ```html
 <script src="https://unpkg.com/@sarmal/core/dist/auto-init.js"></script>
-<canvas data-sarmal="artemis2" data-trail-color="#60a5fa"></canvas>
+<canvas data-sarmal="artemis2" data-trail-color="#60a5fa" width="200" height="200"></canvas>
 ```
 
 ### npm
@@ -27,36 +30,100 @@ const canvas = document.querySelector('canvas')
 const sarmal = createSarmal(canvas, curves.artemis2, {
   trailColor: '#60a5fa',
 })
-sarmal.start()
 ```
+
+The instance starts animating immediately. Call `sarmal.pause()` to freeze and
+`sarmal.play()` to resume. Always call `sarmal.destroy()` on unmount.
+
+## SVG renderer
+
+```js
+import { createSarmalSVG, curves } from '@sarmal/core'
+
+const svg = document.querySelector('svg')
+const sarmal = createSarmalSVG(svg, curves.rose5)
+```
+
+`createSarmalSVG` accepts the same options as `createSarmal`. Coordinate space
+differs: SVG uses 0–100 viewBox units, canvas uses CSS pixels.
 
 ## Available curves
 
-- `artemis2`: Artemis II free-return lunar trajectory curve drawn with Catmull-Rom spline
-- `epitrochoid7`: 7-lobed epitrochoid with a breathing distance parameter
+- `artemis2`: Artemis II free-return lunar trajectory (Catmull-Rom spline)
 - `astroid`: 4-cusped hypocycloid (x=cos³t, y=sin³t)
 - `deltoid`: 3-cusped hypocycloid
-- `rose5`: 5-petal rose curve (r=cos(5t))
+- `epicycloid3`: epicycloid with 3 cusps
+- `epitrochoid7`: 7-lobed epitrochoid with a breathing distance parameter
+- `lame`: Lamé curve (superellipse)
+- `lissajous32`: Lissajous 3:2 ratio
+- `lissajous43`: Lissajous 4:3 ratio
 - `rose3`: 3-petal rose curve (r=cos(3t))
+- `rose5`: 5-petal rose curve (r=cos(5t))
+- `rose52`: rose 5/2 winding pattern
+- `star`: star curve
+- `star4`: 4-pointed star
+- `star7`: 7-pointed star
 
 ## API
 
 ### createSarmal(canvas, curveDef, options?)
 
-Returns an instance with `.start()`, `.stop()`, `.destroy()`.
+Returns a `SarmalInstance` with:
+- `.play()` — start or resume the animation
+- `.pause()` — freeze in place
+- `.destroy()` — stop the loop and free resources (**always call on unmount**)
+- `.morphTo(curveDef, options?)` — smooth transition to another curve (returns Promise)
+- `.seek(phase)` — move to a phase position and rebuild the trail naturally
+- `.jump(phase, options?)` — teleport the head without touching the trail
+- `.setSpeed(n)` — change speed (0 = freeze, negative = reverse)
+- `.setRenderOptions(options)` — update colors and style on a live instance
 
-**Options:**
-- `trailColor`: CSS color for the animated trail
-- `skeletonColor`: CSS color for the static skeleton outline
-- `headColor`: CSS color for the leading dot
-- `headRadius`: radius of the leading dot (pixels)
-- `glowSize`: blur radius for glow effect (pixels)
-- `trailLength`: number of points in the trail buffer
+### createSarmalSVG(svg, curveDef, options?)
 
-The `data-*` attributes on `<canvas>` mirror all options for CDN/no-build usage.
+Same interface as `createSarmal`, drawing into an `<svg>` element.
+
+### Options
+
+- `trailColor`: 6-digit hex string or array of hex strings for gradient (`'#a78bfa'`)
+- `trailStyle`: `'solid'` | `'gradient-static'` | `'gradient-animated'`
+- `trailLength`: number of trail points, fixed at creation (default: `120`)
+- `skeletonColor`: color for the ghost path outline (default: `'#ffffff'`)
+- `headColor`: color for the leading dot, or `null` to derive from trail (default: `'#ffffff'`)
+- `headRadius`: dot radius in CSS pixels (canvas) or viewBox units (SVG)
+- `autoStart`: set to `false` to create paused (default: `true`)
+
+### Gradient palettes
+
+```js
+import { palettes } from '@sarmal/core'
+
+// palettes.bard, palettes.sunset, palettes.ocean, palettes.ice, palettes.fire, palettes.forest
+const sarmal = createSarmal(canvas, curves.astroid, {
+  trailStyle: 'gradient-animated',
+  trailColor: palettes.bard,
+})
+```
+
+### Auto-init (no JS)
+
+```html
+<canvas data-sarmal="rose5" data-trail-color="#a78bfa" width="200" height="200"></canvas>
+<svg data-sarmal="lissajous32" style="width:200px;height:200px;"></svg>
+```
+
+Data attributes mirror option names in kebab-case: `data-trail-color`,
+`data-trail-style`, `data-skeleton-color`, `data-head-color`, `data-head-radius`.
+
+### Common mistakes
+
+- `trailColor` only accepts 6-digit hex strings — not named colors or `rgb()`
+- SVG `headRadius` is in viewBox units (0–100), not pixels — don't pass canvas values
+- Always call `destroy()` — omitting it leaks a `requestAnimationFrame` loop
+- `trailLength` cannot be changed after construction — create a new instance
 
 ## Links
 
 - npm: https://www.npmjs.com/package/@sarmal/core
 - GitHub: https://github.com/yethranayeh/sarmal
 - Site: https://sarmal.art
+- Docs: https://sarmal.art/docs/

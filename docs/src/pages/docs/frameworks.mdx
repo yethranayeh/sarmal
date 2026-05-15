@@ -189,7 +189,7 @@ For reactive updates after mount, call `instance.current.setRenderOptions(...)` 
 
 ### SSR and Next.js App Router
 
-Each source file in `@sarmal/react` begins with `"use client"`. `createSarmal` is only ever called inside `useEffect`, which never runs on the server.
+`@sarmal/react` emits `"use client"` at the top of its bundle output. `createSarmal` is only ever called inside `useEffect`, which never runs on the server.
 
 **Next.js App Router:** Importing `@sarmal/react` inside a Server Component will fail. Add `"use client"` to the file that imports it, or wrap the `<Sarmal>` usage in a dedicated `ClientWrapper.tsx` that is itself marked `"use client"`.
 
