@@ -11,7 +11,7 @@ import Link from "../../components/Link.astro";
 import Alert from "../../components/Alert.astro";
 import SarmalBlueprint from "../../components/SarmalBlueprint.astro";
 import ConceptDemo from "../../components/ConceptDemo.astro";
-import TPositionDemo from "../../components/feature/demo/TPositionDemo.astro";
+import PhasePositionDemo from "../../components/feature/demo/PhasePositionDemo.astro";
 import ParametricIntroDemo from "../../components/ParametricIntroDemo.astro";
 import SkeletonModeDemo from "../../components/feature/demo/SkeletonModeDemo.astro";
 import EngineOutputDemo from "../../components/feature/demo/EngineOutputDemo.astro";
@@ -67,8 +67,8 @@ The key idea is that you control _when_ the dot is at each position. You can spe
 
 
 <div class="grid grid-cols-1 md:grid-cols-2 gap-0 md:gap-4">
-  <p class="order-1 md:order-2">The parameter `t` controls exactly where on that path the dot is at any moment. <br class="hidden md:block" /> Click a position to see the trail rebuild as if the dot had traveled naturally to that point</p>
-  <div class="order-2 md:order-1"><TPositionDemo /></div>
+  <p class="order-1 md:order-2">The parameter `phase` controls exactly where on that path the dot is at any moment. <br class="hidden md:block" /> Click a position to see the trail rebuild as if the dot had traveled naturally to that point</p>
+  <div class="order-2 md:order-1"><PhasePositionDemo /></div>
 </div>
 
 You can head to <Link href='/play/'>the playground</Link> to experiment with parametric curves and try them out in real time.
@@ -107,12 +107,12 @@ The engine owns time, state, and math. It does not know about pixels, colors, or
 
 ```js
 // You write the math
-const fn = (t, time, params) => ({
-	x: Math.cos(t),
-	y: Math.sin(t)
+const fn = (phase, elapsed, params) => ({
+	x: Math.cos(phase),
+	y: Math.sin(phase)
 });
 
-// The engine advances t, manages the trail buffer, handles morphing
+// The engine advances phase, manages the trail buffer, handles morphing
 const engine = createEngine(curveDef);
 const points = engine.tick(dt); // math-space coordinates
 
@@ -121,8 +121,8 @@ renderer.render(points, skeleton);
 ```
 
 `fn` is called each tick with three arguments:
-- `t` (position along the curve, 0 -> period),
-- `time` (elapsed seconds, useful for time-varying shapes),
+- `phase` (position along the curve, 0 -> period),
+- `elapsed` (elapsed seconds, useful for time-varying shapes),
 - `params` (reserved for now; always `{}`).
 
 The renderer *automatically* fits the curve to its container by using the skeleton's bounding box. So, you don't really have to set a scale or size on the curve itself.
@@ -256,7 +256,7 @@ s4.play(); // Animation starts from there
     headRadius={2}
     autoStart={false}
     initialPhase={Math.PI}
-    callouts={[{ target: "head", label: "t = π", sub: "initial position", static: true }]}
+    callouts={[{ target: "head", label: "phase = π", sub: "initial position", static: true }]}
     trailColor="#c0143c"
   />
   <div slot="info">
