@@ -1,5 +1,3 @@
-"use client";
-
 export type { SarmalProps, SarmalSVGProps, BaseSarmalProps } from "./types";
 
 export { useSarmal } from "./use-sarmal";

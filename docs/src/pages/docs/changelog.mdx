@@ -299,6 +299,10 @@ const sarmal = createSarmal(canvas, curves.artemis2, { initialT: Math.PI })
 
 ## React
 
+### 0.4.1 - 15.05.2026
+
+Fixed `"use client"` not appearing in the bundle output. Since **esbuild** strips RSC directives found in source files during bundling, the directive is now injected as a post-build step.
+
 ### 0.4.0 - 10.05.2026
 
 <Alert label="Breaking" variant="error">`initialT` init option renamed to `initialPhase` on both `<Sarmal>` and `<SarmalSVG>`. Also affects the `BaseInit` and `BaseSarmalProps` types.</Alert>
@@ -359,7 +363,7 @@ import { curves } from "@sarmal/core";
 <Sarmal curve={curves.rose3} />
 ```
 
-Peer dependencies: `react >= 18` and `@sarmal/core`. Each source file is marked with `"use client"` for SSR compatibility.
+Peer dependencies: `react >= 18` and `@sarmal/core`. The package bundle emits `"use client"` for SSR compatibility.
 
 ## Svelte
 
