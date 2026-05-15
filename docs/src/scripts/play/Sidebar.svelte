@@ -4,7 +4,10 @@
 
   import { getContext, onMount } from "svelte";
   import { palettes } from "@sarmal/core";
-  import { Link, MoveRight, Unlink, XIcon } from "@lucide/svelte";
+  import Link from "../../components/icons/Link.svelte";
+  import MoveRight from "../../components/icons/MoveRight.svelte";
+  import Unlink from "../../components/icons/Unlink.svelte";
+  import XIcon from "../../components/icons/XIcon.svelte";
   import { CodeJar } from "codejar";
   import Prism from "prismjs";
   import "prismjs/components/prism-javascript";

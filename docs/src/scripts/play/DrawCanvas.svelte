@@ -3,7 +3,7 @@
   import type DrawBoardComponent from "./DrawBoard.svelte";
   import type { DrawingSegment } from "./types";
 
-  import { Import } from "@lucide/svelte";
+  import Import from "../../components/icons/Import.svelte";
   import { getContext } from "svelte";
 
   import Button from "../../components/Button.svelte";

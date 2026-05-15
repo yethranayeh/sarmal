@@ -4,7 +4,8 @@
   import { getContext, tick } from "svelte";
 
   import Button from "../../components/Button.svelte";
-  import { Download, Film } from "@lucide/svelte";
+  import Download from "../../components/icons/Download.svelte";
+  import Film from "../../components/icons/Film.svelte";
   import {
     recordWebM,
     getWebMDurationSeconds,

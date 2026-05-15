@@ -2,7 +2,8 @@
   import type { PlaygroundState } from "./playgroundState.svelte";
 
   import { getContext } from "svelte";
-  import { Trash, PanelLeft } from "@lucide/svelte";
+  import Trash from "../../components/icons/Trash.svelte";
+  import PanelLeft from "../../components/icons/PanelLeft.svelte";
 
   import MathCanvas from "./MathCanvas.svelte";
   import DrawCanvas from "./DrawCanvas.svelte";

@@ -4,7 +4,7 @@
 
   import { createEngine, drawCurve } from "@sarmal/core";
   import { onDestroy, untrack } from "svelte";
-  import { Trash } from "@lucide/svelte";
+  import Trash from "../../components/icons/Trash.svelte";
 
   import {
     computeNormal,

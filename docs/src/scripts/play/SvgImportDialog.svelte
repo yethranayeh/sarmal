@@ -2,17 +2,15 @@
   import type { DrawingSegment } from "./types";
   import type { ParseResult } from "./parseSvgInput";
 
-  import {
-    CheckIcon,
-    CircleCheck,
-    CircleCheckBig,
-    ClipboardCheck,
-    Import,
-    TriangleAlert,
-    TriangleDashed,
-    Upload,
-    X,
-  } from "@lucide/svelte";
+  import CheckIcon from "../../components/icons/CheckIcon.svelte";
+  import CircleCheck from "../../components/icons/CircleCheck.svelte";
+  import CircleCheckBig from "../../components/icons/CircleCheckBig.svelte";
+  import ClipboardCheck from "../../components/icons/ClipboardCheck.svelte";
+  import Import from "../../components/icons/Import.svelte";
+  import TriangleAlert from "../../components/icons/TriangleAlert.svelte";
+  import TriangleDashed from "../../components/icons/TriangleDashed.svelte";
+  import Upload from "../../components/icons/Upload.svelte";
+  import X from "../../components/icons/X.svelte";
 
   import { parseSvgInput } from "./parseSvgInput";
 

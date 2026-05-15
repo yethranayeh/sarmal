@@ -1,5 +1,6 @@
 <script lang="ts">
-  import { Copy, Check } from "@lucide/svelte";
+  import Copy from "./icons/Copy.svelte";
+  import Check from "./icons/Check.svelte";
 
   interface Props {
     code: string;

@@ -4,15 +4,13 @@
   import { SHARE_STATE_VERSION } from "./types";
 
   import { getContext } from "svelte";
-  import {
-    Share2,
-    ImageDown,
-    ChevronDown,
-    Code,
-    Film,
-    Share,
-    FileCodeCorner,
-  } from "@lucide/svelte";
+  import Share2 from "../../components/icons/Share2.svelte";
+  import ImageDown from "../../components/icons/ImageDown.svelte";
+  import ChevronDown from "../../components/icons/ChevronDown.svelte";
+  import Code from "../../components/icons/Code.svelte";
+  import Film from "../../components/icons/Film.svelte";
+  import Share from "../../components/icons/Share.svelte";
+  import FileCodeCorner from "../../components/icons/FileCodeCorner.svelte";
 
   import {
     generateJSSnippet,

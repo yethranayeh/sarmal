@@ -1,5 +1,7 @@
 <script lang="ts">
-  import { Sun, Moon, SunMoon } from "@lucide/svelte";
+  import Sun from "../../icons/Sun.svelte";
+  import Moon from "../../icons/Moon.svelte";
+  import SunMoon from "../../icons/SunMoon.svelte";
   import Button from "../../Button.svelte";
 
   type Preference = "light" | "dark" | "system";
