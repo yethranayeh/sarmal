@@ -247,12 +247,79 @@ export function hexToRgb(hex: string): Rgb {
   return { r: n >> 16, g: (n >> 8) & 255, b: n & 255 };
 }
 
-/** Linear interpolation between two RGB colors */
-export const lerpRgb = (a: Rgb, b: Rgb, t: number) => ({
-  r: Math.round(a.r + (b.r - a.r) * t),
-  g: Math.round(a.g + (b.g - a.g) * t),
-  b: Math.round(a.b + (b.b - a.b) * t),
-});
+/** sRGB byte (0–255) to linear light (0–1)
+ * @see {@link https://bottosson.github.io/posts/oklab/}
+ */
+function srgbByteToLinear(c: number): number {
+  const n = c / 255;
+  return n <= 0.04045 ? n / 12.92 : Math.pow((n + 0.055) / 1.055, 2.4);
+}
+
+/** Linear light (0–1) to sRGB byte (0–255), gamma-compressed and clamped */
+function linearToSrgbByte(c: number): number {
+  const v = Math.max(0, Math.min(1, c));
+  return Math.round((v <= 0.0031308 ? 12.92 * v : 1.055 * Math.pow(v, 1 / 2.4) - 0.055) * 255);
+}
+
+interface Oklab {
+  L: number;
+  a: number;
+  b: number;
+}
+
+/**
+ * sRGB Rgb to OKLab
+ * @see {@link https://bottosson.github.io/posts/oklab/}
+ */
+function rgbToOklab({ r, g, b }: Rgb): Oklab {
+  const rl = srgbByteToLinear(r),
+    gl = srgbByteToLinear(g),
+    bl = srgbByteToLinear(b);
+  const l = Math.cbrt(0.4122214708 * rl + 0.5363325363 * gl + 0.0514459929 * bl);
+  const m = Math.cbrt(0.2119034982 * rl + 0.6806995451 * gl + 0.1073969566 * bl);
+  const s = Math.cbrt(0.0883024619 * rl + 0.2817188376 * gl + 0.6299787005 * bl);
+
+  return {
+    L: 0.2104542553 * l + 0.793617785 * m - 0.0040720468 * s,
+    a: 1.9779984951 * l - 2.428592205 * m + 0.4505937099 * s,
+    b: 0.0259040371 * l + 0.7827717662 * m - 0.808675766 * s,
+  };
+}
+
+/** OKLab to sRGB Rgb, out-of-gamut values clamped to 0–255 */
+function oklabToRgb({ L, a, b }: Oklab): Rgb {
+  const l_ = L + 0.3963377774 * a + 0.2158037573 * b;
+  const m_ = L - 0.1055613458 * a - 0.0638541728 * b;
+  const s_ = L - 0.0894841775 * a - 1.29145603 * b;
+  const l = l_ * l_ * l_,
+    m = m_ * m_ * m_,
+    s = s_ * s_ * s_;
+
+  return {
+    r: linearToSrgbByte(+4.0767416621 * l - 3.3077115913 * m + 0.2309699292 * s),
+    g: linearToSrgbByte(-1.2684380046 * l + 2.6097574011 * m - 0.3413193965 * s),
+    b: linearToSrgbByte(-0.0041960863 * l - 0.7034186147 * m + 1.6076099202 * s),
+  };
+}
+
+/** Interpolates between two sRGB colors in OKLab space without any gray dead zone */
+export const lerpOklab = (a: Rgb, b: Rgb, t: number) => {
+  if (t <= 0) {
+    return a;
+  }
+
+  if (t >= 1) {
+    return b;
+  }
+
+  const la = rgbToOklab(a),
+    lb = rgbToOklab(b);
+  return oklabToRgb({
+    L: la.L + (lb.L - la.L) * t,
+    a: la.a + (lb.a - la.a) * t,
+    b: la.b + (lb.b - la.b) * t,
+  });
+};
 
 /**
  * Gets a color from a palette based on position (0-1) with optional time-based cycling
@@ -277,7 +344,7 @@ export function getPaletteColor(palette: string[], position: number, timeOffset:
   const c1 = hexToRgb(palette[idx % palette.length]!);
   const c2 = hexToRgb(palette[(idx + 1) % palette.length]!);
 
-  return lerpRgb(c1, c2, t);
+  return lerpOklab(c1, c2, t);
 }
 
 const HEX_COLOR_RE = /^#[0-9a-fA-F]{6}$/;

@@ -8,6 +8,9 @@ import type {
   TrailColor,
   TrailStyle,
 } from "./types";
+export type { TrailPoint } from "./renderer-shared";
+export type { Rgb } from "./renderer-shared";
+
 import {
   DEFAULT_MORPH_DURATION_MS,
   DEFAULT_SKELETON_OPACITY,
@@ -24,8 +27,8 @@ import {
 
 const getHeadDotRadius = (w: number, h: number) => Math.max(1, 3 * Math.sqrt(Math.min(w, h) / 160));
 
-export { computeTangent, computeNormal, TrailPoint } from "./renderer-shared";
-export { Rgb, palettes, hexToRgb, lerpRgb, getPaletteColor } from "./renderer-shared";
+export { computeTangent, computeNormal } from "./renderer-shared";
+export { palettes, hexToRgb, lerpOklab, getPaletteColor } from "./renderer-shared";
 
 const WHITE_HEX = "#ffffff";
 

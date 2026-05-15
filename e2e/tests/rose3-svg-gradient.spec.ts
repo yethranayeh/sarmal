@@ -22,6 +22,6 @@ test('rose3 svg gradient renders correctly', async ({ page }) => {
 
   await expect(container).toHaveScreenshot('rose3-svg-gradient.png', {
     maxDiffPixelRatio: 0.01,
-    threshold: 0.2,
+    threshold: 0.15,
   });
 });

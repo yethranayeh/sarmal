@@ -23,6 +23,6 @@ test('rose3 canvas gradient renders correctly', async ({ page }) => {
 
   await expect(canvas).toHaveScreenshot('rose3-canvas-gradient.png', {
     maxDiffPixelRatio: 0.01,
-    threshold: 0.2,
+    threshold: 0.15,
   });
 });

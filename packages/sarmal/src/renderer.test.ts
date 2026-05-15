@@ -12,13 +12,13 @@ import {
   computeNormal,
   applyDprSizing,
   hexToRgb,
-  lerpRgb,
   getPaletteColor,
 } from "./renderer";
 import {
   computeBoundaries,
   FIT_PADDING,
   FIT_PADDING_MIN,
+  lerpOklab,
   palettes,
   resolveHeadColor,
   resolveTrailPalette,
@@ -569,14 +569,33 @@ describe("hexToRgb", () => {
   });
 });
 
-describe("lerpRgb", () => {
-  it("interpolates between two RGB colors", () => {
-    const red = { r: 255, g: 0, b: 0 };
-    const blue = { r: 0, g: 0, b: 255 };
+describe("lerpOklab", () => {
+  it("returns the first color exactly at t=0", () => {
+    expect(lerpOklab({ r: 168, g: 85, b: 247 }, { r: 59, g: 130, b: 246 }, 0)).toEqual({
+      r: 168,
+      g: 85,
+      b: 247,
+    });
+  });
 
-    expect(lerpRgb(red, blue, 0)).toEqual({ r: 255, g: 0, b: 0 });
-    expect(lerpRgb(red, blue, 1)).toEqual({ r: 0, g: 0, b: 255 });
-    expect(lerpRgb(red, blue, 0.5)).toEqual({ r: 128, g: 0, b: 128 });
+  it("returns the second color exactly at t=1", () => {
+    expect(lerpOklab({ r: 168, g: 85, b: 247 }, { r: 59, g: 130, b: 246 }, 1)).toEqual({
+      r: 59,
+      g: 130,
+      b: 246,
+    });
+  });
+
+  it("produces a vivid midpoint — no gray dead zone between saturated colors", () => {
+    // sRGB midpoint of purple+teal = { r:113, g:107, b:246 } — muddy
+    // OKLab midpoint stays perceptually vivid: chroma should remain high
+    const purple = { r: 168, g: 85, b: 247 }; // #a855f7
+    const teal = { r: 20, g: 184, b: 166 }; // #14b8a6
+    const mid = lerpOklab(purple, teal, 0.5);
+
+    // A gray would have all channels within ~20 of each other. Vivid color means spread.
+    const spread = Math.max(mid.r, mid.g, mid.b) - Math.min(mid.r, mid.g, mid.b);
+    expect(spread).toBeGreaterThan(50);
   });
 });
 
@@ -599,8 +618,8 @@ describe("getPaletteColor", () => {
     // Position 1 = first color again (wraps)
     expect(getPaletteColor(palette, 1)).toEqual({ r: 255, g: 0, b: 0 });
 
-    // Position 0.25 = interpolated (25% through the cycle)
-    expect(getPaletteColor(palette, 0.25)).toEqual({ r: 128, g: 0, b: 128 });
+    // Position 0.25 = interpolated (25% through the cycle) — OKLab midpoint, not sRGB average
+    expect(getPaletteColor(palette, 0.25)).toEqual({ r: 140, g: 83, b: 157 });
 
     // Position 0.5 = second color (end of first segment)
     expect(getPaletteColor(palette, 0.5)).toEqual({ r: 0, g: 0, b: 255 });
@@ -619,10 +638,12 @@ describe("getPaletteColor", () => {
     expect(result.b).toBe(0);
 
     // Position 0.67 = blueish (between green and blue)
+    // Note: 2/3 * 3 = 1.9999... in floating point, so t≈0.9999 of green→blue rather than exactly 0 of blue→red.
+    // Pure blue (#0000ff) has a known ≤1-byte OKLab round-trip error, so we assert the dominant channel.
     const result2 = getPaletteColor(palette, 2 / 3);
     expect(result2.r).toBe(0);
     expect(result2.g).toBe(0);
-    expect(result2.b).toBe(255);
+    expect(result2.b).toBeGreaterThan(240);
   });
 
   it("respects time offset for animation", () => {
@@ -1289,8 +1310,10 @@ describe("setRenderOptions on SarmalInstance (canvas)", () => {
     instance.play();
     instance.pause();
 
-    // Some segment of the trail should be tinted with a sunset color
-    expect(fillStyles.some((s) => s.includes("249,115,22"))).toBe(true);
+    // Some segment of the trail should be tinted with a sunset color.
+    // Match on r,g channels of #f97316 (249,115) — the b channel (22) can lose precision
+    // in the OKLab round-trip for very small timeOffset values, so we match r+g only.
+    expect(fillStyles.some((s) => s.includes("249,115"))).toBe(true);
 
     instance.destroy();
     vi.restoreAllMocks();
