@@ -1,7 +1,17 @@
 {
   "name": "@sarmal/react",
-  "version": "0.4.1",
+  "version": "0.4.2",
   "description": "React wrapper for @sarmal/core",
+  "keywords": [
+    "animation",
+    "canvas",
+    "curve",
+    "loading",
+    "parametric",
+    "spinner",
+    "svg",
+    "tanstack-intent"
+  ],
   "license": "MIT",
   "author": {
     "name": "Alper Halil",
@@ -15,7 +25,8 @@
   },
   "files": [
     "dist",
-    "LICENSE"
+    "LICENSE",
+    "skills"
   ],
   "type": "module",
   "main": "./dist/index.js",
@@ -43,6 +54,7 @@
   },
   "devDependencies": {
     "@sarmal/core": "workspace:*",
+    "@tanstack/intent": "0.0.41",
     "@testing-library/react": "^16.3.2",
     "@types/node": "^25.5.2",
     "@types/react": "^19.2.14",

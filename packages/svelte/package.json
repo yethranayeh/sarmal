@@ -2,6 +2,16 @@
   "name": "@sarmal/svelte",
   "version": "0.1.0",
   "description": "Svelte wrapper for @sarmal/core",
+  "keywords": [
+    "animation",
+    "canvas",
+    "curve",
+    "loading",
+    "parametric",
+    "spinner",
+    "svg",
+    "tanstack-intent"
+  ],
   "license": "MIT",
   "author": {
     "name": "Alper Halil",
@@ -16,7 +26,8 @@
   "files": [
     "dist",
     "src",
-    "LICENSE"
+    "LICENSE",
+    "skills"
   ],
   "type": "module",
   "main": "./dist/index.js",
@@ -48,6 +59,7 @@
   },
   "devDependencies": {
     "@sarmal/core": "workspace:*",
+    "@tanstack/intent": "0.0.41",
     "@types/node": "^25.5.2",
     "jsdom": "^29.0.2",
     "oxfmt": "^0.44.0",
