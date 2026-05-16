@@ -2,7 +2,7 @@ import type { CurveDef } from "./types";
 import type { Rgb } from "./renderer-shared";
 
 import { createEngine } from "./engine";
-import { computeBoundaries, hexToRgb } from "./renderer-shared";
+import { computeBoundaries, hexToRgb, lerpOklab } from "./renderer-shared";
 
 const DEFAULT_TRAIL_HEX = "#ec5571"; // --color-primary
 const DEFAULT_FPS = 30;
@@ -105,15 +105,13 @@ export function rgbTo256(r: number, g: number, b: number) {
   return 16 + 36 * ri + 6 * gi + bi;
 }
 
-export function dimColor(hex: string, brightness: number): Rgb {
-  const clamped = Math.max(0, Math.min(1, brightness));
-  const c = hexToRgb(hex);
+export function dimRgb(rgb: Rgb, brightness: number): Rgb {
+  const t = 1 - Math.max(0, Math.min(1, brightness));
+  return lerpOklab(rgb, { r: 0, g: 0, b: 0 }, t);
+}
 
-  return {
-    r: Math.max(0, Math.min(255, Math.round(c.r * clamped))),
-    g: Math.max(0, Math.min(255, Math.round(c.g * clamped))),
-    b: Math.max(0, Math.min(255, Math.round(c.b * clamped))),
-  };
+export function dimColor(hex: string, brightness: number): Rgb {
+  return dimRgb(hexToRgb(hex), brightness);
 }
 
 const AR = "\x1B[0m";
@@ -242,10 +240,8 @@ function renderColorFrame(
       if (cell.isHead) {
         line += ansiColor(headRgb.r, headRgb.g, headRgb.b, colorCap) + ch + AR;
       } else {
-        const r = Math.round(trailRgb.r * cell.brightness);
-        const g = Math.round(trailRgb.g * cell.brightness);
-        const b = Math.round(trailRgb.b * cell.brightness);
-        line += ansiColor(r, g, b, colorCap) + ch + AR;
+        const dimmed = dimRgb(trailRgb, cell.brightness);
+        line += ansiColor(dimmed.r, dimmed.g, dimmed.b, colorCap) + ch + AR;
       }
     }
     lines.push(line);

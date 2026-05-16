@@ -6,6 +6,7 @@ import {
   detectColor,
   rgbTo256,
   dimColor,
+  dimRgb,
   terminalSarmal,
 } from "./terminal";
 import type { CurveDef } from "./types";
@@ -238,18 +239,18 @@ describe("dimColor", () => {
     expect(result.b).toBe(0);
   });
 
-  it("brightness 0.5 halves each channel", () => {
+  it("brightness 0.5 halves each channel in OKLab space", () => {
     const result = dimColor("#a855f7", 0.5);
-    expect(result.r).toBe(84);
-    expect(result.g).toBe(43);
-    expect(result.b).toBe(124);
+    expect(result.r).toBe(63);
+    expect(result.g).toBe(28);
+    expect(result.b).toBe(92);
   });
 
-  it("brightness 0.15 dims correctly", () => {
+  it("brightness 0.15 dims correctly in OKLab space", () => {
     const result = dimColor("#ffffff", 0.15);
-    expect(result.r).toBe(38);
-    expect(result.g).toBe(38);
-    expect(result.b).toBe(38);
+    expect(result.r).toBe(11);
+    expect(result.g).toBe(11);
+    expect(result.b).toBe(10);
   });
 
   it("brightness above 1.0 clamps to 1.0 — channels capped at 255", () => {
@@ -278,6 +279,43 @@ describe("dimColor", () => {
     expect(result.r).toBe(0);
     expect(result.g).toBe(15);
     expect(result.b).toBe(255);
+  });
+});
+
+describe("dimRgb", () => {
+  it("brightness 1.0 returns the original color", () => {
+    const result = dimRgb({ r: 168, g: 85, b: 247 }, 1.0);
+    expect(result.r).toBe(168);
+    expect(result.g).toBe(85);
+    expect(result.b).toBe(247);
+  });
+
+  it("brightness 0.0 returns black", () => {
+    const result = dimRgb({ r: 168, g: 85, b: 247 }, 0.0);
+    expect(result.r).toBe(0);
+    expect(result.g).toBe(0);
+    expect(result.b).toBe(0);
+  });
+
+  it("brightness 0.5 dims in OKLab space", () => {
+    const result = dimRgb({ r: 168, g: 85, b: 247 }, 0.5);
+    expect(result.r).toBe(63);
+    expect(result.g).toBe(28);
+    expect(result.b).toBe(92);
+  });
+
+  it("brightness above 1.0 clamps to original color", () => {
+    const result = dimRgb({ r: 168, g: 85, b: 247 }, 2.0);
+    expect(result.r).toBe(168);
+    expect(result.g).toBe(85);
+    expect(result.b).toBe(247);
+  });
+
+  it("brightness below 0 returns black", () => {
+    const result = dimRgb({ r: 168, g: 85, b: 247 }, -0.5);
+    expect(result.r).toBe(0);
+    expect(result.g).toBe(0);
+    expect(result.b).toBe(0);
   });
 });
 
