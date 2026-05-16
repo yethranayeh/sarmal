@@ -17,6 +17,26 @@ Version history notes of the <Link href="#core">Core</Link>, <Link href="#react"
 
 ## Core
 
+### 0.31.0 - 16.05.2026
+
+`oklch(L C H)` and `oklch(L C H / alpha)` are now accepted everywhere a color string is expected: `trailColor`, `headColor`, `skeletonColor`, `setRenderOptions`.
+
+**oklch** converts directly to OKLab, so floating-point precision is preserved end-to-end. Alpha is *silently* stripped. `deg`, `rad`, `turn` suffixes and percentage channels are not supported.
+
+<Alert label="Breaking" variant="error">`lerpOklab` and `getPaletteColor` signatures changed. `hexToRgb` removed from exports. Use `parseColorToRgb` instead. It accepts the same 6-digit hex plus all formats added in **v0.30.0**</Alert>
+
+```ts
+// Before
+lerpOklab(a: Rgb, b: Rgb, t: number): Rgb
+getPaletteColor(palette: string[], position: number, timeOffset?: number): Rgb
+
+// After
+lerpOklab(a: Oklab, b: Oklab, t: number): Oklab
+getPaletteColor(palette: Oklab[], position: number, timeOffset?: number): Oklab
+```
+
+`Oklab` and `parseColorToRgb` are now named exports.
+
 ### 0.30.0 - 16.05.2026
 
 Color inputs now accept `#rgb` (3-digit hex), `#rrggbbaa` (8-digit hex, alpha stripped), `rgb()`, and `rgba()` in addition to the previous `#rrggbb` format. Any alpha channel in `#rrggbbaa` or `rgba()` is *silently* ignored. Sarmal applies its own opacity at render time. Out-of-range `rgb()` channels are also clamped to 0-255 range.

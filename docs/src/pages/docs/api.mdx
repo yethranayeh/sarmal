@@ -35,9 +35,9 @@ const sarmal = createSarmal(canvas, curves.rose3);
 | Option | Type | Default | Description |
 |--------|------|---------|-------------|
 | trailLength | `number` | `120` | Number of points in trail |
-| skeletonColor | `string` | `'#ffffff'` | Hex color string for the skeleton path. Use `"transparent"` to hide |
-| trailColor | `string \| string[]` | `'#ffffff'` | Hex color string for solid trails, or array of hex colors for gradients |
-| headColor | `string` | *derived* | Hex color string for the head dot. Omit to auto-follow trail color |
+| skeletonColor | `string` | `'#ffffff'` | Color string for the skeleton path. Use `"transparent"` to hide |
+| trailColor | `string \| string[]` | `'#ffffff'` | Color string for solid trails, or array of color strings for gradients |
+| headColor | `string` | *derived* | Color string for the head dot. Omit to auto-follow trail color |
 | headRadius | `number` | `4` | Radius of the head dot in pixels |
 | trailStyle | `TrailStyle` | `'default'` | `'default'` \| `'gradient-static'` \| `'gradient-animated'` |
 | autoStart | `boolean` | `true` | Start the animation loop automatically on creation |
@@ -365,15 +365,15 @@ sarmal.setRenderOptions({ skeletonColor: "transparent" });
 
 | Option | Type | Description |
 |--------|------|-------------|
-| `trailColor` | `string \| string[]` | Single hex color for solid trails, or array of hex colors for gradients |
-| `headColor` | `string \| null` | Hex color to orverride, or `null` to let it auto pick from trail color |
-| `skeletonColor` | `string` | Hex color, or `"transparent"` to hide |
+| `trailColor` | `string \| string[]` | Single color string for solid trails, or array of color strings for gradients |
+| `headColor` | `string \| null` | Color string to override, or `null` to let it auto pick from trail color |
+| `skeletonColor` | `string` | Color string, or `"transparent"` to hide |
 | `trailStyle` | `TrailStyle` | `'default'` \| `'gradient-static'` \| `'gradient-animated'` |
 | `headRadius` | `number` | Radius of the head dot. Canvas: CSS pixels auto-derived from container size by default. SVG: viewBox units (default `1.5`). |
 
 
 <Alert variant="info">
-  Accepted color formats: `#rrggbb`, `#rgb`, `#rrggbbaa` (alpha stripped), `rgb()`, `rgba()` (alpha stripped). Note that, named colors (`"red"`), `hsl()`, and CSS keywords are not accepted.
+  Accepted color formats: `#rrggbb`, `#rgb`, `#rrggbbaa` (alpha stripped), `rgb()`, `rgba()` (alpha stripped), `oklch(L C H)` (CSS Color 4, bare floats only). Note that named colors (`"red"`), `hsl()`, unit suffixes on oklch (`30deg`), and percentage channels are *not accepted*.
 </Alert>
 
 **Validation:** Throws an error if *any* field fails validation. In case of a validation error, no fields will be mutated, so the animation continues on the previous valid state.

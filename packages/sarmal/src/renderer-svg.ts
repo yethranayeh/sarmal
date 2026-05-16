@@ -18,11 +18,14 @@ import {
   computeBoundaries,
   computeTrailQuad,
   enginePassthroughs,
+  colorToRgb,
   getPaletteColor,
-  parseColorToRgb,
+  parseColorToOklab,
   resolveHeadColor,
   resolveTrailPalette,
   resolveTrailMainColor,
+  oklabToRgb,
+  Oklab,
   validateRenderOptions,
   warnIfTrailColorMismatch,
 } from "./renderer-shared";
@@ -85,8 +88,8 @@ function el(tag: string): SVGElement {
 }
 
 function colorToRgbAttr(color: string): string {
-  const c = parseColorToRgb(color)!;
-  return `rgb(${c.r},${c.g},${c.b})`;
+  const { r, g, b } = colorToRgb(color);
+  return `rgb(${r},${g},${b})`;
 }
 
 /**
@@ -115,6 +118,7 @@ export function createSVGRenderer(options: SVGRendererOptions): SarmalInstance {
 
   let trailSolid: string = colorToRgbAttr(resolveTrailMainColor(trailColor));
   let trailPalette: string[] = resolveTrailPalette(trailColor);
+  let trailPaletteOklab: Oklab[] = trailPalette.map((c) => parseColorToOklab(c)!);
 
   const ariaLabel = options.ariaLabel ?? "Loading";
 
@@ -268,7 +272,7 @@ export function createSVGRenderer(options: SVGRendererOptions): SarmalInstance {
 
       if (trailStyle !== "default") {
         const timeOffset = trailStyle === "gradient-animated" ? gradientAnimTime * 0.0005 : 0;
-        const { r, g, b } = getPaletteColor(trailPalette, progress, timeOffset);
+        const { r, g, b } = oklabToRgb(getPaletteColor(trailPaletteOklab, progress, timeOffset));
         trailPaths[i]!.setAttribute("fill", `rgb(${r},${g},${b})`);
       }
     }
@@ -463,6 +467,7 @@ export function createSVGRenderer(options: SVGRendererOptions): SarmalInstance {
         trailColor = partial.trailColor;
         trailSolid = colorToRgbAttr(resolveTrailMainColor(trailColor));
         trailPalette = resolveTrailPalette(trailColor);
+        trailPaletteOklab = trailPalette.map((c) => parseColorToOklab(c)!);
 
         // Only the "default" style paints trail paths at setter time, whereas gradient styles repaint per-segment fills every frame in `updateTrail`,
         //  so they would already overwrite any fill operation made here

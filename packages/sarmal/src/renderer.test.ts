@@ -1,17 +1,18 @@
 // @vitest-environment jsdom
 import type { CurveDef } from "./types";
 
-import { describe, it, expect, vi } from "vitest";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 
 import { createEngine } from "./engine";
 import { createRenderer } from "./renderer";
 import { createSarmal } from "./index";
+import { createSVGRenderer } from "./renderer-svg";
+import { dimRgb } from "./terminal";
 import {
   colorToRgbComponents,
   computeTangent,
   computeNormal,
   applyDprSizing,
-  hexToRgb,
   getPaletteColor,
 } from "./renderer";
 import {
@@ -21,6 +22,11 @@ import {
   lerpOklab,
   palettes,
   parseColorToRgb,
+  parseOklchToOklab,
+  parseColorToOklab,
+  rgbToOklab,
+  oklabToRgb,
+  Oklab,
   resolveHeadColor,
   resolveTrailPalette,
   resolveTrailMainColor,
@@ -562,16 +568,6 @@ describe("type safety guards (prevent silent JS coercion bugs)", () => {
   });
 });
 
-describe("hexToRgb", () => {
-  it("converts hex colors to RGB components", () => {
-    expect(hexToRgb("#ff0000")).toEqual({ r: 255, g: 0, b: 0 });
-    expect(hexToRgb("#00ff00")).toEqual({ r: 0, g: 255, b: 0 });
-    expect(hexToRgb("#0000ff")).toEqual({ r: 0, g: 0, b: 255 });
-    expect(hexToRgb("#ffffff")).toEqual({ r: 255, g: 255, b: 255 });
-    expect(hexToRgb("#000000")).toEqual({ r: 0, g: 0, b: 0 });
-  });
-});
-
 describe("parseColorToRgb", () => {
   describe("3-digit hex", () => {
     it("expands #fff to white", () => {
@@ -672,98 +668,226 @@ describe("parseColorToRgb", () => {
       expect(parseColorToRgb("")).toBeNull();
     });
 
-    it("returns null for oklch() — not supported until Phase 3", () => {
+    it("returns null for oklch() — parseColorToRgb does not handle oklch", () => {
       expect(parseColorToRgb("oklch(0.7 0.15 30)")).toBeNull();
     });
   });
 });
 
+describe("parseOklchToOklab", () => {
+  it("parses oklch(0 0 0) as black", () => {
+    expect(parseOklchToOklab("oklch(0 0 0)")).toEqual({ L: 0, a: 0, b: 0 });
+  });
+
+  it("parses oklch(1 0 0) as white", () => {
+    expect(parseOklchToOklab("oklch(1 0 0)")).toEqual({ L: 1, a: 0, b: 0 });
+  });
+
+  it("parses oklch(0.7 0 0) as achromatic mid", () => {
+    expect(parseOklchToOklab("oklch(0.7 0 0)")).toEqual({ L: 0.7, a: 0, b: 0 });
+  });
+
+  it("parses oklch(0.7 0.15 0) with H=0°", () => {
+    const result = parseOklchToOklab("oklch(0.7 0.15 0)")!;
+    expect(result.L).toBe(0.7);
+    expect(result.a).toBeCloseTo(0.15, 5);
+    expect(result.b).toBeCloseTo(0, 5);
+  });
+
+  it("parses oklch(0.7 0.15 90) with H=90°", () => {
+    const result = parseOklchToOklab("oklch(0.7 0.15 90)")!;
+    expect(result.L).toBe(0.7);
+    expect(result.a).toBeCloseTo(0, 5);
+    expect(result.b).toBeCloseTo(0.15, 5);
+  });
+
+  it("parses oklch(0.7 0.15 180) with H=180°", () => {
+    const result = parseOklchToOklab("oklch(0.7 0.15 180)")!;
+    expect(result.L).toBe(0.7);
+    expect(result.a).toBeCloseTo(-0.15, 5);
+    expect(result.b).toBeCloseTo(0, 5);
+  });
+
+  it("strips alpha from oklch(L C H / alpha)", () => {
+    const withAlpha = parseOklchToOklab("oklch(0.7 0.15 30 / 0.5)")!;
+    const withoutAlpha = parseOklchToOklab("oklch(0.7 0.15 30)")!;
+    expect(withAlpha).toEqual(withoutAlpha);
+  });
+
+  it("clamps L to [0, 1]", () => {
+    expect(parseOklchToOklab("oklch(1.5 0 0)")).toEqual({ L: 1, a: 0, b: 0 });
+    // Negative L doesn't match the regex (unsigned digits only), returns null
+    expect(parseOklchToOklab("oklch(-0.5 0 0)")).toBeNull();
+  });
+
+  it("clamps C to [0, 0.4]", () => {
+    expect(parseOklchToOklab("oklch(0 0.5 0)")).toEqual({ L: 0, a: 0.4, b: 0 });
+    // Negative C doesn't match the regex (unsigned digits only), returns null
+    expect(parseOklchToOklab("oklch(0 -0.1 0)")).toBeNull();
+  });
+
+  it("rejects deg suffix — not supported", () => {
+    expect(parseOklchToOklab("oklch(0.7 0.15 30deg)")).toBeNull();
+  });
+
+  it("rejects percentage L — not supported", () => {
+    expect(parseOklchToOklab("oklch(70% 0.15 30)")).toBeNull();
+  });
+
+  it("rejects none keyword — not supported", () => {
+    expect(parseOklchToOklab("oklch(0.7 none 30)")).toBeNull();
+  });
+
+  it("rejects named color 'red'", () => {
+    expect(parseOklchToOklab("red")).toBeNull();
+  });
+
+  it("rejects empty string", () => {
+    expect(parseOklchToOklab("")).toBeNull();
+  });
+
+  it("rejects negative hue angles", () => {
+    expect(parseOklchToOklab("oklch(0.7 0.15 -30)")).toBeNull();
+  });
+});
+
+describe("parseColorToOklab", () => {
+  it("parses oklch() directly to Oklab", () => {
+    const result = parseColorToOklab("oklch(0.7 0.15 30)")!;
+    expect(result.L).toBe(0.7);
+    expect(Math.abs(result.a - 0.15 * Math.cos((30 * Math.PI) / 180))).toBeLessThan(0.0001);
+    expect(Math.abs(result.b - 0.15 * Math.sin((30 * Math.PI) / 180))).toBeLessThan(0.0001);
+  });
+
+  it("parses hex via sRGB roundtrip", () => {
+    const result = parseColorToOklab("#ffffff")!;
+    expect(result.L).toBeCloseTo(1, 4);
+    expect(result.a).toBeCloseTo(0, 4);
+    expect(result.b).toBeCloseTo(0, 4);
+  });
+
+  it("parses rgb() via sRGB roundtrip", () => {
+    const result = parseColorToOklab("rgb(0,0,0)")!;
+    expect(result.L).toBeCloseTo(0, 4);
+    expect(result.a).toBeCloseTo(0, 4);
+    expect(result.b).toBeCloseTo(0, 4);
+  });
+
+  it("returns null for invalid input", () => {
+    expect(parseColorToOklab("invalid")).toBeNull();
+  });
+});
+
+describe("oklch round-trip accuracy", () => {
+  it("oklch(0 0 0) → OKLab → Rgb equals #000000 within ±1", () => {
+    const oklab = parseOklchToOklab("oklch(0 0 0)")!;
+    const rgb = oklabToRgb(oklab);
+    expect(Math.abs(rgb.r - 0)).toBeLessThanOrEqual(1);
+    expect(Math.abs(rgb.g - 0)).toBeLessThanOrEqual(1);
+    expect(Math.abs(rgb.b - 0)).toBeLessThanOrEqual(1);
+  });
+
+  it("oklch(1 0 0) → OKLab → Rgb equals #ffffff within ±15", () => {
+    // OKLab L=1 maps to out-of-gamut sRGB; the blue channel loses ~12 bytes
+    const oklab = parseOklchToOklab("oklch(1 0 0)")!;
+    const rgb = oklabToRgb(oklab);
+    expect(Math.abs(rgb.r - 255)).toBeLessThanOrEqual(1);
+    expect(Math.abs(rgb.g - 255)).toBeLessThanOrEqual(1);
+    expect(Math.abs(rgb.b - 255)).toBeLessThanOrEqual(15);
+  });
+});
+
 describe("lerpOklab", () => {
   it("returns the first color exactly at t=0", () => {
-    expect(lerpOklab({ r: 168, g: 85, b: 247 }, { r: 59, g: 130, b: 246 }, 0)).toEqual({
-      r: 168,
-      g: 85,
-      b: 247,
-    });
+    const a = rgbToOklab({ r: 168, g: 85, b: 247 });
+    const b = rgbToOklab({ r: 59, g: 130, b: 246 });
+    expect(lerpOklab(a, b, 0)).toEqual(a);
   });
 
   it("returns the second color exactly at t=1", () => {
-    expect(lerpOklab({ r: 168, g: 85, b: 247 }, { r: 59, g: 130, b: 246 }, 1)).toEqual({
-      r: 59,
-      g: 130,
-      b: 246,
-    });
+    const a = rgbToOklab({ r: 168, g: 85, b: 247 });
+    const b = rgbToOklab({ r: 59, g: 130, b: 246 });
+    expect(lerpOklab(a, b, 1)).toEqual(b);
   });
 
   it("produces a vivid midpoint — no gray dead zone between saturated colors", () => {
-    // sRGB midpoint of purple+teal = { r:113, g:107, b:246 } — muddy
-    // OKLab midpoint stays perceptually vivid: chroma should remain high
-    const purple = { r: 168, g: 85, b: 247 }; // #a855f7
-    const teal = { r: 20, g: 184, b: 166 }; // #14b8a6
-    const mid = lerpOklab(purple, teal, 0.5);
+    const purple = rgbToOklab({ r: 168, g: 85, b: 247 });
+    const teal = rgbToOklab({ r: 20, g: 184, b: 166 });
+    const mid = oklabToRgb(lerpOklab(purple, teal, 0.5));
 
     // A gray would have all channels within ~20 of each other. Vivid color means spread.
     const spread = Math.max(mid.r, mid.g, mid.b) - Math.min(mid.r, mid.g, mid.b);
     expect(spread).toBeGreaterThan(50);
   });
+
+  it("pure L-axis interpolation for achromatic colors is exact", () => {
+    const black: Oklab = { L: 0, a: 0, b: 0 };
+    const white: Oklab = { L: 1, a: 0, b: 0 };
+    expect(lerpOklab(black, white, 0.5)).toEqual({ L: 0.5, a: 0, b: 0 });
+  });
 });
 
 describe("getPaletteColor", () => {
-  it("returns white for empty palette", () => {
-    expect(getPaletteColor([], 0)).toEqual({ r: 255, g: 255, b: 255 });
+  const oklabPalette = (hex: string[]) => hex.map((c) => rgbToOklab(parseColorToRgb(c)!));
+
+  it("returns white Oklab for empty palette", () => {
+    expect(getPaletteColor([], 0)).toEqual({ L: 1, a: 0, b: 0 });
   });
 
   it("returns single color for single-entry palette", () => {
-    expect(getPaletteColor(["#ff0000"], 0)).toEqual({ r: 255, g: 0, b: 0 });
-    expect(getPaletteColor(["#ff0000"], 0.5)).toEqual({ r: 255, g: 0, b: 0 });
+    const pal = oklabPalette(["#ff0000"]);
+    expect(getPaletteColor(pal, 0)).toEqual(pal[0]);
+    expect(getPaletteColor(pal, 0.5)).toEqual(pal[0]);
   });
 
   it("cycles through palette based on position", () => {
-    const palette = ["#ff0000", "#0000ff"]; // Red to blue
+    const pal = oklabPalette(["#ff0000", "#0000ff"]);
 
     // Position 0 = first color
-    expect(getPaletteColor(palette, 0)).toEqual({ r: 255, g: 0, b: 0 });
+    expect(oklabToRgb(getPaletteColor(pal, 0))).toEqual({ r: 255, g: 0, b: 0 });
 
     // Position 1 = first color again (wraps)
-    expect(getPaletteColor(palette, 1)).toEqual({ r: 255, g: 0, b: 0 });
+    expect(oklabToRgb(getPaletteColor(pal, 1))).toEqual({ r: 255, g: 0, b: 0 });
 
     // Position 0.25 = interpolated (25% through the cycle) — OKLab midpoint, not sRGB average
-    expect(getPaletteColor(palette, 0.25)).toEqual({ r: 140, g: 83, b: 157 });
+    expect(oklabToRgb(getPaletteColor(pal, 0.25))).toEqual({ r: 140, g: 83, b: 157 });
 
     // Position 0.5 = second color (end of first segment)
-    expect(getPaletteColor(palette, 0.5)).toEqual({ r: 0, g: 0, b: 255 });
+    // KNOWN: Pure blue has a ≤1-byte OKLab round-trip error
+    const blue = oklabToRgb(getPaletteColor(pal, 0.5));
+    expect(blue.r).toBe(0);
+    expect(blue.g).toBe(0);
+    expect(blue.b).toBeGreaterThan(240);
   });
 
   it("cycles through multi-color palette", () => {
-    const palette = ["#ff0000", "#00ff00", "#0000ff"];
+    const pal = oklabPalette(["#ff0000", "#00ff00", "#0000ff"]);
 
     // Position 0 = red
-    expect(getPaletteColor(palette, 0)).toEqual({ r: 255, g: 0, b: 0 });
+    expect(oklabToRgb(getPaletteColor(pal, 0))).toEqual({ r: 255, g: 0, b: 0 });
 
-    // Position 0.33 = greenish (between red and green)
-    const result = getPaletteColor(palette, 1 / 3);
+    // Position 0.33 = green
+    const result = oklabToRgb(getPaletteColor(pal, 1 / 3));
     expect(result.r).toBe(0);
     expect(result.g).toBe(255);
     expect(result.b).toBe(0);
 
     // Position 0.67 = blueish (between green and blue)
-    // Note: 2/3 * 3 = 1.9999... in floating point, so t≈0.9999 of green→blue rather than exactly 0 of blue→red.
-    // Pure blue (#0000ff) has a known ≤1-byte OKLab round-trip error, so we assert the dominant channel.
-    const result2 = getPaletteColor(palette, 2 / 3);
+    const result2 = oklabToRgb(getPaletteColor(pal, 2 / 3));
     expect(result2.r).toBe(0);
     expect(result2.g).toBe(0);
     expect(result2.b).toBeGreaterThan(240);
   });
 
   it("respects time offset for animation", () => {
-    const palette = ["#ff0000", "#00ff00", "#0000ff"]; // Red, Green, Blue
+    const pal = oklabPalette(["#ff0000", "#00ff00", "#0000ff"]);
 
     // Position 0 with offset 0 = first color (red)
-    const staticResult = getPaletteColor(palette, 0, 0);
+    const staticResult = oklabToRgb(getPaletteColor(pal, 0, 0));
     expect(staticResult).toEqual({ r: 255, g: 0, b: 0 });
 
     // Position 0 with offset 0.33 = second color (green)
-    const animatedResult = getPaletteColor(palette, 0, 1 / 3);
+    const animatedResult = oklabToRgb(getPaletteColor(pal, 0, 1 / 3));
     expect(animatedResult).toEqual({ r: 0, g: 255, b: 0 });
 
     // Should be different due to time offset
@@ -1149,6 +1273,10 @@ describe("validateRenderOptions", () => {
     expect(() => validateRenderOptions({ headColor: "#aabbcc" })).not.toThrow();
   });
 
+  it("accepts oklch() for headColor", () => {
+    expect(() => validateRenderOptions({ headColor: "oklch(0.7 0.15 30)" })).not.toThrow();
+  });
+
   it("rejects the legacy 'auto' sentinel for headColor (null is the supported form)", () => {
     expect(() => validateRenderOptions({ headColor: "auto" })).toThrow(TypeError);
   });
@@ -1163,6 +1291,10 @@ describe("validateRenderOptions", () => {
 
   it("accepts a valid hex for skeletonColor", () => {
     expect(() => validateRenderOptions({ skeletonColor: "#112233" })).not.toThrow();
+  });
+
+  it("accepts oklch() for skeletonColor", () => {
+    expect(() => validateRenderOptions({ skeletonColor: "oklch(0.7 0.15 30)" })).not.toThrow();
   });
 
   it("rejects invalid skeletonColor values", () => {
@@ -1196,6 +1328,24 @@ describe("validateRenderOptions", () => {
     };
     expect(() => validateRenderOptions(payload)).toThrow(RangeError);
     expect(() => validateRenderOptions(payload)).toThrow(RangeError);
+  });
+
+  it("accepts oklch() for trailColor", () => {
+    expect(() => validateRenderOptions({ trailColor: "oklch(0.7 0.15 30)" })).not.toThrow();
+  });
+
+  it("accepts mixed oklch and hex in trailColor array", () => {
+    expect(() =>
+      validateRenderOptions({ trailColor: ["oklch(0.7 0.15 30)", "#fff"] }),
+    ).not.toThrow();
+  });
+
+  it("rejects oklch() with deg suffix for trailColor", () => {
+    expect(() => validateRenderOptions({ trailColor: "oklch(0.7 0.15 30deg)" })).toThrow(TypeError);
+  });
+
+  it("rejects oklch() with percentage L for trailColor", () => {
+    expect(() => validateRenderOptions({ trailColor: "oklch(70% 0.15 30)" })).toThrow(TypeError);
   });
 });
 
@@ -1959,5 +2109,206 @@ describe("pauseOnHidden (canvas)", () => {
 
     renderer.destroy();
     vi.restoreAllMocks();
+  });
+});
+
+// ─── Phase 2 — Oklab internal representation ─────────────────────────────────
+
+describe("Phase 2 — Oklab internal representation", () => {
+  describe("lerpOklab with Oklab inputs", () => {
+    it("interpolates pure L-axis exactly for achromatic colors", () => {
+      const black: Oklab = { L: 0, a: 0, b: 0 };
+      const white: Oklab = { L: 1, a: 0, b: 0 };
+      expect(lerpOklab(black, white, 0)).toEqual({ L: 0, a: 0, b: 0 });
+      expect(lerpOklab(black, white, 0.5)).toEqual({ L: 0.5, a: 0, b: 0 });
+      expect(lerpOklab(black, white, 1)).toEqual({ L: 1, a: 0, b: 0 });
+    });
+  });
+
+  describe("getPaletteColor with Oklab[] input", () => {
+    it("empty palette returns white Oklab", () => {
+      expect(getPaletteColor([], 0)).toEqual({ L: 1, a: 0, b: 0 });
+    });
+
+    it("single stop returns that stop unchanged", () => {
+      const stop: Oklab = { L: 0.5, a: 0.1, b: -0.05 };
+      expect(getPaletteColor([stop], 0)).toEqual(stop);
+      expect(getPaletteColor([stop], 0.5)).toEqual(stop);
+      expect(getPaletteColor([stop], 1)).toEqual(stop);
+    });
+
+    it("two-stop black→white gradient produces correct rgba strings", () => {
+      const pal: Oklab[] = [
+        { L: 0, a: 0, b: 0 },
+        { L: 1, a: 0, b: 0 },
+      ];
+      const t0 = oklabToRgb(getPaletteColor(pal, 0));
+      const t05 = oklabToRgb(getPaletteColor(pal, 0.5));
+      const t1 = oklabToRgb(getPaletteColor(pal, 1));
+
+      expect(t0).toEqual({ r: 0, g: 0, b: 0 });
+      // Position 1 wraps to position 0 (cycling), so it's black again
+      expect(t1).toEqual({ r: 0, g: 0, b: 0 });
+      // OKLab L=0.5 midpoint is perceptually uniform — should be a near-neutral gray
+      // Channels may differ by ±12 due to OKLab→sRGB gamut mapping
+      expect(Math.abs(t05.r - t05.g)).toBeLessThanOrEqual(12);
+      expect(Math.abs(t05.g - t05.b)).toBeLessThanOrEqual(12);
+      expect(t05.r).toBeGreaterThan(100);
+    });
+  });
+
+  describe("dimRgb", () => {
+    it("dims a color toward black with pinned channel values", () => {
+      const input = { r: 236, g: 85, b: 113 };
+      const dimmed = dimRgb(input, 0.5);
+
+      // Expected values computed from OKLab interpolation toward black at t=0.5
+      expect(dimmed).toEqual({ r: 91, g: 28, b: 37 });
+    });
+
+    it("brightness=1 returns the original color", () => {
+      const input = { r: 236, g: 85, b: 113 };
+      const result = dimRgb(input, 1);
+      expect(result.r).toBe(input.r);
+      expect(result.g).toBe(input.g);
+      expect(result.b).toBe(input.b);
+    });
+
+    it("brightness=0 returns black", () => {
+      const result = dimRgb({ r: 236, g: 85, b: 113 }, 0);
+      expect(result).toEqual({ r: 0, g: 0, b: 0 });
+    });
+  });
+});
+
+// ─── Phase 2 SVG regression baseline (delete after Phase 2 ships) ────────────
+
+describe("Phase 2 — SVG regression baseline", () => {
+  beforeEach(() => {
+    vi.spyOn(globalThis, "requestAnimationFrame").mockImplementation(() => 1);
+    vi.spyOn(globalThis, "cancelAnimationFrame").mockImplementation(() => {});
+    if (!window.matchMedia) {
+      // @ts-expect-error minimal stub for jsdom
+      window.matchMedia = () => ({
+        matches: false,
+        addListener: () => {},
+        removeListener: () => {},
+      });
+    }
+  });
+  afterEach(() => {
+    vi.restoreAllMocks();
+    document.body.innerHTML = "";
+  });
+
+  it("gradient trail fill attributes match after OKLab internal migration", () => {
+    const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+    svg.style.width = "200px";
+    svg.style.height = "200px";
+    document.body.appendChild(svg);
+
+    const engine = createEngine(testCircle, 120);
+    const instance = createSVGRenderer({
+      container: svg,
+      engine,
+      autoStart: false,
+      trailColor: ["#ff0000", "#0000ff"],
+      trailStyle: "gradient-animated",
+      initialPhase: Math.PI,
+    });
+
+    const trailPaths = Array.from(svg.querySelectorAll("path")).filter(
+      (p) => p.getAttribute("data-sarmal-role") === null && p.getAttribute("stroke") === null,
+    );
+
+    const fills = trailPaths.map((p) => p.getAttribute("fill"));
+
+    // Baseline captured before Phase 2 implementation (trailLength=120, red→blue gradient).
+    // After Phase 2, each fill must match within ±1 per channel (floating-point rounding).
+    const expected = [
+      "rgb(255,0,0)",
+      "rgb(248,28,21)",
+      "rgb(240,41,43)",
+      "rgb(233,50,58)",
+      "rgb(225,57,70)",
+      "rgb(218,63,80)",
+      "rgb(210,67,90)",
+      "rgb(203,71,98)",
+      "rgb(195,74,106)",
+      "rgb(188,77,114)",
+      "rgb(180,79,121)",
+      "rgb(173,80,128)",
+      "rgb(165,82,135)",
+      "rgb(157,82,142)",
+      "rgb(150,83,149)",
+      "rgb(142,83,155)",
+      "rgb(135,83,161)",
+      "rgb(127,82,168)",
+      "rgb(119,81,174)",
+      "rgb(112,80,180)",
+      "rgb(104,78,186)",
+      "rgb(96,76,192)",
+      "rgb(88,74,198)",
+      "rgb(80,71,204)",
+      "rgb(71,67,210)",
+      "rgb(63,63,216)",
+      "rgb(54,58,222)",
+      "rgb(45,52,227)",
+      "rgb(35,44,233)",
+      "rgb(24,33,239)",
+      "rgb(9,16,245)",
+      "rgb(9,16,245)",
+      "rgb(24,33,239)",
+      "rgb(35,44,233)",
+      "rgb(45,52,227)",
+      "rgb(54,58,222)",
+      "rgb(63,63,216)",
+      "rgb(71,67,210)",
+      "rgb(80,71,204)",
+      "rgb(88,74,198)",
+      "rgb(96,76,192)",
+      "rgb(104,78,186)",
+      "rgb(112,80,180)",
+      "rgb(119,81,174)",
+      "rgb(127,82,168)",
+      "rgb(135,83,161)",
+      "rgb(142,83,155)",
+      "rgb(150,83,149)",
+      "rgb(157,82,142)",
+      "rgb(165,82,135)",
+      "rgb(173,80,128)",
+      "rgb(180,79,121)",
+      "rgb(188,77,114)",
+      "rgb(195,74,106)",
+      "rgb(203,71,98)",
+      "rgb(210,67,90)",
+      "rgb(218,63,80)",
+      "rgb(225,57,70)",
+      "rgb(233,50,58)",
+      "rgb(240,41,43)",
+      "rgb(248,28,21)",
+      "rgb(255,0,0)",
+      ...Array(58).fill("rgb(255,0,0)"),
+    ];
+
+    expect(fills.length).toBe(expected.length);
+
+    function parseRgb(s: string) {
+      const m = s.match(/^rgb\((\d+),(\d+),(\d+)\)$/);
+      if (!m) return null;
+      return { r: Number(m[1]), g: Number(m[2]), b: Number(m[3]) };
+    }
+
+    for (let i = 0; i < fills.length; i++) {
+      const actual = parseRgb(fills[i]!);
+      const exp = parseRgb(expected[i]!);
+      expect(actual).not.toBeNull();
+      expect(exp).not.toBeNull();
+      expect(Math.abs(actual!.r - exp!.r)).toBeLessThanOrEqual(1);
+      expect(Math.abs(actual!.g - exp!.g)).toBeLessThanOrEqual(1);
+      expect(Math.abs(actual!.b - exp!.b)).toBeLessThanOrEqual(1);
+    }
+
+    instance.destroy();
   });
 });

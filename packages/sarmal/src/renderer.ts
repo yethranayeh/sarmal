@@ -10,6 +10,7 @@ import type {
 } from "./types";
 export type { TrailPoint } from "./renderer-shared";
 export type { Rgb } from "./renderer-shared";
+export type { Oklab } from "./renderer-shared";
 
 import {
   DEFAULT_MORPH_DURATION_MS,
@@ -17,11 +18,14 @@ import {
   computeBoundaries,
   computeTrailQuad,
   enginePassthroughs,
+  colorToRgb,
   getPaletteColor,
-  parseColorToRgb,
+  parseColorToOklab,
   resolveHeadColor,
   resolveTrailPalette,
   resolveTrailMainColor,
+  oklabToRgb,
+  Oklab,
   validateRenderOptions,
   warnIfTrailColorMismatch,
 } from "./renderer-shared";
@@ -29,13 +33,13 @@ import {
 const getHeadDotRadius = (w: number, h: number) => Math.max(1, 3 * Math.sqrt(Math.min(w, h) / 160));
 
 export { computeTangent, computeNormal } from "./renderer-shared";
-export { palettes, hexToRgb, lerpOklab, getPaletteColor } from "./renderer-shared";
+export { palettes, lerpOklab, getPaletteColor, parseColorToRgb } from "./renderer-shared";
 
 const WHITE_HEX = "#ffffff";
 
 export function colorToRgbComponents(color: string): string {
-  const c = parseColorToRgb(color)!;
-  return `${c.r},${c.g},${c.b}`;
+  const { r, g, b } = colorToRgb(color);
+  return `${r},${g},${b}`;
 }
 
 /**
@@ -109,6 +113,7 @@ export function createRenderer(options: RendererOptions): SarmalInstance {
 
   let trailSolidRgb = colorToRgbComponents(resolveTrailMainColor(trailColor));
   let trailPalette = resolveTrailPalette(trailColor);
+  let trailPaletteOklab: Array<Oklab> = trailPalette.map((c) => parseColorToOklab(c)!);
 
   warnIfTrailColorMismatch(trailColor, trailStyle);
 
@@ -280,8 +285,8 @@ export function createRenderer(options: RendererOptions): SarmalInstance {
         ctx.fillStyle = `rgba(${trailSolidRgb},${opacity})`;
       } else {
         const timeOffset = trailStyle === "gradient-animated" ? gradientAnimTime * 0.0005 : 0;
-        const color = getPaletteColor(trailPalette, progress, timeOffset);
-        ctx.fillStyle = `rgba(${color.r},${color.g},${color.b},${opacity})`;
+        const { r, g, b } = oklabToRgb(getPaletteColor(trailPaletteOklab, progress, timeOffset));
+        ctx.fillStyle = `rgba(${r},${g},${b},${opacity})`;
       }
 
       ctx.beginPath();
@@ -460,6 +465,7 @@ export function createRenderer(options: RendererOptions): SarmalInstance {
         trailColor = partial.trailColor;
         trailSolidRgb = colorToRgbComponents(resolveTrailMainColor(trailColor));
         trailPalette = resolveTrailPalette(trailColor);
+        trailPaletteOklab = trailPalette.map((c) => parseColorToOklab(c)!);
       }
 
       if (partial.skeletonColor !== undefined) {

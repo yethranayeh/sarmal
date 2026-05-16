@@ -2,7 +2,13 @@ import type { CurveDef } from "./types";
 import type { Rgb } from "./renderer-shared";
 
 import { createEngine } from "./engine";
-import { computeBoundaries, lerpOklab, parseColorToRgb } from "./renderer-shared";
+import {
+  computeBoundaries,
+  lerpOklab,
+  parseColorToRgb,
+  rgbToOklab,
+  oklabToRgb,
+} from "./renderer-shared";
 
 const DEFAULT_TRAIL_HEX = "#ec5571"; // --color-primary
 const DEFAULT_FPS = 30;
@@ -107,7 +113,9 @@ export function rgbTo256(r: number, g: number, b: number) {
 
 export function dimRgb(rgb: Rgb, brightness: number): Rgb {
   const t = 1 - Math.max(0, Math.min(1, brightness));
-  return lerpOklab(rgb, { r: 0, g: 0, b: 0 }, t);
+  if (t <= 0) return rgb;
+  if (t >= 1) return { r: 0, g: 0, b: 0 };
+  return oklabToRgb(lerpOklab(rgbToOklab(rgb), { L: 0, a: 0, b: 0 }, t));
 }
 
 export function dimColor(color: string, brightness: number): Rgb {

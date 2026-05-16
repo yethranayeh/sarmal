@@ -295,6 +295,76 @@ export function parseColorToRgb(s: string): Rgb | null {
   return null;
 }
 
+const OKLCH_RE = /^oklch\(\s*([\d.]+)\s+([\d.]+)\s+([\d.]+)(?:\s*\/\s*[\d.]+)?\s*\)$/i;
+
+/**
+ * Parses an oklch() color string directly to Oklab.
+ * Returns `null` for unrecognized or malformed input.
+ *
+ * Accepted syntax (subset of CSS Color 4):
+ * - oklch(L C H) bare floats, L clamped to 0–1, C clamped to 0–0.4, H in degrees
+ * - oklch(L C H / alpha) alpha silently stripped
+ *
+ * ! Not supported: percentages, `none` keyword, negative hues
+ */
+export function parseOklchToOklab(s: string): Oklab | null {
+  const m = OKLCH_RE.exec(s.trim());
+  if (!m) {
+    return null;
+  }
+
+  const L = parseFloat(m[1]!);
+  const C = parseFloat(m[2]!);
+  const H = parseFloat(m[3]!);
+
+  if (Number.isNaN(L) || Number.isNaN(C) || Number.isNaN(H)) {
+    return null;
+  }
+
+  const clampedL = Math.max(0, Math.min(1, L));
+  const clampedC = Math.max(0, Math.min(0.4, C));
+  const H_rad = H * (Math.PI / 180);
+
+  return {
+    L: clampedL,
+    a: clampedC * Math.cos(H_rad),
+    b: clampedC * Math.sin(H_rad),
+  };
+}
+
+/**
+ * Unified color-to-Oklab entry point.
+ * Tries oklch() first (direct to Oklab), then falls back through the sRGB path.
+ */
+export function parseColorToOklab(s: string): Oklab | null {
+  const oklab = parseOklchToOklab(s);
+  if (oklab !== null) {
+    return oklab;
+  }
+
+  const rgb = parseColorToRgb(s);
+  if (rgb === null) {
+    return null;
+  }
+
+  return rgbToOklab(rgb);
+}
+
+/** Converts any accepted color string to Rgb. Throws if the format is unrecognized. */
+export function colorToRgb(color: string): Rgb {
+  const rgb = parseColorToRgb(color);
+  if (rgb !== null) {
+    return rgb;
+  }
+
+  const lab = parseOklchToOklab(color);
+  if (lab !== null) {
+    return oklabToRgb(lab);
+  }
+
+  throw new Error(`[sarmal] unrecognized color "${color}"`);
+}
+
 /** sRGB byte (0–255) to linear light (0–1)
  * @see {@link https://bottosson.github.io/posts/oklab/}
  */
@@ -309,7 +379,7 @@ function linearToSrgbByte(c: number): number {
   return Math.round((v <= 0.0031308 ? 12.92 * v : 1.055 * Math.pow(v, 1 / 2.4) - 0.055) * 255);
 }
 
-interface Oklab {
+export interface Oklab {
   L: number;
   a: number;
   b: number;
@@ -319,7 +389,7 @@ interface Oklab {
  * sRGB Rgb to OKLab
  * @see {@link https://bottosson.github.io/posts/oklab/}
  */
-function rgbToOklab({ r, g, b }: Rgb): Oklab {
+export function rgbToOklab({ r, g, b }: Rgb): Oklab {
   const rl = srgbByteToLinear(r),
     gl = srgbByteToLinear(g),
     bl = srgbByteToLinear(b);
@@ -335,7 +405,7 @@ function rgbToOklab({ r, g, b }: Rgb): Oklab {
 }
 
 /** OKLab to sRGB Rgb, out-of-gamut values clamped to 0–255 */
-function oklabToRgb({ L, a, b }: Oklab): Rgb {
+export function oklabToRgb({ L, a, b }: Oklab): Rgb {
   const l_ = L + 0.3963377774 * a + 0.2158037573 * b;
   const m_ = L - 0.1055613458 * a - 0.0638541728 * b;
   const s_ = L - 0.0894841775 * a - 1.29145603 * b;
@@ -350,8 +420,8 @@ function oklabToRgb({ L, a, b }: Oklab): Rgb {
   };
 }
 
-/** Interpolates between two sRGB colors in OKLab space without any gray dead zone */
-export const lerpOklab = (a: Rgb, b: Rgb, t: number) => {
+/** Interpolates between two OKLab colors without any gray dead zone */
+export const lerpOklab = (a: Oklab, b: Oklab, t: number): Oklab => {
   if (t <= 0) {
     return a;
   }
@@ -360,28 +430,26 @@ export const lerpOklab = (a: Rgb, b: Rgb, t: number) => {
     return b;
   }
 
-  const la = rgbToOklab(a),
-    lb = rgbToOklab(b);
-  return oklabToRgb({
-    L: la.L + (lb.L - la.L) * t,
-    a: la.a + (lb.a - la.a) * t,
-    b: la.b + (lb.b - la.b) * t,
-  });
+  return {
+    L: a.L + (b.L - a.L) * t,
+    a: a.a + (b.a - a.a) * t,
+    b: a.b + (b.b - a.b) * t,
+  };
 };
 
 /**
  * Gets a color from a palette based on position (0-1) with optional time-based cycling
- * @param palette Array of hex color strings
+ * @param palette Array of Oklab colors
  * @param position Position along the gradient (0 = start, 1 = end)
  * @param timeOffset Optional time offset for animated gradients
  */
-export function getPaletteColor(palette: string[], position: number, timeOffset: number = 0): Rgb {
+export function getPaletteColor(palette: Oklab[], position: number, timeOffset: number = 0): Oklab {
   if (palette.length === 0) {
-    return { r: 255, g: 255, b: 255 };
+    return { L: 1, a: 0, b: 0 };
   }
 
   if (palette.length === 1) {
-    return hexToRgb(palette[0]!);
+    return palette[0]!;
   }
 
   const cyclePos = (((position + timeOffset) % 1) + 1) % 1;
@@ -389,8 +457,8 @@ export function getPaletteColor(palette: string[], position: number, timeOffset:
   const idx = Math.floor(scaled);
   const t = scaled - idx;
 
-  const c1 = hexToRgb(palette[idx % palette.length]!);
-  const c2 = hexToRgb(palette[(idx + 1) % palette.length]!);
+  const c1 = palette[idx % palette.length]!;
+  const c2 = palette[(idx + 1) % palette.length]!;
 
   return lerpOklab(c1, c2, t);
 }
@@ -449,9 +517,9 @@ export function validateRenderOptions(partial: RuntimeRenderOptions) {
 
 function assertTrailColor(value: TrailColor) {
   if (typeof value === "string") {
-    if (parseColorToRgb(value) === null) {
+    if (parseColorToOklab(value) === null) {
       throw new TypeError(
-        `[sarmal] setRenderOptions: trailColor must be a valid color string (#rrggbb, #rgb, rgb(), rgba()), got "${value}"`,
+        `[sarmal] setRenderOptions: trailColor must be a valid color string (#rrggbb, #rgb, rgb(), rgba(), oklch()), got "${value}"`,
       );
     }
     return;
@@ -466,9 +534,9 @@ function assertTrailColor(value: TrailColor) {
 
     for (let i = 0; i < value.length; i++) {
       const entry = value[i];
-      if (typeof entry !== "string" || parseColorToRgb(entry) === null) {
+      if (typeof entry !== "string" || parseColorToOklab(entry) === null) {
         throw new TypeError(
-          `[sarmal] setRenderOptions: trailColor[${i}] must be a valid color string (#rrggbb, #rgb, rgb(), rgba()), got ${JSON.stringify(entry)}`,
+          `[sarmal] setRenderOptions: trailColor[${i}] must be a valid color string (#rrggbb, #rgb, rgb(), rgba(), oklch()), got ${JSON.stringify(entry)}`,
         );
       }
     }
@@ -476,7 +544,7 @@ function assertTrailColor(value: TrailColor) {
   }
 
   throw new TypeError(
-    `[sarmal] setRenderOptions: trailColor must be a valid color string (#rrggbb, #rgb, rgb(), rgba()) or an array of color strings, got ${JSON.stringify(value)}`,
+    `[sarmal] setRenderOptions: trailColor must be a valid color string (#rrggbb, #rgb, rgb(), rgba(), oklch()) or an array of color strings, got ${JSON.stringify(value)}`,
   );
 }
 
@@ -485,9 +553,9 @@ function assertHeadColor(value: string | null) {
     return;
   }
 
-  if (typeof value !== "string" || parseColorToRgb(value) === null) {
+  if (typeof value !== "string" || parseColorToOklab(value) === null) {
     throw new TypeError(
-      `[sarmal] setRenderOptions: headColor must be a valid color string (#rrggbb, #rgb, rgb(), rgba()) or null, got ${JSON.stringify(value)}`,
+      `[sarmal] setRenderOptions: headColor must be a valid color string (#rrggbb, #rgb, rgb(), rgba(), oklch()) or null, got ${JSON.stringify(value)}`,
     );
   }
 }
@@ -497,9 +565,9 @@ function assertSkeletonColor(value: string) {
     return;
   }
 
-  if (typeof value !== "string" || parseColorToRgb(value) === null) {
+  if (typeof value !== "string" || parseColorToOklab(value) === null) {
     throw new TypeError(
-      `[sarmal] setRenderOptions: skeletonColor must be a valid color string (#rrggbb, #rgb, rgb(), rgba()) or "transparent", got ${JSON.stringify(value)}`,
+      `[sarmal] setRenderOptions: skeletonColor must be a valid color string (#rrggbb, #rgb, rgb(), rgba(), oklch()) or "transparent", got ${JSON.stringify(value)}`,
     );
   }
 }
@@ -561,7 +629,7 @@ export function resolveHeadColor(trailColor: TrailColor, trailStyle: TrailStyle)
 
   const palette = resolveTrailPalette(trailColor);
   const last = palette[palette.length - 1]!;
-  const { r, g, b } = parseColorToRgb(last)!;
+  const { r, g, b } = colorToRgb(last);
   return `rgb(${r},${g},${b})`;
 }
 
