@@ -133,7 +133,7 @@ Watch the engine and renderer working together. The numbers on the right are raw
 
 **What the engine manages:**
 
-- **t**: position along the curve (advances via `tick(dt)`, overridden with `seek(t)`)
+- **phase**: position along the curve (advances via `tick(dt)`, overridden with `seek(phase)`)
 - **actualTime**: actual elapsed seconds (only advances with `tick()`, never with `seek()`)
 - Trail buffer: the last `N` points. It is a mutable, same array reference each tick
 - <Link href="/docs/getting-started/#morphing-between-curves">Morphing state</Link>: when transitioning between curves

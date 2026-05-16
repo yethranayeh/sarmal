@@ -41,31 +41,31 @@ const sarmal = createSarmal(canvas, curves.rose3);
 | headRadius | `number` | `4` | Radius of the head dot in pixels |
 | trailStyle | `TrailStyle` | `'default'` | `'default'` \| `'gradient-static'` \| `'gradient-animated'` |
 | autoStart | `boolean` | `true` | Start the animation loop automatically on creation |
-| initialPhase | `number` | `undefined` | Initial position along the curve (t value). Calls `seek(initialPhase)` before first frame |
+| initialPhase | `number` | `undefined` | Initial position along the curve (phase value). Calls `seek(initialPhase)` before first frame |
 | pauseOnHidden | `boolean` | `true` | Pauses when the browser tab is hidden and resumes when visible |
 
 ### Auto-start and initial position
 
-By default, sarmal instances start animating immediately from `t=0`. You can control this behavior:
+By default, sarmal instances start animating immediately from `phase=0`. You can control this behavior:
 
 ```ts
-// Start automatically from t=0 (default behavior)
+// Start automatically from phase=0 (default behavior)
 const s1 = createSarmal(canvas, curves.rose3);
 
-// Start automatically from t=Math.PI
+// Start automatically from phase=Math.PI
 const s2 = createSarmal(canvas, curves.rose5, { initialPhase: Math.PI });
 
-// Create dormant at t=0; call play() when ready
+// Create dormant at phase=0; call play() when ready
 const s3 = createSarmal(canvas, curves.deltoid, { autoStart: false });
 s3.play();
 
-// Create dormant at t=Math.PI
+// Create dormant at phase=Math.PI
 const s4 = createSarmal(canvas, curves.lissajous32, {
   autoStart: false,
   initialPhase: Math.PI
 });
 
-// Canvas shows skeleton + trail at t=π position
+// Canvas shows skeleton + trail at phase=π position
 s4.play();
 ```
 
@@ -216,9 +216,9 @@ useEffect(() => {
 
 ## Engine Control
 
-### jump(t)
+### jump(phase)
 
-Instantly moves the head to position `t`. Does not update `actualTime`. Trail is left *untouched* by default, but you can use `clearTrail: true` to wipe it.
+Instantly moves the head to position `phase`. Does not update `actualTime`. Trail is left *untouched* by default, but you can use `clearTrail: true` to wipe it.
 
 Use `jump` when you need a raw position override: morphing mid-flight, scrubbing, or situations where the existing trail context should stay intact.
 
@@ -236,9 +236,9 @@ sarmal.jump(0, { clearTrail: true });
 |--------|------|---------|-------------|
 | `clearTrail` | `boolean` | `false` | Clear the trail on jump |
 
-### seek(t)
+### seek(phase)
 
-Moves to `t` **and** reconstructs the trail as if the animation naturally arrived there from `t=0`. Also updates `actualTime` to match.
+Moves to `phase` **and** reconstructs the trail as if the animation naturally arrived there from `phase=0`. Also updates `actualTime` to match.
 
 Use `seek` when you want the trail to look *meaningful* after the move, like making a jump where keeping the trail context matters.
 
@@ -533,7 +533,7 @@ const sarmal = createSarmal(canvas, curves.lissajous32, {
 
 1. **Mutable trail buffer**: The internal trail array is reused each frame. If you need to keep previous frame values, copy with `[...trail]`.
 
-2. **`jump()` is position-only**: Updates `t` but NOT `actualTime`. Clock time only advances with the internal animation loop. Use `seek()` if you need `actualTime` to match.
+2. **`jump()` is position-only**: Updates `phase` but NOT `actualTime`. Clock time only advances with the internal animation loop. Use `seek()` if you need `actualTime` to match.
 
 3. **`seek` step**: Default is `period / trailLength`, which is deterministic and FPS-independent. Pass explicit `step` to match your actual render loop delta.
 
@@ -543,7 +543,7 @@ const sarmal = createSarmal(canvas, curves.lissajous32, {
 
 6. **Canvas sizing is fixed at init**: `createSarmal()` captures canvas dimensions at creation. If the canvas is resized after init, you will need to call `destroy()` and re-create.
 
-7. **Negative speed**: Reverses `t` traversal direction. Trail extends in the opposite direction. Supported but not polished.
+7. **Negative speed**: Reverses `phase` traversal direction. Trail extends in the opposite direction. Supported but not polished.
 
 8. **`setSpeed(0)` vs `pause()`**: `setSpeed(0)` freezes the animation but the RAF loop keeps running, during which the sarmal remains reactive. `pause()` cancels the loop entirely and saves CPU. They look identical on screen but have different resource implications.
 
@@ -565,7 +565,7 @@ interface CurveDef {
   period?: number;
   speed?: number;
   skeleton?: "static" | "live";
-  skeletonFn?: (t: number) => Point;
+  skeletonFn?: (phase: number) => Point;
 }
 
 interface SarmalInstance {
@@ -573,8 +573,8 @@ interface SarmalInstance {
   pause(): void;
   reset(): void;
   destroy(): void;
-  jump(t: number, options?: { clearTrail?: boolean }): void;
-  seek(t: number, options?: { wrap?: boolean; step?: number }): void;
+  jump(phase: number, options?: { clearTrail?: boolean }): void;
+  seek(phase: number, options?: { wrap?: boolean; step?: number }): void;
   setSpeed(speed: number): void;
   getSpeed(): number;
   resetSpeed(): void;

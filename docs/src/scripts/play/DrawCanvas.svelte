@@ -22,7 +22,7 @@
 
 {#if pg.drawPointCount === 0}
   <div
-    class="absolute inset-0 z-10 flex flex-col items-center justify-center pointer-events-none gap-6"
+    class="absolute inset-0 z-10 flex flex-col items-center justify-center pointer-events-none gap-2 md:gap-6"
   >
     <EmptyStateGesture />
 

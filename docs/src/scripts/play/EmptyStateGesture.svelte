@@ -52,10 +52,8 @@
 
 <div class="text-center max-w-85 px-6 select-none">
   <svg
-    class="pl"
+    class="pl md:w-50 md:h-50 w-30 h-30"
     viewBox="0 0 370 370"
-    width="370"
-    height="370"
     aria-label="A hand cursor places two dots via clicks, then grabs the first one and drags it to a new position"
   >
     <g fill="var(--fg)" stroke-linejoin="round">
@@ -153,12 +151,6 @@
     --fg: light-dark(var(--gray950), var(--gray50));
     --trans-dur: 0.3s;
     color-scheme: light dark;
-  }
-
-  .pl {
-    display: block;
-    width: 11.5em;
-    height: auto;
   }
 
   .pl circle {

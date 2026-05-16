@@ -86,7 +86,7 @@
   </div>
 
   <!-- Mode tag (bottom-left) -->
-  <div class="absolute bottom-6 left-6 z-10 pointer-events-none">
+  <div class="absolute bottom-5 left-6 z-10 pointer-events-none">
     <span
       class="font-heading italic font-medium text-[28px] leading-none tracking-[-0.01em] text-muted-foreground select-none"
     >

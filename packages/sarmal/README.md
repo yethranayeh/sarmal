@@ -14,7 +14,7 @@
 
 The animations can be used anywhere you want. Use it for loading spinners, progress indicators, or to indicate that your very special AI model is _thinking_, up to you.
 
-In web applications and perhaps also in the terminal maybe if possible!
+In web applications or directly in your terminal (`npx @sarmal/core`).
 
 - **Canvas & SVG renderers**: choose one or the other, but why not both?
 - **standard curves**: default cliche curves any LLM can generate in seconds, from classic spirals to custom parametric paths
