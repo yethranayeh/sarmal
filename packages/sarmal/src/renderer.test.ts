@@ -7,7 +7,7 @@ import { createEngine } from "./engine";
 import { createRenderer } from "./renderer";
 import { createSarmal } from "./index";
 import {
-  hexToRgbComponents,
+  colorToRgbComponents,
   computeTangent,
   computeNormal,
   applyDprSizing,
@@ -20,6 +20,7 @@ import {
   FIT_PADDING_MIN,
   lerpOklab,
   palettes,
+  parseColorToRgb,
   resolveHeadColor,
   resolveTrailPalette,
   resolveTrailMainColor,
@@ -114,31 +115,34 @@ function makeCanvas(): HTMLCanvasElement {
   return canvas;
 }
 
-describe("hexToRgbComponents", () => {
+describe("colorToRgbComponents", () => {
   it("parses valid 6-digit hex colors", () => {
-    expect(hexToRgbComponents("#ff0000")).toBe("255,0,0");
-    expect(hexToRgbComponents("#00ff00")).toBe("0,255,0");
-    expect(hexToRgbComponents("#0000ff")).toBe("0,0,255");
-    expect(hexToRgbComponents("#ffffff")).toBe("255,255,255");
-    expect(hexToRgbComponents("#000000")).toBe("0,0,0");
+    expect(colorToRgbComponents("#ff0000")).toBe("255,0,0");
+    expect(colorToRgbComponents("#00ff00")).toBe("0,255,0");
+    expect(colorToRgbComponents("#0000ff")).toBe("0,0,255");
+    expect(colorToRgbComponents("#ffffff")).toBe("255,255,255");
+    expect(colorToRgbComponents("#000000")).toBe("0,0,0");
   });
 
   it("parses hex colors with mixed case", () => {
-    expect(hexToRgbComponents("#FFff00")).toBe("255,255,0");
-    expect(hexToRgbComponents("#AaBbCc")).toBe("170,187,204");
+    expect(colorToRgbComponents("#FFff00")).toBe("255,255,0");
+    expect(colorToRgbComponents("#AaBbCc")).toBe("170,187,204");
   });
 
-  it("KNOWN: invalid hex produces '0,0,0' — NaN from parseInt is coerced to 0 by bitwise ops", () => {
-    expect(hexToRgbComponents("")).toBe("0,0,0");
-    expect(hexToRgbComponents("#gg0000")).toBe("0,0,0");
+  it("parses 3-digit hex colors", () => {
+    expect(colorToRgbComponents("#fff")).toBe("255,255,255");
+    expect(colorToRgbComponents("#f0f")).toBe("255,0,255");
+    expect(colorToRgbComponents("#000")).toBe("0,0,0");
   });
 
-  it("KNOWN: CSS named colors are not supported — silently produce wrong values", () => {
-    expect(hexToRgbComponents("red")).toBe("0,0,237");
+  it("parses rgb() strings", () => {
+    expect(colorToRgbComponents("rgb(255, 0, 128)")).toBe("255,0,128");
+    expect(colorToRgbComponents("rgb(0,0,0)")).toBe("0,0,0");
   });
 
-  it("KNOWN: 3-digit shorthand is not expanded — #fff produces '0,15,255' not '255,255,255'", () => {
-    expect(hexToRgbComponents("#fff")).toBe("0,15,255");
+  it("clamps out-of-range rgb channels", () => {
+    expect(colorToRgbComponents("rgb(300, 0, 0)")).toBe("255,0,0");
+    expect(colorToRgbComponents("rgb(0, -10, 0)")).toBe("0,0,0");
   });
 });
 
@@ -547,10 +551,9 @@ describe("type safety guards (prevent silent JS coercion bugs)", () => {
     expect(length).toBeCloseTo(1, 5);
   });
 
-  it("hexToRgbComponents returns string but with numeric content", () => {
-    const result = hexToRgbComponents("#ff0000");
+  it("colorToRgbComponents returns string but with numeric content", () => {
+    const result = colorToRgbComponents("#ff0000");
     expect(typeof result).toBe("string");
-    // Split and verify each component is parseable as a number
     const parts = result.split(",").map((s) => parseInt(s, 10));
     expect(parts.length).toBe(3);
     expect(parts[0]).toBe(255);
@@ -566,6 +569,112 @@ describe("hexToRgb", () => {
     expect(hexToRgb("#0000ff")).toEqual({ r: 0, g: 0, b: 255 });
     expect(hexToRgb("#ffffff")).toEqual({ r: 255, g: 255, b: 255 });
     expect(hexToRgb("#000000")).toEqual({ r: 0, g: 0, b: 0 });
+  });
+});
+
+describe("parseColorToRgb", () => {
+  describe("3-digit hex", () => {
+    it("expands #fff to white", () => {
+      expect(parseColorToRgb("#fff")).toEqual({ r: 255, g: 255, b: 255 });
+    });
+
+    it("expands #f0f correctly", () => {
+      expect(parseColorToRgb("#f0f")).toEqual({ r: 255, g: 0, b: 255 });
+    });
+
+    it("expands #000 to black", () => {
+      expect(parseColorToRgb("#000")).toEqual({ r: 0, g: 0, b: 0 });
+    });
+  });
+
+  describe("6-digit hex", () => {
+    it("parses #ffffff", () => {
+      expect(parseColorToRgb("#ffffff")).toEqual({ r: 255, g: 255, b: 255 });
+    });
+
+    it("parses #ec5571", () => {
+      expect(parseColorToRgb("#ec5571")).toEqual({ r: 236, g: 85, b: 113 });
+    });
+  });
+
+  describe("8-digit hex — alpha stripped", () => {
+    it("parses #ffffffcc ignoring alpha", () => {
+      expect(parseColorToRgb("#ffffffcc")).toEqual({ r: 255, g: 255, b: 255 });
+    });
+
+    it("parses #ec557100 ignoring alpha", () => {
+      expect(parseColorToRgb("#ec557100")).toEqual({ r: 236, g: 85, b: 113 });
+    });
+  });
+
+  describe("rgb()", () => {
+    it("parses rgb(255, 0, 128)", () => {
+      expect(parseColorToRgb("rgb(255, 0, 128)")).toEqual({ r: 255, g: 0, b: 128 });
+    });
+
+    it("parses rgb(0,0,0) without spaces", () => {
+      expect(parseColorToRgb("rgb(0,0,0)")).toEqual({ r: 0, g: 0, b: 0 });
+    });
+
+    it("parses rgb( 255 , 0 , 0 ) with extra whitespace", () => {
+      expect(parseColorToRgb("rgb( 255 , 0 , 0 )")).toEqual({ r: 255, g: 0, b: 0 });
+    });
+
+    it("is case-insensitive: RGB(255,0,0)", () => {
+      expect(parseColorToRgb("RGB(255,0,0)")).toEqual({ r: 255, g: 0, b: 0 });
+    });
+  });
+
+  describe("rgba() — alpha stripped", () => {
+    it("parses rgba(255, 0, 128, 0.5) ignoring alpha", () => {
+      expect(parseColorToRgb("rgba(255, 0, 128, 0.5)")).toEqual({ r: 255, g: 0, b: 128 });
+    });
+
+    it("parses rgba(255, 0, 128, 1) ignoring alpha", () => {
+      expect(parseColorToRgb("rgba(255, 0, 128, 1)")).toEqual({ r: 255, g: 0, b: 128 });
+    });
+  });
+
+  describe("clamping", () => {
+    it("clamps rgb(300, 0, 0) to 255,0,0", () => {
+      expect(parseColorToRgb("rgb(300, 0, 0)")).toEqual({ r: 255, g: 0, b: 0 });
+    });
+
+    it("clamps rgb(0, -10, 0) to 0,0,0", () => {
+      expect(parseColorToRgb("rgb(0, -10, 0)")).toEqual({ r: 0, g: 0, b: 0 });
+    });
+  });
+
+  describe("whitespace trimming", () => {
+    it("trims leading/trailing whitespace from #fff", () => {
+      expect(parseColorToRgb("  #fff  ")).toEqual({ r: 255, g: 255, b: 255 });
+    });
+  });
+
+  describe("invalid → null", () => {
+    it("returns null for named color 'red'", () => {
+      expect(parseColorToRgb("red")).toBeNull();
+    });
+
+    it("returns null for hsl()", () => {
+      expect(parseColorToRgb("hsl(120, 100%, 50%)")).toBeNull();
+    });
+
+    it("returns null for 4-digit hex", () => {
+      expect(parseColorToRgb("#ffff")).toBeNull();
+    });
+
+    it("returns null for percentage rgb channels", () => {
+      expect(parseColorToRgb("rgb(50%, 0%, 0%)")).toBeNull();
+    });
+
+    it("returns null for empty string", () => {
+      expect(parseColorToRgb("")).toBeNull();
+    });
+
+    it("returns null for oklch() — not supported until Phase 3", () => {
+      expect(parseColorToRgb("oklch(0.7 0.15 30)")).toBeNull();
+    });
   });
 });
 
@@ -982,16 +1091,28 @@ describe("validateRenderOptions", () => {
     ).toThrow(/unknown key "trailColorr"/);
   });
 
-  it("rejects 3-digit shorthand hex for trailColor", () => {
-    expect(() => validateRenderOptions({ trailColor: "#fff" })).toThrow(TypeError);
+  it("accepts 3-digit shorthand hex for trailColor", () => {
+    expect(() => validateRenderOptions({ trailColor: "#fff" })).not.toThrow();
+  });
+
+  it("accepts rgb() notation for trailColor", () => {
+    expect(() => validateRenderOptions({ trailColor: "rgb(255,0,0)" })).not.toThrow();
+  });
+
+  it("accepts 8-digit hex for trailColor (alpha stripped)", () => {
+    expect(() => validateRenderOptions({ trailColor: "#ffffffcc" })).not.toThrow();
+  });
+
+  it("accepts mixed formats in trailColor array", () => {
+    expect(() => validateRenderOptions({ trailColor: ["#fff", "rgb(0,0,0)"] })).not.toThrow();
   });
 
   it("rejects named colors for trailColor", () => {
     expect(() => validateRenderOptions({ trailColor: "red" })).toThrow(TypeError);
   });
 
-  it("rejects rgb() notation for trailColor", () => {
-    expect(() => validateRenderOptions({ trailColor: "rgb(255,0,0)" })).toThrow(TypeError);
+  it("rejects hsl() for trailColor", () => {
+    expect(() => validateRenderOptions({ trailColor: "hsl(120, 100%, 50%)" })).toThrow(TypeError);
   });
 
   it("accepts a valid 6-digit hex for trailColor", () => {
@@ -1420,6 +1541,20 @@ describe("setRenderOptions on SarmalInstance (canvas)", () => {
   });
 
   describe("skeletonColor", () => {
+    it("does not throw when initialized with skeletonColor: 'transparent'", () => {
+      vi.spyOn(globalThis, "requestAnimationFrame").mockImplementation(() => 1);
+      vi.spyOn(globalThis, "cancelAnimationFrame").mockImplementation(() => {});
+
+      const instance = createSarmal(makeCanvas(), testCircle, {
+        autoStart: false,
+        skeletonColor: "transparent",
+      });
+
+      expect(() => instance.destroy()).not.toThrow();
+
+      vi.restoreAllMocks();
+    });
+
     it("updates the skeleton color on subsequent frames", () => {
       vi.spyOn(globalThis, "requestAnimationFrame").mockImplementation(() => 1);
       vi.spyOn(globalThis, "cancelAnimationFrame").mockImplementation(() => {});

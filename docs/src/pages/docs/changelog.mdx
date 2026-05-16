@@ -17,6 +17,10 @@ Version history notes of the <Link href="#core">Core</Link>, <Link href="#react"
 
 ## Core
 
+### 0.30.0 - 16.05.2026
+
+Color inputs now accept `#rgb` (3-digit hex), `#rrggbbaa` (8-digit hex, alpha stripped), `rgb()`, and `rgba()` in addition to the previous `#rrggbb` format. Any alpha channel in `#rrggbbaa` or `rgba()` is *silently* ignored. Sarmal applies its own opacity at render time. Out-of-range `rgb()` channels are also clamped to 0-255 range.
+
 ### 0.29.0 - 15.05.2026
 
 Gradient trail colors are now interpolated in [OKLab](https://bottosson.github.io/posts/oklab/) space instead of sRGB. Midpoints between saturated stops stay vivid rather than passing through a gray dead zone.

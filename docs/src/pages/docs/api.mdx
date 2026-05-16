@@ -372,8 +372,8 @@ sarmal.setRenderOptions({ skeletonColor: "transparent" });
 | `headRadius` | `number` | Radius of the head dot. Canvas: CSS pixels auto-derived from container size by default. SVG: viewBox units (default `1.5`). |
 
 
-<Alert variant="warning">
-  Accepted color format is currently only 6-digit hex strings. Shorthand hex (`#fff`), named colors (`"red"`), `rgb()`, `hsl()`, or CSS keywords like (`currentColor`) are not yet accepted.
+<Alert variant="info">
+  Accepted color formats: `#rrggbb`, `#rgb`, `#rrggbbaa` (alpha stripped), `rgb()`, `rgba()` (alpha stripped). Note that, named colors (`"red"`), `hsl()`, and CSS keywords are not accepted.
 </Alert>
 
 **Validation:** Throws an error if *any* field fails validation. In case of a validation error, no fields will be mutated, so the animation continues on the previous valid state.

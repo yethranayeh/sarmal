@@ -247,6 +247,54 @@ export function hexToRgb(hex: string): Rgb {
   return { r: n >> 16, g: (n >> 8) & 255, b: n & 255 };
 }
 
+const HEX_3_RE = /^#([0-9a-fA-F]{3})$/;
+const HEX_6_RE = /^#([0-9a-fA-F]{6})$/;
+const HEX_8_RE = /^#([0-9a-fA-F]{8})$/;
+const RGB_RE =
+  /^rgba?\(\s*(-?\d{1,3})\s*,\s*(-?\d{1,3})\s*,\s*(-?\d{1,3})(?:\s*,\s*[\d.]+)?\s*\)$/i;
+
+/**
+ * Parses a color string in any supported format into Rgb components.
+ * Returns `null` for unrecognized or malformed input.
+ *
+ * Supported formats:
+ * - 3-digit hex: #rgb
+ * - 6-digit hex: #rrggbb
+ * - 8-digit hex: #rrggbbaa (alpha is silently stripped)
+ * - rgb(r, g, b) channels clamped to 0–255
+ * - rgba(r, g, b, a) alpha is silently stripped
+ */
+export function parseColorToRgb(s: string): Rgb | null {
+  const trimmed = s.trim();
+
+  const m3 = HEX_3_RE.exec(trimmed);
+  if (m3) {
+    const [r, g, b] = m3[1]!;
+    return hexToRgb(`#${r}${r}${g}${g}${b}${b}`);
+  }
+
+  const m6 = HEX_6_RE.exec(trimmed);
+  if (m6) {
+    return hexToRgb(trimmed);
+  }
+
+  const m8 = HEX_8_RE.exec(trimmed);
+  if (m8) {
+    return hexToRgb(`#${trimmed.slice(1, 7)}`);
+  }
+
+  const mRgb = RGB_RE.exec(trimmed);
+  if (mRgb) {
+    return {
+      r: Math.max(0, Math.min(255, parseInt(mRgb[1]!, 10))),
+      g: Math.max(0, Math.min(255, parseInt(mRgb[2]!, 10))),
+      b: Math.max(0, Math.min(255, parseInt(mRgb[3]!, 10))),
+    };
+  }
+
+  return null;
+}
+
 /** sRGB byte (0–255) to linear light (0–1)
  * @see {@link https://bottosson.github.io/posts/oklab/}
  */
@@ -347,8 +395,6 @@ export function getPaletteColor(palette: string[], position: number, timeOffset:
   return lerpOklab(c1, c2, t);
 }
 
-const HEX_COLOR_RE = /^#[0-9a-fA-F]{6}$/;
-
 // TODO: maybe should infer the union type from the variable instead of making the variable respect the predefined union type
 const TRAIL_STYLES: readonly TrailStyle[] = ["default", "gradient-static", "gradient-animated"];
 
@@ -403,9 +449,9 @@ export function validateRenderOptions(partial: RuntimeRenderOptions) {
 
 function assertTrailColor(value: TrailColor) {
   if (typeof value === "string") {
-    if (!HEX_COLOR_RE.test(value)) {
+    if (parseColorToRgb(value) === null) {
       throw new TypeError(
-        `[sarmal] setRenderOptions: trailColor must be a 6-digit hex string, got "${value}"`,
+        `[sarmal] setRenderOptions: trailColor must be a valid color string (#rrggbb, #rgb, rgb(), rgba()), got "${value}"`,
       );
     }
     return;
@@ -420,9 +466,9 @@ function assertTrailColor(value: TrailColor) {
 
     for (let i = 0; i < value.length; i++) {
       const entry = value[i];
-      if (typeof entry !== "string" || !HEX_COLOR_RE.test(entry)) {
+      if (typeof entry !== "string" || parseColorToRgb(entry) === null) {
         throw new TypeError(
-          `[sarmal] setRenderOptions: trailColor[${i}] must be a 6-digit hex string, got ${JSON.stringify(entry)}`,
+          `[sarmal] setRenderOptions: trailColor[${i}] must be a valid color string (#rrggbb, #rgb, rgb(), rgba()), got ${JSON.stringify(entry)}`,
         );
       }
     }
@@ -430,7 +476,7 @@ function assertTrailColor(value: TrailColor) {
   }
 
   throw new TypeError(
-    `[sarmal] setRenderOptions: trailColor must be a 6-digit hex string or an array of hex strings, got ${JSON.stringify(value)}`,
+    `[sarmal] setRenderOptions: trailColor must be a valid color string (#rrggbb, #rgb, rgb(), rgba()) or an array of color strings, got ${JSON.stringify(value)}`,
   );
 }
 
@@ -439,9 +485,9 @@ function assertHeadColor(value: string | null) {
     return;
   }
 
-  if (typeof value !== "string" || !HEX_COLOR_RE.test(value)) {
+  if (typeof value !== "string" || parseColorToRgb(value) === null) {
     throw new TypeError(
-      `[sarmal] setRenderOptions: headColor must be a 6-digit hex string or null, got ${JSON.stringify(value)}`,
+      `[sarmal] setRenderOptions: headColor must be a valid color string (#rrggbb, #rgb, rgb(), rgba()) or null, got ${JSON.stringify(value)}`,
     );
   }
 }
@@ -451,9 +497,9 @@ function assertSkeletonColor(value: string) {
     return;
   }
 
-  if (typeof value !== "string" || !HEX_COLOR_RE.test(value)) {
+  if (typeof value !== "string" || parseColorToRgb(value) === null) {
     throw new TypeError(
-      `[sarmal] setRenderOptions: skeletonColor must be a 6-digit hex string or "transparent", got ${JSON.stringify(value)}`,
+      `[sarmal] setRenderOptions: skeletonColor must be a valid color string (#rrggbb, #rgb, rgb(), rgba()) or "transparent", got ${JSON.stringify(value)}`,
     );
   }
 }
@@ -510,13 +556,12 @@ export function resolveTrailPalette(trailColor: TrailColor): string[] {
  */
 export function resolveHeadColor(trailColor: TrailColor, trailStyle: TrailStyle): string {
   if (trailStyle === "default") {
-    // TODO: should it return hex here instead of rgb?
     return resolveTrailMainColor(trailColor);
   }
 
   const palette = resolveTrailPalette(trailColor);
   const last = palette[palette.length - 1]!;
-  const { r, g, b } = hexToRgb(last);
+  const { r, g, b } = parseColorToRgb(last)!;
   return `rgb(${r},${g},${b})`;
 }
 

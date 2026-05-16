@@ -274,10 +274,10 @@ describe("dimColor", () => {
     expect(result.b).toBe(0);
   });
 
-  it("KNOWN: 3-digit hex produces unexpected values (hexToRgb does not support shorthand)", () => {
+  it("supports 3-digit hex shorthand", () => {
     const result = dimColor("#fff", 1.0);
-    expect(result.r).toBe(0);
-    expect(result.g).toBe(15);
+    expect(result.r).toBe(255);
+    expect(result.g).toBe(255);
     expect(result.b).toBe(255);
   });
 });

@@ -19,6 +19,7 @@ import {
   computeTrailQuad,
   enginePassthroughs,
   getPaletteColor,
+  parseColorToRgb,
   resolveHeadColor,
   resolveTrailPalette,
   resolveTrailMainColor,
@@ -83,6 +84,11 @@ function el(tag: string): SVGElement {
   return document.createElementNS("http://www.w3.org/2000/svg", tag);
 }
 
+function colorToRgbAttr(color: string): string {
+  const c = parseColorToRgb(color)!;
+  return `rgb(${c.r},${c.g},${c.b})`;
+}
+
 /**
  * Creates a live SVG renderer for sarmal animations
  * The SVG is appended into `container` and updated each frame via **requestAnimationFrame**
@@ -107,7 +113,7 @@ export function createSVGRenderer(options: SVGRendererOptions): SarmalInstance {
   let headColor: string = userHeadColor ?? resolveHeadColor(trailColor, trailStyle);
   let headRadius: number; // assigned below after container size is read
 
-  let trailSolid: string = resolveTrailMainColor(trailColor);
+  let trailSolid: string = colorToRgbAttr(resolveTrailMainColor(trailColor));
   let trailPalette: string[] = resolveTrailPalette(trailColor);
 
   const ariaLabel = options.ariaLabel ?? "Loading";
@@ -146,7 +152,10 @@ export function createSVGRenderer(options: SVGRendererOptions): SarmalInstance {
   const skeletonPath = el("path") as SVGPathElement;
   skeletonPath.setAttribute("data-sarmal-role", "skeleton");
   skeletonPath.setAttribute("fill", "none");
-  skeletonPath.setAttribute("stroke", skeletonColor);
+  skeletonPath.setAttribute(
+    "stroke",
+    skeletonColor === "transparent" ? "transparent" : colorToRgbAttr(skeletonColor),
+  );
   skeletonPath.setAttribute("stroke-opacity", String(DEFAULT_SKELETON_OPACITY));
   skeletonPath.setAttribute("stroke-width", svgSkeletonStrokeWidth);
   if (skeletonColor === "transparent") {
@@ -156,14 +165,20 @@ export function createSVGRenderer(options: SVGRendererOptions): SarmalInstance {
 
   const skeletonPathA = el("path") as SVGPathElement;
   skeletonPathA.setAttribute("fill", "none");
-  skeletonPathA.setAttribute("stroke", skeletonColor);
+  skeletonPathA.setAttribute(
+    "stroke",
+    skeletonColor === "transparent" ? "transparent" : colorToRgbAttr(skeletonColor),
+  );
   skeletonPathA.setAttribute("stroke-width", svgSkeletonStrokeWidth);
   skeletonPathA.setAttribute("visibility", "hidden");
   group.appendChild(skeletonPathA);
 
   const skeletonPathB = el("path") as SVGPathElement;
   skeletonPathB.setAttribute("fill", "none");
-  skeletonPathB.setAttribute("stroke", skeletonColor);
+  skeletonPathB.setAttribute(
+    "stroke",
+    skeletonColor === "transparent" ? "transparent" : colorToRgbAttr(skeletonColor),
+  );
   skeletonPathB.setAttribute("stroke-width", svgSkeletonStrokeWidth);
   skeletonPathB.setAttribute("visibility", "hidden");
   group.appendChild(skeletonPathB);
@@ -181,7 +196,7 @@ export function createSVGRenderer(options: SVGRendererOptions): SarmalInstance {
 
   const headCircle = el("circle") as SVGCircleElement;
   headCircle.setAttribute("data-sarmal-role", "head");
-  headCircle.setAttribute("fill", headColor);
+  headCircle.setAttribute("fill", colorToRgbAttr(headColor));
   headCircle.setAttribute("r", String(headRadius));
   group.appendChild(headCircle);
 
@@ -446,7 +461,7 @@ export function createSVGRenderer(options: SVGRendererOptions): SarmalInstance {
 
       if (partial.trailColor !== undefined) {
         trailColor = partial.trailColor;
-        trailSolid = resolveTrailMainColor(trailColor);
+        trailSolid = colorToRgbAttr(resolveTrailMainColor(trailColor));
         trailPalette = resolveTrailPalette(trailColor);
 
         // Only the "default" style paints trail paths at setter time, whereas gradient styles repaint per-segment fills every frame in `updateTrail`,
@@ -462,13 +477,12 @@ export function createSVGRenderer(options: SVGRendererOptions): SarmalInstance {
         skeletonColor = partial.skeletonColor;
 
         if (skeletonColor === "transparent") {
-          // TODO: what happens when `skeletonColor` is set to "transparent" during morph? Do the skeleton paths of A and B still render?
           skeletonPath.setAttribute("visibility", "hidden");
         } else {
-          skeletonPath.setAttribute("stroke", skeletonColor);
+          skeletonPath.setAttribute("stroke", colorToRgbAttr(skeletonColor));
           skeletonPath.removeAttribute("visibility");
-          skeletonPathA.setAttribute("stroke", skeletonColor);
-          skeletonPathB.setAttribute("stroke", skeletonColor);
+          skeletonPathA.setAttribute("stroke", colorToRgbAttr(skeletonColor));
+          skeletonPathB.setAttribute("stroke", colorToRgbAttr(skeletonColor));
         }
       }
 
@@ -497,7 +511,7 @@ export function createSVGRenderer(options: SVGRendererOptions): SarmalInstance {
       } else {
         headColor = userHeadColor;
       }
-      headCircle.setAttribute("fill", headColor);
+      headCircle.setAttribute("fill", colorToRgbAttr(headColor));
 
       if (partial.trailColor !== undefined || partial.trailStyle !== undefined) {
         warnIfTrailColorMismatch(trailColor, trailStyle);

@@ -2,7 +2,7 @@ import type { CurveDef } from "./types";
 import type { Rgb } from "./renderer-shared";
 
 import { createEngine } from "./engine";
-import { computeBoundaries, hexToRgb, lerpOklab } from "./renderer-shared";
+import { computeBoundaries, lerpOklab, parseColorToRgb } from "./renderer-shared";
 
 const DEFAULT_TRAIL_HEX = "#ec5571"; // --color-primary
 const DEFAULT_FPS = 30;
@@ -110,8 +110,8 @@ export function dimRgb(rgb: Rgb, brightness: number): Rgb {
   return lerpOklab(rgb, { r: 0, g: 0, b: 0 }, t);
 }
 
-export function dimColor(hex: string, brightness: number): Rgb {
-  return dimRgb(hexToRgb(hex), brightness);
+export function dimColor(color: string, brightness: number): Rgb {
+  return dimRgb(parseColorToRgb(color)!, brightness);
 }
 
 const AR = "\x1B[0m";
@@ -289,8 +289,8 @@ export function terminalSarmal(
   const userSpeed = options?.speed;
   const colorCap = detectColor();
 
-  const trailRgb = hexToRgb(trailHex);
-  const headRgb = hexToRgb(headHex);
+  const trailRgb = parseColorToRgb(trailHex)!;
+  const headRgb = parseColorToRgb(headHex)!;
 
   const engine = createEngine(curveDef);
   if (userSpeed !== undefined) {

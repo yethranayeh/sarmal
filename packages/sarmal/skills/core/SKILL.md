@@ -143,7 +143,7 @@ Auto-init script (no JS needed):
 
 ## Common mistakes
 
-- **`trailColor` with named colors or `rgb()`** — only 6-digit hex strings are supported; `'red'` and `'#f00'` are not valid
+- **`trailColor` with named colors or `hsl()`** — accepted formats are `#rrggbb`, `#rgb`, `#rrggbbaa` (alpha stripped), `rgb()`, `rgba()` (alpha stripped); named colors (`'red'`) and `hsl()` throw
 - **SVG `headRadius` with pixel values** — SVG space is 0–100 viewBox units; a canvas value of `4` renders as a large dot in SVG
 - **Forgetting `destroy()`** — always clean up in React `useEffect` return, Vue `onUnmounted`, etc.
 - **Changing `trailLength` after construction** — not possible; `trailLength` is fixed at creation; create a new instance

@@ -52,7 +52,7 @@ npx @sarmal/core [options]
 | `--fps` | `number` | `30` | Frame rate |
 | `--speed` | `number` | Curve default | Animation speed multiplier |
 | `--size` | `number` | `16` | Spinner width in characters |
-| `--color` | `string` | `#ec5571` | Trail color as 6-digit hex |
+| `--color` | `string` | `#ec5571` | Trail color (`#rrggbb`, `#rgb`, `rgb()`, `rgba()`) |
 | `--verbose` | flag | off | Print curve name and hint above the spinner |
 | `--help` | flag | - | Show usage |
 
@@ -81,8 +81,8 @@ stop();
 interface TerminalSarmalOptions {
   size?: number       // Width in chars. Default: 16 (32x32 dot grid)
   fps?: number        // Default: 30
-  trailColor?: string // 6-digit hex. Default: "#ec5571"
-  headColor?: string  // 6-digit hex. Default: trailColor
+  trailColor?: string // #rrggbb, #rgb, rgb(), rgba(). Default: "#ec5571"
+  headColor?: string  // #rrggbb, #rgb, rgb(), rgba(). Default: trailColor
   speed?: number      // Default: curve's built-in speed
 }
 ```

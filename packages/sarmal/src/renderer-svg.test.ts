@@ -73,15 +73,15 @@ describe("setRenderOptions — SVG attribute re-apply", () => {
       trailStyle: "default",
     });
 
-    // Before: every trail path's fill was set to #ff0000 at init.
+    // Before: every trail path's fill was set to rgb(255,0,0) at init.
     const trailPaths = getTrailPaths(container);
     expect(trailPaths.length).toBeGreaterThan(0);
-    for (const p of trailPaths) expect(p.getAttribute("fill")).toBe("#ff0000");
+    for (const p of trailPaths) expect(p.getAttribute("fill")).toBe("rgb(255,0,0)");
 
     instance.setRenderOptions({ trailColor: "#00ff00" });
 
     // After: every trail path's fill was re-painted to the new color.
-    for (const p of trailPaths) expect(p.getAttribute("fill")).toBe("#00ff00");
+    for (const p of trailPaths) expect(p.getAttribute("fill")).toBe("rgb(0,255,0)");
 
     instance.destroy();
   });
@@ -126,9 +126,19 @@ describe("setRenderOptions — SVG attribute re-apply", () => {
 
     // Now every trail path should be re-seeded to the solid.
     const trailPaths = getTrailPaths(container);
-    for (const p of trailPaths) expect(p.getAttribute("fill")).toBe("#ff0000");
+    for (const p of trailPaths) expect(p.getAttribute("fill")).toBe("rgb(255,0,0)");
 
     instance.destroy();
+  });
+
+  it("does not throw when initialized with skeletonColor: 'transparent'", () => {
+    const container = makeContainer();
+    const instance = createSarmalSVG(container, testCircle, {
+      autoStart: false,
+      skeletonColor: "transparent",
+    });
+
+    expect(() => instance.destroy()).not.toThrow();
   });
 
   it("skeletonColor change updates the stroke attribute on the skeleton path", () => {
@@ -139,10 +149,10 @@ describe("setRenderOptions — SVG attribute re-apply", () => {
     });
 
     const skeletonPath = getSkeletonPath(container);
-    expect(skeletonPath.getAttribute("stroke")).toBe("#ffffff");
+    expect(skeletonPath.getAttribute("stroke")).toBe("rgb(255,255,255)");
 
     instance.setRenderOptions({ skeletonColor: "#123456" });
-    expect(skeletonPath.getAttribute("stroke")).toBe("#123456");
+    expect(skeletonPath.getAttribute("stroke")).toBe("rgb(18,52,86)");
 
     instance.destroy();
   });
@@ -162,7 +172,7 @@ describe("setRenderOptions — SVG attribute re-apply", () => {
 
     instance.setRenderOptions({ skeletonColor: "#abcdef" });
     expect(skeletonPath.getAttribute("visibility")).toBeNull();
-    expect(skeletonPath.getAttribute("stroke")).toBe("#abcdef");
+    expect(skeletonPath.getAttribute("stroke")).toBe("rgb(171,205,239)");
 
     instance.destroy();
   });
@@ -176,11 +186,10 @@ describe("setRenderOptions — SVG attribute re-apply", () => {
     });
 
     const head = getHeadCircle(container);
-    // Auto-follow: initial head color equals solid trail color.
-    expect(head.getAttribute("fill")).toBe("#ff0000");
+    expect(head.getAttribute("fill")).toBe("rgb(255,0,0)");
 
     instance.setRenderOptions({ headColor: "#aabbcc" });
-    expect(head.getAttribute("fill")).toBe("#aabbcc");
+    expect(head.getAttribute("fill")).toBe("rgb(170,187,204)");
 
     instance.destroy();
   });
@@ -194,10 +203,10 @@ describe("setRenderOptions — SVG attribute re-apply", () => {
     });
 
     const head = getHeadCircle(container);
-    expect(head.getAttribute("fill")).toBe("#ff0000");
+    expect(head.getAttribute("fill")).toBe("rgb(255,0,0)");
 
     instance.setRenderOptions({ trailColor: "#00ff00" });
-    expect(head.getAttribute("fill")).toBe("#00ff00");
+    expect(head.getAttribute("fill")).toBe("rgb(0,255,0)");
 
     instance.destroy();
   });
@@ -213,14 +222,13 @@ describe("setRenderOptions — SVG attribute re-apply", () => {
     const head = getHeadCircle(container);
 
     instance.setRenderOptions({ headColor: "#aabbcc" });
-    expect(head.getAttribute("fill")).toBe("#aabbcc");
+    expect(head.getAttribute("fill")).toBe("rgb(170,187,204)");
 
     instance.setRenderOptions({ headColor: null });
-    // Still red because trailColor hasn't changed, but now auto-follow is on.
-    expect(head.getAttribute("fill")).toBe("#ff0000");
+    expect(head.getAttribute("fill")).toBe("rgb(255,0,0)");
 
     instance.setRenderOptions({ trailColor: "#00ff00" });
-    expect(head.getAttribute("fill")).toBe("#00ff00");
+    expect(head.getAttribute("fill")).toBe("rgb(0,255,0)");
 
     instance.destroy();
   });

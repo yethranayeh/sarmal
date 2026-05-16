@@ -18,6 +18,7 @@ import {
   computeTrailQuad,
   enginePassthroughs,
   getPaletteColor,
+  parseColorToRgb,
   resolveHeadColor,
   resolveTrailPalette,
   resolveTrailMainColor,
@@ -32,10 +33,9 @@ export { palettes, hexToRgb, lerpOklab, getPaletteColor } from "./renderer-share
 
 const WHITE_HEX = "#ffffff";
 
-// TODO: accept rgb(a)
-export function hexToRgbComponents(hex: string): string {
-  const n = parseInt(hex.slice(1), 16);
-  return `${n >> 16},${(n >> 8) & 255},${n & 255}`;
+export function colorToRgbComponents(color: string): string {
+  const c = parseColorToRgb(color)!;
+  return `${c.r},${c.g},${c.b}`;
 }
 
 /**
@@ -107,7 +107,7 @@ export function createRenderer(options: RendererOptions): SarmalInstance {
   let userHeadColor: string | null = options.headColor ?? null;
   let headColor: string = userHeadColor ?? resolveHeadColor(trailColor, trailStyle);
 
-  let trailSolidRgb = hexToRgbComponents(resolveTrailMainColor(trailColor));
+  let trailSolidRgb = colorToRgbComponents(resolveTrailMainColor(trailColor));
   let trailPalette = resolveTrailPalette(trailColor);
 
   warnIfTrailColorMismatch(trailColor, trailStyle);
@@ -180,7 +180,7 @@ export function createRenderer(options: RendererOptions): SarmalInstance {
     // Apply DPR scale to draw in logical coordinates
     skeletonCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
 
-    skeletonCtx.strokeStyle = `rgba(${hexToRgbComponents(skeletonColor)},${DEFAULT_SKELETON_OPACITY})`;
+    skeletonCtx.strokeStyle = `rgba(${colorToRgbComponents(skeletonColor)},${DEFAULT_SKELETON_OPACITY})`;
     skeletonCtx.lineWidth = 1.5;
     skeletonCtx.beginPath();
 
@@ -200,7 +200,7 @@ export function createRenderer(options: RendererOptions): SarmalInstance {
       return;
     }
 
-    ctx.strokeStyle = `rgba(${hexToRgbComponents(skeletonColor)},${opacity})`;
+    ctx.strokeStyle = `rgba(${colorToRgbComponents(skeletonColor)},${opacity})`;
     ctx.lineWidth = 1.5;
     ctx.beginPath();
     ctx.moveTo(pts[0]!.x * scale + offsetX, pts[0]!.y * scale + offsetY);
@@ -227,7 +227,7 @@ export function createRenderer(options: RendererOptions): SarmalInstance {
         return;
       }
 
-      ctx.strokeStyle = `rgba(${hexToRgbComponents(skeletonColor)},${DEFAULT_SKELETON_OPACITY})`;
+      ctx.strokeStyle = `rgba(${colorToRgbComponents(skeletonColor)},${DEFAULT_SKELETON_OPACITY})`;
       ctx.lineWidth = 1.5;
       ctx.beginPath();
 
@@ -340,7 +340,7 @@ export function createRenderer(options: RendererOptions): SarmalInstance {
         morphAlpha = 0;
 
         skeleton = engine.getSarmalSkeleton();
-        if (!engine.isLiveSkeleton) {
+        if (!engine.isLiveSkeleton && skeletonColor !== "transparent") {
           buildSkeletonCanvas();
         }
       }
@@ -375,7 +375,7 @@ export function createRenderer(options: RendererOptions): SarmalInstance {
   skeleton = engine.getSarmalSkeleton();
   calculateBoundaries();
 
-  if (!engine.isLiveSkeleton) {
+  if (!engine.isLiveSkeleton && skeletonColor !== "transparent") {
     buildSkeletonCanvas();
   }
 
@@ -458,7 +458,7 @@ export function createRenderer(options: RendererOptions): SarmalInstance {
 
       if (partial.trailColor !== undefined) {
         trailColor = partial.trailColor;
-        trailSolidRgb = hexToRgbComponents(resolveTrailMainColor(trailColor));
+        trailSolidRgb = colorToRgbComponents(resolveTrailMainColor(trailColor));
         trailPalette = resolveTrailPalette(trailColor);
       }
 

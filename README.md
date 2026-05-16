@@ -10,6 +10,7 @@ This is a monorepo of the **Sarmal** project, which aims to be a parametric curv
 |---------|-------------|
 | [`@sarmal/core`](./packages/sarmal/README.md) | renderers, engine, and curve exports |
 | [`@sarmal/react`](./packages/react/README.md) | React component and hook wrapper |
+| [`@sarmal/svelte`](./packages/svelte/README.md) | Svelte component and hook wrapper |
 
 ## Documentation
 
