@@ -53,6 +53,10 @@ export function resolveWebMOptions(pg: PlaygroundState): SarmalOptions {
     opts.headRadius = pg.headRadius;
   }
 
+  if (pg.trailWidth !== null) {
+    opts.trailWidth = pg.trailWidth;
+  }
+
   return opts;
 }
 

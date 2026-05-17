@@ -40,6 +40,7 @@ const sarmal = createSarmal(canvas, curves.rose3);
 | trailColor | `string \| string[]` | `'#ffffff'` | Color string for solid trails, or array of color strings for gradients |
 | headColor | `string` | *derived* | Color string for the head dot. Omit to auto-follow trail color |
 | headRadius | `number` | `4` | Radius of the head dot in pixels |
+| trailWidth | `number` | `1` | Multiplier scaling the ribbon trail width. `2` = twice as thick, `0.5` = half width. Taper shape is preserved. |
 | trailStyle | `TrailStyle` | `'default'` | `'default'` \| `'gradient-static'` \| `'gradient-animated'` |
 | autoStart | `boolean` | `true` | Start the animation loop automatically on creation |
 | initialPhase | `number` | `undefined` | Initial position along the curve (phase value). Calls `seek(initialPhase)` before first frame |
@@ -371,6 +372,7 @@ sarmal.setRenderOptions({ skeletonColor: "transparent" });
 | `skeletonColor` | `string` | Color string, or `"transparent"` to hide |
 | `trailStyle` | `TrailStyle` | `'default'` \| `'gradient-static'` \| `'gradient-animated'` |
 | `headRadius` | `number` | Radius of the head dot. Canvas: CSS pixels auto-derived from container size by default. SVG: viewBox units (default `1.5`). |
+| `trailWidth` | `number` | Multiplier scaling the ribbon trail width. Positive finite number. |
 
 
 <Alert variant="info">

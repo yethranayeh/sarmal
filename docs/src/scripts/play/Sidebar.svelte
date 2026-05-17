@@ -378,6 +378,16 @@
       formatValue={(v) => v.toFixed(1)}
       onChange={pg.handleHeadRadiusChange}
     />
+
+    <Slider
+      label="Trail width"
+      value={pg.trailWidth ?? 1}
+      min={0.25}
+      max={3}
+      step={0.05}
+      formatValue={(v) => `${v.toFixed(2)}×`}
+      onChange={pg.handleTrailWidthChange}
+    />
   </section>
 
   <!-- Style -->

@@ -2,6 +2,7 @@ import type { PlaygroundState } from "../playgroundState.svelte";
 import type { DrawingSegment } from "../types";
 
 import { palettes } from "@sarmal/core";
+
 import { getResolvedSkeletonColor } from "../renderer";
 import pkg from "../../../../../packages/sarmal/package.json";
 
@@ -89,6 +90,10 @@ export function serializeOptions(pg: PlaygroundState): string | null {
     parts.push(`headRadius: ${pg.headRadius}`);
   }
 
+  if (pg.trailWidth !== null) {
+    parts.push(`trailWidth: ${pg.trailWidth}`);
+  }
+
   if (pg.trailLength !== DEFAULT_ENGINE_TRAIL_LENGTH) {
     parts.push(`trailLength: ${pg.trailLength}`);
   }
@@ -102,6 +107,10 @@ export function serializeReactOptions(pg: PlaygroundState): string | null {
 
   if (pg.headRadius !== null) {
     parts.push(`headRadius: ${pg.headRadius}`);
+  }
+
+  if (pg.trailWidth !== null) {
+    parts.push(`trailWidth: ${pg.trailWidth}`);
   }
 
   if (parts.length === 0) return null;

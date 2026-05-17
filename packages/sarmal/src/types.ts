@@ -281,6 +281,13 @@ export interface RuntimeRenderOptions {
    * - Canvas: CSS pixels. Auto-derived from container size if omitted.
    * - SVG: viewBox units (0–100 space). Default: `0.5`. */
   headRadius?: number;
+  /**
+   * Multiplier applied to the trail's width at both ends.
+   * `2` doubles the width; `0.5` halves it.
+   * Taper shape is preserved.
+   * @default 1
+   */
+  trailWidth?: number;
 }
 
 /**
@@ -320,6 +327,8 @@ export interface BaseRendererOptions {
   headColor?: string;
   /** @default 4 */
   headRadius?: number;
+  /** @default 1 */
+  trailWidth?: number;
   /**
    * Trail rendering style
    * @default 'default'

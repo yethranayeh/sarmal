@@ -48,6 +48,7 @@
     headColor={pg.headColor}
     headColorAuto={pg.headColorAuto}
     headRadius={(pg.headRadius ?? 0.5) * 0.02}
+    trailWidth={pg.trailWidth ?? 1}
     initialPoints={pg.drawInitialPoints}
     showControls={pg.shouldShowDrawControls}
     onPointsChange={(pts: Array<DrawingSegment>) => (pg.drawPoints = pts)}

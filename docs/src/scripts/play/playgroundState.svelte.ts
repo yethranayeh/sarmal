@@ -26,6 +26,7 @@ export interface PlaygroundState {
   speed: number;
   trailLength: number;
   headRadius: number | null;
+  trailWidth: number | null;
   trailStyle: TrailStyle;
   trailColor: string;
   headColor: string;
@@ -62,6 +63,7 @@ export interface PlaygroundState {
   handleTrailLengthChange: (newLength: number) => void;
   handleTrailLengthCommit: () => Promise<void>;
   handleHeadRadiusChange: (newRadius: number) => void;
+  handleTrailWidthChange: (newWidth: number) => void;
   handleTrailColorChange: (newColor: string) => void;
   handleHeadColorChange: (newColor: string) => void;
   handleHeadColorAutoChange: (auto: boolean) => void;
@@ -87,6 +89,7 @@ export function createPlaygroundState(
     speed: 1,
     trailLength: 120,
     headRadius: null as number | null,
+    trailWidth: null as number | null,
     trailStyle: "default" as TrailStyle,
     trailColor: "#c0143c",
     headColor: "#c0143c",
@@ -186,6 +189,7 @@ export function createPlaygroundState(
         ),
         headColor: state.headColorAuto ? undefined : state.headColor,
         headRadius: state.headRadius ?? undefined,
+        trailWidth: state.trailWidth ?? undefined,
         trailLength: state.trailLength,
         speed: state.speed,
         trailStyle: state.trailStyle,
@@ -451,6 +455,13 @@ export function createPlaygroundState(
     }
   }
 
+  function handleTrailWidthChange(newWidth: number) {
+    state.trailWidth = newWidth;
+    if (state.currentMode === "math") {
+      state.instance?.setRenderOptions({ trailWidth: newWidth });
+    }
+  }
+
   function handleTrailColorChange(newColor: string) {
     state.trailColor = newColor;
     if (state.currentMode === "math") {
@@ -582,6 +593,9 @@ export function createPlaygroundState(
     }
     if (typeof saved.headRadius === "number") {
       state.headRadius = saved.headRadius;
+    }
+    if (typeof saved.trailWidth === "number") {
+      state.trailWidth = saved.trailWidth;
     }
     if (typeof saved.trailLength === "number") {
       state.trailLength = saved.trailLength;
@@ -733,6 +747,12 @@ export function createPlaygroundState(
     set headRadius(v) {
       state.headRadius = v;
     },
+    get trailWidth() {
+      return state.trailWidth;
+    },
+    set trailWidth(v) {
+      state.trailWidth = v;
+    },
     get trailStyle() {
       return state.trailStyle;
     },
@@ -880,6 +900,7 @@ export function createPlaygroundState(
     handleTrailLengthChange,
     handleTrailLengthCommit,
     handleHeadRadiusChange,
+    handleTrailWidthChange,
     handleTrailColorChange,
     handleHeadColorChange,
     handleHeadColorAutoChange,

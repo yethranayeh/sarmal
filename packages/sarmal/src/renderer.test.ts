@@ -17,8 +17,11 @@ import {
 } from "./renderer";
 import {
   computeBoundaries,
+  computeTrailQuad,
   FIT_PADDING,
   FIT_PADDING_MIN,
+  TRAIL_MIN_WIDTH,
+  TRAIL_MAX_WIDTH,
   lerpOklab,
   palettes,
   parseColorToRgb,
@@ -526,6 +529,50 @@ describe("computeNormal", () => {
     ];
     const normal = computeNormal(trail, 0);
     expect(normal.y).toBeGreaterThan(0);
+  });
+});
+
+describe("computeTrailQuad — trailWidth proportionality", () => {
+  // Horizontal trail: normal is (0, ±1) so perpendicular spread is purely in Y.
+  // Testing at i=0 (tail) where progress=0 and w0 = minWidth/2.
+  const trail = [
+    { x: 0, y: 0 },
+    { x: 1, y: 0 },
+    { x: 2, y: 0 },
+  ];
+  const toX = (p: { x: number }) => p.x;
+  const toY = (p: { y: number }) => p.y;
+
+  it("doubling trailWidth doubles the perpendicular spread at the tail", () => {
+    const q1 = computeTrailQuad(trail, 0, trail.length, toX, toY, TRAIL_MIN_WIDTH, TRAIL_MAX_WIDTH);
+    const q2 = computeTrailQuad(
+      trail,
+      0,
+      trail.length,
+      toX,
+      toY,
+      TRAIL_MIN_WIDTH * 2,
+      TRAIL_MAX_WIDTH * 2,
+    );
+
+    const spread1 = Math.abs(q1.l0y - q1.r0y);
+    const spread2 = Math.abs(q2.l0y - q2.r0y);
+    expect(spread2).toBeCloseTo(spread1 * 2, 10);
+  });
+
+  it("trailWidth of 1 matches the default (no scaling)", () => {
+    const qDefault = computeTrailQuad(trail, 0, trail.length, toX, toY);
+    const qExplicit = computeTrailQuad(
+      trail,
+      0,
+      trail.length,
+      toX,
+      toY,
+      TRAIL_MIN_WIDTH * 1,
+      TRAIL_MAX_WIDTH * 1,
+    );
+    expect(qExplicit.l0y).toBeCloseTo(qDefault.l0y, 10);
+    expect(qExplicit.r0y).toBeCloseTo(qDefault.r0y, 10);
   });
 });
 
@@ -1399,6 +1446,46 @@ describe("validateRenderOptions — headRadius", () => {
   });
 });
 
+describe("validateRenderOptions — trailWidth", () => {
+  it("accepts a positive number", () => {
+    expect(() => validateRenderOptions({ trailWidth: 1 })).not.toThrow();
+    expect(() => validateRenderOptions({ trailWidth: 0.5 })).not.toThrow();
+    expect(() => validateRenderOptions({ trailWidth: 2.5 })).not.toThrow();
+  });
+
+  it("rejects NaN", () => {
+    expect(() => validateRenderOptions({ trailWidth: NaN })).toThrow(TypeError);
+  });
+
+  it("rejects Infinity", () => {
+    expect(() => validateRenderOptions({ trailWidth: Infinity })).toThrow(TypeError);
+  });
+
+  it("rejects negative numbers", () => {
+    expect(() => validateRenderOptions({ trailWidth: -1 })).toThrow(TypeError);
+  });
+
+  it("rejects zero", () => {
+    expect(() => validateRenderOptions({ trailWidth: 0 })).toThrow(TypeError);
+  });
+
+  it("rejects non-number values", () => {
+    expect(() => validateRenderOptions({ trailWidth: "2" as unknown as number })).toThrow(
+      TypeError,
+    );
+    expect(() => validateRenderOptions({ trailWidth: null as unknown as number })).toThrow(
+      TypeError,
+    );
+    expect(() => validateRenderOptions({ trailWidth: true as unknown as number })).toThrow(
+      TypeError,
+    );
+  });
+
+  it("is a known render option key (no 'unknown key' rejection)", () => {
+    expect(() => validateRenderOptions({ trailWidth: 1 })).not.toThrow();
+  });
+});
+
 // ─── warnIfTrailColorMismatch ────────────────────────────────────────────────
 
 describe("warnIfTrailColorMismatch", () => {
@@ -1899,6 +1986,18 @@ describe("setRenderOptions orthogonality", () => {
       vi.restoreAllMocks();
     });
 
+    it("invalid headRadius at construction throws TypeError", () => {
+      expect(() =>
+        createSarmal(makeCanvas(), testCircle, { autoStart: false, headRadius: -1 }),
+      ).toThrow(TypeError);
+      expect(() =>
+        createSarmal(makeCanvas(), testCircle, { autoStart: false, headRadius: 0 }),
+      ).toThrow(TypeError);
+      expect(() =>
+        createSarmal(makeCanvas(), testCircle, { autoStart: false, headRadius: NaN }),
+      ).toThrow(TypeError);
+    });
+
     it("invalid headRadius is fail-atomic (does not mutate current radius)", () => {
       vi.spyOn(globalThis, "requestAnimationFrame").mockImplementation(() => 1);
       vi.spyOn(globalThis, "cancelAnimationFrame").mockImplementation(() => {});
@@ -1916,6 +2015,55 @@ describe("setRenderOptions orthogonality", () => {
 
       expect(arcRadii.length).toBeGreaterThan(0);
       expect(arcRadii[0]).toBe(5);
+
+      instance.destroy();
+      vi.restoreAllMocks();
+    });
+  });
+
+  describe("trailWidth runtime (canvas)", () => {
+    it("invalid trailWidth at construction throws TypeError", () => {
+      expect(() =>
+        createSarmal(makeCanvas(), testCircle, { autoStart: false, trailWidth: -1 }),
+      ).toThrow(TypeError);
+      expect(() =>
+        createSarmal(makeCanvas(), testCircle, { autoStart: false, trailWidth: 0 }),
+      ).toThrow(TypeError);
+      expect(() =>
+        createSarmal(makeCanvas(), testCircle, { autoStart: false, trailWidth: NaN }),
+      ).toThrow(TypeError);
+    });
+
+    it("accepts trailWidth at construction without throwing", () => {
+      const instance = createSarmal(makeCanvas(), testCircle, {
+        autoStart: false,
+        trailWidth: 3,
+      });
+      expect(instance).toBeDefined();
+      instance.destroy();
+    });
+
+    it("setRenderOptions({ trailWidth }) is accepted without throwing", () => {
+      const instance = createSarmal(makeCanvas(), testCircle, { autoStart: false });
+      expect(() => instance.setRenderOptions({ trailWidth: 2 })).not.toThrow();
+      instance.destroy();
+    });
+
+    it("invalid trailWidth is fail-atomic (does not mutate current value)", () => {
+      vi.spyOn(globalThis, "requestAnimationFrame").mockImplementation(() => 1);
+      vi.spyOn(globalThis, "cancelAnimationFrame").mockImplementation(() => {});
+
+      const instance = createSarmal(makeCanvas(), testCircle, {
+        autoStart: false,
+        trailWidth: 3,
+      });
+
+      expect(() => instance.setRenderOptions({ trailWidth: NaN })).toThrow(TypeError);
+      expect(() => instance.setRenderOptions({ trailWidth: 0 })).toThrow(TypeError);
+      expect(() => instance.setRenderOptions({ trailWidth: -1 })).toThrow(TypeError);
+
+      // After failed mutations, a valid update should still work — state was not corrupted
+      expect(() => instance.setRenderOptions({ trailWidth: 1.5 })).not.toThrow();
 
       instance.destroy();
       vi.restoreAllMocks();

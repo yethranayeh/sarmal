@@ -141,7 +141,15 @@ export function createSVGRenderer(options: SVGRendererOptions): SarmalInstance {
   const svgTrailMaxWidth = (TRAIL_MAX_WIDTH * viewSize) / containerPx;
   const svgSkeletonStrokeWidth = String((SKELETON_STROKE_WIDTH_PX * viewSize) / containerPx);
 
+  if (options.headRadius !== undefined) {
+    validateRenderOptions({ headRadius: options.headRadius });
+  }
+
+  if (options.trailWidth !== undefined) {
+    validateRenderOptions({ trailWidth: options.trailWidth });
+  }
   headRadius = options.headRadius ?? SVG_DEFAULT_HEAD_RADIUS;
+  let trailWidth = options.trailWidth ?? 1;
 
   container.setAttribute("viewBox", `0 0 ${viewSize} ${viewSize}`);
   container.setAttribute("role", "img");
@@ -261,8 +269,8 @@ export function createSVGRenderer(options: SVGRendererOptions): SarmalInstance {
         trailCount,
         px,
         py,
-        svgTrailMinWidth,
-        svgTrailMaxWidth,
+        svgTrailMinWidth * trailWidth,
+        svgTrailMaxWidth * trailWidth,
       );
 
       const d = `M${l0x.toFixed(2)} ${l0y.toFixed(2)} L${l1x.toFixed(2)} ${l1y.toFixed(2)} L${r1x.toFixed(2)} ${r1y.toFixed(2)} L${r0x.toFixed(2)} ${r0y.toFixed(2)} Z`;
@@ -509,6 +517,10 @@ export function createSVGRenderer(options: SVGRendererOptions): SarmalInstance {
       if (partial.headRadius !== undefined) {
         headRadius = partial.headRadius;
         headCircle.setAttribute("r", String(headRadius));
+      }
+
+      if (partial.trailWidth !== undefined) {
+        trailWidth = partial.trailWidth;
       }
 
       if (userHeadColor === null) {

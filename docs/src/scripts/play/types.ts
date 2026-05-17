@@ -37,6 +37,7 @@ export interface SharedState {
   headColor: string;
   headColorAuto: boolean;
   headRadius?: number;
+  trailWidth?: number;
   trailLength: number;
   speed: number;
   showSkeleton: boolean;
@@ -57,6 +58,7 @@ export interface PlaygroundRenderParams {
   skeletonColor: string;
   headColor?: string;
   headRadius?: number;
+  trailWidth?: number;
   trailLength: number;
   speed: number;
   trailStyle: TrailStyle;

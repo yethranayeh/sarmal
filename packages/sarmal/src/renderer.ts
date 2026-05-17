@@ -15,6 +15,8 @@ export type { Oklab } from "./renderer-shared";
 import {
   DEFAULT_MORPH_DURATION_MS,
   DEFAULT_SKELETON_OPACITY,
+  TRAIL_MIN_WIDTH,
+  TRAIL_MAX_WIDTH,
   computeBoundaries,
   computeTrailQuad,
   enginePassthroughs,
@@ -139,7 +141,16 @@ export function createRenderer(options: RendererOptions): SarmalInstance {
   // Store logical dimensions for boundary calculations
   let logicalWidth = canvas.width / dpr;
   let logicalHeight = canvas.height / dpr;
+  if (options.headRadius !== undefined) {
+    validateRenderOptions({ headRadius: options.headRadius });
+  }
+
+  if (options.trailWidth !== undefined) {
+    validateRenderOptions({ trailWidth: options.trailWidth });
+  }
+
   let headRadius = options.headRadius ?? getHeadDotRadius(logicalWidth, logicalHeight);
+  let trailWidth = options.trailWidth ?? 1;
 
   let skeleton: Array<Point> = [];
   let skeletonCanvas: OffscreenCanvas | null = null;
@@ -278,6 +289,8 @@ export function createRenderer(options: RendererOptions): SarmalInstance {
         trailCount,
         toX,
         toY,
+        TRAIL_MIN_WIDTH * trailWidth,
+        TRAIL_MAX_WIDTH * trailWidth,
       );
 
       // Determine fill color based on trail style
@@ -486,6 +499,10 @@ export function createRenderer(options: RendererOptions): SarmalInstance {
 
       if (partial.headRadius !== undefined) {
         headRadius = partial.headRadius;
+      }
+
+      if (partial.trailWidth !== undefined) {
+        trailWidth = partial.trailWidth;
       }
 
       if (userHeadColor === null) {

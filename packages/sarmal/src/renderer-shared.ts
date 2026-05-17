@@ -226,12 +226,12 @@ export function enginePassthroughs(engine: Engine) {
  */
 export const palettes = {
   bard: ["#a855f7", "#3b82f6", "#14b8a6", "#ec4899"],
-  sunset: ["#f97316", "#dc2626", "#9333ea", "#f472b6"],
+  carnival: ["#ff6b6b", "#4ecdc4", "#ffe66d"],
   ocean: ["#1e3a8a", "#06b6d4", "#22d3ee", "#e0f2fe"],
+  sunset: ["#f97316", "#dc2626", "#9333ea", "#f472b6"],
   ice: ["#1e3a8a", "#67e8f9"],
   rocketpop: ["#08b8cd", "#ffffff", "#ff001f"],
   neon: ["#00e5ff", "#7c3aed", "#e040fb"],
-  carnival: ["#ff6b6b", "#4ecdc4", "#ffe66d"],
   vaporwave: ["#ff71ce", "#01cdfe", "#b967ff"],
   pastel: ["#c4b5fd", "#fbcfe8", "#bae6fd"],
   sakura: ["#fff1f2", "#fda4af", "#fb7185"],
@@ -477,6 +477,7 @@ const RENDER_OPTION_KEYS: ReadonlySet<string> = new Set([
   "skeletonColor",
   "trailStyle",
   "headRadius",
+  "trailWidth",
 ]);
 
 /**
@@ -516,6 +517,9 @@ export function validateRenderOptions(partial: RuntimeRenderOptions) {
   }
   if (partial.headRadius !== undefined) {
     assertHeadRadius(partial.headRadius);
+  }
+  if (partial.trailWidth !== undefined) {
+    assertTrailWidth(partial.trailWidth);
   }
 }
 
@@ -594,6 +598,20 @@ function assertHeadRadius(value: number) {
   if (!Number.isFinite(value) || value <= 0) {
     throw new TypeError(
       `[sarmal] setRenderOptions: headRadius must be a finite positive number, got ${value}`,
+    );
+  }
+}
+
+function assertTrailWidth(value: number) {
+  if (typeof value !== "number") {
+    throw new TypeError(
+      `[sarmal] setRenderOptions: trailWidth must be a number, got ${JSON.stringify(value)}`,
+    );
+  }
+
+  if (!Number.isFinite(value) || value <= 0) {
+    throw new TypeError(
+      `[sarmal] setRenderOptions: trailWidth must be a finite positive number, got ${value}`,
     );
   }
 }

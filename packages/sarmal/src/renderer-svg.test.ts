@@ -269,6 +269,18 @@ describe("setRenderOptions — SVG attribute re-apply", () => {
       instance.destroy();
     });
 
+    it("invalid headRadius at construction throws TypeError", () => {
+      expect(() =>
+        createSarmalSVG(makeContainer(), testCircle, { autoStart: false, headRadius: -1 }),
+      ).toThrow(TypeError);
+      expect(() =>
+        createSarmalSVG(makeContainer(), testCircle, { autoStart: false, headRadius: 0 }),
+      ).toThrow(TypeError);
+      expect(() =>
+        createSarmalSVG(makeContainer(), testCircle, { autoStart: false, headRadius: NaN }),
+      ).toThrow(TypeError);
+    });
+
     it("setRenderOptions({ headRadius }) updates the head circle's r attribute", () => {
       const container = makeContainer();
       const instance = createSarmalSVG(container, testCircle, { autoStart: false });
@@ -297,6 +309,84 @@ describe("setRenderOptions — SVG attribute re-apply", () => {
       expect(trailFillsAfter).toEqual(trailFillsBefore);
 
       instance.destroy();
+    });
+  });
+
+  describe("trailWidth runtime (SVG)", () => {
+    it("invalid trailWidth at construction throws TypeError", () => {
+      expect(() =>
+        createSarmalSVG(makeContainer(), testCircle, { autoStart: false, trailWidth: -1 }),
+      ).toThrow(TypeError);
+      expect(() =>
+        createSarmalSVG(makeContainer(), testCircle, { autoStart: false, trailWidth: 0 }),
+      ).toThrow(TypeError);
+      expect(() =>
+        createSarmalSVG(makeContainer(), testCircle, { autoStart: false, trailWidth: NaN }),
+      ).toThrow(TypeError);
+    });
+
+    it("accepts trailWidth at construction without throwing", () => {
+      const container = makeContainer();
+      const instance = createSarmalSVG(container, testCircle, {
+        autoStart: false,
+        trailWidth: 3,
+      });
+      expect(instance).toBeDefined();
+      instance.destroy();
+    });
+
+    it("setRenderOptions({ trailWidth }) is accepted without throwing", () => {
+      const container = makeContainer();
+      const instance = createSarmalSVG(container, testCircle, { autoStart: false });
+      expect(() => instance.setRenderOptions({ trailWidth: 2 })).not.toThrow();
+      instance.destroy();
+    });
+
+    it("invalid trailWidth is fail-atomic (does not corrupt renderer state)", () => {
+      const container = makeContainer();
+      const instance = createSarmalSVG(container, testCircle, {
+        autoStart: false,
+        trailWidth: 2,
+      });
+
+      expect(() => instance.setRenderOptions({ trailWidth: NaN })).toThrow(TypeError);
+      expect(() => instance.setRenderOptions({ trailWidth: 0 })).toThrow(TypeError);
+      expect(() => instance.setRenderOptions({ trailWidth: -1 })).toThrow(TypeError);
+
+      // After failed mutations, a valid update must still be accepted
+      expect(() => instance.setRenderOptions({ trailWidth: 0.5 })).not.toThrow();
+
+      instance.destroy();
+    });
+
+    it("wider trailWidth produces a larger coordinate spread in trail path d attributes", () => {
+      function makeRenderedInstance(trailWidth: number): { d: string; container: SVGSVGElement } {
+        const container = makeContainer();
+        const engine = createEngine(testCircle, 30);
+        const instance = createSVGRenderer({ container, engine, autoStart: false, trailWidth });
+
+        for (let i = 0; i < 20; i++) engine.tick(0.016);
+        instance.play();
+        instance.pause();
+
+        const trailPaths = getTrailPaths(container);
+        const filledPath = trailPaths.find((p) => (p.getAttribute("d") ?? "").length > 0);
+        const d = filledPath?.getAttribute("d") ?? "";
+        instance.destroy();
+        return { d, container };
+      }
+
+      const { d: dThin } = makeRenderedInstance(1);
+      const { d: dThick } = makeRenderedInstance(3);
+
+      // Extract all numeric coordinate values from the d attribute
+      const nums = (d: string) => (d.match(/-?[\d.]+/g) ?? []).map(Number);
+      const range = (vals: number[]) => Math.max(...vals) - Math.min(...vals);
+
+      const thinRange = range(nums(dThin));
+      const thickRange = range(nums(dThick));
+
+      expect(thickRange).toBeGreaterThan(thinRange);
     });
   });
 });

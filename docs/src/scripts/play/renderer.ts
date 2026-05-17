@@ -55,5 +55,9 @@ export function createInstance(
     rendererOptions.headRadius = params.headRadius;
   }
 
+  if (params.trailWidth !== undefined) {
+    rendererOptions.trailWidth = params.trailWidth;
+  }
+
   return createSVGRenderer(rendererOptions);
 }

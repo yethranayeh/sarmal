@@ -27,6 +27,7 @@
     headColor?: string;
     headColorAuto?: boolean;
     headRadius?: number;
+    trailWidth?: number;
     initialPoints?: Array<DrawingSegment>;
     showControls?: boolean;
     onPointsChange?: (points: Array<DrawingSegment>) => void;
@@ -43,6 +44,7 @@
     headColor,
     headColorAuto = false,
     headRadius = 0.01,
+    trailWidth = 1,
     initialPoints = [],
     showControls = true,
     onPointsChange,
@@ -185,9 +187,12 @@
       const progress = i / (count - 1);
       const nextProgress = (i + 1) / (count - 1);
       const opacity = Math.pow(progress, TRAIL_FADE_CURVE) * TRAIL_MAX_OPACITY;
-      const w0 = TRAIL_HALF_MIN + progress * (TRAIL_HALF_MAX - TRAIL_HALF_MIN);
+      const w0 =
+        (TRAIL_HALF_MIN + progress * (TRAIL_HALF_MAX - TRAIL_HALF_MIN)) *
+        trailWidth;
       const w1 =
-        TRAIL_HALF_MIN + nextProgress * (TRAIL_HALF_MAX - TRAIL_HALF_MIN);
+        (TRAIL_HALF_MIN + nextProgress * (TRAIL_HALF_MAX - TRAIL_HALF_MIN)) *
+        trailWidth;
 
       const n0 = computeNormal(trail, i);
       const n1 = computeNormal(trail, i + 1);
