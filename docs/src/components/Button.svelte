@@ -3,7 +3,7 @@
   import { tv, type VariantProps } from "tailwind-variants";
 
   export const buttonVariants = tv({
-    base: "font-ui cursor-pointer transition-all inline-flex items-center gap-1.5 rounded-full px-4.5 py-2.5 text-[13px] font-semibold leading-none disabled:pointer-events-none disabled:opacity-50",
+    base: "font-ui cursor-pointer transition-all inline-flex items-center gap-1.5 rounded-full px-4.5 py-2.5 text-[13px] font-semibold leading-none disabled:pointer-events-none disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 focus-visible:ring-offset-2 focus-visible:ring-offset-background",
     variants: {
       variant: {
         primary: "bg-primary text-primary-foreground hover:bg-accent",

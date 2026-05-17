@@ -53,7 +53,7 @@
     >
       {#each ["math", "draw"] as mode}
         <button
-          class="px-4 py-1.5 rounded-full font-body text-[11px] font-semibold uppercase tracking-[0.08em] cursor-pointer transition-colors duration-300 bg-transparent {pg.currentMode ===
+          class="px-4 py-1.5 rounded-full font-body text-[11px] font-semibold uppercase tracking-[0.08em] cursor-pointer transition-colors duration-300 bg-transparent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 {pg.currentMode ===
           mode
             ? 'text-primary-foreground'
             : 'text-muted-foreground hover:text-foreground'}"
