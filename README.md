@@ -19,6 +19,7 @@ This is a monorepo of the **Sarmal** project, which aims to be a parametric curv
 - **[Docs](https://sarmal.art/docs)** | Documentation content regarding API, concepts, curves, changelog and more
 - **[Core README](./packages/sarmal/README.md)** | Having two READMEs is always better than none
 - **[React README](./packages/react/README.md)** | Now we have three
+- **[Svelte README](./packages/svelte/README.md)** | And four
 
 ## Contributing
 

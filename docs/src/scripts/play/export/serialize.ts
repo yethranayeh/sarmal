@@ -1,17 +1,53 @@
 import type { PlaygroundState } from "../playgroundState.svelte";
 import type { DrawingSegment } from "../types";
+import type { SarmalOptions } from "@sarmal/core";
 
 import { palettes } from "@sarmal/core";
 
-import { getResolvedSkeletonColor } from "../renderer";
 import pkg from "../../../../../packages/sarmal/package.json";
 
 export const VERSION = pkg.version;
 export const DEFAULT_ENGINE_TRAIL_LENGTH = 120;
 
+export type ResolvedPlaygroundOptions = {
+  trailColor: SarmalOptions["trailColor"];
+  trailStyle: SarmalOptions["trailStyle"];
+  skeletonColor: SarmalOptions["skeletonColor"];
+  headColor?: string;
+  headRadius?: number;
+  trailWidth?: number;
+  trailLength?: number;
+};
+
 export function pointsToString(points: Array<DrawingSegment>): string {
   const lines = points.map(([x, y]) => `  [${x.toFixed(2)}, ${y.toFixed(2)}]`);
   return `[\n${lines.join(",\n")},\n]`;
+}
+
+export function resolvePlaygroundRuntimeOptions(pg: PlaygroundState): ResolvedPlaygroundOptions {
+  const opts: ResolvedPlaygroundOptions = {
+    trailColor: pg.resolvedTrailColor,
+    trailStyle: pg.trailStyle,
+    skeletonColor: pg.resolvedSkeletonColor,
+  };
+
+  if (!pg.headColorAuto) {
+    opts.headColor = pg.headColor;
+  }
+
+  if (pg.headRadius !== null) {
+    opts.headRadius = pg.headRadius;
+  }
+
+  if (pg.trailWidth !== null) {
+    opts.trailWidth = pg.trailWidth;
+  }
+
+  if (pg.trailLength !== DEFAULT_ENGINE_TRAIL_LENGTH) {
+    opts.trailLength = pg.trailLength;
+  }
+
+  return opts;
 }
 
 export function formatTrailColor(pg: PlaygroundState): string {
@@ -58,44 +94,40 @@ export function serializeCurveRef(pg: PlaygroundState): { ref: string; imports: 
 }
 
 export function serializeSharedColorOptions(pg: PlaygroundState): string[] {
+  const resolved = resolvePlaygroundRuntimeOptions(pg);
   const parts: string[] = [];
 
-  if (pg.trailStyle !== "default") {
-    parts.push(`trailStyle: '${pg.trailStyle}'`);
+  if (resolved.trailStyle !== "default") {
+    parts.push(`trailStyle: '${resolved.trailStyle}'`);
   }
 
   parts.push(`trailColor: ${formatTrailColor(pg)}`);
 
   if (pg.showSkeleton) {
-    const resolvedSkeleton = getResolvedSkeletonColor(
-      pg.showSkeleton,
-      pg.trailStyle,
-      pg.palette,
-      pg.trailColor,
-    );
-    parts.push(`skeletonColor: '${resolvedSkeleton}'`);
+    parts.push(`skeletonColor: '${resolved.skeletonColor}'`);
   }
 
-  if (!pg.headColorAuto) {
-    parts.push(`headColor: '${pg.headColor}'`);
+  if (resolved.headColor !== undefined) {
+    parts.push(`headColor: '${resolved.headColor}'`);
   }
 
   return parts;
 }
 
 export function serializeOptions(pg: PlaygroundState): string | null {
+  const resolved = resolvePlaygroundRuntimeOptions(pg);
   const parts = serializeSharedColorOptions(pg);
 
-  if (pg.headRadius !== null) {
-    parts.push(`headRadius: ${pg.headRadius}`);
+  if (resolved.headRadius !== undefined) {
+    parts.push(`headRadius: ${resolved.headRadius}`);
   }
 
-  if (pg.trailWidth !== null) {
-    parts.push(`trailWidth: ${pg.trailWidth}`);
+  if (resolved.trailWidth !== undefined) {
+    parts.push(`trailWidth: ${resolved.trailWidth}`);
   }
 
-  if (pg.trailLength !== DEFAULT_ENGINE_TRAIL_LENGTH) {
-    parts.push(`trailLength: ${pg.trailLength}`);
+  if (resolved.trailLength !== undefined) {
+    parts.push(`trailLength: ${resolved.trailLength}`);
   }
 
   if (parts.length === 0) return null;
@@ -103,14 +135,15 @@ export function serializeOptions(pg: PlaygroundState): string | null {
 }
 
 export function serializeReactOptions(pg: PlaygroundState): string | null {
+  const resolved = resolvePlaygroundRuntimeOptions(pg);
   const parts = serializeSharedColorOptions(pg);
 
-  if (pg.headRadius !== null) {
-    parts.push(`headRadius: ${pg.headRadius}`);
+  if (resolved.headRadius !== undefined) {
+    parts.push(`headRadius: ${resolved.headRadius}`);
   }
 
-  if (pg.trailWidth !== null) {
-    parts.push(`trailWidth: ${pg.trailWidth}`);
+  if (resolved.trailWidth !== undefined) {
+    parts.push(`trailWidth: ${resolved.trailWidth}`);
   }
 
   if (parts.length === 0) return null;
@@ -118,10 +151,11 @@ export function serializeReactOptions(pg: PlaygroundState): string | null {
 }
 
 export function serializeReactInit(pg: PlaygroundState): string | null {
+  const resolved = resolvePlaygroundRuntimeOptions(pg);
   const parts: string[] = [];
 
-  if (pg.trailLength !== DEFAULT_ENGINE_TRAIL_LENGTH) {
-    parts.push(`trailLength: ${pg.trailLength}`);
+  if (resolved.trailLength !== undefined) {
+    parts.push(`trailLength: ${resolved.trailLength}`);
   }
 
   if (parts.length === 0) return null;

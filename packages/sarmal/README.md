@@ -46,8 +46,8 @@ import { createSarmal, rose3 } from "@sarmal/core";
 const canvas = document.getElementById("my-canvas");
 const sarmal = createSarmal(canvas, rose3, {
   trailLength: 30,
-  strokeStyle: "#00ffaa",
-  lineWidth: 2,
+  trailColor: "#00ffaa",
+  trailWidth: 2,
 });
 
 sarmal.start();

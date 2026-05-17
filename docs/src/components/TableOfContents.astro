@@ -25,9 +25,22 @@ const h3Pad = LX + IX_OFFSET + H3R + TEXT_GAP;
 
 const h2sWithChildren = new Set<string>();
 let _h2 = "";
+
 for (const h of tocItems) {
-	if (h.depth === 2) _h2 = h.slug;
-	else if (h.depth === 3 && _h2) h2sWithChildren.add(_h2);
+	if (h.depth === 2) {
+		_h2 = h.slug;
+	} else if (h.depth === 3 && _h2) {
+		h2sWithChildren.add(_h2);
+	}
+}
+
+const totalHeadingCount = tocItems.length;
+const shouldCollapseAll = totalHeadingCount > 20;
+const h2sWithChildrenArray = Array.from(h2sWithChildren);
+const firstCollapsibleSlug = h2sWithChildrenArray[0] ?? "";
+
+function getCollapsedAtStart(slug: string): boolean {
+	return shouldCollapseAll && slug !== firstCollapsibleSlug;
 }
 ---
 
@@ -60,8 +73,13 @@ for (const h of tocItems) {
 										<button
 											class="toc-chevron group/btn absolute inset-y-0 -left-0.5 z-20 flex cursor-pointer items-center justify-center opacity-0 text-background transition-opacity duration-150 group-hover:opacity-100 focus-visible:opacity-100"
 											style={{ width: `${h2Pad}px` }}
-											aria-expanded="true"
+											aria-expanded={
+												getCollapsedAtStart(heading.slug) ? "false" : "true"
+											}
 											data-slug={heading.slug}
+											data-collapsed-at-start={
+												getCollapsedAtStart(heading.slug) ? "true" : undefined
+											}
 										>
 											<span class="flex transition-transform duration-300 group-aria-[expanded=false]/btn:-rotate-90">
 												<ChevronDown size={16} stroke-width={2.5} />
@@ -591,6 +609,14 @@ for (const h of tocItems) {
 
 	// One-time click listeners on chevron buttons — never recreated on render
 	const chevronBtns = nav?.querySelectorAll<HTMLButtonElement>(".toc-chevron");
+
+	// Pre-populate collapsedH2s from SSR-marked buttons
+	for (const btn of chevronBtns ?? []) {
+		if (btn.dataset.collapsedAtStart === "true") {
+			collapsedH2s.add(btn.dataset.slug ?? "");
+		}
+	}
+
 	for (const btn of chevronBtns ?? []) {
 		btn.addEventListener("click", () => {
 			const slug = btn.dataset.slug ?? "";

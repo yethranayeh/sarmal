@@ -62,6 +62,7 @@ Pass a different `curve` prop and the component will morph to it smoothly. Contr
   skeletonColor="transparent"
   headColor="#ffffff"
   trailStyle="gradient-animated"
+  trailWidth={1.5}
   width={200}
   height={200}
 />
@@ -146,7 +147,7 @@ For a more declarative approach, use the `sarmal` and `sarmalSVG` actions:
 
 ```svelte
 <script>
-  import { sarmal } from "@sarmal/svelte";
+  import { sarmal, sarmalSVG } from "@sarmal/svelte";
   import { rose3 } from "@sarmal/core";
 </script>
 

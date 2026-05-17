@@ -62,6 +62,7 @@ const [curve, setCurve] = useState(rose3);
   skeletonColor="transparent"
   headColor="#ffffff"
   trailStyle="gradient-animated"
+  trailWidth={1.5}
   width={200}
   height={200}
 />
