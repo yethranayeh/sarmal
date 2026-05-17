@@ -12,6 +12,7 @@
     getPaletteColor,
     oklabToRgb,
     parseColorToOklab,
+    parseColorToRgb,
     resolveHeadColor,
     TRAIL_FADE_CURVE,
     TRAIL_MAX_OPACITY,
@@ -88,6 +89,50 @@
       ? resolveHeadColor(trailColor, trailStyle)
       : (headColor ?? strokeColor),
   );
+
+  let surfaceColor = $state<string>("#ffffff");
+  let foregroundColor = $state<string>("#1b1c1a");
+
+  $effect(() => {
+    if (!svgElement) {
+      return;
+    }
+    const read = () => {
+      const style = getComputedStyle(svgElement!);
+      surfaceColor =
+        style.getPropertyValue("--color-surface-raised").trim() || "#ffffff";
+      foregroundColor =
+        style.getPropertyValue("--color-foreground").trim() || "#1b1c1a";
+    };
+    read();
+    const mo = new MutationObserver(read);
+    mo.observe(document.documentElement, {
+      attributeFilter: ["class", "data-theme"],
+    });
+    return () => mo.disconnect();
+  });
+
+  function wcagLuminance(r: number, g: number, b: number): number {
+    const ch = (c: number) => {
+      const s = c / 255;
+      return s <= 0.04045 ? s / 12.92 : Math.pow((s + 0.055) / 1.055, 2.4);
+    };
+
+    return 0.2126 * ch(r) + 0.7152 * ch(g) + 0.0722 * ch(b);
+  }
+
+  const controlPointColor = $derived.by(() => {
+    const trailRgb = parseColorToRgb(strokeColor);
+    const surfaceRgb = parseColorToRgb(surfaceColor);
+    if (!trailRgb || !surfaceRgb) {
+      return foregroundColor;
+    }
+
+    const tL = wcagLuminance(trailRgb.r, trailRgb.g, trailRgb.b);
+    const sL = wcagLuminance(surfaceRgb.r, surfaceRgb.g, surfaceRgb.b);
+    const contrast = (Math.max(tL, sL) + 0.05) / (Math.min(tL, sL) + 0.05);
+    return contrast >= 2.5 ? strokeColor : foregroundColor;
+  });
 
   $effect(() => {
     const g = trailGroup;
@@ -539,12 +584,12 @@
     <polygon
       points={polygonPointsStr}
       fill="none"
-      stroke={isAnimating ? strokeColor : "currentColor"}
+      stroke={isAnimating ? controlPointColor : "currentColor"}
       stroke-width="0.007"
       stroke-dasharray="0.04 0.025"
       stroke-linejoin="round"
       opacity={isAnimating ? 0.18 : 0.28}
-      class={isAnimating ? "" : "text-foreground"}
+      class="text-foreground"
       data-export-hidden
     />
   {/if}
@@ -556,12 +601,12 @@
       y1={points[points.length - 1]![1]}
       x2={mouseSvgPoint[0]}
       y2={mouseSvgPoint[1]}
-      stroke={isAnimating ? strokeColor : "currentColor"}
+      stroke={isAnimating ? controlPointColor : "currentColor"}
       stroke-width="0.007"
       stroke-dasharray="0.04 0.025"
       stroke-linecap="round"
       opacity={0.22}
-      class={isAnimating ? "" : "text-foreground"}
+      class="text-foreground"
       data-export-hidden
     />
   {/if}
@@ -591,7 +636,7 @@
           <circle
             cx={point[0]}
             cy={point[1]}
-            fill={strokeColor}
+            fill={controlPointColor}
             opacity="0.18"
             class="pointer-events-none [r:0.12px] md:[r:0.06px]"
           ></circle>
@@ -602,7 +647,7 @@
           cx={point[0]}
           cy={point[1]}
           class="fill-surface-raised [r:0.060px] md:[r:0.025px] group-data-[is-last=true]:[r:0.070px] md:group-data-[is-last=true]:[r:0.035px] stroke-[0.015px] md:stroke-[0.01px] group-data-[is-last=true]:stroke-[0.018px] md:group-data-[is-last=true]:stroke-[0.012px]"
-          stroke={strokeColor}
+          stroke={controlPointColor}
           onpointerdown={(e) => handlePointPointerDown(e, i)}
           role="button"
           tabindex="0"
@@ -613,7 +658,7 @@
           <circle
             cx={point[0]}
             cy={point[1]}
-            fill={strokeColor}
+            fill={controlPointColor}
             class="pointer-events-none [r:0.03px] md:[r:0.015px]"
           ></circle>
         {/if}
