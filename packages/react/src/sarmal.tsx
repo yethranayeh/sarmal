@@ -19,6 +19,7 @@ const SarmalInner = ({
   height,
   headRadius,
   trailLength,
+  trailWidth,
   autoStart,
   initialPhase,
 }: SarmalProps) => {
@@ -41,7 +42,7 @@ const SarmalInner = ({
     morphDuration !== undefined ? { morphDuration } : undefined,
   );
 
-  useRenderOptions(instance, trailColor, skeletonColor, headColor, trailStyle);
+  useRenderOptions(instance, trailColor, skeletonColor, headColor, trailStyle, trailWidth);
 
   useEffect(() => {
     if (instance.current) {

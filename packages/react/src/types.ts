@@ -47,6 +47,7 @@ export interface BaseSarmalProps {
   trailLength?: number;
   /** changing after mount recreates the instance and resets the trail */
   headRadius?: number;
+  trailWidth?: number;
   /** changing after mount recreates the instance and resets the trail */
   autoStart?: boolean;
   /** changing after mount recreates the instance and resets the trail */

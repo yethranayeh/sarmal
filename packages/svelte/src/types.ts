@@ -33,6 +33,7 @@ export interface SarmalActionOptions {
   morphDuration?: number;
   trailLength?: number;
   headRadius?: number;
+  trailWidth?: number;
   autoStart?: boolean;
   initialPhase?: number;
 }
@@ -50,6 +51,7 @@ export interface SarmalProps {
   instance?: SarmalInstance | null;
   trailLength?: number;
   headRadius?: number;
+  trailWidth?: number;
   autoStart?: boolean;
   initialPhase?: number;
   width?: number;

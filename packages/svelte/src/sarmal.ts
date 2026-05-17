@@ -14,7 +14,7 @@ import { buildOptions, initOptionsChanged, diffRenderOptions } from "./action-sh
  * The action responds to option changes via its `update` callback:
  * - Init-time options (`trailLength`, `headRadius`, `autoStart`, `initialPhase`) trigger destroy + recreate
  * - The `curve` option triggers `morphTo`, which preserves the trail
- * - Runtime visual options (`trailColor`, `skeletonColor`, `headColor`, `trailStyle`) trigger `setRenderOptions` without recreating
+ * - Runtime visual options (`trailColor`, `skeletonColor`, `headColor`, `trailStyle`, `trailWidth`) trigger `setRenderOptions` without recreating
  */
 export function sarmal(node: HTMLCanvasElement, options: SarmalActionOptions) {
   let instance = createSarmal(node, options.curve, buildOptions(options));

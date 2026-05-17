@@ -22,6 +22,7 @@
     instance?: SarmalInstance | null;
     trailLength?: number;
     headRadius?: number;
+    trailWidth?: number;
     autoStart?: boolean;
     initialPhase?: number;
     width?: number;
@@ -41,6 +42,7 @@
     instance = $bindable(null as SarmalInstance | null),
     trailLength,
     headRadius,
+    trailWidth,
     autoStart,
     initialPhase,
     width,
@@ -67,6 +69,7 @@
       ...(skeletonColor !== undefined && { skeletonColor }),
       ...(headColor !== undefined && { headColor }),
       ...(trailStyle !== undefined && { trailStyle }),
+      ...(trailWidth !== undefined && { trailWidth }),
     }));
 
     const inst = createSarmal(c, initCurve, {
@@ -116,12 +119,16 @@
       ...(skeletonColor !== undefined && { skeletonColor }),
       ...(headColor !== undefined ? { headColor } : { headColor: null }),
       ...(trailStyle !== undefined && { trailStyle }),
+      ...(trailWidth !== undefined && { trailWidth }),
     });
   });
 
   $effect(() => {
     const inst = instance;
-    if (!inst) return;
+    if (!inst) {
+      return;
+    }
+
     onready?.(inst);
   });
 </script>

@@ -11,11 +11,13 @@ export function useRenderOptions(
   skeletonColor: string | undefined,
   headColor: string | undefined,
   trailStyle: TrailStyle | undefined,
+  trailWidth: number | undefined,
 ): void {
   const prevTrailColorRef = useRef<TrailColor | undefined>(trailColor);
   const prevSkeletonColorRef = useRef<string | undefined>(skeletonColor);
   const prevHeadColorRef = useRef<string | undefined>(headColor);
   const prevTrailStyleRef = useRef<TrailStyle | undefined>(trailStyle);
+  const prevTrailWidthRef = useRef<number | undefined>(trailWidth);
 
   useEffect(() => {
     const sarmal = instance.current;
@@ -74,4 +76,18 @@ export function useRenderOptions(
       prevTrailStyleRef.current = trailStyle;
     }
   }, [trailStyle]);
+
+  useEffect(() => {
+    const inst = instance.current;
+    if (!inst) {
+      return;
+    }
+
+    if (trailWidth !== prevTrailWidthRef.current) {
+      if (trailWidth !== undefined) {
+        inst.setRenderOptions({ trailWidth });
+      }
+      prevTrailWidthRef.current = trailWidth;
+    }
+  }, [trailWidth]);
 }

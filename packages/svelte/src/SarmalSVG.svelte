@@ -21,6 +21,7 @@
     instance?: SarmalInstance | null;
     trailLength?: number;
     headRadius?: number;
+    trailWidth?: number;
     autoStart?: boolean;
     initialPhase?: number;
     onready?: (instance: SarmalInstance) => void;
@@ -38,6 +39,7 @@
     instance = $bindable(null as SarmalInstance | null),
     trailLength,
     headRadius,
+    trailWidth,
     autoStart,
     initialPhase,
     onready,
@@ -58,6 +60,7 @@
       ...(skeletonColor !== undefined && { skeletonColor }),
       ...(headColor !== undefined && { headColor }),
       ...(trailStyle !== undefined && { trailStyle }),
+      ...(trailWidth !== undefined && { trailWidth }),
     }));
 
     const inst = createSarmalSVG(s, initCurve, {
@@ -107,6 +110,7 @@
       ...(skeletonColor !== undefined && { skeletonColor }),
       ...(headColor !== undefined ? { headColor } : { headColor: null }),
       ...(trailStyle !== undefined && { trailStyle }),
+      ...(trailWidth !== undefined && { trailWidth }),
     });
   });
 

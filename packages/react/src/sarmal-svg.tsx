@@ -17,6 +17,7 @@ const SarmalSVGInner = ({
   trailStyle,
   headRadius,
   trailLength,
+  trailWidth,
   autoStart,
   initialPhase,
 }: SarmalSVGProps) => {
@@ -37,7 +38,7 @@ const SarmalSVGInner = ({
     morphDuration !== undefined ? { morphDuration } : undefined,
   );
 
-  useRenderOptions(instance, trailColor, skeletonColor, headColor, trailStyle);
+  useRenderOptions(instance, trailColor, skeletonColor, headColor, trailStyle, trailWidth);
 
   useEffect(() => {
     if (instance.current) {

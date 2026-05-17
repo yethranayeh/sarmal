@@ -9,6 +9,7 @@ export function buildOptions(opts: SarmalActionOptions) {
     ...(opts.skeletonColor !== undefined && { skeletonColor: opts.skeletonColor }),
     ...(opts.headColor !== undefined && { headColor: opts.headColor }),
     ...(opts.trailStyle !== undefined && { trailStyle: opts.trailStyle }),
+    ...(opts.trailWidth !== undefined && { trailWidth: opts.trailWidth }),
     ...(opts.trailLength !== undefined && { trailLength: opts.trailLength }),
     ...(opts.headRadius !== undefined && { headRadius: opts.headRadius }),
     ...(opts.autoStart !== undefined && { autoStart: opts.autoStart }),
@@ -44,6 +45,10 @@ export function diffRenderOptions(
 
   if (prev.trailStyle !== next.trailStyle) {
     if (next.trailStyle !== undefined) changes.trailStyle = next.trailStyle;
+  }
+
+  if (prev.trailWidth !== next.trailWidth) {
+    if (next.trailWidth !== undefined) changes.trailWidth = next.trailWidth;
   }
 
   return changes;

@@ -333,6 +333,10 @@ const sarmal = createSarmal(canvas, curves.artemis2, { initialT: Math.PI })
 
 ## React
 
+### 0.5.0 - 17.05.2026
+
+Added `trailWidth` prop to `<Sarmal>` and `<SarmalSVG>`. Changes after mount update the trail width smoothly using `setRenderOptions` without recreating the instance or resetting the trail.
+
 ### 0.4.1 - 15.05.2026
 
 Fixed `"use client"` not appearing in the bundle output. Since **esbuild** strips RSC directives found in source files during bundling, the directive is now injected as a post-build step.
@@ -400,6 +404,10 @@ import { curves } from "@sarmal/core";
 Peer dependencies: `react >= 18` and `@sarmal/core`. The package bundle emits `"use client"` for SSR compatibility.
 
 ## Svelte
+
+### 0.2.0 - 17.05.2026
+
+Added `trailWidth` prop to `<Sarmal>` and `<SarmalSVG>` components, and to the `sarmal` and `sarmalSVG` actions. Changes update the trail width smoothly without recreating the instance or resetting the trail.
 
 ### 0.1.0 - 14.05.2026
 
