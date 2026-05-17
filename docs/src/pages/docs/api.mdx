@@ -12,6 +12,7 @@ import Alert from "../../components/Alert.astro";
 import Link from "../../components/Link.astro";
 import SarmalBlueprint from "../../components/SarmalBlueprint.astro";
 import ConceptDemo from "../../components/ConceptDemo.astro";
+import PaletteShowcase from "../../components/PaletteShowcase.astro";
 
 # API Reference
 
@@ -502,14 +503,7 @@ const sarmal = createSarmal(canvas, curves.astroid, {
 
 These color combinations are exposed as the `palettes` named export. When in gradient trail style mode, pass any palette to `trailColor` for gradient trails.
 
-| Preset | Colors | Best For |
-|--------|--------|----------|
-| `bard` | Purple → blue → teal → pink | Animated gradient |
-| `sunset` | Orange → red → purple → pink | Warm, energetic |
-| `ocean` | Deep blue → cyan → aqua → white | Cool, calm |
-| `ice` | Deep blue → ice cyan | Static gradient |
-| `fire` | Deep red → amber | Bold, attention-grabbing |
-| `forest` | Deep green → mint | Natural, organic |
+<PaletteShowcase />
 
 ```ts
 import { createSarmal, curves, palettes } from "@sarmal/core";
@@ -602,8 +596,12 @@ const palettes: {
   sunset: string[];
   ocean: string[];
   ice: string[];
-  fire: string[];
-  forest: string[];
+  rocketpop: string[];
+  neon: string[];
+  carnival: string[];
+  vaporwave: string[];
+  pastel: string[];
+  sakura: string[];
 };
 
 function drawCurve(points: [number, number][]): CurveDef;

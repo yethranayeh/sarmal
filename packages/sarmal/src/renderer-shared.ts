@@ -229,8 +229,12 @@ export const palettes = {
   sunset: ["#f97316", "#dc2626", "#9333ea", "#f472b6"],
   ocean: ["#1e3a8a", "#06b6d4", "#22d3ee", "#e0f2fe"],
   ice: ["#1e3a8a", "#67e8f9"],
-  fire: ["#7f1d1d", "#fbbf24"],
-  forest: ["#14532d", "#86efac"],
+  rocketpop: ["#08b8cd", "#ffffff", "#ff001f"],
+  neon: ["#00e5ff", "#7c3aed", "#e040fb"],
+  carnival: ["#ff6b6b", "#4ecdc4", "#ffe66d"],
+  vaporwave: ["#ff71ce", "#01cdfe", "#b967ff"],
+  pastel: ["#c4b5fd", "#fbcfe8", "#bae6fd"],
+  sakura: ["#fff1f2", "#fda4af", "#fb7185"],
 } as const satisfies Record<string, Array<string>>;
 export type SarmalPalette = keyof typeof palettes; // TODO: reconsider naming convention. Should this represent the value type instead of the key union?
 

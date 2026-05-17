@@ -1,0 +1,43 @@
+---
+import { palettes } from "@sarmal/core";
+import SectionLabel from "./SectionLabel.astro";
+
+const entries = Object.entries(palettes);
+---
+
+<div
+	class="my-6 overflow-hidden rounded-xl border border-border bg-surface-raised"
+>
+	<div class="border-b border-border-subtle bg-background px-4 py-3">
+		<SectionLabel label="Built-in Palettes" />
+	</div>
+
+	<div class="grid grid-cols-1 gap-4 p-4 sm:grid-cols-2">
+		{
+			entries.map(([name, colors]) => (
+				<div class="space-y-2.5 rounded-lg border border-border-subtle bg-surface p-3">
+					<div class="font-ui text-xs font-medium text-foreground capitalize">
+						{name}
+					</div>
+					<div
+						class="h-4 w-full rounded-md"
+						style={`background-image: linear-gradient(to right, ${colors.join(", ")})`}
+					/>
+					<div class="flex gap-1.5">
+						{colors.map((color) => (
+							<div class="flex flex-1 flex-col items-center">
+								<div
+									class="h-6 w-full rounded border border-border-subtle/50"
+									style={`background-color: ${color}`}
+								/>
+								<span class="mt-0.5 block font-mono text-[10px] uppercase text-muted-gray">
+									{color}
+								</span>
+							</div>
+						))}
+					</div>
+				</div>
+			))
+		}
+	</div>
+</div>
