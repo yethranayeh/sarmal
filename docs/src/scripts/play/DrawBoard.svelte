@@ -1,6 +1,7 @@
 <script lang="ts">
   import type { Engine, Point, TrailStyle } from "@sarmal/core";
   import type { DrawingSegment } from "./types";
+  import type { Oklab } from "../../../../packages/sarmal/src/renderer-shared";
 
   import { createEngine, drawCurve } from "@sarmal/core";
   import { onDestroy, untrack } from "svelte";
@@ -9,6 +10,8 @@
   import {
     computeNormal,
     getPaletteColor,
+    oklabToRgb,
+    parseColorToOklab,
     resolveHeadColor,
     TRAIL_FADE_CURVE,
     TRAIL_MAX_OPACITY,
@@ -106,11 +109,11 @@
   });
 
   function gradientColor(
-    palette: string[],
+    palette: Oklab[],
     pos: number,
     timeOffset: number,
   ): string {
-    const { r, g, b } = getPaletteColor(palette, pos, timeOffset);
+    const { r, g, b } = oklabToRgb(getPaletteColor(palette, pos, timeOffset));
     return `rgb(${r},${g},${b})`;
   }
 
@@ -123,8 +126,11 @@
     const startIdx = Math.max(0, count - 1 - MAX_TRAIL_SEGMENTS);
     const drawnCount = count - 1 - startIdx;
     const isGradient = trailStyle !== "default";
-    const palette =
+    const paletteStrings =
       isGradient && Array.isArray(trailColor) ? (trailColor as string[]) : [];
+    const palette = paletteStrings
+      .map((c) => parseColorToOklab(c)!)
+      .filter(Boolean);
     const timeOff =
       trailStyle === "gradient-animated" ? gradientAnimTime * 0.0005 : 0;
     const solid = strokeColor;
