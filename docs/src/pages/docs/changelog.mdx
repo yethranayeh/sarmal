@@ -333,6 +333,12 @@ const sarmal = createSarmal(canvas, curves.artemis2, { initialT: Math.PI })
 
 ## React
 
+### 0.6.0 - 17.05.2026
+
+Canvas and SVG instances are now initialized with `useLayoutEffect` instead of `useEffect`, so the element is sized and the animation starts before the browser's first paint. This eliminates the brief flash of an unsized canvas that could appear on first render.
+
+Fixed a stale closure bug where changing `morphDuration` between renders had no effect on the next morph. The hook now *always* reads the latest `morphOptions` value.
+
 ### 0.5.0 - 17.05.2026
 
 Added `trailWidth` prop to `<Sarmal>` and `<SarmalSVG>`. Changes after mount update the trail width smoothly using `setRenderOptions` without recreating the instance or resetting the trail.

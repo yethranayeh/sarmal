@@ -2,7 +2,7 @@
 import type { CurveDef, SarmalInstance, SarmalOptions } from "@sarmal/core";
 import type { CanvasInit, MorphOptions } from "./types";
 
-import { useRef, useEffect } from "react";
+import { useRef, useLayoutEffect } from "react";
 import { createSarmal } from "@sarmal/core";
 import { useMorphEffect } from "./use-morph";
 
@@ -42,7 +42,7 @@ export function useSarmal(
   const committedCurveRef = useMorphEffect(curve, instance, morphOptions);
 
   // eslint-disable-next-line react-hooks/exhaustive-deps -- curve changes go through morphTo, not recreation
-  useEffect(() => {
+  useLayoutEffect(() => {
     const canvas = canvasRef.current;
     if (canvas == null) {
       return;

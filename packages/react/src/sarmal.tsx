@@ -1,7 +1,7 @@
 "use client";
 import type { SarmalProps } from "./types";
 
-import { useEffect, memo } from "react";
+import { useLayoutEffect, memo } from "react";
 import { useSarmal } from "./use-sarmal";
 import { useRenderOptions } from "./use-render-options";
 
@@ -44,7 +44,7 @@ const SarmalInner = ({
 
   useRenderOptions(instance, trailColor, skeletonColor, headColor, trailStyle, trailWidth);
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (instance.current) {
       onReady?.(instance.current);
     }

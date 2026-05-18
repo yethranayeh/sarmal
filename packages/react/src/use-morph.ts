@@ -21,8 +21,9 @@ export function useMorphEffect(
   morphOptions: MorphOptions | undefined,
 ): React.RefObject<CurveDef> {
   const committedCurveRef = useRef<CurveDef>(curve);
+  const morphOptionsRef = useRef<MorphOptions | undefined>(morphOptions);
+  morphOptionsRef.current = morphOptions;
 
-  // !morphDuration changes rarely and reading the latest value inside the effect is good enough.
   useEffect(() => {
     if (curve === committedCurveRef.current) {
       return;
@@ -35,7 +36,9 @@ export function useMorphEffect(
     }
 
     const opts =
-      morphOptions?.morphDuration != null ? { duration: morphOptions.morphDuration } : undefined;
+      morphOptionsRef.current?.morphDuration != null
+        ? { duration: morphOptionsRef.current.morphDuration }
+        : undefined;
 
     instance.current.morphTo(curve, opts).catch(() => {});
   }, [curve]);

@@ -1,7 +1,7 @@
 "use client";
 import type { SarmalSVGProps } from "./types";
 
-import { useEffect, memo } from "react";
+import { useLayoutEffect, memo } from "react";
 import { useSarmalSVG } from "./use-sarmal-svg";
 import { useRenderOptions } from "./use-render-options";
 
@@ -40,7 +40,7 @@ const SarmalSVGInner = ({
 
   useRenderOptions(instance, trailColor, skeletonColor, headColor, trailStyle, trailWidth);
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (instance.current) {
       onReady?.(instance.current);
     }
