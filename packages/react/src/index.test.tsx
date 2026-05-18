@@ -348,6 +348,7 @@ describe("<Sarmal>", () => {
 
     expect(mockInstance.setRenderOptions).toHaveBeenCalledWith({
       trailColor: "#00ff00",
+      headColor: null,
     });
   });
 
@@ -373,6 +374,7 @@ describe("<Sarmal>", () => {
 
     expect(mockInstance.setRenderOptions).toHaveBeenCalledWith({
       trailColor: ["#0000ff", "#ff00ff"],
+      headColor: null,
     });
   });
 
@@ -385,6 +387,7 @@ describe("<Sarmal>", () => {
 
     expect(mockInstance.setRenderOptions).toHaveBeenCalledWith({
       skeletonColor: "transparent",
+      headColor: null,
     });
   });
 
@@ -409,6 +412,7 @@ describe("<Sarmal>", () => {
 
     expect(mockInstance.setRenderOptions).toHaveBeenCalledWith({
       trailStyle: "gradient-animated",
+      headColor: null,
     });
   });
 
@@ -650,6 +654,7 @@ describe("<SarmalSVG>", () => {
 
     expect(mockInstance.setRenderOptions).toHaveBeenCalledWith({
       trailColor: "#00ff00",
+      headColor: null,
     });
   });
 
@@ -660,6 +665,7 @@ describe("<SarmalSVG>", () => {
 
     expect(mockInstance.setRenderOptions).toHaveBeenCalledWith({
       skeletonColor: "transparent",
+      headColor: null,
     });
   });
 
@@ -680,6 +686,7 @@ describe("<SarmalSVG>", () => {
 
     expect(mockInstance.setRenderOptions).toHaveBeenCalledWith({
       trailStyle: "gradient-animated",
+      headColor: null,
     });
   });
 
