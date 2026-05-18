@@ -43,15 +43,14 @@
     "access": "public"
   },
   "scripts": {
-    "prebuild": "vitest --run",
     "build": "tsup",
     "dev": "tsup --watch",
-    "prepublishOnly": "pnpm test -- --run && tsup",
+    "prepublishOnly": "pnpm test && tsup",
     "typecheck": "tsc --noEmit",
     "lint": "oxlint",
     "format": "oxfmt",
-    "test": "vitest",
-    "test:watch": "vitest --watch"
+    "test": "vitest --run",
+    "test:watch": "vitest"
   },
   "devDependencies": {
     "@sarmal/core": "workspace:*",
