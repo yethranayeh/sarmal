@@ -1,6 +1,9 @@
 <script lang="ts">
   import type { PlaygroundState } from "./playgroundState.svelte";
-  import type { SarmalInstance } from "@sarmal/core";
+  import type {
+    SarmalInstance,
+    DotMatrixRuntimeRenderOptions,
+  } from "@sarmal/core";
   import { getContext, tick } from "svelte";
 
   import Button from "../../components/Button.svelte";
@@ -11,32 +14,19 @@
     getWebMDurationSeconds,
     getWebMRawDurationSeconds,
     resolveWebMCurve,
-    resolveWebMOptions,
+    type WebMRenderer,
   } from "./export/index";
-  import { createSarmalSVG } from "@sarmal/core";
+  import { createSarmalDotMatrix } from "@sarmal/core";
   import { SEPARATOR_DOT } from "../../variables";
 
   const pg = getContext<PlaygroundState>("playground");
 
-  const VB_W = 96;
-  const VB_H = 54;
-  const COLS = 48;
-  const ROWS = 27;
-  const CELL = VB_W / COLS;
-  const DOT_R = 0.55;
-  const RENDER_RADIUS = 7;
-  const TOTAL = COLS * ROWS;
-
   // Fake theatrics so users can appreciate the visuals even on short videos :)
   const MIN_RENDER_MS = 1500;
 
-  type DotGrid = {
-    circles: Array<Array<SVGCircleElement>>;
-    lit: Array<Array<boolean>>;
-  };
-
   type DialogMode = "configure" | "rendering" | "ready";
   type DurationMode = "period" | "custom";
+  type DotDensity = "coarse" | "normal" | "fine";
 
   let dialogEl = $state<HTMLDialogElement | null>(null);
   let mode = $state<DialogMode>("configure");
@@ -49,16 +39,15 @@
   let previewUrl = $state<string | null>(null);
   let isSliding = $state(false);
 
-  let dotSvgEl = $state<SVGSVGElement | null>(null);
-  let sarmalSvgEl = $state<SVGSVGElement | null>(null);
-  let mirrorInstance: SarmalInstance | null = null;
-  let grid: DotGrid | null = null;
-  let animFrameId = 0;
-  let renderedCount = 0;
-  let renderDone = false;
+  let rendererMode = $state<WebMRenderer>("standard");
+  let dotDensity = $state<DotDensity>("normal");
+  let isStyleSliding = $state(false);
+  let isDensitySliding = $state(false);
+
+  let dmCanvasEl = $state<HTMLCanvasElement | null>(null);
+  let mirrorInstance: SarmalInstance<DotMatrixRuntimeRenderOptions> | null =
+    null;
   let exportStartTime = 0;
-  let cUnlit = "";
-  let cRendered = "";
 
   $effect(() => {
     const el = dialogEl;
@@ -93,6 +82,8 @@
     blobSize = "";
     abortController = null;
     previewUrl = null;
+    rendererMode = "standard";
+    dotDensity = "normal";
     dialogEl?.showModal();
   }
 
@@ -158,162 +149,54 @@
     }, 450);
   }
 
-  function hexToRgba(hex: string, alpha: number): string {
-    const r = parseInt(hex.slice(1, 3), 16);
-    const g = parseInt(hex.slice(3, 5), 16);
-    const b = parseInt(hex.slice(5, 7), 16);
-    return `rgba(${r},${g},${b},${alpha})`;
+  function switchRendererMode(next: WebMRenderer) {
+    if (next === rendererMode) {
+      return;
+    }
+    rendererMode = next;
+    isStyleSliding = true;
+    setTimeout(() => {
+      isStyleSliding = false;
+    }, 450);
   }
 
-  function createDots(svg: SVGSVGElement): DotGrid {
-    const circles: SVGCircleElement[][] = [];
-    const lit: boolean[][] = [];
-    const ns = "http://www.w3.org/2000/svg";
-
-    for (let r = 0; r < ROWS; r++) {
-      circles[r] = [];
-      lit[r] = [];
-      for (let c = 0; c < COLS; c++) {
-        lit[r]![c] = false;
-        const dot = document.createElementNS(ns, "circle");
-        dot.setAttribute("cx", String((c + 0.5) * CELL));
-        dot.setAttribute("cy", String((r + 0.5) * CELL));
-        dot.setAttribute("r", String(DOT_R));
-        dot.setAttribute("fill", cUnlit);
-        svg.appendChild(dot);
-        circles[r]![c] = dot;
-      }
+  function switchDotDensity(next: DotDensity) {
+    if (next === dotDensity) {
+      return;
     }
-
-    return { circles, lit };
+    dotDensity = next;
+    isDensitySliding = true;
+    setTimeout(() => {
+      isDensitySliding = false;
+    }, 450);
   }
 
-  function trackHead() {
-    if (renderDone || !grid) {
-      return;
-    }
-
-    const head = sarmalSvgEl?.querySelector("[data-sarmal-role='head']");
-    if (!head) {
-      animFrameId = requestAnimationFrame(trackHead);
-      return;
-    }
-
-    const hx = parseFloat(head.getAttribute("cx") ?? "0");
-    const hy = parseFloat(head.getAttribute("cy") ?? "0");
-
-    if (!Number.isFinite(hx) || !Number.isFinite(hy)) {
-      animFrameId = requestAnimationFrame(trackHead);
-      return;
-    }
-
-    const dxHead = 21 + hx * 0.54;
-    const dyHead = hy * 0.54;
-
-    const cMin = Math.max(0, Math.floor((dxHead - RENDER_RADIUS) / CELL));
-    const cMax = Math.min(COLS - 1, Math.ceil((dxHead + RENDER_RADIUS) / CELL));
-    const rMin = Math.max(0, Math.floor((dyHead - RENDER_RADIUS) / CELL));
-    const rMax = Math.min(ROWS - 1, Math.ceil((dyHead + RENDER_RADIUS) / CELL));
-
-    const RR2 = RENDER_RADIUS * RENDER_RADIUS;
-    for (let r = rMin; r <= rMax; r++) {
-      for (let c = cMin; c <= cMax; c++) {
-        if (grid && !grid.lit[r]![c]) {
-          const dx = (c + 0.5) * CELL - dxHead;
-          const dy = (r + 0.5) * CELL - dyHead;
-          if (dx * dx + dy * dy <= RR2) {
-            grid.lit[r]![c] = true;
-            grid.circles[r]![c]!.setAttribute("fill", cRendered);
-            renderedCount++;
-          }
-        }
-      }
-    }
-
-    if (renderedCount < TOTAL && Math.random() < 0.65) {
-      const attempts = renderedCount > TOTAL * 0.85 ? 5 : 3;
-      for (let i = 0; i < attempts; i++) {
-        const cr = Math.floor(Math.random() * ROWS);
-        const cc = Math.floor(Math.random() * COLS);
-        if (grid && !grid.lit[cr]![cc]) {
-          grid.lit[cr]![cc] = true;
-          grid.circles[cr]![cc]!.setAttribute("fill", cRendered);
-          renderedCount++;
-        }
-      }
-    }
-
-    if (renderedCount >= TOTAL) {
-      renderDone = true;
-      return;
-    }
-
-    animFrameId = requestAnimationFrame(trackHead);
-  }
-
-  function forceCompleteDots() {
-    if (!grid) {
-      return;
-    }
-    for (let r = 0; r < ROWS; r++) {
-      for (let c = 0; c < COLS; c++) {
-        if (!grid.lit[r]![c]) {
-          grid.lit[r]![c] = true;
-          grid.circles[r]![c]!.setAttribute("fill", cRendered);
-          renderedCount++;
-        }
-      }
-    }
-    renderDone = true;
+  function getDotGrid(): { cols: number; rows: number } {
+    if (dotDensity === "coarse") return { cols: 16, rows: 16 };
+    if (dotDensity === "fine") return { cols: 48, rows: 48 };
+    return { cols: 32, rows: 32 };
   }
 
   function cleanupMirror() {
-    if (animFrameId) {
-      cancelAnimationFrame(animFrameId);
-      animFrameId = 0;
-    }
-    if (mirrorInstance) {
-      mirrorInstance.destroy();
-      mirrorInstance = null;
-    }
-    if (sarmalSvgEl) {
-      sarmalSvgEl.innerHTML = "";
-    }
-    if (dotSvgEl) {
-      dotSvgEl.innerHTML = "";
-    }
-    grid = null;
-    renderedCount = 0;
-    renderDone = false;
+    mirrorInstance?.destroy();
+    mirrorInstance = null;
   }
 
   function setupDotMatrix() {
-    if (!dotSvgEl || !sarmalSvgEl) {
+    if (!dmCanvasEl) {
       return;
     }
 
-    cUnlit = hexToRgba(pg.headColor, 0.09);
-    cRendered = hexToRgba(pg.headColor, 0.42);
-
-    dotSvgEl.innerHTML = "";
-    sarmalSvgEl.innerHTML = "";
-    grid = createDots(dotSvgEl);
-    renderedCount = 0;
-    renderDone = false;
-
-    const curve = resolveWebMCurve(pg);
-    const options = resolveWebMOptions(pg);
-
-    mirrorInstance = createSarmalSVG(sarmalSvgEl, curve, {
-      ...options,
-      skeletonColor: "transparent",
+    mirrorInstance = createSarmalDotMatrix(dmCanvasEl, resolveWebMCurve(pg), {
+      cols: 48,
+      rows: 27,
+      trailColor: pg.headColor,
     });
-
-    animFrameId = requestAnimationFrame(trackHead);
   }
 
   async function handleExport() {
     const duration = getEffectiveDuration();
+    const { cols, rows } = getDotGrid();
     mode = "rendering";
     renderRatio = 0;
     exportStartTime = performance.now();
@@ -325,9 +208,17 @@
       await tick();
       setupDotMatrix();
 
-      blob = await recordWebM(pg, duration, controller.signal, (ratio) => {
-        renderRatio = ratio;
-      });
+      blob = await recordWebM(
+        pg,
+        duration,
+        controller.signal,
+        (ratio) => {
+          renderRatio = ratio;
+        },
+        rendererMode,
+        cols,
+        rows,
+      );
 
       const elapsed = performance.now() - exportStartTime;
       if (elapsed < MIN_RENDER_MS) {
@@ -338,7 +229,6 @@
         return;
       }
 
-      forceCompleteDots();
       cleanupMirror();
 
       const sizeMB = blob.size / (1024 * 1024);
@@ -374,12 +264,91 @@
       <h3 class="font-heading text-lg font-medium text-foreground mb-2">
         Export as WebM
       </h3>
-      <p class="font-body text-xs text-muted-foreground leading-relaxed mb-1">
+      <p class="font-body text-xs text-muted-foreground leading-relaxed mb-4">
         Export uses the canvas renderer and may differ slightly from the
         preview.
       </p>
 
+      <div class="mb-4">
+        <p class="font-body text-xs text-muted-foreground mb-2">Style</p>
+        <div
+          class="group relative inline-flex items-center bg-surface-raised backdrop-blur-md border border-border rounded-full p-0.75 gap-0.5 shadow-[0_1px_2px_color-mix(in_srgb,var(--color-foreground)_4%,transparent)]"
+        >
+          <button
+            class="px-4 py-1.5 rounded-full font-body text-[11px] font-semibold uppercase tracking-[0.08em] cursor-pointer transition-colors duration-300 bg-transparent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 {rendererMode ===
+            'standard'
+              ? 'text-primary-foreground'
+              : 'text-muted-foreground hover:text-foreground'}"
+            onclick={() => switchRendererMode("standard")}
+          >
+            Standard
+          </button>
+          <button
+            class="px-4 py-1.5 rounded-full font-body text-[11px] font-semibold uppercase tracking-[0.08em] cursor-pointer transition-colors duration-300 bg-transparent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 {rendererMode ===
+            'dotmatrix'
+              ? 'text-primary-foreground'
+              : 'text-muted-foreground hover:text-foreground'}"
+            onclick={() => switchRendererMode("dotmatrix")}
+          >
+            Dot&nbsp;Matrix
+          </button>
+          <div
+            class="bg-primary rounded-full absolute -z-1 h-7 {rendererMode ===
+            'standard'
+              ? 'left-1 w-22'
+              : 'left-[47%] w-27'} {isStyleSliding ? 'is-sliding' : ''}"
+            style="transition: left 300ms cubic-bezier(0.34, 1.2, 0.64, 1), width 300ms cubic-bezier(0.34, 1.2, 0.64, 1);"
+          ></div>
+        </div>
+
+        {#if rendererMode === "dotmatrix"}
+          <div class="mt-3">
+            <div
+              class="group relative inline-flex items-center bg-surface-raised backdrop-blur-md border border-border rounded-full p-0.75 gap-0.5 shadow-[0_1px_2px_color-mix(in_srgb,var(--color-foreground)_4%,transparent)]"
+            >
+              <button
+                class="px-3 py-1.5 rounded-full font-body text-[11px] font-semibold uppercase tracking-[0.08em] cursor-pointer transition-colors duration-300 bg-transparent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 {dotDensity ===
+                'coarse'
+                  ? 'text-primary-foreground'
+                  : 'text-muted-foreground hover:text-foreground'}"
+                onclick={() => switchDotDensity("coarse")}
+              >
+                Coarse
+              </button>
+              <button
+                class="px-3 py-1.5 rounded-full font-body text-[11px] font-semibold uppercase tracking-[0.08em] cursor-pointer transition-colors duration-300 bg-transparent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 {dotDensity ===
+                'normal'
+                  ? 'text-primary-foreground'
+                  : 'text-muted-foreground hover:text-foreground'}"
+                onclick={() => switchDotDensity("normal")}
+              >
+                Normal
+              </button>
+              <button
+                class="px-3 py-1.5 rounded-full font-body text-[11px] font-semibold uppercase tracking-[0.08em] cursor-pointer transition-colors duration-300 bg-transparent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 {dotDensity ===
+                'fine'
+                  ? 'text-primary-foreground'
+                  : 'text-muted-foreground hover:text-foreground'}"
+                onclick={() => switchDotDensity("fine")}
+              >
+                Fine
+              </button>
+              <div
+                class="bg-primary rounded-full absolute -z-1 h-7 {dotDensity ===
+                'coarse'
+                  ? 'left-1 w-18'
+                  : dotDensity === 'normal'
+                    ? 'left-[35%] w-18'
+                    : 'left-[68%] w-13'} {isDensitySliding ? 'is-sliding' : ''}"
+                style="transition: left 300ms cubic-bezier(0.34, 1.2, 0.64, 1), width 300ms cubic-bezier(0.34, 1.2, 0.64, 1);"
+              ></div>
+            </div>
+          </div>
+        {/if}
+      </div>
+
       <div class="mb-6">
+        <p class="font-body text-xs text-muted-foreground mb-2">Duration</p>
         <div
           class="group relative inline-flex items-center bg-surface-raised backdrop-blur-md border border-border rounded-full p-0.75 gap-0.5 shadow-[0_1px_2px_color-mix(in_srgb,var(--color-foreground)_4%,transparent)]"
         >
@@ -470,15 +439,12 @@
         <div
           class="aspect-video bg-surface-raised dark:bg-surface rounded-md overflow-hidden relative border border-border"
         >
-          <svg
-            bind:this={dotSvgEl}
+          <canvas
+            bind:this={dmCanvasEl}
+            width="384"
+            height="216"
             class="absolute inset-0 w-full h-full"
-            viewBox="0 0 96 54"
-          ></svg>
-          <svg
-            bind:this={sarmalSvgEl}
-            class="absolute inset-0 w-full h-full pointer-events-none"
-          ></svg>
+          ></canvas>
         </div>
       </div>
 
