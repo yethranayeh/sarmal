@@ -2,6 +2,7 @@ import type { CurveDef, SarmalInstance, SarmalOptions } from "./types";
 export type { SVGRendererOptions, SVGSarmalOptions } from "./renderer-svg";
 export type {
   BaseRendererOptions,
+  BaseRuntimeRenderOptions,
   Point,
   CurveDef,
   Engine,
@@ -13,13 +14,16 @@ export type {
   TrailStyle,
   TrailColor,
   RuntimeRenderOptions,
+  DotMatrixRuntimeRenderOptions,
 } from "./types";
 export type { CurveName } from "./curves";
 export type { SarmalPalette, BoundaryResult } from "./renderer-shared";
+export type { DotMatrixSarmalOptions } from "./renderer-dot-matrix";
 
 export { createEngine } from "./engine";
 export { createRenderer } from "./renderer";
 export { createSVGRenderer, createSarmalSVG } from "./renderer-svg";
+export { createSarmalDotMatrix } from "./renderer-dot-matrix";
 export { curves } from "./curves";
 export { palettes, computeBoundaries } from "./renderer-shared";
 export { drawCurve, evaluateCatmullRom } from "./catmull-rom";

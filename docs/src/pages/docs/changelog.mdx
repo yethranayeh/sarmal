@@ -17,6 +17,19 @@ Version history notes of the <Link href="#core">Core</Link>, <Link href="#react"
 
 ## Core
 
+### 0.34.0 - 20.05.2026
+
+New `createSarmalDotMatrix(canvas, curveDef, options?)` canvas renderer. Maps the sarmal trail onto a grid of dots: the head is fully lit, the tail fades to dim, and off-trail dots appear as faint background points.
+
+`DotMatrixSarmalOptions` is a named export from `@sarmal/core`.
+
+Returns `SarmalInstance`: full interface parity with `createSarmal` and `createSarmalSVG`, including `morphTo` and `setRenderOptions`. Accepts `cols`, `rows`, `roundness`, `trailLength`, `trailColor`, and `trailStyle` options.
+
+The renderer has no skeleton and no ribbon trail. `setRenderOptions` supports `trailColor` and `trailStyle`.
+
+<Alert variant="warning">Passing `headColor`, `skeletonColor`, `headRadius`, or `trailWidth` throws.</Alert>
+
+
 ### 0.33.0 - 17.05.2026
 
 Added `trailWidth` option to `createSarmal`, `createSarmalSVG`, and `setRenderOptions`. A positive-number multiplier (default `1`) that scales the trail's width at both ends while preserving the *taper shape*. `trailWidth: 2` doubles the width; `trailWidth: 0.5` halves it.

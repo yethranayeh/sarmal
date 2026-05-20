@@ -220,7 +220,9 @@ export interface Engine extends AnimationControls {
   cancelSpeedTransition(): void;
 }
 
-export interface SarmalInstance extends AnimationControls {
+export interface SarmalInstance<
+  T extends BaseRuntimeRenderOptions = RuntimeRenderOptions,
+> extends AnimationControls {
   /** Starts the animation loop (requestAnimationFrame). If already running, does nothing. */
   play(): void;
   /** Pauses the animation loop (cancelAnimationFrame) and cancels any speed transition. Preserves state. */
@@ -246,7 +248,7 @@ export interface SarmalInstance extends AnimationControls {
    *
    * ! Validation fails the operation completely if any of the fields fail the chceck.
    */
-  setRenderOptions(partial: RuntimeRenderOptions): void;
+  setRenderOptions(partial: T): void;
 }
 
 /**
@@ -262,21 +264,28 @@ export type TrailStyle = "default" | "gradient-static" | "gradient-animated";
 export type TrailColor = string | string[];
 
 /**
- * Runtime-renderable options that can be changed on a live instance without destroying and recreating it.
+ * Runtime options shared across all renderers.
+ * Use this as the type parameter for `SarmalInstance` when storing instances polymorphically.
+ */
+export interface BaseRuntimeRenderOptions {
+  trailColor?: TrailColor;
+  trailStyle?: TrailStyle;
+}
+
+/**
+ * Runtime-renderable options for the canvas and SVG renderers.
  *
- * Passing `null` for `headColor`makes the head color derive its color from the current `trailColor` and `trailStyle`
+ * Passing `null` for `headColor` makes the head color derive from the current `trailColor` and `trailStyle`.
  * Passing a hex string locks the head color until overridden.
  *
- * Passing `"transparent"` for `skeletonColor` hides the skeleton. Any other value must be a valid {@link TrailColor}.
+ * Passing `"transparent"` for `skeletonColor` hides the skeleton. Any other value must be a valid hex color.
  */
-export interface RuntimeRenderOptions {
-  trailColor?: TrailColor;
+export interface RuntimeRenderOptions extends BaseRuntimeRenderOptions {
   /** 6-digit hex string to override, or `null` to make it automatic */
   headColor?: string | null;
   // TODO: maybe skeleton color should be nullable too instead of expecting "transparent"
   /** 6-digit hex string, or `"transparent"` to hide the skeleton. */
   skeletonColor?: string;
-  trailStyle?: TrailStyle;
   /** Radius of the head dot.
    * - Canvas: CSS pixels. Auto-derived from container size if omitted.
    * - SVG: viewBox units (0–100 space). Default: `0.5`. */
@@ -289,6 +298,13 @@ export interface RuntimeRenderOptions {
    */
   trailWidth?: number;
 }
+
+/**
+ * Runtime-renderable options for the dot matrix renderer.
+ * *Only* supports `trailColor` and `trailStyle`
+ * ! Unsupported fields will throw if passed.
+ */
+export type DotMatrixRuntimeRenderOptions = BaseRuntimeRenderOptions;
 
 /**
  * Common renderer options shared between canvas and SVG renderers.

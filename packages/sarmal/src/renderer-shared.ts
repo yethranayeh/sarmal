@@ -1,4 +1,11 @@
-import type { Engine, Point, RuntimeRenderOptions, TrailColor, TrailStyle } from "./types";
+import type {
+  BaseRuntimeRenderOptions,
+  Engine,
+  Point,
+  RuntimeRenderOptions,
+  TrailColor,
+  TrailStyle,
+} from "./types";
 
 export const DEFAULT_MORPH_DURATION_MS = 300;
 export const DEFAULT_SKELETON_OPACITY = 0.15;
@@ -471,6 +478,8 @@ export function getPaletteColor(palette: Oklab[], position: number, timeOffset: 
 const TRAIL_STYLES: readonly TrailStyle[] = ["default", "gradient-static", "gradient-animated"];
 
 // FIXME: Should inherit from the actual render option object to avoid drift
+const BASE_RENDER_OPTION_KEYS: ReadonlySet<string> = new Set(["trailColor", "trailStyle"]);
+
 const RENDER_OPTION_KEYS: ReadonlySet<string> = new Set([
   "trailColor",
   "headColor",
@@ -479,6 +488,24 @@ const RENDER_OPTION_KEYS: ReadonlySet<string> = new Set([
   "headRadius",
   "trailWidth",
 ]);
+
+/**
+ * Validates options for renderers that only support `trailColor` and `trailStyle`.
+ * Throws a `TypeError` if any unsuppoerted (`headColor`, `skeletonColor`, etc.) is passed.
+ */
+export function validateBaseRenderOptions(partial: BaseRuntimeRenderOptions) {
+  for (const key of Object.keys(partial)) {
+    if (!BASE_RENDER_OPTION_KEYS.has(key)) {
+      throw new TypeError(`[sarmal] setRenderOptions: unsupported key "${key}" for this renderer`);
+    }
+  }
+  if (partial.trailColor !== undefined) {
+    assertTrailColor(partial.trailColor);
+  }
+  if (partial.trailStyle !== undefined) {
+    assertTrailStyle(partial.trailStyle);
+  }
+}
 
 /**
  * Checks a `RuntimeRenderOptions` payload against the library's acceptance criteria.

@@ -87,6 +87,53 @@ const sarmal = createSarmalSVG(svg, curves.lissajous32);
   `trailStyle` and `palette` work identically in both canvas and SVG renderers.
 </Alert>
 
+## createSarmalDotMatrix
+
+A canvas renderer that maps the sarmal trail onto a grid of dots instead of a ribbon. Each frame, dots near the head are fully lit, dots near the tail are dim, and off-trail dots appear as faint background points. The grid density and dot shape are configurable.
+
+Returns `SarmalInstance`, which is the same interface as `createSarmal` and `createSarmalSVG`.
+
+```ts
+import { createSarmalDotMatrix, curves } from "@sarmal/core";
+
+const canvas = document.getElementById("loading-indicator") as HTMLCanvasElement;
+const sarmal = createSarmalDotMatrix(canvas, curves.lissajous43, {
+  cols: 32,
+  rows: 32,
+  trailColor: "#2dd4bf",
+});
+```
+
+### Options
+
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `cols` | `number` | `32` | Number of dot columns |
+| `rows` | `number` | `32` | Number of dot rows |
+| `roundness` | `number` | `1` | Dot shape. `0` = sharp square, `1` = full circle. Values between give rounded rectangles. |
+| `trailLength` | `number` | `cols x 3` | Number of trail points to keep. Larger values extend the tail further back. |
+| `trailColor` | `string \| string[]` | `'#ffffff'` | Dot color. Single string for solid mode; array of 2+ strings for gradient mode. Accepts hex, `rgb()`, `rgba()`, and `oklch()`. |
+| `trailStyle` | `TrailStyle` | `'default'` | `'default'` is a solid color, alpha by intensity. `'gradient-static'` is color sampled from `trailColor` gradient per dot. `'gradient-animated'` is the same but the gradient phase shifts over time. Requires `trailColor` array. |
+| `autoStart` | `boolean` | `true` | Start the animation loop automatically on creation |
+| `initialPhase` | `number` | `undefined` | Initial position along the curve. Calls `seek(initialPhase)` before the first frame. |
+| `pauseOnHidden` | `boolean` | `true` | Pauses when the browser tab is hidden and resumes when visible |
+
+### Differences from createSarmal
+
+- **No skeleton.** The dot-matrix renderer draws no background path outline.
+- **No ribbon trail.** The trail is expressed as dot brightness, not a tapered ribbon.
+- **`setRenderOptions` supports `trailColor` and `trailStyle` only.** Fields like `headColor`, `skeletonColor`, `headRadius`, and `trailWidth` throw if passed. The dot matrix renderer has no head dot, no skeleton, and no ribbon.
+
+```ts
+// Change dot color on a live instance
+sarmal.setRenderOptions({ trailColor: "#f87171" });
+
+// Enable gradient mode: each dot's color is sampled from the palette by trail position
+sarmal.setRenderOptions({ trailColor: palettes.ice, trailStyle: "gradient-static" });
+```
+
+---
+
 ## drawCurve
 
 Creates a `CurveDef` from drawn control points. The points form a <Link href="/docs/concepts/#closing-the-loop">closed loop</Link>. The last point connects back to the first, and the resulting closed Catmull-Rom spline passes smoothly through every point.
@@ -612,4 +659,22 @@ function evaluateCatmullRom(
   points: [number, number][],
   t: number,
 ): Point;
+
+interface DotMatrixSarmalOptions {
+  cols?: number;           // default: 32
+  rows?: number;           // default: 32
+  roundness?: number;      // 0–1, default: 1 (circle)
+  trailLength?: number;    // default: cols * 3
+  trailColor?: string | string[];  // default: '#ffffff'
+  trailStyle?: TrailStyle; // default: 'default'
+  autoStart?: boolean;     // default: true
+  initialPhase?: number;
+  pauseOnHidden?: boolean; // default: true
+}
+
+function createSarmalDotMatrix(
+  canvas: HTMLCanvasElement,
+  curveDef: CurveDef,
+  options?: DotMatrixSarmalOptions,
+): SarmalInstance;
 ```
