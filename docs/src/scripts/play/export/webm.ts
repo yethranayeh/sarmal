@@ -1,9 +1,11 @@
 import type { PlaygroundState } from "../playgroundState.svelte";
 import type { CurveDef, SarmalOptions } from "@sarmal/core";
 
-import { createSarmal, curves, drawCurve } from "@sarmal/core";
+import { createSarmal, createSarmalDotMatrix, curves, drawCurve } from "@sarmal/core";
 
 import { resolvePlaygroundRuntimeOptions } from "./serialize";
+
+export type WebMRenderer = "standard" | "dotmatrix";
 
 const WEBM_MIN_DURATION = 1;
 const WEBM_MAX_DURATION = 8;
@@ -71,6 +73,9 @@ export async function recordWebM(
   durationSeconds: number,
   signal?: AbortSignal,
   onProgress?: (ratio: number) => void,
+  renderer?: WebMRenderer,
+  dotCols?: number,
+  dotRows?: number,
 ): Promise<Blob> {
   if (signal?.aborted) {
     throw new DOMException("Aborted", "AbortError");
@@ -80,6 +85,10 @@ export async function recordWebM(
 
   const curve = resolveWebMCurve(pg);
   const options = resolveWebMOptions(pg);
+
+  const effectiveRenderer = renderer ?? "standard";
+  const effectiveCols = dotCols ?? 32;
+  const effectiveRows = dotRows ?? 32;
 
   const previewRect = pg.previewRef.current?.getBoundingClientRect();
   const containerSize =
@@ -114,7 +123,7 @@ export async function recordWebM(
     ctx.fillRect(x, y, w, h);
   };
 
-  let instance: ReturnType<typeof createSarmal> | null = null;
+  let instance: { destroy(): void } | null = null;
 
   const abortHandler = () => {
     if (recorder && recorder.state === "recording") {
@@ -125,7 +134,15 @@ export async function recordWebM(
   let recorder: MediaRecorder | null = null;
 
   try {
-    instance = createSarmal(canvas, curve, options);
+    if (effectiveRenderer === "dotmatrix") {
+      instance = createSarmalDotMatrix(canvas, curve, {
+        cols: effectiveCols,
+        rows: effectiveRows,
+        trailColor: options.trailColor ?? "#ffffff",
+      });
+    } else {
+      instance = createSarmal(canvas, curve, options);
+    }
 
     const stream = canvas.captureStream(WEBM_FPS);
 

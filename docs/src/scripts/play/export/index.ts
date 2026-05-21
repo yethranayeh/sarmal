@@ -1,4 +1,5 @@
 export type { ResolvedPlaygroundOptions } from "./serialize";
+export type { WebMRenderer } from "./webm";
 
 export { generateJSSnippet, generateReactSnippet, generateStandaloneHTML } from "./snippets";
 export {

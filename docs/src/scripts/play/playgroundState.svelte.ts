@@ -39,7 +39,6 @@ export interface PlaygroundState {
   lastCompiledCode: string;
   lastCompiledFn: CurveFn | null;
   lastCompiledSamples: Point[] | null;
-  isSliding: boolean;
   codeWasMigrated: boolean;
   drawBoardRef: DrawBoardExports | null;
   drawInitialPoints: Array<DrawingSegment> | undefined;
@@ -102,7 +101,6 @@ export function createPlaygroundState(
     lastCompiledCode: "",
     lastCompiledFn: null as CurveFn | null,
     lastCompiledSamples: null as Point[] | null,
-    isSliding: false,
     codeWasMigrated: false,
     drawBoardRef: null as DrawBoardExports | null,
     drawInitialPoints: undefined as Array<DrawingSegment> | undefined,
@@ -113,7 +111,6 @@ export function createPlaygroundState(
   });
 
   let debounceTimer: ReturnType<typeof setTimeout> | null = null;
-  let slideTimer: ReturnType<typeof setTimeout> | null = null;
   let sandboxWorker: Worker | null = null;
   let evalLoopDispose: (() => void) | null = null;
   let compileVersion = 0;
@@ -360,14 +357,6 @@ export function createPlaygroundState(
       }
     }
 
-    state.isSliding = false;
-    requestAnimationFrame(() => {
-      state.isSliding = true;
-    });
-    if (slideTimer) clearTimeout(slideTimer);
-    slideTimer = setTimeout(() => {
-      state.isSliding = false;
-    }, 450);
   }
 
   function switchMode(mode: PlaygroundMode) {
@@ -638,10 +627,6 @@ export function createPlaygroundState(
       clearTimeout(debounceTimer);
     }
 
-    if (slideTimer) {
-      clearTimeout(slideTimer);
-    }
-
     if (sandboxWorker) {
       evalLoopDispose?.();
       sandboxWorker.terminate();
@@ -824,12 +809,6 @@ export function createPlaygroundState(
     },
     set activePeriod(v) {
       state.activePeriod = v;
-    },
-    get isSliding() {
-      return state.isSliding;
-    },
-    set isSliding(v) {
-      state.isSliding = v;
     },
     get drawBoardRef() {
       return state.drawBoardRef;

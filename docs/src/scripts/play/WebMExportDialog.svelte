@@ -9,6 +9,7 @@
   import Button from "../../components/Button.svelte";
   import Download from "../../components/icons/Download.svelte";
   import Film from "../../components/icons/Film.svelte";
+  import PillToggle from "../../components/PillToggle.svelte";
   import {
     recordWebM,
     getWebMDurationSeconds,
@@ -37,12 +38,9 @@
   let blobSize = $state("");
   let abortController = $state<AbortController | null>(null);
   let previewUrl = $state<string | null>(null);
-  let isSliding = $state(false);
 
   let rendererMode = $state<WebMRenderer>("standard");
   let dotDensity = $state<DotDensity>("normal");
-  let isStyleSliding = $state(false);
-  let isDensitySliding = $state(false);
 
   let dmCanvasEl = $state<HTMLCanvasElement | null>(null);
   let mirrorInstance: SarmalInstance<DotMatrixRuntimeRenderOptions> | null =
@@ -136,39 +134,6 @@
     a.click();
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
-  }
-
-  function switchDurationMode(next: DurationMode) {
-    if (next === durationMode) {
-      return;
-    }
-    durationMode = next;
-    isSliding = true;
-    setTimeout(() => {
-      isSliding = false;
-    }, 450);
-  }
-
-  function switchRendererMode(next: WebMRenderer) {
-    if (next === rendererMode) {
-      return;
-    }
-    rendererMode = next;
-    isStyleSliding = true;
-    setTimeout(() => {
-      isStyleSliding = false;
-    }, 450);
-  }
-
-  function switchDotDensity(next: DotDensity) {
-    if (next === dotDensity) {
-      return;
-    }
-    dotDensity = next;
-    isDensitySliding = true;
-    setTimeout(() => {
-      isDensitySliding = false;
-    }, 450);
   }
 
   function getDotGrid(): { cols: number; rows: number } {
@@ -271,113 +236,40 @@
 
       <div class="mb-4">
         <p class="font-body text-xs text-muted-foreground mb-2">Style</p>
-        <div
-          class="group relative inline-flex items-center bg-surface-raised backdrop-blur-md border border-border rounded-full p-0.75 gap-0.5 shadow-[0_1px_2px_color-mix(in_srgb,var(--color-foreground)_4%,transparent)]"
-        >
-          <button
-            class="px-4 py-1.5 rounded-full font-body text-[11px] font-semibold uppercase tracking-[0.08em] cursor-pointer transition-colors duration-300 bg-transparent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 {rendererMode ===
-            'standard'
-              ? 'text-primary-foreground'
-              : 'text-muted-foreground hover:text-foreground'}"
-            onclick={() => switchRendererMode("standard")}
-          >
-            Standard
-          </button>
-          <button
-            class="px-4 py-1.5 rounded-full font-body text-[11px] font-semibold uppercase tracking-[0.08em] cursor-pointer transition-colors duration-300 bg-transparent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 {rendererMode ===
-            'dotmatrix'
-              ? 'text-primary-foreground'
-              : 'text-muted-foreground hover:text-foreground'}"
-            onclick={() => switchRendererMode("dotmatrix")}
-          >
-            Dot&nbsp;Matrix
-          </button>
-          <div
-            class="bg-primary rounded-full absolute -z-1 h-7 {rendererMode ===
-            'standard'
-              ? 'left-1 w-22'
-              : 'left-[47%] w-27'} {isStyleSliding ? 'is-sliding' : ''}"
-            style="transition: left 300ms cubic-bezier(0.34, 1.2, 0.64, 1), width 300ms cubic-bezier(0.34, 1.2, 0.64, 1);"
-          ></div>
-        </div>
+        <PillToggle
+          options={[
+            { value: "standard", label: "Standard" },
+            { value: "dotmatrix", label: "Dot Matrix" },
+          ]}
+          value={rendererMode}
+          onchange={(v) => (rendererMode = v)}
+        />
 
         {#if rendererMode === "dotmatrix"}
           <div class="mt-3">
-            <div
-              class="group relative inline-flex items-center bg-surface-raised backdrop-blur-md border border-border rounded-full p-0.75 gap-0.5 shadow-[0_1px_2px_color-mix(in_srgb,var(--color-foreground)_4%,transparent)]"
-            >
-              <button
-                class="px-3 py-1.5 rounded-full font-body text-[11px] font-semibold uppercase tracking-[0.08em] cursor-pointer transition-colors duration-300 bg-transparent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 {dotDensity ===
-                'coarse'
-                  ? 'text-primary-foreground'
-                  : 'text-muted-foreground hover:text-foreground'}"
-                onclick={() => switchDotDensity("coarse")}
-              >
-                Coarse
-              </button>
-              <button
-                class="px-3 py-1.5 rounded-full font-body text-[11px] font-semibold uppercase tracking-[0.08em] cursor-pointer transition-colors duration-300 bg-transparent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 {dotDensity ===
-                'normal'
-                  ? 'text-primary-foreground'
-                  : 'text-muted-foreground hover:text-foreground'}"
-                onclick={() => switchDotDensity("normal")}
-              >
-                Normal
-              </button>
-              <button
-                class="px-3 py-1.5 rounded-full font-body text-[11px] font-semibold uppercase tracking-[0.08em] cursor-pointer transition-colors duration-300 bg-transparent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 {dotDensity ===
-                'fine'
-                  ? 'text-primary-foreground'
-                  : 'text-muted-foreground hover:text-foreground'}"
-                onclick={() => switchDotDensity("fine")}
-              >
-                Fine
-              </button>
-              <div
-                class="bg-primary rounded-full absolute -z-1 h-7 {dotDensity ===
-                'coarse'
-                  ? 'left-1 w-18'
-                  : dotDensity === 'normal'
-                    ? 'left-[35%] w-18'
-                    : 'left-[68%] w-13'} {isDensitySliding ? 'is-sliding' : ''}"
-                style="transition: left 300ms cubic-bezier(0.34, 1.2, 0.64, 1), width 300ms cubic-bezier(0.34, 1.2, 0.64, 1);"
-              ></div>
-            </div>
+            <PillToggle
+              options={[
+                { value: "coarse", label: "Coarse" },
+                { value: "normal", label: "Normal" },
+                { value: "fine", label: "Fine" },
+              ]}
+              value={dotDensity}
+              onchange={(v) => (dotDensity = v)}
+            />
           </div>
         {/if}
       </div>
 
       <div class="mb-6">
         <p class="font-body text-xs text-muted-foreground mb-2">Duration</p>
-        <div
-          class="group relative inline-flex items-center bg-surface-raised backdrop-blur-md border border-border rounded-full p-0.75 gap-0.5 shadow-[0_1px_2px_color-mix(in_srgb,var(--color-foreground)_4%,transparent)]"
-        >
-          <button
-            class="px-4 py-1.5 rounded-full font-body text-[11px] font-semibold uppercase tracking-[0.08em] cursor-pointer transition-colors duration-300 bg-transparent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 {durationMode ===
-            'period'
-              ? 'text-primary-foreground'
-              : 'text-muted-foreground hover:text-foreground'}"
-            onclick={() => switchDurationMode("period")}
-          >
-            One&nbsp;Period
-          </button>
-          <button
-            class="px-4 py-1.5 rounded-full font-body text-[11px] font-semibold uppercase tracking-[0.08em] cursor-pointer transition-colors duration-300 bg-transparent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 {durationMode ===
-            'custom'
-              ? 'text-primary-foreground'
-              : 'text-muted-foreground hover:text-foreground'}"
-            onclick={() => switchDurationMode("custom")}
-          >
-            Custom
-          </button>
-          <div
-            class="bg-primary rounded-full absolute -z-1 h-7 {durationMode ===
-            'period'
-              ? 'left-1 w-27'
-              : 'left-[58%] w-20'} {isSliding ? 'is-sliding' : ''}"
-            style="transition: left 300ms cubic-bezier(0.34, 1.2, 0.64, 1), width 300ms cubic-bezier(0.34, 1.2, 0.64, 1);"
-          ></div>
-        </div>
+        <PillToggle
+          options={[
+            { value: "period", label: "One Period" },
+            { value: "custom", label: "Custom" },
+          ]}
+          value={durationMode}
+          onchange={(v) => (durationMode = v)}
+        />
 
         {#if durationMode === "period"}
           {@const raw = getWebMRawDurationSeconds(pg)}
@@ -509,29 +401,6 @@
       transition:
         opacity 200ms ease-out,
         transform 200ms ease-out;
-    }
-
-    .is-sliding {
-      animation: slide 450ms ease-out forwards;
-    }
-  }
-
-  @keyframes slide {
-    0% {
-      filter: blur(0px);
-      transform: scaleX(1);
-    }
-    20% {
-      filter: blur(1px);
-      transform: scaleX(1.03);
-    }
-    60% {
-      filter: blur(0.5px);
-      transform: scaleX(0.98);
-    }
-    100% {
-      filter: blur(0px);
-      transform: scaleX(1);
     }
   }
 </style>
