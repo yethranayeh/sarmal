@@ -1,0 +1,78 @@
+---
+// Mirrors Button.svelte
+import { tv } from "tailwind-variants";
+
+export const buttonVariants = tv({
+	base: "font-body cursor-pointer transition-all inline-flex items-center gap-1.5 rounded-full px-4.5 py-2.5 text-[13px] font-semibold leading-none disabled:pointer-events-none disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 focus-visible:ring-offset-2 focus-visible:ring-offset-background",
+	variants: {
+		variant: {
+			primary: "bg-primary text-primary-foreground hover:bg-accent",
+			ghost: "text-foreground hover:bg-foreground/8",
+			"ghost-inverted": "text-white/70 hover:text-white hover:bg-white/10",
+			destructive: "text-error hover:bg-error/10",
+		},
+		active: {
+			true: "",
+			false: "",
+		},
+	},
+	compoundVariants: [
+		{
+			variant: "ghost",
+			active: true,
+			class: "text-primary bg-primary/10 hover:bg-primary/15",
+		},
+		{
+			variant: "ghost-inverted",
+			active: true,
+			class: "text-white bg-white/15 hover:bg-white/20",
+		},
+		{
+			variant: "destructive",
+			active: true,
+			class: "text-error bg-error/10 hover:bg-error/15",
+		},
+	],
+	defaultVariants: {
+		variant: "primary",
+		active: false,
+	},
+});
+
+interface Props {
+	href?: string;
+	type?: "button" | "submit" | "reset";
+	variant?: "primary" | "ghost" | "ghost-inverted" | "destructive";
+	active?: boolean;
+	disabled?: boolean;
+	class?: string;
+	"aria-label"?: string;
+	"aria-expanded"?: boolean;
+	"aria-haspopup"?: "dialog" | "menu" | "grid" | "listbox" | "tree" | boolean;
+	title?: string;
+}
+
+const {
+	href,
+	type = "button",
+	variant = "primary",
+	active = false,
+	disabled,
+	class: className = "",
+	...rest
+} = Astro.props;
+
+const classes = buttonVariants({ variant, active, class: className });
+---
+
+{
+	href ? (
+		<a href={href} class={classes} {...rest}>
+			<slot />
+		</a>
+	) : (
+		<button type={type} {disabled} class={classes} {...rest}>
+			<slot />
+		</button>
+	)
+}

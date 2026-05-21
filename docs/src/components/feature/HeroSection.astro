@@ -2,7 +2,7 @@
 import { Code } from "astro:components";
 
 import SectionLabel from "../SectionLabel.astro";
-import CopyButton from "../CopyButton.svelte";
+import CopyButton from "../CopyButton.astro";
 import DotGrid from "../DotGrid.astro";
 
 import { codeThemes } from "../../lib/shiki";
@@ -53,7 +53,7 @@ const codeSnippet = `<script src="https://unpkg.com/@sarmal/core/dist/auto-init.
 				/>
 			</div>
 			<div class="w-full flex justify-end">
-				<CopyButton class="text-primary!" code={codeSnippet} client:load />
+				<CopyButton showText code={codeSnippet} />
 			</div>
 		</div>
 	</div>

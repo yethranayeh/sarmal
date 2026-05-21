@@ -1,0 +1,82 @@
+---
+import { Copy, Check } from "@lucide/astro";
+import Button from "./Button.astro";
+
+interface Props {
+	code: string;
+	variant?: "ghost" | "ghost-inverted";
+	class?: string;
+	showText?: boolean;
+}
+
+const {
+	code,
+	variant = "ghost",
+	class: className = "",
+	showText = false,
+} = Astro.props;
+---
+
+<Button
+	data-copy-btn
+	data-code={code}
+	title="Copy"
+	variant={variant}
+	class={className}
+>
+	<span class="relative size-3.5 shrink-0">
+		<Copy
+			class="absolute inset-0 m-auto transition-opacity duration-200 ease group-data-copied:opacity-0"
+			size={14}
+		/>
+		<Check
+			class="absolute inset-0 m-auto transition-opacity duration-200 ease opacity-0 group-data-copied:opacity-100"
+			size={14}
+		/>
+	</span>
+	{
+		showText && (
+			<span class="grid [grid-template-areas:stack] text-xs leading-none font-medium">
+				<span class="[grid-area:stack] group-data-copied:invisible">Copy</span>
+				<span class="[grid-area:stack] invisible group-data-copied:visible">
+					Copied
+				</span>
+			</span>
+		)
+	}
+</Button>
+
+<script>
+	const setup = () => {
+		const buttons = document.querySelectorAll("[data-copy-btn]");
+		const timers = new WeakMap<Element, ReturnType<typeof setTimeout>>();
+
+		buttons.forEach((btn) => {
+			btn.addEventListener("click", async () => {
+				const code = btn.getAttribute("data-code");
+				if (!code) {
+					return;
+				}
+
+				await navigator.clipboard.writeText(code);
+				btn.setAttribute("data-copied", "");
+
+				const prev = timers.get(btn);
+				if (prev) {
+					clearTimeout(prev);
+				}
+
+				timers.set(
+					btn,
+					setTimeout(() => btn.removeAttribute("data-copied"), 2000),
+				);
+			});
+		});
+	};
+
+	if ("requestIdleCallback" in window) {
+		requestIdleCallback(setup, { timeout: 2000 });
+	} else {
+		setTimeout(setup, 200);
+	}
+</script>
