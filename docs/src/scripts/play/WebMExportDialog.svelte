@@ -235,7 +235,7 @@
       </p>
 
       <div class="mb-4">
-        <p class="font-body text-xs text-muted-foreground mb-2">Style</p>
+        <p class="font-body text-xs text-muted-foreground mb-2">Renderer</p>
         <PillToggle
           options={[
             { value: "standard", label: "Standard" },
@@ -245,8 +245,24 @@
           onchange={(v) => (rendererMode = v)}
         />
 
-        {#if rendererMode === "dotmatrix"}
-          <div class="mt-3">
+        {#if rendererMode === "standard"}
+          <p
+            class="font-body text-xs text-muted-foreground mt-3 leading-relaxed"
+          >
+            Classic canvas rendering with smooth gradient trails and a glowing
+            head dot.
+          </p>
+        {:else}
+          <p
+            class="font-body text-xs text-muted-foreground mt-3 leading-relaxed"
+          >
+            Renders the curve as a grid of dots that illuminate along the path.
+          </p>
+
+          <div class="mt-4">
+            <p class="font-body text-xs text-muted-foreground mb-2">
+              Grid Density
+            </p>
             <PillToggle
               options={[
                 { value: "coarse", label: "Coarse" },
@@ -256,6 +272,29 @@
               value={dotDensity}
               onchange={(v) => (dotDensity = v)}
             />
+
+            {#if dotDensity === "coarse"}
+              <p
+                class="font-body text-xs text-muted-foreground mt-3 leading-relaxed"
+              >
+                Sparse 16x16 grid with bold, chunky dots. Retro feel; smaller
+                file size.
+              </p>
+            {:else if dotDensity === "normal"}
+              <p
+                class="font-body text-xs text-muted-foreground mt-3 leading-relaxed"
+              >
+                Balanced 32x32 grid. Good detail and performance for most
+                exports.
+              </p>
+            {:else}
+              <p
+                class="font-body text-xs text-muted-foreground mt-3 leading-relaxed"
+              >
+                Dense 48x48 grid with maximum detail. Smoother dot patterns;
+                larger file size.
+              </p>
+            {/if}
           </div>
         {/if}
       </div>
