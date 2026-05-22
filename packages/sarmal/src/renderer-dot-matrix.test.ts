@@ -351,6 +351,203 @@ describe("createSarmalDotMatrix — morphTo", () => {
   });
 });
 
+describe("createSarmalDotMatrix — gradient color rendering", () => {
+  it("gradient-static mode samples blue-spectrum colors at mid-trail intensities", () => {
+    // With a red→blue palette, intensity≈0.5 maps to the blue half of the cycle.
+    // This verifies the Oklab interpolation path actually fires, not just that it doesn't throw.
+    let capturedData: Uint8ClampedArray | null = null;
+    const canvas = document.createElement("canvas");
+    canvas.width = 240;
+    canvas.height = 240;
+    // @ts-ignore
+    canvas.getContext = (id: string) =>
+      id === "2d"
+        ? {
+            putImageData(imageData: ImageData) {
+              capturedData = new Uint8ClampedArray(imageData.data);
+            },
+            fillStyle: "",
+            globalAlpha: 1,
+          }
+        : null;
+
+    const pending: FrameRequestCallback[] = [];
+    const rafSpy = vi.spyOn(globalThis, "requestAnimationFrame").mockImplementation((cb) => {
+      pending.push(cb);
+      return pending.length;
+    });
+    const cafSpy = vi.spyOn(globalThis, "cancelAnimationFrame").mockImplementation(() => {});
+
+    const instance = createSarmalDotMatrix(canvas, circle, {
+      autoStart: false,
+      cols: 8,
+      rows: 8,
+      trailLength: 24,
+      trailColor: ["#ff0000", "#0000ff"],
+      trailStyle: "gradient-static",
+    });
+
+    instance.play();
+    let t = performance.now();
+    for (let i = 0; i < 60; i++) {
+      t += 16;
+      const cb = pending.pop();
+      if (cb) cb(t);
+    }
+
+    expect(capturedData).not.toBeNull();
+
+    // getPaletteColor cycles: red(0) → blue(0.5) → red(1).
+    // Mid-trail dots (intensity≈0.5) are blue — verify at least one lit pixel has b > r.
+    let hasBlueishLitPixel = false;
+    for (let i = 0; i < capturedData!.length; i += 4) {
+      if (capturedData![i + 3]! > 50 && capturedData![i + 2]! > capturedData![i]!) {
+        hasBlueishLitPixel = true;
+        break;
+      }
+    }
+    expect(hasBlueishLitPixel).toBe(true);
+
+    instance.destroy();
+    rafSpy.mockRestore();
+    cafSpy.mockRestore();
+  });
+
+  it("gradient-animated changes the rendered output as animTime accumulates", () => {
+    let latestData: Uint8ClampedArray | null = null;
+    const canvas = document.createElement("canvas");
+    canvas.width = 240;
+    canvas.height = 240;
+    // @ts-ignore
+    canvas.getContext = (id: string) =>
+      id === "2d"
+        ? {
+            putImageData(imageData: ImageData) {
+              latestData = new Uint8ClampedArray(imageData.data);
+            },
+            fillStyle: "",
+            globalAlpha: 1,
+          }
+        : null;
+
+    const pending: FrameRequestCallback[] = [];
+    const rafSpy = vi.spyOn(globalThis, "requestAnimationFrame").mockImplementation((cb) => {
+      pending.push(cb);
+      return pending.length;
+    });
+    const cafSpy = vi.spyOn(globalThis, "cancelAnimationFrame").mockImplementation(() => {});
+
+    const instance = createSarmalDotMatrix(canvas, circle, {
+      autoStart: false,
+      cols: 8,
+      rows: 8,
+      trailLength: 24,
+      trailColor: ["#ff0000", "#0000ff"],
+      trailStyle: "gradient-animated",
+    });
+
+    instance.play();
+    let t = performance.now();
+
+    // Capture after 5 frames (animTime ≈ 0.08s, timeOffset ≈ 0.013)
+    for (let i = 0; i < 5; i++) {
+      t += 16;
+      const cb = pending.pop();
+      if (cb) cb(t);
+    }
+    const earlySnapshot = new Uint8ClampedArray(latestData!);
+
+    // Advance ~3 seconds = half the 6-second ANIM_PERIOD (timeOffset shifts by 0.5)
+    for (let i = 0; i < 187; i++) {
+      t += 16;
+      const cb = pending.pop();
+      if (cb) cb(t);
+    }
+
+    let differs = false;
+    for (let i = 0; i < earlySnapshot.length; i++) {
+      if (earlySnapshot[i] !== latestData![i]) {
+        differs = true;
+        break;
+      }
+    }
+    expect(differs).toBe(true);
+
+    instance.destroy();
+    rafSpy.mockRestore();
+    cafSpy.mockRestore();
+  });
+
+  it("switching from gradient to solid trailColor renders all lit dots in a uniform color", () => {
+    let capturedData: Uint8ClampedArray | null = null;
+    const canvas = document.createElement("canvas");
+    canvas.width = 240;
+    canvas.height = 240;
+    // @ts-ignore
+    canvas.getContext = (id: string) =>
+      id === "2d"
+        ? {
+            putImageData(imageData: ImageData) {
+              capturedData = new Uint8ClampedArray(imageData.data);
+            },
+            fillStyle: "",
+            globalAlpha: 1,
+          }
+        : null;
+
+    const pending: FrameRequestCallback[] = [];
+    const rafSpy = vi.spyOn(globalThis, "requestAnimationFrame").mockImplementation((cb) => {
+      pending.push(cb);
+      return pending.length;
+    });
+    const cafSpy = vi.spyOn(globalThis, "cancelAnimationFrame").mockImplementation(() => {});
+
+    // Start in gradient mode so gradientOklab is populated
+    const instance = createSarmalDotMatrix(canvas, circle, {
+      autoStart: false,
+      cols: 8,
+      rows: 8,
+      trailLength: 24,
+      trailColor: ["#ff0000", "#0000ff"],
+      trailStyle: "gradient-static",
+    });
+
+    instance.play();
+    let t = performance.now();
+    for (let i = 0; i < 30; i++) {
+      t += 16;
+      const cb = pending.pop();
+      if (cb) cb(t);
+    }
+
+    // Switch to solid red — applyColor sets gradientOklab=null and colorRgb=(255,0,0)
+    instance.setRenderOptions({ trailColor: "#ff0000", trailStyle: "default" });
+
+    // One frame to capture solid-mode output
+    t += 16;
+    const cb = pending.pop();
+    if (cb) cb(t);
+
+    expect(capturedData).not.toBeNull();
+
+    // Background alpha ≤ 0.05 * 255 ≈ 12; threshold 50 isolates lit dots only.
+    // In solid mode, all lit dots share colorRgb — so exactly one unique RGB must appear.
+    const litColors = new Set<string>();
+    for (let i = 0; i < capturedData!.length; i += 4) {
+      if (capturedData![i + 3]! > 50) {
+        litColors.add(`${capturedData![i]},${capturedData![i + 1]},${capturedData![i + 2]}`);
+      }
+    }
+
+    expect(litColors.size).toBe(1);
+    expect([...litColors][0]).toBe("255,0,0");
+
+    instance.destroy();
+    rafSpy.mockRestore();
+    cafSpy.mockRestore();
+  });
+});
+
 describe("createSarmalDotMatrix — pixel output", () => {
   it("calls putImageData exactly once per rendered frame", () => {
     const pending: FrameRequestCallback[] = [];

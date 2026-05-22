@@ -17,6 +17,10 @@ Version history notes of the <Link href="#core">Core</Link>, <Link href="#react"
 
 ## Core
 
+### 0.35.1 - 23.05.2026
+
+Dot-matrix gradient colors are now interpolated in Oklab space. This will eliminate the gray midpoint that could appear with certain palettes. The `gradient-animated` style now cycles continuously through the palette instead of oscillating.
+
 ### 0.35.0 - 22.05.2026
 
 Dot matrix renderer now uses `ImageData`/`putImageData` for drawing. Dot edges are antialiased through precomputed 4x4 supersampling, gradient colours are sampled per-dot for a smoother, band-free result.
