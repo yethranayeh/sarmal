@@ -17,16 +17,6 @@ import {
   validateBaseRenderOptions,
 } from "./renderer-shared";
 
-/**
- * How many brightness levels to group dots into when drawing.
- *
- * Instead of one canvas draw call per lit dot, dots with similar brightness
- *  are batched into the same path and filled in one call.
- * 8 buckets means at most 8 fill calls per frame for the lit portion of the grid,
- *  regardless of how many dots are lit.
- */
-const NUM_BUCKETS = 8;
-
 export interface DotMatrixSarmalOptions extends Pick<
   BaseRendererOptions,
   "autoStart" | "pauseOnHidden" | "initialPhase"
@@ -82,10 +72,10 @@ export interface DotMatrixSarmalOptions extends Pick<
  * Grid geometry is derived from `cols` and `rows`.
  * For example, a 240x240 canvas with `cols: 32, rows: 32` produces 1024 dots with cells approximately 7.5x7.5 px each.
  *
- * The background layer (all dim dots) is pre-rendered to an OffscreenCanvas at init and
- *  restored each frame with a single `drawImage` call.
- * Lit dots are batched by brightness level,
- *  so the total draw calls per frame is around 10–12 regardless of grid size.
+ * At init, a pixel mask is computed that records which canvas pixels belong to each dot.
+ * Each frame, RGBA values are written directly into a typed array (one entry per lit pixel)
+ *  and flushed to the canvas with a single `ctx.putImageData` call.
+ * Frame cost is flat regardless of how many dots are lit or what grid size is used.
  *
  * @param canvas - The canvas element to draw into.
  *                 Its `width` and `height` HTML attributes determine the rendering area.
@@ -164,7 +154,21 @@ export function createSarmalDotMatrix(
   let offsetX = 0;
   let offsetY = 0;
 
-  let bgCanvas: OffscreenCanvas | null = null;
+  // Pixel mask: flat-packed arrays mapping each dot index to its RGBA byte offsets in canvas pixel space.
+  // Computed once at init so `draw()` never needs to do geometry math.
+  let pixelMaskStarts: Uint32Array = new Uint32Array(0);
+  let pixelMaskLengths: Uint32Array = new Uint32Array(0);
+  let pixelMaskIndices: Uint32Array = new Uint32Array(0);
+  // Per-pixel antialiasing coverage (0.0–1.0),
+  //    precomputed through 4x4 SSAA.
+  // Interior pixels = 1.0
+  //    edge pixels have a fraction that fades alpha smoothly.
+  let pixelMaskCoverages: Float32Array = new Float32Array(0);
+  // bgImageData: all dots at 5% opacity which are restored at the start of every frame. Rebuilt on color change.
+  // frameImageData: working buffer, overwritten completely each frame. Allocated once at init.
+  let bgImageData: ImageData | null = null;
+  let frameImageData: ImageData | null = null;
+
   let animationId: number | null = null;
   let lastTime = 0;
   let pausedByVisibility = false;
@@ -176,26 +180,101 @@ export function createSarmalDotMatrix(
   let morphProgress = 0;
 
   /**
-   * Draws all grid dots at very low opacity (5%) onto an OffscreenCanvas.
-   * This canvas is used as the starting point for each frame.
-   * Restored in one drawImage call, so we never have to iterate all cells at draw time just to paint the background.
-   * Rebuilt when the trail color changes, since background dots share the same hue.
+   * Pre-computes which canvas pixels belong to each dot using a rounded-rectangle SDF,
+   *  with 4x4 supersampled antialiasing coverage.
+   *
+   * For each pixel in every dot's bounding box, 16 sub-sample points are tested against the SDF.
+   * The fraction that pass (0.0625–1.0) is stored as that pixel's coverage.
+   * Edge pixels fade out smoothly instead of snapping to binary inside/outside,
+   *  so all dot shapes look correctly antialiased regardless of radius.
+   *
+   * Results are stored in TypedArrays for cache friendly access in draw().
+   * ! Must be called once before `buildBgImageData()`
    */
-  function buildBgCanvas() {
-    bgCanvas = new OffscreenCanvas(W, H);
-    const bgCtx = bgCanvas.getContext("2d")!;
-    const bg = gradientRgb ? gradientRgb[0]! : colorRgb;
-    bgCtx.fillStyle = `rgba(${bg.r},${bg.g},${bg.b},0.05)`;
-    bgCtx.beginPath();
+  function computePixelMask() {
+    const starts = new Uint32Array(cols * rows);
+    const lengths = new Uint32Array(cols * rows);
+    const allIndices: number[] = [];
+    const allCoverages: number[] = [];
+    const cornerR = roundness * dotR;
+    const cornerR2 = cornerR * cornerR;
+    // 4x4 SSAA: 16 sub-samples per pixel, each offset by (i+0.5)/4 within the pixel
+    const SSAA = 4;
+    const SSAA2 = SSAA * SSAA;
 
     for (let row = 0; row < rows; row++) {
       for (let col = 0; col < cols; col++) {
+        const dotIdx = row * cols + col;
         const cx = (col + 0.5) * cellW;
         const cy = (row + 0.5) * cellH;
-        bgCtx.roundRect(cx - dotR, cy - dotR, dotR * 2, dotR * 2, roundness * dotR);
+        // Extend bounding box by one pixel so edge sub-samples are captured
+        const x0 = Math.max(0, Math.floor(cx - dotR - 1));
+        const x1 = Math.min(W - 1, Math.ceil(cx + dotR + 1));
+        const y0 = Math.max(0, Math.floor(cy - dotR - 1));
+        const y1 = Math.min(H - 1, Math.ceil(cy + dotR + 1));
+
+        starts[dotIdx] = allIndices.length;
+        let count = 0;
+        for (let py = y0; py <= y1; py++) {
+          for (let px = x0; px <= x1; px++) {
+            let hits = 0;
+            for (let sy = 0; sy < SSAA; sy++) {
+              const spyCenter = py + (sy + 0.5) / SSAA;
+              for (let sx = 0; sx < SSAA; sx++) {
+                const spxCenter = px + (sx + 0.5) / SSAA;
+                // Generalized rounded-rect SDF:
+                //   roundness=0 (square), roundness=1 (full circle)
+                const dx = Math.max(Math.abs(spxCenter - cx) - (dotR - cornerR), 0);
+                const dy = Math.max(Math.abs(spyCenter - cy) - (dotR - cornerR), 0);
+                if (dx * dx + dy * dy <= cornerR2) {
+                  hits++;
+                }
+              }
+            }
+
+            if (hits > 0) {
+              allIndices.push((py * W + px) * 4);
+              allCoverages.push(hits / SSAA2);
+              count++;
+            }
+          }
+        }
+        lengths[dotIdx] = count;
       }
     }
-    bgCtx.fill();
+
+    pixelMaskStarts = starts;
+    pixelMaskLengths = lengths;
+    pixelMaskIndices = new Uint32Array(allIndices);
+    pixelMaskCoverages = new Float32Array(allCoverages);
+  }
+
+  /**
+   * Builds the background ImageData (all dots at 5% opacity).
+   * Rebuilt whenever trailColor changes since background dots share the trail hue.
+   * ! Must be called after `computePixelMask()`
+   */
+  function buildBgImageData() {
+    bgImageData = new ImageData(W, H);
+
+    const bg = gradientRgb ? gradientRgb[0]! : colorRgb;
+    const baseAlpha = 0.05 * 255;
+    const { data } = bgImageData;
+    const n = cols * rows;
+
+    for (let dotIdx = 0; dotIdx < n; dotIdx++) {
+      const start = pixelMaskStarts[dotIdx]!;
+      const len = pixelMaskLengths[dotIdx]!;
+
+      for (let k = 0; k < len; k++) {
+        const px = pixelMaskIndices[start + k]!;
+        const coverage = pixelMaskCoverages[start + k]!;
+        data[px] = bg.r;
+        data[px + 1] = bg.g;
+        data[px + 2] = bg.b;
+        data[px + 3] = Math.round(baseAlpha * coverage);
+      }
+    }
   }
 
   function sampleGradientRgb(stops: Array<Rgb>, t: number): Rgb {
@@ -221,6 +300,7 @@ export function createSarmalDotMatrix(
    */
   function calculateBoundaries(skel: Array<{ x: number; y: number }>) {
     const b = computeBoundaries(skel, W, H);
+
     if (b) {
       scale = b.scale;
       offsetX = b.offsetX;
@@ -237,6 +317,7 @@ export function createSarmalDotMatrix(
   function mapPt(x: number, y: number): [number, number] {
     const px = x * scale + offsetX;
     const py = y * scale + offsetY;
+
     return [
       Math.max(0, Math.min(cols - 1, Math.round((px / W) * (cols - 1)))),
       Math.max(0, Math.min(rows - 1, Math.round((py / H) * (rows - 1)))),
@@ -249,6 +330,7 @@ export function createSarmalDotMatrix(
    */
   function stamp(c: number, r: number, intensity: number) {
     const idx = r * cols + c;
+
     if (intensity > grid[idx]!) {
       grid[idx] = intensity;
     }
@@ -285,6 +367,7 @@ export function createSarmalDotMatrix(
         // Number of interpolated steps scales with how far apart the two cells are.
         // Multiplying by 2 ensures we never skip a cell even on diagonal moves.
         const steps = Math.ceil(Math.max(Math.abs(nc - c), Math.abs(nr - r))) * 2;
+
         for (let s = 1; s < steps; s++) {
           const t = s / steps;
           const ix = pt.x + (next.x - pt.x) * t;
@@ -300,68 +383,53 @@ export function createSarmalDotMatrix(
   /**
    * Draws the current grid state to the canvas.
    *
-   * The background (all dim dots) is restored with a single drawImage call.
-   * Lit dots are then drawn on top, batched into `NUM_BUCKETS` brightness groups
-   * so that all dots at similar intensity share one path and one fill call.
-   * This keeps the total number of canvas draw calls around 10–12 per frame.
+   * Restores the background ImageData (all dim dots at 5% opacity),
+   *  then writes lit dot pixels directly into the frame buffer at their exact intensity and color,
+   *    flushing once with `putImageData`
+   * Total canvas API calls per frame: 1
    */
   function draw() {
-    ctx.clearRect(0, 0, W, H);
-
-    // One drawImage restores the full background instead of iterating all cells
-    if (bgCanvas) {
-      ctx.drawImage(bgCanvas, 0, 0);
+    if (!bgImageData || !frameImageData) {
+      return;
     }
 
-    // TODO: Consider alternative putImageData approach
-    //       Pre-compute at init which pixels belong to each cell's dot (pixel mask lookup table).
-    //       Each frame, write RGBA values into a Uint8ClampedArray based on grid intensities,
-    //        then call ctx.putImageData(imageData, 0, 0) once.
-    //       Would eliminates all per-frame draw calls at the cost of manual rasterization (no anti-aliasing on dot edges).
-    //       Worth exploring for very fine grids (56x56+) or many simultaneous instances.
+    frameImageData.data.set(bgImageData.data);
+    const { data } = frameImageData;
 
-    const animOffset =
+    const sineOffset =
       currentTrailStyle === "gradient-animated"
-        ? Math.abs(((animTime / ANIM_PERIOD) % 2) - 1) * 0.35
+        ? 0.15 * Math.sin((animTime / ANIM_PERIOD) * 2 * Math.PI)
         : 0;
 
-    for (let bucket = 0; bucket < NUM_BUCKETS; bucket++) {
-      const lo = bucket / NUM_BUCKETS;
-      const hi = (bucket + 1) / NUM_BUCKETS;
-      const midpoint = (lo + hi) / 2;
-      // Use the midpoint of the bucket range as the alpha for all dots in this group.
-      const alpha = 0.08 + midpoint * 0.92;
-
-      let hasLit = false;
-      ctx.beginPath();
-
-      for (let row = 0; row < rows; row++) {
-        for (let col = 0; col < cols; col++) {
-          const intensity = grid[row * cols + col]!;
-          if (intensity > lo && intensity <= hi) {
-            const cx = (col + 0.5) * cellW;
-            const cy = (row + 0.5) * cellH;
-            ctx.roundRect(cx - dotR, cy - dotR, dotR * 2, dotR * 2, roundness * dotR);
-            hasLit = true;
-          }
-        }
+    const n = cols * rows;
+    for (let dotIdx = 0; dotIdx < n; dotIdx++) {
+      const intensity = grid[dotIdx]!;
+      if (intensity <= 0) {
+        continue;
       }
 
-      if (hasLit) {
-        if (gradientRgb !== null) {
-          const t = (((midpoint + animOffset) % 1) + 1) % 1;
-          const { r, g, b } = sampleGradientRgb(gradientRgb, t);
-          ctx.fillStyle = `rgb(${r},${g},${b})`;
-        } else {
-          const { r, g, b } = colorRgb;
-          ctx.fillStyle = `rgb(${r},${g},${b})`;
-        }
-        ctx.globalAlpha = alpha;
-        ctx.fill();
+      let r: number, g: number, b: number;
+      if (gradientRgb !== null) {
+        const t = Math.max(0, Math.min(1, intensity + sineOffset));
+        ({ r, g, b } = sampleGradientRgb(gradientRgb, t));
+      } else {
+        ({ r, g, b } = colorRgb);
+      }
+      const baseA = (0.08 + intensity * 0.92) * 255;
+
+      const start = pixelMaskStarts[dotIdx]!;
+      const len = pixelMaskLengths[dotIdx]!;
+      for (let k = 0; k < len; k++) {
+        const px = pixelMaskIndices[start + k]!;
+        const coverage = pixelMaskCoverages[start + k]!;
+        data[px] = r;
+        data[px + 1] = g;
+        data[px + 2] = b;
+        data[px + 3] = Math.round(baseA * coverage);
       }
     }
 
-    ctx.globalAlpha = 1;
+    ctx.putImageData(frameImageData, 0, 0);
   }
 
   /**
@@ -408,7 +476,9 @@ export function createSarmalDotMatrix(
   // ── Init ────────────────────────────────────────────────────────────────────
 
   calculateBoundaries(engine.getSarmalSkeleton());
-  buildBgCanvas();
+  computePixelMask();
+  frameImageData = new ImageData(W, H);
+  buildBgImageData();
 
   if (initialPhase !== undefined) {
     engine.seek(initialPhase);
@@ -511,7 +581,7 @@ export function createSarmalDotMatrix(
       }
 
       if (needsRebuildBg) {
-        buildBgCanvas();
+        buildBgImageData();
       }
 
       if (currentTrailStyle !== "default" && gradientRgb === null) {

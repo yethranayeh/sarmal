@@ -17,6 +17,11 @@ Version history notes of the <Link href="#core">Core</Link>, <Link href="#react"
 
 ## Core
 
+### 0.35.0 - 22.05.2026
+
+Dot matrix renderer now uses `ImageData`/`putImageData` for drawing. Dot edges are antialiased through precomputed 4x4 supersampling, gradient colours are sampled per-dot for a smoother, band-free result.
+Frame cost is <span class="underline">flat</span> regardless of grid size.
+
 ### 0.34.0 - 20.05.2026
 
 New `createSarmalDotMatrix(canvas, curveDef, options?)` canvas renderer. Maps the sarmal trail onto a grid of dots: the head is fully lit, the tail fades to dim, and off-trail dots appear as faint background points.

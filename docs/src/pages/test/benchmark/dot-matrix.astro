@@ -1,0 +1,528 @@
+---
+
+---
+
+<!doctype html>
+<html lang="en">
+	<head>
+		<meta charset="UTF-8" />
+		<title>Dot Matrix — Drawing Approach Benchmark</title>
+		<style>
+			body {
+				background: #0c0c0c;
+				color: #888;
+				font-family: monospace;
+				margin: 0;
+				padding: 2rem;
+			}
+			h1 {
+				color: #ccc;
+				font-size: 0.9rem;
+				letter-spacing: 0.08em;
+				text-transform: uppercase;
+				margin: 0 0 0.5rem;
+			}
+			p {
+				font-size: 0.65rem;
+				color: #444;
+				margin: 0 0 1.5rem;
+			}
+			#status {
+				font-size: 0.7rem;
+				color: #2dd4bf;
+				margin-bottom: 1rem;
+			}
+			table {
+				border-collapse: collapse;
+				font-size: 0.65rem;
+			}
+			th {
+				color: #555;
+				text-align: left;
+				padding: 0.2rem 1rem 0.2rem 0;
+				text-transform: uppercase;
+				letter-spacing: 0.06em;
+			}
+			td {
+				color: #888;
+				padding: 0.15rem 1rem 0.15rem 0;
+				font-variant-numeric: tabular-nums;
+			}
+			tr:hover td {
+				color: #ccc;
+			}
+		</style>
+	</head>
+	<body>
+		<h1>Dot Matrix — Drawing Approach Benchmark</h1>
+		<p>
+			Compares 5 drawing strategies × 4 grid sizes.<br />
+			Open DevTools console for raw table. Results are written to
+			<code>window.__dotMatrixBenchResults</code> for Playwright.
+		</p>
+		<div id="status">running…</div>
+		<table id="results-table"></table>
+	</body>
+</html>
+
+<script>
+	import { createEngine, curves } from "@sarmal/core";
+
+	// ── Types ────────────────────────────────────────────────────────────────────
+
+	type Rgb = { r: number; g: number; b: number };
+
+	type BenchResult = {
+		approach: string;
+		gridSize: number;
+		avgFrameMs: number;
+		minFrameMs: number;
+		maxFrameMs: number;
+		fillCallsPerFrame: number;
+	};
+
+	type CountingCtx = {
+		beginPath(): void;
+		roundRect(
+			x: number,
+			y: number,
+			w: number,
+			h: number,
+			r: number | DOMPointInit | (number | DOMPointInit)[],
+		): void;
+		fill(): void;
+		clearRect(x: number, y: number, w: number, h: number): void;
+		putImageData(data: ImageData, x: number, y: number): void;
+		fillStyle: string | CanvasGradient | CanvasPattern;
+		globalAlpha: number;
+		readonly fillCount: number;
+		resetFillCount(): void;
+	};
+
+	type PixelMask = {
+		starts: Uint32Array;
+		lengths: Uint32Array;
+		indices: Uint32Array;
+	};
+
+	// ── Constants ────────────────────────────────────────────────────────────────
+
+	const N_WARMUP = 100;
+	const N_MEASURE = 300;
+	const CANVAS_SIZE = 240;
+	const SIZES = [16, 32, 48, 56] as const;
+	const APPROACHES = [
+		"buckets-8",
+		"buckets-16",
+		"buckets-32",
+		"per-dot",
+		"put-image-data",
+	] as const;
+
+	type Approach = (typeof APPROACHES)[number];
+
+	// Bard palette stops — same hue range as the default gradient
+	const GRAD_STOPS: Rgb[] = [
+		{ r: 0, g: 198, b: 255 },
+		{ r: 0, g: 114, b: 255 },
+		{ r: 133, g: 0, b: 255 },
+		{ r: 255, g: 0, b: 163 },
+	];
+
+	// ── Helpers ──────────────────────────────────────────────────────────────────
+
+	function sampleGradientRgb(stops: Rgb[], t: number): Rgb {
+		const n = stops.length;
+		const scaled = Math.max(0, Math.min(1, t)) * (n - 1);
+		const i = Math.min(Math.floor(scaled), n - 2);
+		const a = stops[i]!;
+		const b = stops[i + 1]!;
+		const mix = scaled - i;
+		return {
+			r: Math.round(a.r + (b.r - a.r) * mix),
+			g: Math.round(a.g + (b.g - a.g) * mix),
+			b: Math.round(a.b + (b.b - a.b) * mix),
+		};
+	}
+
+	function makeCountingCtx(
+		ctx: OffscreenCanvasRenderingContext2D,
+	): CountingCtx {
+		let fills = 0;
+		return {
+			beginPath() {
+				ctx.beginPath();
+			},
+			roundRect(x, y, w, h, r) {
+				ctx.roundRect(x, y, w, h, r as number);
+			},
+			fill() {
+				fills++;
+				ctx.fill();
+			},
+			clearRect(x, y, w, h) {
+				ctx.clearRect(x, y, w, h);
+			},
+			putImageData(data, x, y) {
+				ctx.putImageData(data, x, y);
+			},
+			get fillStyle() {
+				return ctx.fillStyle;
+			},
+			set fillStyle(v) {
+				ctx.fillStyle = v;
+			},
+			get globalAlpha() {
+				return ctx.globalAlpha;
+			},
+			set globalAlpha(v) {
+				ctx.globalAlpha = v;
+			},
+			get fillCount() {
+				return fills;
+			},
+			resetFillCount() {
+				fills = 0;
+			},
+		};
+	}
+
+	/**
+	 * Build a grid using the real engine — same logic as renderer-dot-matrix.ts buildGrid().
+	 * Uses a simple linear mapPt (no computeBoundaries) which is fine for benchmarking.
+	 */
+	function buildGridFromEngine(cols: number, rows: number): Float32Array {
+		// Fresh engine, fully warmed up so the trail buffer is filled
+		const engine = createEngine(curves.lissajous43, cols * 3);
+		for (let i = 0; i < cols * 3 * 2; i++) engine.tick(1 / 60);
+
+		const trail = engine.tick(1 / 60);
+		const count = engine.trailCount;
+		const grid = new Float32Array(cols * rows);
+
+		function mapPt(x: number, y: number): [number, number] {
+			return [
+				Math.max(0, Math.min(cols - 1, Math.round(((x + 1) / 2) * (cols - 1)))),
+				Math.max(0, Math.min(rows - 1, Math.round(((y + 1) / 2) * (rows - 1)))),
+			];
+		}
+
+		function stamp(c: number, r: number, intensity: number) {
+			const idx = r * cols + c;
+			if (intensity > grid[idx]!) grid[idx] = intensity;
+		}
+
+		for (let i = 0; i < count; i++) {
+			const pt = trail[i]!;
+			const intensity = (i + 1) / count;
+			const [c, r] = mapPt(pt.x, pt.y);
+			stamp(c, r, intensity);
+
+			if (i < count - 1) {
+				const next = trail[i + 1]!;
+				const [nc, nr] = mapPt(next.x, next.y);
+				const steps =
+					Math.ceil(Math.max(Math.abs(nc - c), Math.abs(nr - r))) * 2;
+				for (let s = 1; s < steps; s++) {
+					const t = s / steps;
+					const ix = pt.x + (next.x - pt.x) * t;
+					const iy = pt.y + (next.y - pt.y) * t;
+					const ii = intensity + (1 / count) * t;
+					const [ic, ir] = mapPt(ix, iy);
+					stamp(ic, ir, ii);
+				}
+			}
+		}
+
+		return grid;
+	}
+
+	/**
+	 * Pre-computes which RGBA byte offsets (in a flat CANVAS_SIZE×CANVAS_SIZE ImageData)
+	 * belong to each dot's circle, so the putImageData approach can write pixels directly.
+	 */
+	function buildPixelMask(cols: number, rows: number): PixelMask {
+		const W = CANVAS_SIZE;
+		const H = CANVAS_SIZE;
+		const cellW = W / cols;
+		const cellH = H / rows;
+		const dotR = Math.min(cellW, cellH) * 0.36;
+		const dotR2 = dotR * dotR;
+
+		const allIndices: number[] = [];
+		const starts = new Uint32Array(cols * rows);
+		const lengths = new Uint32Array(cols * rows);
+
+		for (let row = 0; row < rows; row++) {
+			for (let col = 0; col < cols; col++) {
+				const dotIdx = row * cols + col;
+				const cx = (col + 0.5) * cellW;
+				const cy = (row + 0.5) * cellH;
+				const x0 = Math.max(0, Math.floor(cx - dotR));
+				const x1 = Math.min(W - 1, Math.ceil(cx + dotR));
+				const y0 = Math.max(0, Math.floor(cy - dotR));
+				const y1 = Math.min(H - 1, Math.ceil(cy + dotR));
+
+				starts[dotIdx] = allIndices.length;
+				let count = 0;
+				for (let py = y0; py <= y1; py++) {
+					for (let px = x0; px <= x1; px++) {
+						const dx = px + 0.5 - cx;
+						const dy = py + 0.5 - cy;
+						if (dx * dx + dy * dy <= dotR2) {
+							allIndices.push((py * W + px) * 4);
+							count++;
+						}
+					}
+				}
+				lengths[dotIdx] = count;
+			}
+		}
+
+		return { starts, lengths, indices: new Uint32Array(allIndices) };
+	}
+
+	// ── Drawing approaches ────────────────────────────────────────────────────────
+
+	function drawBuckets(
+		grid: Float32Array,
+		ctx: CountingCtx,
+		cols: number,
+		rows: number,
+		numBuckets: number,
+		stops: Rgb[],
+	) {
+		const cellW = CANVAS_SIZE / cols;
+		const cellH = CANVAS_SIZE / rows;
+		const dotR = Math.min(cellW, cellH) * 0.36;
+
+		for (let bucket = 0; bucket < numBuckets; bucket++) {
+			const lo = bucket / numBuckets;
+			const hi = (bucket + 1) / numBuckets;
+			const midpoint = (lo + hi) / 2;
+
+			let hasLit = false;
+			ctx.beginPath();
+
+			for (let row = 0; row < rows; row++) {
+				for (let col = 0; col < cols; col++) {
+					const intensity = grid[row * cols + col]!;
+					if (intensity > lo && intensity <= hi) {
+						const cx = (col + 0.5) * cellW;
+						const cy = (row + 0.5) * cellH;
+						ctx.roundRect(cx - dotR, cy - dotR, dotR * 2, dotR * 2, dotR);
+						hasLit = true;
+					}
+				}
+			}
+
+			if (hasLit) {
+				const { r, g, b } = sampleGradientRgb(stops, midpoint);
+				ctx.fillStyle = `rgb(${r},${g},${b})`;
+				ctx.globalAlpha = 0.08 + midpoint * 0.92;
+				ctx.fill();
+			}
+		}
+	}
+
+	function drawPerDot(
+		grid: Float32Array,
+		ctx: CountingCtx,
+		cols: number,
+		rows: number,
+		stops: Rgb[],
+	) {
+		const cellW = CANVAS_SIZE / cols;
+		const cellH = CANVAS_SIZE / rows;
+		const dotR = Math.min(cellW, cellH) * 0.36;
+
+		for (let row = 0; row < rows; row++) {
+			for (let col = 0; col < cols; col++) {
+				const intensity = grid[row * cols + col]!;
+				if (intensity > 0) {
+					const cx = (col + 0.5) * cellW;
+					const cy = (row + 0.5) * cellH;
+					ctx.beginPath();
+					ctx.roundRect(cx - dotR, cy - dotR, dotR * 2, dotR * 2, dotR);
+					const { r, g, b } = sampleGradientRgb(stops, intensity);
+					ctx.fillStyle = `rgb(${r},${g},${b})`;
+					ctx.globalAlpha = 0.08 + intensity * 0.92;
+					ctx.fill();
+				}
+			}
+		}
+	}
+
+	function drawImageDataApproach(
+		grid: Float32Array,
+		mask: PixelMask,
+		imageData: ImageData,
+		ctx: CountingCtx,
+		stops: Rgb[],
+	) {
+		const { data } = imageData;
+		const { starts, lengths, indices } = mask;
+
+		data.fill(0);
+
+		const n = grid.length;
+		for (let dotIdx = 0; dotIdx < n; dotIdx++) {
+			const intensity = grid[dotIdx]!;
+			if (intensity > 0) {
+				const { r, g, b } = sampleGradientRgb(stops, intensity);
+				const a = Math.round((0.08 + intensity * 0.92) * 255);
+				const start = starts[dotIdx]!;
+				const len = lengths[dotIdx]!;
+				for (let k = 0; k < len; k++) {
+					const px = indices[start + k]!;
+					data[px] = r;
+					data[px + 1] = g;
+					data[px + 2] = b;
+					data[px + 3] = a;
+				}
+			}
+		}
+
+		ctx.putImageData(imageData, 0, 0);
+	}
+
+	// ── Benchmark runner ─────────────────────────────────────────────────────────
+
+	function runApproach(
+		approach: Approach,
+		grid: Float32Array,
+		ctx: CountingCtx,
+		cols: number,
+		rows: number,
+		mask: PixelMask,
+		imageData: ImageData,
+		stops: Rgb[],
+	) {
+		switch (approach) {
+			case "buckets-8":
+				drawBuckets(grid, ctx, cols, rows, 8, stops);
+				break;
+			case "buckets-16":
+				drawBuckets(grid, ctx, cols, rows, 16, stops);
+				break;
+			case "buckets-32":
+				drawBuckets(grid, ctx, cols, rows, 32, stops);
+				break;
+			case "per-dot":
+				drawPerDot(grid, ctx, cols, rows, stops);
+				break;
+			case "put-image-data":
+				drawImageDataApproach(grid, mask, imageData, ctx, stops);
+				break;
+		}
+	}
+
+	function benchmark(): BenchResult[] {
+		const results: BenchResult[] = [];
+
+		for (const gridSize of SIZES) {
+			const grid = buildGridFromEngine(gridSize, gridSize);
+			const mask = buildPixelMask(gridSize, gridSize);
+
+			const canvas = new OffscreenCanvas(CANVAS_SIZE, CANVAS_SIZE);
+			const rawCtx = canvas.getContext("2d")!;
+			const ctx = makeCountingCtx(rawCtx);
+			const imageData = new ImageData(CANVAS_SIZE, CANVAS_SIZE);
+
+			for (const approach of APPROACHES) {
+				// Warmup — lets the JIT compile and stabilise
+				for (let i = 0; i < N_WARMUP; i++) {
+					runApproach(
+						approach,
+						grid,
+						ctx,
+						gridSize,
+						gridSize,
+						mask,
+						imageData,
+						GRAD_STOPS,
+					);
+				}
+
+				ctx.resetFillCount();
+				const times: number[] = [];
+
+				for (let i = 0; i < N_MEASURE; i++) {
+					const t0 = performance.now();
+					runApproach(
+						approach,
+						grid,
+						ctx,
+						gridSize,
+						gridSize,
+						mask,
+						imageData,
+						GRAD_STOPS,
+					);
+					times.push(performance.now() - t0);
+				}
+
+				const avg = times.reduce((a, b) => a + b, 0) / times.length;
+				results.push({
+					approach,
+					gridSize,
+					avgFrameMs: avg,
+					minFrameMs: Math.min(...times),
+					maxFrameMs: Math.max(...times),
+					fillCallsPerFrame: ctx.fillCount / N_MEASURE,
+				});
+			}
+		}
+
+		return results;
+	}
+
+	// ── Run and report ────────────────────────────────────────────────────────────
+
+	const statusEl = document.getElementById("status")!;
+	const tableEl = document.getElementById("results-table")!;
+
+	// Defer so the page paints "running…" before we block
+	requestAnimationFrame(() => {
+		const results = benchmark();
+
+		(window as unknown as Record<string, unknown>)["__dotMatrixBenchResults"] =
+			results;
+
+		statusEl.textContent = "done";
+		statusEl.style.color = "#888";
+
+		console.table(
+			results.map((r) => ({
+				approach: r.approach,
+				size: `${r.gridSize}×${r.gridSize}`,
+				"avg (ms)": r.avgFrameMs.toFixed(4),
+				"min (ms)": r.minFrameMs.toFixed(4),
+				"max (ms)": r.maxFrameMs.toFixed(4),
+				"fills/frame": r.fillCallsPerFrame.toFixed(1),
+			})),
+		);
+
+		// Build a readable table in the page too
+		const header = [
+			"approach",
+			"size",
+			"avg ms",
+			"min ms",
+			"max ms",
+			"fills/frame",
+		];
+		const rows = results.map((r) => [
+			r.approach,
+			`${r.gridSize}×${r.gridSize}`,
+			r.avgFrameMs.toFixed(4),
+			r.minFrameMs.toFixed(4),
+			r.maxFrameMs.toFixed(4),
+			r.fillCallsPerFrame.toFixed(1),
+		]);
+
+		tableEl.innerHTML =
+			`<thead><tr>${header.map((h) => `<th>${h}</th>`).join("")}</tr></thead>` +
+			`<tbody>${rows.map((row) => `<tr>${row.map((cell) => `<td>${cell}</td>`).join("")}</tr>`).join("")}</tbody>`;
+	});
+</script>

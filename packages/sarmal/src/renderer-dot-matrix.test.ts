@@ -4,28 +4,19 @@ import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { createEngine } from "./engine";
 import { createSarmalDotMatrix } from "./renderer-dot-matrix";
 
-// Mock OffscreenCanvas for jsdom environment
-class MockOffscreenCanvas {
-  width: number;
-  height: number;
+// jsdom does not ship ImageData — provide a minimal mock
+class MockImageData {
+  readonly data: Uint8ClampedArray;
+  readonly width: number;
+  readonly height: number;
   constructor(width: number, height: number) {
     this.width = width;
     this.height = height;
-  }
-  getContext(_contextId: string) {
-    return {
-      clearRect: () => {},
-      fillRect: () => {},
-      fill: () => {},
-      beginPath: () => {},
-      roundRect: () => {},
-      fillStyle: "",
-      globalAlpha: 1,
-    } as unknown as OffscreenCanvasRenderingContext2D;
+    this.data = new Uint8ClampedArray(width * height * 4);
   }
 }
-// @ts-ignore - adding to global for jsdom
-globalThis.OffscreenCanvas = MockOffscreenCanvas;
+// @ts-ignore - polyfilling for jsdom
+globalThis.ImageData = MockImageData;
 
 const circle: CurveDef = {
   name: "test-circle",
@@ -42,11 +33,7 @@ function makeCanvas(width = 240, height = 240): HTMLCanvasElement {
   canvas.getContext = (contextId: string) => {
     if (contextId === "2d") {
       return {
-        clearRect: () => {},
-        fill: () => {},
-        beginPath: () => {},
-        roundRect: () => {},
-        drawImage: () => {},
+        putImageData: () => {},
         fillStyle: "",
         globalAlpha: 1,
       };
@@ -361,5 +348,123 @@ describe("createSarmalDotMatrix — morphTo", () => {
     instance.destroy();
 
     await expect(morphPromise).rejects.toThrow("destroyed during morph");
+  });
+});
+
+describe("createSarmalDotMatrix — pixel output", () => {
+  it("calls putImageData exactly once per rendered frame", () => {
+    const pending: FrameRequestCallback[] = [];
+    const rafSpy = vi.spyOn(globalThis, "requestAnimationFrame").mockImplementation((cb) => {
+      pending.push(cb);
+      return pending.length;
+    });
+    const cafSpy = vi.spyOn(globalThis, "cancelAnimationFrame").mockImplementation(() => {});
+
+    const putSpy = vi.fn();
+    const canvas = document.createElement("canvas");
+    canvas.width = 240;
+    canvas.height = 240;
+    // @ts-ignore
+    canvas.getContext = (id: string) =>
+      id === "2d" ? { putImageData: putSpy, fillStyle: "", globalAlpha: 1 } : null;
+
+    const instance = createSarmalDotMatrix(canvas, circle, { autoStart: false });
+    expect(putSpy).toHaveBeenCalledTimes(1); // init renderFrame(0)
+    putSpy.mockClear();
+
+    // play() calls loop() immediately (not via rAF) for the first frame,
+    // then schedules the next via requestAnimationFrame.
+    instance.play();
+    putSpy.mockClear(); // drop the immediate-loop call; test only rAF-driven frames
+
+    // Each rAF pop must produce exactly one putImageData call — no more, no less.
+    let t = performance.now();
+    for (let i = 0; i < 4; i++) {
+      const before = putSpy.mock.calls.length;
+      t += 16;
+      const cb = pending.pop();
+      if (cb) cb(t);
+      expect(putSpy.mock.calls.length - before).toBe(1);
+    }
+
+    expect(putSpy).toHaveBeenCalledTimes(4);
+
+    instance.destroy();
+    rafSpy.mockRestore();
+    cafSpy.mockRestore();
+  });
+
+  it("head pixels are brighter than tail pixels after the trail fills", () => {
+    const pending: FrameRequestCallback[] = [];
+    const rafSpy = vi.spyOn(globalThis, "requestAnimationFrame").mockImplementation((cb) => {
+      pending.push(cb);
+      return pending.length;
+    });
+    const cafSpy = vi.spyOn(globalThis, "cancelAnimationFrame").mockImplementation(() => {});
+
+    // Snapshot the alpha channel at each putImageData call. Copy — not a reference —
+    // because frameImageData.data is mutated in place between frames.
+    let capturedAlphas: Uint8Array | null = null;
+    const canvas = document.createElement("canvas");
+    canvas.width = 240;
+    canvas.height = 240;
+    // @ts-ignore
+    canvas.getContext = (id: string) =>
+      id === "2d"
+        ? {
+            putImageData(imageData: ImageData) {
+              const src = imageData.data;
+              const dst = new Uint8Array(src.length >> 2);
+              for (let i = 0; i < dst.length; i++) dst[i] = src[(i << 2) + 3]!;
+              capturedAlphas = dst;
+            },
+            fillStyle: "",
+            globalAlpha: 1,
+          }
+        : null;
+
+    // 8×8 grid → dotR ≈ 10px, large enough for reliable full-coverage interior pixels.
+    // trailLength=24 fills in ~24 frames; 60 frames drives it well past the cap.
+    const instance = createSarmalDotMatrix(canvas, circle, {
+      autoStart: false,
+      cols: 8,
+      rows: 8,
+      trailLength: 24,
+    });
+
+    instance.play();
+    let t = performance.now();
+    for (let i = 0; i < 60; i++) {
+      t += 16;
+      const cb = pending.pop();
+      if (cb) cb(t);
+    }
+
+    expect(capturedAlphas).not.toBeNull();
+
+    let maxAlpha = 0;
+    let minNonZero = 256;
+    const nonZeroDistinct = new Set<number>();
+    for (let i = 0; i < capturedAlphas!.length; i++) {
+      const a = capturedAlphas![i]!;
+      if (a > maxAlpha) maxAlpha = a;
+      if (a > 0) {
+        nonZeroDistinct.add(a);
+        if (a < minNonZero) minNonZero = a;
+      }
+    }
+
+    // Head dot at intensity=1 has alpha ≈ 255; must be clearly bright
+    expect(maxAlpha).toBeGreaterThan(200);
+    // Background / tail is visibly dimmer than head
+    expect(minNonZero).toBeLessThan(maxAlpha);
+    // Continuous per-dot gradient sampling produces many distinct alpha levels.
+    // A bucket renderer (8 buckets) would produce only ~8 distinct values;
+    // continuous sampling + SSAA edge coverage produces significantly more.
+    expect(nonZeroDistinct.size).toBeGreaterThan(10);
+
+    instance.destroy();
+    rafSpy.mockRestore();
+    cafSpy.mockRestore();
   });
 });
