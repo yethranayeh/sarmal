@@ -4,6 +4,12 @@
   <strong>React wrapper for @sarmal/core</strong>
 </p>
 
+<div align="center">
+  <a href="https://sarmal.art">
+    <img src="../../docs/public/curves-light.gif" alt="Sarmal demo" width="100%" max-width="720">
+  </a>
+</div>
+
 ---
 
 **@sarmal/react** gives you a `<Sarmal>` component and a `useSarmal` hook so you can drop parametric curve animations into React apps without the canvas wiring. SVG output is also supported with `<SarmalSVG>` and `useSarmalSVG`.

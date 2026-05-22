@@ -1,6 +1,10 @@
 # Sarmal
 
-**[sarmal.art](https://sarmal.art)**
+<div align="center">
+  <a href="https://sarmal.art">
+    <img src="./docs/public/curves-dark.gif" alt="Sarmal demo" width="100%" max-width="720">
+  </a>
+</div>
 
 This is a monorepo of the **Sarmal** project, which aims to be a parametric curve renderer, mainly for loading/thinking indicators, but you are also allowed to use it however you like :)
 

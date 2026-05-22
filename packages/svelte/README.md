@@ -4,6 +4,12 @@
   <strong>Svelte wrapper for @sarmal/core</strong>
 </p>
 
+<div align="center">
+  <a href="https://sarmal.art">
+    <img src="../../docs/public/curves-light.gif" alt="Sarmal demo" width="100%" max-width="720">
+  </a>
+</div>
+
 ---
 
 **@sarmal/svelte** gives you `<Sarmal>` and `<SarmalSVG>` components, `useSarmal` and `useSarmalSVG` hooks, and `sarmal` / `sarmalSVG` actions so you can drop curve animations into Svelte 5 apps without the canvas wiring.

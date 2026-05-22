@@ -4,9 +4,11 @@
   <strong>Parametric curve animations for loading/thinking indicators</strong>
 </p>
 
-<p align="center">
-  <a href="https://sarmal.art" target="_blank">Live Demo at sarmal.art</a>
-</p>
+<div align="center">
+  <a href="https://sarmal.art">
+    <img src="../../docs/public/curves-light.gif" alt="Sarmal demo" width="100%" max-width="720">
+  </a>
+</div>
 
 ---
 
