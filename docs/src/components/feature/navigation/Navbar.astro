@@ -1,6 +1,6 @@
 ---
 import Branding from "../../Branding.astro";
-import ThemeToggle from "./ThemeToggle.svelte";
+import ThemeToggle from "./ThemeToggle.astro";
 ---
 
 <header class="bg-surface-raised w-full relative z-20">
@@ -17,7 +17,7 @@ import ThemeToggle from "./ThemeToggle.svelte";
 			<div class="hidden md:block"><Branding /></div>
 		</div>
 		<div class="flex items-center gap-3 md:gap-4 z-20">
-			<ThemeToggle client:load />
+			<ThemeToggle />
 			<div class="w-px h-5 bg-border" aria-hidden="true"></div>
 			<slot name="nav" />
 			<slot />

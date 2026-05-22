@@ -1,0 +1,114 @@
+---
+import { Sun, Moon, SunMoon } from "@lucide/astro";
+import Button from "../../Button.astro";
+---
+
+<Button
+	variant="ghost"
+	class="p-0! md:p-2!"
+	data-theme-toggle
+	aria-label="System preference — click to change"
+	title="System preference"
+>
+	<div class="relative h-4 w-4">
+		<SunMoon
+			size={16}
+			class="absolute inset-0 transition-opacity duration-500"
+			style="opacity:0"
+		/>
+		<Moon
+			size={16}
+			class="absolute inset-0 transition-opacity duration-500"
+			style="opacity:0"
+		/>
+		<Sun
+			size={16}
+			class="absolute inset-0 transition-opacity duration-500"
+			style="opacity:0"
+		/>
+	</div>
+</Button>
+
+<script>
+	type Preference = "light" | "dark" | "system";
+
+	const btn = document.querySelector(
+		"[data-theme-toggle]",
+	) as HTMLElement | null;
+	if (btn) {
+		const icons = btn.querySelectorAll(".relative.h-4.w-4 > svg");
+		const sunMoonEl = icons[0] as SVGElement | undefined;
+		const moonEl = icons[1] as SVGElement | undefined;
+		const sunEl = icons[2] as SVGElement | undefined;
+
+		let preference: Preference = "system";
+		try {
+			const stored = localStorage.getItem("theme");
+			if (stored === "dark" || stored === "light" || stored === "system") {
+				preference = stored as Preference;
+			}
+		} catch {}
+
+		function getResolved(): "light" | "dark" {
+			if (preference !== "system") {
+				return preference;
+			}
+
+			return window.matchMedia("(prefers-color-scheme: dark)").matches
+				? "dark"
+				: "light";
+		}
+
+		const modeLabel: Record<Preference, string> = {
+			light: "Light mode",
+			dark: "Dark mode",
+			system: "System preference",
+		};
+
+		function applyIcons() {
+			if (!sunMoonEl || !moonEl || !sunEl) {
+				return;
+			}
+
+			sunMoonEl.style.opacity = preference === "system" ? "" : "0";
+			moonEl.style.opacity = preference === "dark" ? "" : "0";
+			sunEl.style.opacity = preference === "light" ? "" : "0";
+		}
+
+		function applyTheme() {
+			const resolved = getResolved();
+			document.documentElement.classList.toggle("dark", resolved === "dark");
+			document.documentElement.classList.toggle("light", resolved === "light");
+		}
+
+		function syncMeta() {
+			btn!.setAttribute(
+				"aria-label",
+				`${modeLabel[preference]} (click to change)`,
+			);
+			btn!.setAttribute("title", modeLabel[preference]);
+		}
+
+		// Since BaseLayout applies theme class, on load we only need to reveal the correct icon and fix the aria labels
+		applyIcons();
+		syncMeta();
+
+		btn.addEventListener("click", () => {
+			if (preference === "system") {
+				preference = getResolved() === "dark" ? "light" : "dark";
+			} else if (preference === "light") {
+				preference = "dark";
+			} else {
+				preference = "system";
+			}
+
+			try {
+				localStorage.setItem("theme", preference);
+			} catch {}
+
+			applyTheme();
+			applyIcons();
+			syncMeta();
+		});
+	}
+</script>
