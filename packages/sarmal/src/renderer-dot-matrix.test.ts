@@ -3,6 +3,7 @@ import type { CurveDef } from "./types";
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { createEngine } from "./engine";
 import { createSarmalDotMatrix } from "./renderer-dot-matrix";
+import { DEFAULT_SKELETON_OPACITY } from "./renderer-shared";
 
 // jsdom does not ship ImageData — provide a minimal mock
 class MockImageData {
@@ -803,6 +804,89 @@ describe("createSarmalDotMatrix — skeleton", () => {
     expect(setsAreIdentical).toBe(false);
 
     instance.destroy();
+    rafSpy.mockRestore();
+    cafSpy.mockRestore();
+  });
+
+  it("trail tail over skeleton dots never drops below skeleton opacity", () => {
+    // Regression test: trail pixels are raw overwrites (not alpha-composited). Without a floor,
+    // trail tail dots (min 8% alpha) could overwrite skeleton dots (15% alpha), making the
+    // skeleton visually dimmer where the trail passes over it.
+    //
+    // Strategy: identify skeleton pixel positions from the initial frame (blue dots, no trail yet),
+    // then drive enough frames for the trail to lap the full curve and check that those same
+    // positions in the final frame have alpha >= their initial-frame alpha.
+    const pending: FrameRequestCallback[] = [];
+    const rafSpy = vi.spyOn(globalThis, "requestAnimationFrame").mockImplementation((cb) => {
+      pending.push(cb);
+      return pending.length;
+    });
+    const cafSpy = vi.spyOn(globalThis, "cancelAnimationFrame").mockImplementation(() => {});
+
+    const frames: Uint8ClampedArray[] = [];
+    const canvas = document.createElement("canvas");
+    canvas.width = 240;
+    canvas.height = 240;
+    // @ts-ignore
+    canvas.getContext = (id: string) =>
+      id === "2d"
+        ? {
+            putImageData(imageData: ImageData) {
+              frames.push(new Uint8ClampedArray(imageData.data));
+            },
+            fillStyle: "",
+            globalAlpha: 1,
+          }
+        : null;
+
+    // 32×32 grid with default trailLength (cols*3 = 96): the trail spans ~24% of the circle
+    // (~20 cells), so the head and tail land on clearly different grid cells.
+    // Tail-only cells have intensity ≈ 1/96 → alpha ≈ 22, well below skeleton floor (38).
+    // A coarse 8×8 grid would cluster all 24 trail points into 1–2 cells,
+    //  hiding the bug via stamp(max).
+    createSarmalDotMatrix(canvas, circle, {
+      autoStart: false,
+      cols: 32,
+      rows: 32,
+      trailColor: "#ffffff",
+      skeletonColor: "#0000ff",
+    }).play();
+
+    // frames[0] is the init frame — identify blue skeleton pixels (R<20, B>200, alpha>0)
+    const initFrame = frames[0]!;
+    const skeletonPositions: number[] = [];
+    for (let i = 0; i < initFrame.length; i += 4) {
+      if (initFrame[i]! < 20 && initFrame[i + 2]! > 200 && initFrame[i + 3]! > 0) {
+        skeletonPositions.push(i);
+      }
+    }
+    expect(skeletonPositions.length).toBeGreaterThan(0);
+
+    // Drive 500 frames of 16 ms — trail fully laps the circle, tail overlaps skeleton
+    let t = performance.now();
+    for (let f = 0; f < 500; f++) {
+      t += 16;
+      const cb = pending.pop();
+      if (cb) {
+        cb(t);
+      }
+    }
+
+    const finalFrame = frames[frames.length - 1]!;
+
+    // Each skeleton position must retain at least its initial alpha.
+    // Before the fix: trail tail (8% alpha) overwrote skeleton (15%), so finalAlpha < initAlpha.
+    // After the fix: skeleton opacity acts as a floor, so finalAlpha >= initAlpha.
+    for (const pos of skeletonPositions) {
+      const initAlpha = initFrame[pos + 3]!;
+      const finalAlpha = finalFrame[pos + 3]!;
+      expect(finalAlpha).toBeGreaterThanOrEqual(initAlpha);
+    }
+
+    // Sanity: the constant we're relying on is the one tested above
+    expect(DEFAULT_SKELETON_OPACITY).toBe(0.15);
+
+    pending.length = 0;
     rafSpy.mockRestore();
     cafSpy.mockRestore();
   });

@@ -485,7 +485,13 @@ export function createSarmalDotMatrix(
       } else {
         ({ r, g, b } = colorRgb);
       }
-      const baseA = (0.08 + intensity * 0.92) * 255;
+      // Skeleton dots act as a brightness floor: trail tail (min 8% alpha) must not dim a
+      // skeleton dot (15% alpha) since pixels are raw overwrites, not alpha-composited.
+      const skelFloor =
+        skeletonColorOklab !== null && skeletonDotGrid[dotIdx] === 1
+          ? DEFAULT_SKELETON_OPACITY * 255
+          : 0;
+      const baseA = Math.max(skelFloor, (0.08 + intensity * 0.92) * 255);
 
       const start = pixelMaskStarts[dotIdx]!;
       const len = pixelMaskLengths[dotIdx]!;
