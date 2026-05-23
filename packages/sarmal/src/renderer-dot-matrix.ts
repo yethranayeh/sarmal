@@ -12,6 +12,7 @@ import type { Oklab, Rgb } from "./renderer-shared";
 import { createEngine } from "./engine";
 import {
   DEFAULT_MORPH_DURATION_MS,
+  DEFAULT_SKELETON_OPACITY,
   colorToRgb,
   computeBoundaries,
   enginePassthroughs,
@@ -23,7 +24,7 @@ import {
 
 export interface DotMatrixSarmalOptions extends Pick<
   BaseRendererOptions,
-  "autoStart" | "pauseOnHidden" | "initialPhase"
+  "autoStart" | "pauseOnHidden" | "initialPhase" | "skeletonColor"
 > {
   /**
    * Number of dot columns in the grid.
@@ -111,6 +112,7 @@ export function createSarmalDotMatrix(
     trailLength: trailLengthOpt,
     trailColor: initialColor = "#ffffff",
     trailStyle: initialTrailStyle = "default",
+    skeletonColor: skeletonColorOpt = "#ffffff",
     autoStart = true,
     pauseOnHidden: pauseOnHiddenOpt = true,
     initialPhase,
@@ -170,6 +172,12 @@ export function createSarmalDotMatrix(
   // frameImageData: working buffer, overwritten completely each frame. Allocated once at init.
   let bgImageData: ImageData | null = null;
   let frameImageData: ImageData | null = null;
+
+  // Skeleton state: which dots are "on" the skeleton, and the parsed skeleton color.
+  // `skeletonDotGrid` is a flat boolean mask (0 or 1) over the grid, updated whenever boundaries change.
+  // `skeletonColorOklab` is null when skeleton is 'transparent' (disabled)
+  let skeletonColorOklab: Oklab | null = null;
+  const skeletonDotGrid = new Uint8Array(cols * rows);
 
   let animationId: number | null = null;
   let lastTime = 0;
@@ -289,6 +297,73 @@ export function createSarmalDotMatrix(
     }
   }
 
+  function applySkeletonColor(color: string) {
+    skeletonColorOklab = color === "transparent" ? null : parseColorToOklab(color)!;
+  }
+
+  /**
+   * Marks which grid cells the skeleton path passes through.
+   * Uses the same `mapPt` + gap-fill logic as `buildGrid` so the skeleton
+   *  traces the same cells the trail would trace over a full period.
+   * Mutates `skeletonDotGrid`. Called at init and whenever boundaries change.
+   */
+  function computeSkeletonGrid(skel: Array<{ x: number; y: number }>) {
+    skeletonDotGrid.fill(0);
+    const count = skel.length;
+    for (let i = 0; i < count; i++) {
+      const pt = skel[i]!;
+      const [c, r] = mapPt(pt.x, pt.y);
+      skeletonDotGrid[r * cols + c] = 1;
+
+      if (i < count - 1) {
+        const next = skel[i + 1]!;
+        const [nc, nr] = mapPt(next.x, next.y);
+        const steps = Math.ceil(Math.max(Math.abs(nc - c), Math.abs(nr - r))) * 2;
+
+        for (let s = 1; s < steps; s++) {
+          const t = s / steps;
+          const ix = pt.x + (next.x - pt.x) * t;
+          const iy = pt.y + (next.y - pt.y) * t;
+          const [ic, ir] = mapPt(ix, iy);
+          skeletonDotGrid[ir * cols + ic] = 1;
+        }
+      }
+    }
+  }
+
+  /**
+   * Writes skeleton dot pixels into `data` at `DEFAULT_SKELETON_OPACITY`, coverage-weighted.
+   * If `skeletonColorOklab` is `null` (transparent), nothing happens
+   * Called every frame in `draw()` before the trail pass so trail always overwrites skeleton.
+   */
+  function writeSkeletonPixels(data: Uint8ClampedArray) {
+    if (skeletonColorOklab === null) {
+      return;
+    }
+
+    const { r, g, b } = oklabToRgb(skeletonColorOklab);
+    const skelBaseAlpha = DEFAULT_SKELETON_OPACITY * 255;
+    const n = cols * rows;
+
+    for (let dotIdx = 0; dotIdx < n; dotIdx++) {
+      if (!skeletonDotGrid[dotIdx]) {
+        continue;
+      }
+
+      const start = pixelMaskStarts[dotIdx]!;
+      const len = pixelMaskLengths[dotIdx]!;
+
+      for (let k = 0; k < len; k++) {
+        const px = pixelMaskIndices[start + k]!;
+        const coverage = pixelMaskCoverages[start + k]!;
+        data[px] = r;
+        data[px + 1] = g;
+        data[px + 2] = b;
+        data[px + 3] = Math.round(skelBaseAlpha * coverage);
+      }
+    }
+  }
+
   /**
    * Recomputes the scale and offset needed to map engine coordinates into this canvas.
    * The engine produces coordinates in math space (roughly [-1, 1] for most curves, but not always).
@@ -393,6 +468,8 @@ export function createSarmalDotMatrix(
     frameImageData.data.set(bgImageData.data);
     const { data } = frameImageData;
 
+    writeSkeletonPixels(data);
+
     const timeOffset = currentTrailStyle === "gradient-animated" ? animTime / ANIM_PERIOD : 0;
 
     const n = cols * rows;
@@ -448,8 +525,10 @@ export function createSarmalDotMatrix(
         completeMorphNow();
         calculateBoundaries(engine.getSarmalSkeleton());
       }
+      computeSkeletonGrid(engine.getSarmalSkeleton());
     } else if (engine.isLiveSkeleton) {
       calculateBoundaries(engine.getSarmalSkeleton());
+      computeSkeletonGrid(engine.getSarmalSkeleton());
     }
 
     if (currentTrailStyle === "gradient-animated") {
@@ -472,10 +551,12 @@ export function createSarmalDotMatrix(
 
   // ── Init ────────────────────────────────────────────────────────────────────
 
-  validateBaseRenderOptions({ trailColor: initialColor });
+  validateBaseRenderOptions({ trailColor: initialColor, skeletonColor: skeletonColorOpt });
   applyColor(initialColor);
+  applySkeletonColor(skeletonColorOpt);
   calculateBoundaries(engine.getSarmalSkeleton());
   computePixelMask();
+  computeSkeletonGrid(engine.getSarmalSkeleton());
   frameImageData = new ImageData(W, H);
   buildBgImageData();
 
@@ -490,14 +571,20 @@ export function createSarmalDotMatrix(
   const instance: SarmalInstance<DotMatrixRuntimeRenderOptions> = {
     /** Starts the animation loop. Does nothing if already running. */
     play() {
-      if (animationId !== null) return;
+      if (animationId !== null) {
+        return;
+      }
+
       lastTime = performance.now();
       loop();
     },
 
     /** Pauses the animation loop. Preserves current trail state. */
     pause() {
-      if (animationId === null) return;
+      if (animationId === null) {
+        return;
+      }
+
       cancelAnimationFrame(animationId);
       animationId = null;
       engine.cancelSpeedTransition();
@@ -548,8 +635,8 @@ export function createSarmalDotMatrix(
     /**
      * Updates render options on a live instance without stopping the animation.
      *
-     * Supported: `trailColor` and `trailStyle`.
-     * ! Unsupported fields (`headColor`, `skeletonColor`, `headRadius`, `trailWidth`) throw.
+     * Supported: `trailColor`, `trailStyle`, and `skeletonColor`.
+     * ! Unsupported fields (`headColor`, `headRadius`, `trailWidth`) throw.
      * ! Validation fails the entire call if any field is invalid, leaving options unchanged.
      */
     setRenderOptions(partial: DotMatrixRuntimeRenderOptions): void {
@@ -560,6 +647,10 @@ export function createSarmalDotMatrix(
       if (partial.trailColor !== undefined) {
         applyColor(partial.trailColor);
         needsRebuildBg = true;
+      }
+
+      if (partial.skeletonColor !== undefined) {
+        applySkeletonColor(partial.skeletonColor);
       }
 
       if (partial.trailStyle !== undefined) {

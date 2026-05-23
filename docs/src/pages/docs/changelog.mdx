@@ -17,6 +17,21 @@ Version history notes of the <Link href="#core">Core</Link>, <Link href="#react"
 
 ## Core
 
+### 0.36.0 - 23.05.2026
+
+<Alert label="Breaking" variant="error">`createSarmalDotMatrix` now renders a skeleton by default (at 15% opacity). Pass `skeletonColor: "transparent"` to opt out.</Alert>
+
+```ts
+// Before: no skeleton rendered
+createSarmalDotMatrix(canvas, curve)
+
+// After: skeleton at `#ffffff` by default.
+// Pass `"transparent"` to disable
+createSarmalDotMatrix(canvas, curve, { skeletonColor: "transparent" })
+```
+
+`skeletonColor` is now accepted by `setRenderOptions` on the dot matrix renderer and takes effect on the next frame without rebuilding any buffer. Accepts the same formats as `trailColor`: `#rrggbb`, `#rgb`, `rgb()`, `rgba()`, and `oklch()`.
+
 ### 0.35.1 - 23.05.2026
 
 Dot-matrix gradient colors are now interpolated in Oklab space. This will eliminate the gray midpoint that could appear with certain palettes. The `gradient-animated` style now cycles continuously through the palette instead of oscillating.

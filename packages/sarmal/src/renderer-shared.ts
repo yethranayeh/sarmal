@@ -158,7 +158,9 @@ export function computeBoundaries(
   logicalHeight: number,
   minPaddingPx = FIT_PADDING_MIN,
 ): BoundaryResult | null {
-  if (pts.length === 0) return null;
+  if (pts.length === 0) {
+    return null;
+  }
 
   const first = pts[0]!;
   let minX = first.x,
@@ -478,7 +480,11 @@ export function getPaletteColor(palette: Oklab[], position: number, timeOffset: 
 const TRAIL_STYLES: readonly TrailStyle[] = ["default", "gradient-static", "gradient-animated"];
 
 // FIXME: Should inherit from the actual render option object to avoid drift
-const BASE_RENDER_OPTION_KEYS: ReadonlySet<string> = new Set(["trailColor", "trailStyle"]);
+const BASE_RENDER_OPTION_KEYS: ReadonlySet<string> = new Set([
+  "trailColor",
+  "trailStyle",
+  "skeletonColor",
+]);
 
 const RENDER_OPTION_KEYS: ReadonlySet<string> = new Set([
   "trailColor",
@@ -490,8 +496,8 @@ const RENDER_OPTION_KEYS: ReadonlySet<string> = new Set([
 ]);
 
 /**
- * Validates options for renderers that only support `trailColor` and `trailStyle`.
- * Throws a `TypeError` if any unsuppoerted (`headColor`, `skeletonColor`, etc.) is passed.
+ * Validates options for renderers that support `trailColor`, `trailStyle`, and `skeletonColor`.
+ * Throws a `TypeError` if any canvas-only field (`headColor`, `headRadius`, `trailWidth`) is passed.
  */
 export function validateBaseRenderOptions(partial: BaseRuntimeRenderOptions) {
   for (const key of Object.keys(partial)) {
@@ -504,6 +510,9 @@ export function validateBaseRenderOptions(partial: BaseRuntimeRenderOptions) {
   }
   if (partial.trailStyle !== undefined) {
     assertTrailStyle(partial.trailStyle);
+  }
+  if (partial.skeletonColor !== undefined) {
+    assertSkeletonColor(partial.skeletonColor);
   }
 }
 

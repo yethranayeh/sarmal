@@ -270,6 +270,8 @@ export type TrailColor = string | string[];
 export interface BaseRuntimeRenderOptions {
   trailColor?: TrailColor;
   trailStyle?: TrailStyle;
+  /** Color string (`#rrggbb`, `#rgb`, `rgb()`, `rgba()`, `oklch()`), or `"transparent"` to hide the skeleton. */
+  skeletonColor?: string;
 }
 
 /**
@@ -278,13 +280,13 @@ export interface BaseRuntimeRenderOptions {
  * Passing `null` for `headColor` makes the head color derive from the current `trailColor` and `trailStyle`.
  * Passing a hex string locks the head color until overridden.
  *
- * Passing `"transparent"` for `skeletonColor` hides the skeleton. Any other value must be a valid hex color.
+ * Passing `"transparent"` for `skeletonColor` hides the skeleton. Any other value accepts the same formats as `trailColor`.
  */
 export interface RuntimeRenderOptions extends BaseRuntimeRenderOptions {
   /** 6-digit hex string to override, or `null` to make it automatic */
   headColor?: string | null;
   // TODO: maybe skeleton color should be nullable too instead of expecting "transparent"
-  /** 6-digit hex string, or `"transparent"` to hide the skeleton. */
+  /** Color string (`#rrggbb`, `#rgb`, `rgb()`, `rgba()`, `oklch()`), or `"transparent"` to hide the skeleton. */
   skeletonColor?: string;
   /** Radius of the head dot.
    * - Canvas: CSS pixels. Auto-derived from container size if omitted.
@@ -301,8 +303,8 @@ export interface RuntimeRenderOptions extends BaseRuntimeRenderOptions {
 
 /**
  * Runtime-renderable options for the dot matrix renderer.
- * *Only* supports `trailColor` and `trailStyle`
- * ! Unsupported fields will throw if passed.
+ * Supports `trailColor`, `trailStyle`, and `skeletonColor`.
+ * ! Canvas-only fields (headColor, headRadius, trailWidth) will throw if passed.
  */
 export type DotMatrixRuntimeRenderOptions = BaseRuntimeRenderOptions;
 
@@ -328,6 +330,8 @@ export interface BaseRendererOptions {
    */
   initialPhase?: number;
   /**
+   * Color of the skeleton dots. Accepts `#rrggbb`, `#rgb`, `rgb()`, `rgba()`, or `oklch()`.
+   * Pass `"transparent"` to disable the skeleton entirely.
    * @default '#ffffff'
    */
   skeletonColor?: string;

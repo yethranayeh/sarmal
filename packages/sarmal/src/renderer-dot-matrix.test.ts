@@ -71,7 +71,9 @@ describe("createSarmalDotMatrix — defaults", () => {
     // KNOWN: trailCount is not exposed on SarmalInstance, so this test validates the engine's
     // cap behavior at 96 (32 * 3) but cannot confirm the renderer passes that formula to createEngine.
     const engine = createEngine(circle, 32 * 3);
-    for (let i = 0; i < 200; i++) engine.tick(0.016);
+    for (let i = 0; i < 200; i++) {
+      engine.tick(0.016);
+    }
     expect(engine.trailCount).toBe(96); // 32 * 3
     engine.reset();
   });
@@ -79,7 +81,9 @@ describe("createSarmalDotMatrix — defaults", () => {
   it("respects a custom trailLength over the cols*3 default", () => {
     // KNOWN: same limitation as above — tests engine cap behavior, not the renderer formula.
     const engine = createEngine(circle, 50);
-    for (let i = 0; i < 200; i++) engine.tick(0.016);
+    for (let i = 0; i < 200; i++) {
+      engine.tick(0.016);
+    }
     expect(engine.trailCount).toBe(50);
     engine.reset();
   });
@@ -103,7 +107,9 @@ describe("createSarmalDotMatrix — trail overflow", () => {
       for (let i = 0; i < 200; i++) {
         t += 16;
         const cb = pending.pop();
-        if (cb) cb(t);
+        if (cb) {
+          cb(t);
+        }
       }
     }).not.toThrow();
 
@@ -253,10 +259,22 @@ describe("createSarmalDotMatrix — setRenderOptions", () => {
     instance.destroy();
   });
 
-  it("throws when skeletonColor is passed (canvas-only field)", () => {
+  it("accepts skeletonColor without throwing", () => {
     const instance = createSarmalDotMatrix(makeCanvas(), circle, { autoStart: false });
-    expect(() => instance.setRenderOptions({ skeletonColor: "#ffffff" } as any)).toThrow(
-      /unsupported key "skeletonColor"/,
+    expect(() => instance.setRenderOptions({ skeletonColor: "#ffffff" })).not.toThrow();
+    instance.destroy();
+  });
+
+  it("accepts 'transparent' for skeletonColor without throwing", () => {
+    const instance = createSarmalDotMatrix(makeCanvas(), circle, { autoStart: false });
+    expect(() => instance.setRenderOptions({ skeletonColor: "transparent" })).not.toThrow();
+    instance.destroy();
+  });
+
+  it("throws on an invalid skeletonColor value", () => {
+    const instance = createSarmalDotMatrix(makeCanvas(), circle, { autoStart: false });
+    expect(() => instance.setRenderOptions({ skeletonColor: "not-a-color" } as any)).toThrow(
+      /skeletonColor/,
     );
     instance.destroy();
   });
@@ -309,7 +327,9 @@ describe("createSarmalDotMatrix — morphTo", () => {
     for (let i = 0; i < 10; i++) {
       t += 34;
       const cb = pending.pop();
-      if (cb) cb(t);
+      if (cb) {
+        cb(t);
+      }
     }
 
     await expect(morphPromise).resolves.toBeUndefined();
@@ -392,7 +412,9 @@ describe("createSarmalDotMatrix — gradient color rendering", () => {
     for (let i = 0; i < 60; i++) {
       t += 16;
       const cb = pending.pop();
-      if (cb) cb(t);
+      if (cb) {
+        cb(t);
+      }
     }
 
     expect(capturedData).not.toBeNull();
@@ -453,7 +475,9 @@ describe("createSarmalDotMatrix — gradient color rendering", () => {
     for (let i = 0; i < 5; i++) {
       t += 16;
       const cb = pending.pop();
-      if (cb) cb(t);
+      if (cb) {
+        cb(t);
+      }
     }
     const earlySnapshot = new Uint8ClampedArray(latestData!);
 
@@ -461,7 +485,9 @@ describe("createSarmalDotMatrix — gradient color rendering", () => {
     for (let i = 0; i < 187; i++) {
       t += 16;
       const cb = pending.pop();
-      if (cb) cb(t);
+      if (cb) {
+        cb(t);
+      }
     }
 
     let differs = false;
@@ -517,7 +543,9 @@ describe("createSarmalDotMatrix — gradient color rendering", () => {
     for (let i = 0; i < 30; i++) {
       t += 16;
       const cb = pending.pop();
-      if (cb) cb(t);
+      if (cb) {
+        cb(t);
+      }
     }
 
     // Switch to solid red — applyColor sets gradientOklab=null and colorRgb=(255,0,0)
@@ -526,7 +554,9 @@ describe("createSarmalDotMatrix — gradient color rendering", () => {
     // One frame to capture solid-mode output
     t += 16;
     const cb = pending.pop();
-    if (cb) cb(t);
+    if (cb) {
+      cb(t);
+    }
 
     expect(capturedData).not.toBeNull();
 
@@ -541,6 +571,236 @@ describe("createSarmalDotMatrix — gradient color rendering", () => {
 
     expect(litColors.size).toBe(1);
     expect([...litColors][0]).toBe("255,0,0");
+
+    instance.destroy();
+    rafSpy.mockRestore();
+    cafSpy.mockRestore();
+  });
+});
+
+describe("createSarmalDotMatrix — skeleton", () => {
+  function makeCapturingCanvas(width = 240, height = 240) {
+    let capturedData: Uint8ClampedArray | null = null;
+    const canvas = document.createElement("canvas");
+    canvas.width = width;
+    canvas.height = height;
+    // @ts-ignore
+    canvas.getContext = (id: string) =>
+      id === "2d"
+        ? {
+            putImageData(imageData: ImageData) {
+              capturedData = new Uint8ClampedArray(imageData.data);
+            },
+            fillStyle: "",
+            globalAlpha: 1,
+          }
+        : null;
+    return { canvas, getCaptured: () => capturedData };
+  }
+
+  it("skeleton dots appear in the first frame at ~15% opacity", () => {
+    // Use a blue skeleton (#0000ff) against a white trail (#ffffff).
+    // Interior skeleton pixels: R≈0, B≈255, alpha≈38 (15%*255).
+    // Trail AA-edge pixels are white (R=G=B=255) — distinct from blue skeleton.
+    // Check that at least one blue pixel (R<20, B>200) lands in alpha 25–50.
+    const { canvas, getCaptured } = makeCapturingCanvas();
+    createSarmalDotMatrix(canvas, circle, {
+      autoStart: false,
+      cols: 8,
+      rows: 8,
+      trailLength: 24,
+      skeletonColor: "#0000ff",
+    }).destroy();
+
+    const data = getCaptured()!;
+    expect(data).not.toBeNull();
+
+    let hasBlueSkeletonPixel = false;
+    for (let i = 0; i < data.length; i += 4) {
+      const a = data[i + 3]!;
+      if (a >= 25 && a <= 50 && data[i]! < 20 && data[i + 2]! > 200) {
+        hasBlueSkeletonPixel = true;
+        break;
+      }
+    }
+    expect(hasBlueSkeletonPixel).toBe(true);
+  });
+
+  it("skeletonColor: 'transparent' produces no blue skeleton pixels in the first frame", () => {
+    // With transparent skeleton and a blue skeletonColor that never renders,
+    // no pixel should be blue (R<20, B>200) in the skeleton alpha range (25–50).
+    const { canvas, getCaptured } = makeCapturingCanvas();
+    createSarmalDotMatrix(canvas, circle, {
+      autoStart: false,
+      cols: 8,
+      rows: 8,
+      trailLength: 24,
+      skeletonColor: "transparent",
+    }).destroy();
+
+    const data = getCaptured()!;
+    expect(data).not.toBeNull();
+
+    let hasBluePixelInSkeletonRange = false;
+    for (let i = 0; i < data.length; i += 4) {
+      const a = data[i + 3]!;
+      if (a >= 25 && a <= 50 && data[i]! < 20 && data[i + 2]! > 200) {
+        hasBluePixelInSkeletonRange = true;
+        break;
+      }
+    }
+    expect(hasBluePixelInSkeletonRange).toBe(false);
+  });
+
+  it("setRenderOptions({ skeletonColor }) changes the skeleton color in subsequent frames", () => {
+    const pending: FrameRequestCallback[] = [];
+    const rafSpy = vi.spyOn(globalThis, "requestAnimationFrame").mockImplementation((cb) => {
+      pending.push(cb);
+      return pending.length;
+    });
+    const cafSpy = vi.spyOn(globalThis, "cancelAnimationFrame").mockImplementation(() => {});
+
+    let latestData: Uint8ClampedArray | null = null;
+    const canvas = document.createElement("canvas");
+    canvas.width = 240;
+    canvas.height = 240;
+    // @ts-ignore
+    canvas.getContext = (id: string) =>
+      id === "2d"
+        ? {
+            putImageData(imageData: ImageData) {
+              latestData = new Uint8ClampedArray(imageData.data);
+            },
+            fillStyle: "",
+            globalAlpha: 1,
+          }
+        : null;
+
+    const instance = createSarmalDotMatrix(canvas, circle, {
+      autoStart: false,
+      cols: 8,
+      rows: 8,
+      trailLength: 24,
+    });
+
+    instance.setRenderOptions({ skeletonColor: "#ff0000" });
+    instance.play();
+
+    let t = performance.now();
+    t += 16;
+    const cb = pending.pop();
+    if (cb) {
+      cb(t);
+    }
+
+    expect(latestData).not.toBeNull();
+
+    // Skeleton dots colored red: r>200, g≈0, b≈0, alpha in skeleton range (25–50)
+    let hasRedSkeletonPixel = false;
+    for (let i = 0; i < latestData!.length; i += 4) {
+      const a = latestData![i + 3]!;
+      if (
+        a >= 25 &&
+        a <= 50 &&
+        latestData![i]! > 200 &&
+        latestData![i + 1]! < 20 &&
+        latestData![i + 2]! < 20
+      ) {
+        hasRedSkeletonPixel = true;
+        break;
+      }
+    }
+    expect(hasRedSkeletonPixel).toBe(true);
+
+    instance.destroy();
+    rafSpy.mockRestore();
+    cafSpy.mockRestore();
+  });
+
+  it("skeleton grid updates to reflect the new curve after morph completes", async () => {
+    // Morph from circle → rose (3-petal). Their skeletons trace different cells at 16×16,
+    // so at least some blue-skeleton pixels must change position after the morph.
+    const rose: CurveDef = {
+      name: "test-rose",
+      fn: (phase) => ({
+        x: Math.cos(3 * phase) * Math.cos(phase),
+        y: Math.cos(3 * phase) * Math.sin(phase),
+      }),
+      period: Math.PI * 2,
+      speed: 1,
+    };
+
+    const pending: FrameRequestCallback[] = [];
+    const rafSpy = vi.spyOn(globalThis, "requestAnimationFrame").mockImplementation((cb) => {
+      pending.push(cb);
+      return pending.length;
+    });
+    const cafSpy = vi.spyOn(globalThis, "cancelAnimationFrame").mockImplementation(() => {});
+
+    const frames: Uint8ClampedArray[] = [];
+    const canvas = document.createElement("canvas");
+    canvas.width = 240;
+    canvas.height = 240;
+    // @ts-ignore
+    canvas.getContext = (id: string) =>
+      id === "2d"
+        ? {
+            putImageData(imageData: ImageData) {
+              frames.push(new Uint8ClampedArray(imageData.data));
+            },
+            fillStyle: "",
+            globalAlpha: 1,
+          }
+        : null;
+
+    const instance = createSarmalDotMatrix(canvas, circle, {
+      autoStart: false,
+      cols: 16,
+      rows: 16,
+      trailLength: 48,
+      skeletonColor: "#0000ff",
+    });
+
+    // frames[0] is the init frame — contains the circle skeleton
+    const initFrame = frames[0]!;
+
+    const morphPromise = instance.morphTo(rose, { duration: 300 });
+    instance.play();
+
+    // Drive 10 frames of 34ms each (≈340ms > 300ms duration, morph completes ~frame 9)
+    let t = performance.now();
+    for (let i = 0; i < 10; i++) {
+      t += 34;
+      const cb = pending.pop();
+      if (cb) {
+        cb(t);
+      }
+    }
+    await morphPromise;
+
+    // Last captured frame has the post-morph rose skeleton
+    const finalFrame = frames[frames.length - 1]!;
+
+    function blueSkeletonPixels(data: Uint8ClampedArray): Set<number> {
+      const positions = new Set<number>();
+      for (let i = 0; i < data.length; i += 4) {
+        const a = data[i + 3]!;
+        if (a >= 25 && a <= 50 && data[i]! < 20 && data[i + 2]! > 200) {
+          positions.add(i);
+        }
+      }
+      return positions;
+    }
+
+    const before = blueSkeletonPixels(initFrame);
+    const after = blueSkeletonPixels(finalFrame);
+
+    expect(before.size).toBeGreaterThan(0);
+    expect(after.size).toBeGreaterThan(0);
+
+    // At least some skeleton cells must have changed — the grid was updated
+    const setsAreIdentical = before.size === after.size && [...before].every((p) => after.has(p));
+    expect(setsAreIdentical).toBe(false);
 
     instance.destroy();
     rafSpy.mockRestore();
@@ -580,7 +840,9 @@ describe("createSarmalDotMatrix — pixel output", () => {
       const before = putSpy.mock.calls.length;
       t += 16;
       const cb = pending.pop();
-      if (cb) cb(t);
+      if (cb) {
+        cb(t);
+      }
       expect(putSpy.mock.calls.length - before).toBe(1);
     }
 
@@ -612,7 +874,9 @@ describe("createSarmalDotMatrix — pixel output", () => {
             putImageData(imageData: ImageData) {
               const src = imageData.data;
               const dst = new Uint8Array(src.length >> 2);
-              for (let i = 0; i < dst.length; i++) dst[i] = src[(i << 2) + 3]!;
+              for (let i = 0; i < dst.length; i++) {
+                dst[i] = src[(i << 2) + 3]!;
+              }
               capturedAlphas = dst;
             },
             fillStyle: "",
@@ -634,7 +898,9 @@ describe("createSarmalDotMatrix — pixel output", () => {
     for (let i = 0; i < 60; i++) {
       t += 16;
       const cb = pending.pop();
-      if (cb) cb(t);
+      if (cb) {
+        cb(t);
+      }
     }
 
     expect(capturedAlphas).not.toBeNull();
@@ -644,10 +910,14 @@ describe("createSarmalDotMatrix — pixel output", () => {
     const nonZeroDistinct = new Set<number>();
     for (let i = 0; i < capturedAlphas!.length; i++) {
       const a = capturedAlphas![i]!;
-      if (a > maxAlpha) maxAlpha = a;
+      if (a > maxAlpha) {
+        maxAlpha = a;
+      }
       if (a > 0) {
         nonZeroDistinct.add(a);
-        if (a < minNonZero) minNonZero = a;
+        if (a < minNonZero) {
+          minNonZero = a;
+        }
       }
     }
 

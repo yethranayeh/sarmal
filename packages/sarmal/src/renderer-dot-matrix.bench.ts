@@ -58,7 +58,9 @@ function buildGrid(cols: number, rows: number): Float32Array {
     const col = Math.max(0, Math.min(cols - 1, Math.round(((x + 1) / 2) * (cols - 1))));
     const row = Math.max(0, Math.min(rows - 1, Math.round(((y + 1) / 2) * (rows - 1))));
     const idx = row * cols + col;
-    if (intensity > grid[idx]!) grid[idx] = intensity;
+    if (intensity > grid[idx]!) {
+      grid[idx] = intensity;
+    }
   }
   return grid;
 }
