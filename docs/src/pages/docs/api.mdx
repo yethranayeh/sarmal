@@ -46,7 +46,7 @@ const sarmal = createSarmal(canvas, curves.rose3);
 | initialPhase | `number` | `undefined` | Initial position along the curve (phase value). Calls `seek(initialPhase)` before first frame |
 | pauseOnHidden | `boolean` | `true` | Pauses when the browser tab is hidden and resumes when visible |
 
-### Auto-start and initial position
+### Initial state
 
 By default, sarmal instances start animating immediately from `phase=0`. You can control this behavior:
 
@@ -118,7 +118,7 @@ const sarmal = createSarmalDotMatrix(canvas, curves.lissajous43, {
 | `initialPhase` | `number` | `undefined` | Initial position along the curve. Calls `seek(initialPhase)` before the first frame. |
 | `pauseOnHidden` | `boolean` | `true` | Pauses when the browser tab is hidden and resumes when visible |
 
-### Differences from createSarmal
+### Differences
 
 - **No skeleton.** The dot-matrix renderer draws no background path outline.
 - **No ribbon trail.** The trail is expressed as dot brightness, not a tapered ribbon.
@@ -265,7 +265,7 @@ useEffect(() => {
 
 ## Engine Control
 
-### jump(phase)
+### jump()
 
 Instantly moves the head to position `phase`. Does not update `actualTime`. Trail is left *untouched* by default, but you can use `clearTrail: true` to wipe it.
 
@@ -285,7 +285,7 @@ sarmal.jump(0, { clearTrail: true });
 |--------|------|---------|-------------|
 | `clearTrail` | `boolean` | `false` | Clear the trail on jump |
 
-### seek(phase)
+### seek()
 
 Moves to `phase` **and** reconstructs the trail as if the animation naturally arrived there from `phase=0`. Also updates `actualTime` to match.
 
@@ -311,7 +311,7 @@ sarmal.seek(1, { step: 0.1 });
 
 ## Animation Control
 
-### setSpeed(speed)
+### setSpeed()
 
 Overrides the animation speed. Returns `void`. The override persists until cleared with `resetSpeed()` or replaced with another call.
 
@@ -363,7 +363,7 @@ sarmal.getSpeed(); // curve.speed (e.g., 1)
 `resetSpeed()` removes the override layer entirely. It defers to the curve dynamically, so future curve changes are reflected in `getSpeed()` automatically.
 </Alert>
 
-### setSpeedOver(speed, duration)
+### setSpeedOver()
 
 Transitions to a new speed over a duration, returning a `Promise<void>` that resolves when complete. Uses linear interpolation between current and target speed.
 
@@ -387,7 +387,7 @@ sarmal.pause();                     // then pause the loop
 - `speed` must be a finite number
 - `duration` must be a finite number greater than `0`
 
-### setRenderOptions(partial)
+### setRenderOptions()
 
 Changes colors and trail style on a live Sarmal instance without destroying and recreating it.
 Render options are independent of engine state. They do not affect and are not affected by morphing, seeking, jumping, speed changes, pause/play, or reset.
@@ -430,7 +430,7 @@ sarmal.setRenderOptions({ skeletonColor: "transparent" });
 
 ## Morphing
 
-### morphTo(target)
+### morphTo()
 
 Smooth transition between curves. Returns `Promise<void>` that resolves when morph completes.
 
@@ -467,7 +467,7 @@ await sarmal.morphTo(curves.artemis2);
 - Calling `morphTo()` mid-morph resolves the previous Promise *immediately*. The current interpolated state becomes `curveA` for the new morph while avoiding a visual jump
 - The transition flow for speed and morph run *independently*
 
-## Curve Definition Schema
+## Curve Schema
 
 ```ts
 interface CurveDef {
@@ -480,7 +480,7 @@ interface CurveDef {
 }
 ```
 
-### fn(phase, elapsed, params)
+### Curve function
 
 - **`phase`**: Position along curve (0 <ArrowRight size={14} class="inline" /> period)
 - **`elapsed`**: Actual elapsed seconds

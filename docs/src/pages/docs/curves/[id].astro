@@ -86,9 +86,11 @@ const trailColor = curve.color;
 			</a>
 			<span class="inline-flex gap-4 items-center">
 				{curve.name}
-				{curve.kind && <CurveKindBadge kind={curve.kind} />}
 			</span>
 		</h1>
+
+		{curve.kind && <CurveKindBadge kind={curve.kind} />}
+
 		<p class="lead">{curve.descriptionLong}</p>
 
 		<div class="relative my-8 flex justify-center">

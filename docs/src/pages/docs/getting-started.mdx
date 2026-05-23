@@ -45,7 +45,7 @@ The script scans for `canvas[data-sarmal]` and `svg[data-sarmal]` on page load a
 
 See <Link href="/docs/frameworks/#cdn">CDN</Link> section in Framework Guides page for more details.
 
-## Your first animated curve
+## Your first curve
 
 `createSarmal` is the fastest way to get an animated curve on screen. You point it to a canvas element and pick a curve. The animation starts automatically:
 
@@ -206,7 +206,7 @@ const sarmal = createSarmalSVG(svg, curves.lissajous32);
 	`trailStyle` and colors work identically in both canvas and SVG renderers.
 </Alert>
 
-## Morphing between curves
+## Morphing
 
 Call `morphTo` to smoothly transition from one curve to another:
 
@@ -219,7 +219,7 @@ await sarmal.morphTo(curves.deltoid, { duration: 500 });
 
 The trail and skeleton crossfade during the transition. `morphTo` returns a `Promise` that resolves when the morph is complete, so you can chain them.
 
-## Frameworks and SSR
+## Frameworks & SSR
 
 The engine is pure math and works _anywhere_, but the renderers need the **DOM**. If you're using Next.js, Remix, or another SSR framework, you may need to guard the import and initialization:
 

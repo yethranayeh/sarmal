@@ -9,7 +9,7 @@ description: Framework integration guides for React, Svelte, and CDN usage.
 import Alert from "../../components/Alert.astro";
 import Link from "../../components/Link.astro";
 
-# Framework Guides
+# Frameworks
 
 Framework integration guides for React and CDN usage.
 
@@ -187,7 +187,7 @@ Runtime visual options (`trailColor`, `headColor`, `skeletonColor`, `trailStyle`
 For reactive updates after mount, call `instance.current.setRenderOptions(...)` directly. Init options (`width`, `height`, `trailLength`, `autoStart`, `initialPhase`) are tracked and trigger **destroy**+*recreate* on change. `headRadius` is also tracked as an init option (prop changes recreate), but can be changed at runtime with `setRenderOptions` without a recreate.
 </Alert>
 
-### SSR and Next.js App Router
+### Server Side Rendering
 
 `@sarmal/react` emits `"use client"` at the top of its bundle output. `createSarmal` is only ever called inside `useEffect`, which never runs on the server.
 
