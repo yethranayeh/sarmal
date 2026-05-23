@@ -1,10 +1,9 @@
 ---
 import Branding from "../../Branding.astro";
 import ThemeToggle from "./ThemeToggle.astro";
-import DotMatrixToggle from "./DotMatrixToggle.astro";
 ---
 
-<header class="bg-surface-raised w-full sticky top-0 z-20">
+<header class="bg-surface-raised w-full relative md:sticky top-0 z-20">
 	<div class="w-full relative bg-surface-raised h-13 md:hidden">
 		<div class="z-10 relative flex items-center h-full w-max pl-4">
 			<Branding />
@@ -12,13 +11,12 @@ import DotMatrixToggle from "./DotMatrixToggle.astro";
 	</div>
 
 	<div
-		class="flex items-center justify-between w-full h-13 px-4 py-2 isolate border-b border-border bg-surface-raised/70 backdrop-blur-sm ring-1 ring-black/5"
+		class="flex items-center justify-between w-full h-13 px-4 py-2 isolate border-b border-border bg-surface-raised/70 md:bg-transparent backdrop-blur-sm md:backdrop-blur-none ring-1 md:ring-0 ring-black/5 fixed md:relative top-0"
 	>
 		<div>
 			<div class="hidden md:block"><Branding /></div>
 		</div>
 		<div class="flex items-center gap-3 md:gap-4 z-20">
-			<DotMatrixToggle />
 			<ThemeToggle />
 			<div class="w-px h-5 bg-border" aria-hidden="true"></div>
 			<slot name="nav" />
