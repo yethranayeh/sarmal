@@ -577,6 +577,70 @@ describe("createSarmalDotMatrix — gradient color rendering", () => {
     rafSpy.mockRestore();
     cafSpy.mockRestore();
   });
+
+  it("trailStyle:default with array trailColor renders all lit dots in the first color only", () => {
+    // Bug: draw() gated on `gradientOklab !== null` instead of `currentTrailStyle !== "default"`,
+    // so passing trailColor:["#ff0000","#0000ff"] with trailStyle:"default" rendered a gradient
+    // even though "default" mode is supposed to be solid (first color only).
+    let capturedData: Uint8ClampedArray | null = null;
+    const canvas = document.createElement("canvas");
+    canvas.width = 240;
+    canvas.height = 240;
+    // @ts-ignore
+    canvas.getContext = (id: string) =>
+      id === "2d"
+        ? {
+            putImageData(imageData: ImageData) {
+              capturedData = new Uint8ClampedArray(imageData.data);
+            },
+            fillStyle: "",
+            globalAlpha: 1,
+          }
+        : null;
+
+    const pending: FrameRequestCallback[] = [];
+    const rafSpy = vi.spyOn(globalThis, "requestAnimationFrame").mockImplementation((cb) => {
+      pending.push(cb);
+      return pending.length;
+    });
+    const cafSpy = vi.spyOn(globalThis, "cancelAnimationFrame").mockImplementation(() => {});
+
+    const instance = createSarmalDotMatrix(canvas, circle, {
+      autoStart: false,
+      cols: 8,
+      rows: 8,
+      trailLength: 24,
+      trailColor: ["#ff0000", "#0000ff"],
+      trailStyle: "default",
+    });
+
+    instance.play();
+    let t = performance.now();
+    for (let i = 0; i < 60; i++) {
+      t += 16;
+      const cb = pending.pop();
+      if (cb) {
+        cb(t);
+      }
+    }
+
+    expect(capturedData).not.toBeNull();
+
+    // In "default" mode with a red→blue array, colorRgb is set to the first color (red).
+    // All lit dots must be red — no blueish pixel (b > r) may appear among lit pixels.
+    let hasBlueishLitPixel = false;
+    for (let i = 0; i < capturedData!.length; i += 4) {
+      if (capturedData![i + 3]! > 50 && capturedData![i + 2]! > capturedData![i]!) {
+        hasBlueishLitPixel = true;
+        break;
+      }
+    }
+    expect(hasBlueishLitPixel).toBe(false);
+
+    instance.destroy();
+    rafSpy.mockRestore();
+    cafSpy.mockRestore();
+  });
 });
 
 describe("createSarmalDotMatrix — skeleton", () => {

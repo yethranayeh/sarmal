@@ -480,7 +480,7 @@ export function createSarmalDotMatrix(
       }
 
       let r: number, g: number, b: number;
-      if (gradientOklab !== null) {
+      if (currentTrailStyle !== "default" && gradientOklab !== null) {
         ({ r, g, b } = oklabToRgb(getPaletteColor(gradientOklab, intensity, timeOffset)));
       } else {
         ({ r, g, b } = colorRgb);

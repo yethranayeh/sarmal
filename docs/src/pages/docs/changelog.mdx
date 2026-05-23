@@ -17,6 +17,10 @@ Version history notes of the <Link href="#core">Core</Link>, <Link href="#react"
 
 ## Core
 
+### 0.36.3 - 23.05.2026
+
+Fixed `createSarmalDotMatrix` ignoring `trailStyle: "default"` when `trailColor` is an array. The renderer was gating gradient sampling on whether `gradientOklab` was populated, not on the active `trailStyle`. So, in a scenario where user provides an *array* of colors, using a palette with `trailStyle: "default"` did not matter. It would still render a gradient instead of a solid color. The expectation is that it must use the first palette entry like canvas and svg renderers.
+
 ### 0.36.2 - 23.05.2026
 
 Fixed `createSarmalDotMatrix` rendering skeleton dots dimmer than their resting opacity when the trail tail passed over them. The skeleton opacity now acts as a minimum brightness floor for any trail pixel that lands on a skeleton cell.
