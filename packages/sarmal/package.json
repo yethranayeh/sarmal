@@ -1,6 +1,6 @@
 {
   "name": "@sarmal/core",
-  "version": "0.36.4",
+  "version": "0.36.5",
   "description": "Curve path based loading indicators and their renderer",
   "keywords": [
     "animation",

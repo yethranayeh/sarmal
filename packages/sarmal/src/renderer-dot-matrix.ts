@@ -19,7 +19,10 @@ import {
   getPaletteColor,
   oklabToRgb,
   parseColorToOklab,
+  resolveTrailMainColor,
+  resolveTrailPalette,
   validateBaseRenderOptions,
+  warnIfTrailColorMismatch,
 } from "./renderer-shared";
 
 export interface DotMatrixSarmalOptions extends Pick<
@@ -134,17 +137,16 @@ export function createSarmalDotMatrix(
   // It is large enough to be clearly visible without adjacent dots overlapping even at coarse grid densities
   const dotR = Math.min(cellW, cellH) * 0.36;
 
-  // Gradient state: `null` is solid mode,
-  //  with Oklab stops, it becomes gradient mode
+  // Oklab palette: always populated by `applyColor()`, used only when `trailStyle !== "default"`.
   // Oklab interpolation avoids the gray dead zone that sRGB gradients produce.
-  let gradientOklab: Array<Oklab> | null = null;
-  // Primary color in Rgb, used for solid mode and as the background dot hue in gradient mode.
-  // Initialized by `applyColor()` in the init block below
+  let gradientOklab: Array<Oklab> = [];
+  // Primary color in Rgb: always the first (or only) stop of `trailColor`.
+  // Used for solid mode and as the background dot hue. Initialized by `applyColor()` in the init block below.
   let colorRgb: Rgb = { r: 255, g: 255, b: 255 };
-  let currentTrailStyle: TrailStyle = initialTrailStyle;
-  // Accumulated seconds; incremented each frame only in 'gradient-animated' mode.
-  let animTime = 0;
-  const ANIM_PERIOD = 6;
+  let trailStyle: TrailStyle = initialTrailStyle;
+  let trailColor: TrailColor = initialColor;
+  // Accumulated milliseconds; incremented each frame only in 'gradient-animated' mode.
+  let gradientAnimTime = 0;
 
   // Flat buffer: one intensity value (0–1) per grid cell, indexed as row * cols + col.
   // 0 means the trail is not touching this cell,
@@ -288,13 +290,8 @@ export function createSarmalDotMatrix(
   }
 
   function applyColor(color: TrailColor) {
-    if (Array.isArray(color)) {
-      gradientOklab = color.map((c) => parseColorToOklab(c)!);
-      colorRgb = oklabToRgb(gradientOklab[0]!);
-    } else {
-      gradientOklab = null;
-      colorRgb = colorToRgb(color);
-    }
+    colorRgb = colorToRgb(resolveTrailMainColor(color));
+    gradientOklab = resolveTrailPalette(color).map((c) => parseColorToOklab(c)!);
   }
 
   function applySkeletonColor(color: string) {
@@ -470,7 +467,7 @@ export function createSarmalDotMatrix(
 
     writeSkeletonPixels(data);
 
-    const timeOffset = currentTrailStyle === "gradient-animated" ? animTime / ANIM_PERIOD : 0;
+    const timeOffset = trailStyle === "gradient-animated" ? gradientAnimTime * 0.0005 : 0;
 
     const n = cols * rows;
     for (let dotIdx = 0; dotIdx < n; dotIdx++) {
@@ -480,7 +477,7 @@ export function createSarmalDotMatrix(
       }
 
       let r: number, g: number, b: number;
-      if (currentTrailStyle !== "default" && gradientOklab !== null) {
+      if (trailStyle !== "default") {
         ({ r, g, b } = oklabToRgb(getPaletteColor(gradientOklab, intensity, timeOffset)));
       } else {
         ({ r, g, b } = colorRgb);
@@ -537,8 +534,8 @@ export function createSarmalDotMatrix(
       computeSkeletonGrid(engine.getSarmalSkeleton());
     }
 
-    if (currentTrailStyle === "gradient-animated") {
-      animTime += deltaTime;
+    if (trailStyle === "gradient-animated") {
+      gradientAnimTime += deltaTime * 1000;
     }
 
     buildGrid(deltaTime);
@@ -560,6 +557,7 @@ export function createSarmalDotMatrix(
   validateBaseRenderOptions({ trailColor: initialColor, skeletonColor: skeletonColorOpt });
   applyColor(initialColor);
   applySkeletonColor(skeletonColorOpt);
+  warnIfTrailColorMismatch(trailColor, trailStyle);
   calculateBoundaries(engine.getSarmalSkeleton());
   computePixelMask();
   computeSkeletonGrid(engine.getSarmalSkeleton());
@@ -651,7 +649,8 @@ export function createSarmalDotMatrix(
       let needsRebuildBg = false;
 
       if (partial.trailColor !== undefined) {
-        applyColor(partial.trailColor);
+        trailColor = partial.trailColor;
+        applyColor(trailColor);
         needsRebuildBg = true;
       }
 
@@ -660,9 +659,9 @@ export function createSarmalDotMatrix(
       }
 
       if (partial.trailStyle !== undefined) {
-        currentTrailStyle = partial.trailStyle;
-        if (currentTrailStyle === "default") {
-          animTime = 0;
+        trailStyle = partial.trailStyle;
+        if (trailStyle === "default") {
+          gradientAnimTime = 0;
         }
       }
 
@@ -670,16 +669,8 @@ export function createSarmalDotMatrix(
         buildBgImageData();
       }
 
-      if (currentTrailStyle !== "default" && gradientOklab === null) {
-        // biome-ignore lint/suspicious/noConsole: advisory for developer feedback
-        console.warn(
-          `[sarmal] dot matrix: trailColor is a single color but trailStyle is "${currentTrailStyle}"; the trail will render as a solid color. Pass an array of hex colors to use a real gradient.`,
-        );
-      } else if (currentTrailStyle === "default" && gradientOklab !== null) {
-        // biome-ignore lint/suspicious/noConsole: advisory for developer feedback
-        console.warn(
-          '[sarmal] dot matrix: trailColor is an array but trailStyle is "default"; only the first color will be used. Pass a gradient trailStyle to use the whole palette.',
-        );
+      if (partial.trailColor !== undefined || partial.trailStyle !== undefined) {
+        warnIfTrailColorMismatch(trailColor, trailStyle);
       }
     },
   };
