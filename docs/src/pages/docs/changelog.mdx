@@ -17,6 +17,14 @@ Version history notes of the <Link href="#core">Core</Link>, <Link href="#react"
 
 ## Core
 
+### 0.36.4 - 23.05.2026
+
+`createSarmalDotMatrix` now uses the same shared color utilities (`resolveTrailMainColor`, `resolveTrailPalette`, `warnIfTrailColorMismatch`) as the canvas and SVG renderers. Three observable changes:
+
+- Mismatched `trailColor`/`trailStyle` pairs now warn at construction time, not only on `setRenderOptions`.
+- The `gradient-animated` cycle period is now 2 seconds, matching the canvas and SVG renderers. It was previously 6 seconds.
+- The mismatch warning message is now identical across all three renderers.
+
 ### 0.36.3 - 23.05.2026
 
 Fixed `createSarmalDotMatrix` ignoring `trailStyle: "default"` when `trailColor` is an array. The renderer was gating gradient sampling on whether `gradientOklab` was populated, not on the active `trailStyle`. So, in a scenario where user provides an *array* of colors, using a palette with `trailStyle: "default"` did not matter. It would still render a gradient instead of a solid color. The expectation is that it must use the first palette entry like canvas and svg renderers.
