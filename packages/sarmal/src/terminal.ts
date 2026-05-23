@@ -113,8 +113,14 @@ export function rgbTo256(r: number, g: number, b: number) {
 
 export function dimRgb(rgb: Rgb, brightness: number): Rgb {
   const t = 1 - Math.max(0, Math.min(1, brightness));
-  if (t <= 0) return rgb;
-  if (t >= 1) return { r: 0, g: 0, b: 0 };
+  if (t <= 0) {
+    return rgb;
+  }
+
+  if (t >= 1) {
+    return { r: 0, g: 0, b: 0 };
+  }
+
   return oklabToRgb(lerpOklab(rgbToOklab(rgb), { L: 0, a: 0, b: 0 }, t));
 }
 

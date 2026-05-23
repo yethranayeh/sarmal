@@ -17,15 +17,21 @@ describe("getSarmalSkeleton() allocation behavior", () => {
     const engine = createEngine(circle);
 
     // Warm up — JIT compile and discard initial allocations
-    for (let i = 0; i < 10; i++) engine.getSarmalSkeleton();
-    if (global.gc) global.gc();
+    for (let i = 0; i < 10; i++) {
+      engine.getSarmalSkeleton();
+    }
+    if (global.gc) {
+      global.gc();
+    }
 
     const before = queryObjects(Array) as number;
     const CALLS = 100;
     for (let i = 0; i < CALLS; i++) {
       engine.getSarmalSkeleton();
     }
-    if (global.gc) global.gc();
+    if (global.gc) {
+      global.gc();
+    }
     const after = queryObjects(Array) as number;
 
     // Each call allocates 1 array. Total should not exceed CALLS + small tolerance.
@@ -36,13 +42,21 @@ describe("getSarmalSkeleton() allocation behavior", () => {
   it("does not retain skeleton arrays after call completes (GC can reclaim them)", () => {
     const engine = createEngine(circle);
 
-    for (let i = 0; i < 50; i++) engine.getSarmalSkeleton();
-    if (global.gc) global.gc();
+    for (let i = 0; i < 50; i++) {
+      engine.getSarmalSkeleton();
+    }
+    if (global.gc) {
+      global.gc();
+    }
 
     const baseline = queryObjects(Array) as number;
 
-    for (let i = 0; i < 50; i++) engine.getSarmalSkeleton();
-    if (global.gc) global.gc();
+    for (let i = 0; i < 50; i++) {
+      engine.getSarmalSkeleton();
+    }
+    if (global.gc) {
+      global.gc();
+    }
 
     const after = queryObjects(Array) as number;
 

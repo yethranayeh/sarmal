@@ -32,11 +32,15 @@ export function diffRenderOptions(
 ): Partial<RuntimeRenderOptions> {
   const changes: Partial<RuntimeRenderOptions> = {};
   if (!shallowEqualTrailColor(prev.trailColor, next.trailColor)) {
-    if (next.trailColor !== undefined) changes.trailColor = next.trailColor;
+    if (next.trailColor !== undefined) {
+      changes.trailColor = next.trailColor;
+    }
   }
 
   if (prev.skeletonColor !== next.skeletonColor) {
-    if (next.skeletonColor !== undefined) changes.skeletonColor = next.skeletonColor;
+    if (next.skeletonColor !== undefined) {
+      changes.skeletonColor = next.skeletonColor;
+    }
   }
 
   if (prev.headColor !== next.headColor) {
@@ -44,11 +48,15 @@ export function diffRenderOptions(
   }
 
   if (prev.trailStyle !== next.trailStyle) {
-    if (next.trailStyle !== undefined) changes.trailStyle = next.trailStyle;
+    if (next.trailStyle !== undefined) {
+      changes.trailStyle = next.trailStyle;
+    }
   }
 
   if (prev.trailWidth !== next.trailWidth) {
-    if (next.trailWidth !== undefined) changes.trailWidth = next.trailWidth;
+    if (next.trailWidth !== undefined) {
+      changes.trailWidth = next.trailWidth;
+    }
   }
 
   return changes;

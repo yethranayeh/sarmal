@@ -1,6 +1,6 @@
 {
   "name": "@sarmal/react",
-  "version": "0.6.1",
+  "version": "0.6.2",
   "description": "React wrapper for @sarmal/core",
   "keywords": [
     "animation",
@@ -47,7 +47,7 @@
     "dev": "tsup --watch",
     "prepublishOnly": "pnpm test && tsup",
     "typecheck": "tsc --noEmit",
-    "lint": "oxlint",
+    "lint": "oxlint --config ../../.oxlintrc.json",
     "format": "oxfmt",
     "test": "vitest --run",
     "test:watch": "vitest"

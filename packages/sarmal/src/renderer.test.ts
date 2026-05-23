@@ -1552,7 +1552,9 @@ function makeCanvasWithFillTracker(): {
   let currentFillStyle = "";
   // biome-ignore lint/suspicious/noExplicitAny: minimal mock context for the test
   (canvas as any).getContext = (contextId: string) => {
-    if (contextId !== "2d") return null;
+    if (contextId !== "2d") {
+      return null;
+    }
     return {
       save: () => {},
       restore: () => {},
@@ -2443,7 +2445,9 @@ describe("Phase 2 — SVG regression baseline", () => {
 
     function parseRgb(s: string) {
       const m = s.match(/^rgb\((\d+),(\d+),(\d+)\)$/);
-      if (!m) return null;
+      if (!m) {
+        return null;
+      }
       return { r: Number(m[1]), g: Number(m[2]), b: Number(m[3]) };
     }
 

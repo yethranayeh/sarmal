@@ -149,7 +149,9 @@ describe("reset()", () => {
 
   it("next tick after reset behaves as if engine was just created", () => {
     const engine = createEngine(identity, 10);
-    for (let i = 0; i < 20; i++) engine.tick(1);
+    for (let i = 0; i < 20; i++) {
+      engine.tick(1);
+    }
     engine.reset();
     expect(engine.trailCount).toBe(0);
     const trail = engine.tick(2); // t=2, actualTime=2
@@ -507,7 +509,9 @@ describe("getSarmalSkeleton()", () => {
   it("is not affected by tick() calls — skeleton is always sampled at time=0", () => {
     const engine = createEngine(circle);
     const before = engine.getSarmalSkeleton();
-    for (let i = 0; i < 100; i++) engine.tick(0.1);
+    for (let i = 0; i < 100; i++) {
+      engine.tick(0.1);
+    }
     const after = engine.getSarmalSkeleton();
     expect(before[0]!.x).toBeCloseTo(after[0]!.x);
     expect(before[0]!.y).toBeCloseTo(after[0]!.y);
@@ -829,7 +833,9 @@ describe("tick() during morph", () => {
     const curveD: CurveDef = { ...curveA, name: "d", speed: 1.5 };
 
     const engine = createEngine(curveA, 30);
-    for (let i = 0; i < 5; i++) engine.tick(1 / 60);
+    for (let i = 0; i < 5; i++) {
+      engine.tick(1 / 60);
+    }
 
     // Interrupt 1
     engine.startMorph(curveB);

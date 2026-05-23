@@ -28,13 +28,17 @@ function getTrailPaths(container: SVGSVGElement): SVGPathElement[] {
 
 function getHeadCircle(container: Element): SVGCircleElement {
   const circle = container.querySelector<SVGCircleElement>('circle[data-sarmal-role="head"]');
-  if (!circle) throw new Error("no head circle");
+  if (!circle) {
+    throw new Error("no head circle");
+  }
   return circle;
 }
 
 function getSkeletonPath(container: Element): SVGPathElement {
   const path = container.querySelector<SVGPathElement>('path[data-sarmal-role="skeleton"]');
-  if (!path) throw new Error("no skeleton path");
+  if (!path) {
+    throw new Error("no skeleton path");
+  }
   return path;
 }
 
@@ -76,12 +80,16 @@ describe("setRenderOptions — SVG attribute re-apply", () => {
     // Before: every trail path's fill was set to rgb(255,0,0) at init.
     const trailPaths = getTrailPaths(container);
     expect(trailPaths.length).toBeGreaterThan(0);
-    for (const p of trailPaths) expect(p.getAttribute("fill")).toBe("rgb(255,0,0)");
+    for (const p of trailPaths) {
+      expect(p.getAttribute("fill")).toBe("rgb(255,0,0)");
+    }
 
     instance.setRenderOptions({ trailColor: "#00ff00" });
 
     // After: every trail path's fill was re-painted to the new color.
-    for (const p of trailPaths) expect(p.getAttribute("fill")).toBe("rgb(0,255,0)");
+    for (const p of trailPaths) {
+      expect(p.getAttribute("fill")).toBe("rgb(0,255,0)");
+    }
 
     instance.destroy();
   });
@@ -126,7 +134,9 @@ describe("setRenderOptions — SVG attribute re-apply", () => {
 
     // Now every trail path should be re-seeded to the solid.
     const trailPaths = getTrailPaths(container);
-    for (const p of trailPaths) expect(p.getAttribute("fill")).toBe("rgb(255,0,0)");
+    for (const p of trailPaths) {
+      expect(p.getAttribute("fill")).toBe("rgb(255,0,0)");
+    }
 
     instance.destroy();
   });
@@ -365,7 +375,9 @@ describe("setRenderOptions — SVG attribute re-apply", () => {
         const engine = createEngine(testCircle, 30);
         const instance = createSVGRenderer({ container, engine, autoStart: false, trailWidth });
 
-        for (let i = 0; i < 20; i++) engine.tick(0.016);
+        for (let i = 0; i < 20; i++) {
+          engine.tick(0.016);
+        }
         instance.play();
         instance.pause();
 

@@ -68,7 +68,9 @@ describe("live skeleton contracts", () => {
     it(`${name}: skeleton changes after tick() advances elapsed`, () => {
       const engine = createEngine(curves[name]!, 60);
       const before = snapshotSkeleton(engine);
-      for (let i = 0; i < 10; i++) engine.tick(0.05);
+      for (let i = 0; i < 10; i++) {
+        engine.tick(0.05);
+      }
       const after = snapshotSkeleton(engine);
       expect(skeletonsDiffer(before, after)).toBe(true);
     });
@@ -82,7 +84,9 @@ describe("live skeleton contracts", () => {
   it(`${STATIC_CURVE_NAME}: skeleton is stable after tick()`, () => {
     const engine = createEngine(curves[STATIC_CURVE_NAME]!, 60);
     const before = snapshotSkeleton(engine);
-    for (let i = 0; i < 10; i++) engine.tick(0.05);
+    for (let i = 0; i < 10; i++) {
+      engine.tick(0.05);
+    }
     const after = snapshotSkeleton(engine);
     expect(skeletonsDiffer(before, after)).toBe(false);
   });
@@ -149,7 +153,9 @@ describe("speed propagation through engine", () => {
   it("setSpeed(0) freezes phase — all trail points are identical", () => {
     const engine = createEngine({ name: "test", speed: 1, fn: (p) => ({ x: p, y: 0 }) }, 10);
     engine.setSpeed(0);
-    for (let i = 0; i < 10; i++) engine.tick(0.1);
+    for (let i = 0; i < 10; i++) {
+      engine.tick(0.1);
+    }
     const trail = engine.tick(0);
     for (let i = 0; i < engine.trailCount; i++) {
       expect(trail[i]!.x).toBe(0);
@@ -211,7 +217,9 @@ function snapshotSkeleton(engine: ReturnType<typeof createEngine>): Point[] {
 }
 
 function skeletonsDiffer(a: Point[], b: Point[]): boolean {
-  if (a.length !== b.length) return true;
+  if (a.length !== b.length) {
+    return true;
+  }
   for (let i = 0; i < a.length; i++) {
     if (Math.abs(a[i]!.x - b[i]!.x) > 1e-10 || Math.abs(a[i]!.y - b[i]!.y) > 1e-10) {
       return true;
