@@ -1,0 +1,60 @@
+---
+const shapes = [
+	{ value: 0, label: "0 (square)" },
+	{ value: 0.5, label: "0.5 (rounded)" },
+	{ value: 1, label: "1 (circle)" },
+];
+---
+
+<div class="dm-roundness not-prose my-8">
+	<div class="flex flex-wrap gap-6 justify-center items-end">
+		{
+			shapes.map((s) => (
+				<div class="flex flex-col items-center gap-2">
+					<canvas
+						class="roundness-canvas"
+						width={180}
+						height={180}
+						data-dm-roundness={s.value}
+					/>
+					<span
+						class="font-ui text-[10px] tracking-[0.25em] uppercase text-muted"
+						set:html={s.label}
+					/>
+				</div>
+			))
+		}
+	</div>
+</div>
+
+<script>
+	import { createSarmalDotMatrix, curves } from "@sarmal/core";
+
+	document.querySelectorAll<HTMLElement>(".dm-roundness").forEach((wrapper) => {
+		wrapper
+			.querySelectorAll<HTMLCanvasElement>(".roundness-canvas")
+			.forEach((canvas) => {
+				const roundness = parseFloat(canvas.dataset.dmRoundness ?? "1");
+				const inst = createSarmalDotMatrix(canvas, curves.lissajous32, {
+					cols: 24,
+					rows: 24,
+					roundness,
+					trailColor: "#2dd4bf",
+					skeletonColor: "#3a3b37",
+					autoStart: false,
+				});
+
+				const observer = new IntersectionObserver(
+					(entries) => {
+						if (entries[0]?.isIntersecting) {
+							inst.play();
+						} else {
+							inst.pause();
+						}
+					},
+					{ threshold: 0.1 },
+				);
+				observer.observe(canvas);
+			});
+	});
+</script>

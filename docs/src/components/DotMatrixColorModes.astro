@@ -1,0 +1,64 @@
+---
+const modes = [
+	{ style: "default", label: "Solid" },
+	{ style: "gradient-static", label: "Gradient static" },
+	{ style: "gradient-animated", label: "Gradient animated" },
+];
+---
+
+<div class="dm-color-modes not-prose my-8">
+	<div class="flex flex-wrap gap-6 justify-center items-end">
+		{
+			modes.map((m) => (
+				<div class="flex flex-col items-center gap-2">
+					<canvas
+						class="color-mode-canvas"
+						width={180}
+						height={180}
+						data-dm-style={m.style}
+					/>
+					<span class="font-ui text-[10px] tracking-[0.25em] uppercase text-muted">
+						{m.label}
+					</span>
+				</div>
+			))
+		}
+	</div>
+</div>
+
+<script>
+	import { createSarmalDotMatrix, curves, palettes } from "@sarmal/core";
+
+	document
+		.querySelectorAll<HTMLElement>(".dm-color-modes")
+		.forEach((wrapper) => {
+			wrapper
+				.querySelectorAll<HTMLCanvasElement>(".color-mode-canvas")
+				.forEach((canvas) => {
+					const style = canvas.dataset.dmStyle as
+						| "default"
+						| "gradient-static"
+						| "gradient-animated";
+					const inst = createSarmalDotMatrix(canvas, curves.lissajous43, {
+						cols: 28,
+						rows: 28,
+						trailColor: style === "default" ? "#2dd4bf" : palettes.rocketpop,
+						trailStyle: style,
+						skeletonColor: "#3a3b37",
+						autoStart: false,
+					});
+
+					const observer = new IntersectionObserver(
+						(entries) => {
+							if (entries[0]?.isIntersecting) {
+								inst.play();
+							} else {
+								inst.pause();
+							}
+						},
+						{ threshold: 0.1 },
+					);
+					observer.observe(canvas);
+				});
+		});
+</script>

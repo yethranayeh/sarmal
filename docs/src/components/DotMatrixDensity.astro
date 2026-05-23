@@ -1,0 +1,55 @@
+---
+const densities = [16, 32, 48, 64];
+---
+
+<div class="dm-density not-prose my-8">
+	<div class="flex flex-wrap gap-6 justify-center items-end">
+		{
+			densities.map((d) => (
+				<div class="flex flex-col items-center gap-2">
+					<canvas
+						class="density-canvas"
+						width={160}
+						height={160}
+						data-dm-density={d}
+					/>
+					<span class="font-ui text-[10px] tracking-[0.25em] uppercase text-muted">
+						{d}x{d}
+					</span>
+				</div>
+			))
+		}
+	</div>
+</div>
+
+<script>
+	import { createSarmalDotMatrix, curves } from "@sarmal/core";
+
+	document.querySelectorAll<HTMLElement>(".dm-density").forEach((wrapper) => {
+		wrapper
+			.querySelectorAll<HTMLCanvasElement>(".density-canvas")
+			.forEach((canvas) => {
+				const density = parseInt(canvas.dataset.dmDensity ?? "32");
+				const inst = createSarmalDotMatrix(canvas, curves.astroid, {
+					cols: density,
+					rows: density,
+					trailColor: "#2dd4bf",
+					trailLength: density * 3,
+					skeletonColor: "#3a3b37",
+					autoStart: false,
+				});
+
+				const observer = new IntersectionObserver(
+					(entries) => {
+						if (entries[0]?.isIntersecting) {
+							inst.play();
+						} else {
+							inst.pause();
+						}
+					},
+					{ threshold: 0.1 },
+				);
+				observer.observe(canvas);
+			});
+	});
+</script>

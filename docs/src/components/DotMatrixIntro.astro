@@ -1,0 +1,34 @@
+---
+
+---
+
+<div class="not-prose">
+	<canvas id="intro-canvas" width={200} height={200}></canvas>
+</div>
+
+<script>
+	import { createSarmalDotMatrix, curves, palettes } from "@sarmal/core";
+	const canvas = document.getElementById("intro-canvas") as HTMLCanvasElement;
+
+	const inst = createSarmalDotMatrix(canvas, curves.lissajous43, {
+		cols: 32,
+		rows: 32,
+		trailColor: palettes.sunset,
+		trailStyle: "gradient-static",
+		skeletonColor: "#3a3b37",
+		autoStart: false,
+	});
+
+	const observer = new IntersectionObserver(
+		(entries) => {
+			if (entries[0]?.isIntersecting) {
+				inst.play();
+			} else {
+				inst.pause();
+			}
+		},
+		{ threshold: 0.1 },
+	);
+
+	observer.observe(canvas);
+</script>

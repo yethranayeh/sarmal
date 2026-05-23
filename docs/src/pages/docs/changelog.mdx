@@ -2,7 +2,7 @@
 layout: ../../layouts/DocsLayout.astro
 title: Changelog
 sidebarLabel: Changelog
-order: 8
+order: 9
 description: Version history and migration notes.
 ---
 
@@ -470,6 +470,12 @@ import { curves } from "@sarmal/core";
 Peer dependencies: `react >= 18` and `@sarmal/core`. The package bundle emits `"use client"` for SSR compatibility.
 
 ## Svelte
+
+### 0.3.0 - 24.05.2026
+
+Added `pauseOnHidden` prop to `<Sarmal>` and `<SarmalSVG>` components, and to the `sarmal` and `sarmalSVG` actions. Controls whether the animation automatically pauses when the browser tab is hidden. Defaults to `true`. Changing the prop on a component after mount destroys and recreates the instance; the action handles it via destroy + recreate the same way other init options do.
+
+Added `morphStrategy` prop to `<Sarmal>` and `<SarmalSVG>` components, and to the `sarmal` and `sarmalSVG` actions. Accepts `'normalized'` (default) or `'raw'`. Also available as a `getMorphStrategy` argument on the `useSarmal` and `useSarmalSVG` composables.
 
 ### 0.2.0 - 17.05.2026
 
