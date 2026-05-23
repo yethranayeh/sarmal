@@ -1,0 +1,149 @@
+---
+layout: ../../layouts/DocsLayout.astro
+title: Dot Matrix Renderer
+sidebarLabel: Dot Matrix
+order: 4.5
+description: Render sarmal curves as a grid of fading dots. Blueprint aesthetic, configurable density, smooth gradients.
+---
+
+import Alert from "../../components/Alert.astro";
+import Link from "../../components/Link.astro";
+import DotMatrixIntro from "../../components/DotMatrixIntro.astro";
+import DotMatrixDensity from "../../components/DotMatrixDensity.astro";
+import DotMatrixRoundness from "../../components/DotMatrixRoundness.astro";
+import DotMatrixColorModes from "../../components/DotMatrixColorModes.astro";
+
+# Dot Matrix
+
+<div class="grid grid-cols-1 md:grid-cols-2">
+  <p>The dot matrix renderer maps Sarmal curves onto a grid of dots. Each dot's brightness reflects its position along the trail. The head dot is fully lit, and as the position travels toward the tail, it becomes to fade. The background grid is *always* visible, and the trail moves *through* it.</p>
+  <div class="flex items-center justify-center"><DotMatrixIntro /></div>
+</div>
+
+## How It Works
+
+Each frame, trail points are mapped to grid cells. Adjacent points are gap-filled so no cell is skipped, even at coarse densities. Each lit dot gets an intensity from 0 to 1 based on its position in the trail. The final frame is written in a single `putImageData` call — performance is flat regardless of grid size.
+
+
+## Grid Density
+
+Grid density is the most visible dial. Coarser grids feel <span class="font-mono">pixelated</span>. Finer grids approximate continuous motion while preserving the dot character.
+
+<DotMatrixDensity />
+
+The default is 32x32. It's a sweet middle ground where the curve has the dot matrix character, but also fine enough to retain its shape. The trail length defaults to `cols * 3`, so the tail stays proportional regardless of density.
+
+## Dot Shape
+
+`roundness` controls dot shape the same way CSS `border-radius` controls corners: `0` is a sharp square, `1` is a full circle, anything in between is a rounded rectangle.
+
+<DotMatrixRoundness />
+
+## Color Modes
+
+The same three modes as the canvas and svg renderers:
+
+- **Solid** (`"default"`): Single color, brightness varies by trail position.
+- **Gradient static** (`"gradient-static"`): Each dot's color is sampled from the palette by its trail position. The palette *doesn't* move.
+- **Gradient animated** (`"gradient-animated"`): same, but the palette <em class="hover:translate-x-0.5 inline-block transition-transform">shifts</em> as the head advances.
+
+<DotMatrixColorModes />
+
+```ts
+import { createSarmalDotMatrix, palettes } from "@sarmal/core";
+
+// Solid color
+createSarmalDotMatrix(canvas, curve, { trailColor: "#2dd4bf" });
+
+// Static gradient
+createSarmalDotMatrix(canvas, curve, {
+  trailColor: palettes.rocketpop,
+  trailStyle: "gradient-static",
+});
+
+// Animated gradient
+createSarmalDotMatrix(canvas, curve, {
+  trailColor: palettes.ice,
+  trailStyle: "gradient-animated",
+});
+```
+
+## Skeleton
+
+Behind the trail, a faint layer of dots outlines the full curve path. This is the skeleton, and it has its own color (`skeletonColor`), which is separate from the trail.
+
+The default is white, which disappears on light backgrounds. Set it to something that reads against your surface, or pass `"transparent"` to remove it:
+
+```ts
+createSarmalDotMatrix(canvas, curve, {
+  trailColor: "#2dd4bf",
+  skeletonColor: "#3a3b37",
+});
+
+// No skeleton
+createSarmalDotMatrix(canvas, curve, {
+  trailColor: "#2dd4bf",
+  skeletonColor: "transparent",
+});
+```
+
+---
+
+## When to Use
+
+Reach for the dot matrix when:
+
+- You want a blueprint, schematic, or technical aesthetic
+- The indicator should fill space without demanding attention
+- You want the ambient texture of a full grid, not a ribbon
+
+Skip it when you need smooth continuous motion, or when the canvas needs accessibility semantics.
+
+## Characteristics
+
+| Feature | Dot Matrix |
+|---------|------------|
+| Responsive scaling | Manual (fixed canvas) |
+| Trail cost | Flat per frame regardless of grid size |
+| Accessibility | Add a visually hidden label |
+| Animated gradients | Yes |
+| Custom palettes | Yes |
+
+## Usage
+
+```ts
+import { createSarmalDotMatrix, curves } from "@sarmal/core";
+
+const canvas = document.getElementById("loader") as HTMLCanvasElement;
+const sarmal = createSarmalDotMatrix(canvas, curves.lissajous43, {
+  cols: 32,
+  rows: 32,
+  roundness: 1,
+  trailColor: "#2dd4bf",
+});
+```
+
+Returns the same `SarmalInstance` interface as `createSarmal` and `createSarmalSVG`. All instance methods (`play`, `pause`, `morphTo`, `seek`, `setRenderOptions`, `destroy`) work identically.
+
+## Options
+
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| cols | `number` | `32` | Number of dot columns |
+| rows | `number` | `32` | Number of dot rows |
+| roundness | `number` | `1` | Dot shape. `0` = square, `1` = circle |
+| trailLength | `number` | `cols * 3` | Trail length. Larger values extend the tail further |
+| trailColor | `string \| string[]` | `'#ffffff'` | Dot color. Array enables gradient modes |
+| skeletonColor | `string` | `'#ffffff'` | Color of the background skeleton dots. Use `'transparent'` to hide |
+| trailStyle | `TrailStyle` | `'default'` | `'default'`, `'gradient-static'`, or `'gradient-animated'` |
+| autoStart | `boolean` | `true` | Start animation on creation |
+| initialPhase | `number` | `undefined` | Initial position along the curve |
+| pauseOnHidden | `boolean` | `true` | Pause when tab is hidden |
+
+See the <Link href="/docs/api/#createsarmaldotmatrix">API Reference</Link> for full details on each option.
+
+## See Also
+
+- <Link href="/docs/canvas-vs-svg/">Canvas vs SVG</Link>: choose the right ribbon renderer
+- <Link href="/docs/api/#createsarmaldotmatrix">API Reference</Link>: full options and methods
+- <Link href="/docs/terminal/">Terminal &amp; CLI</Link>: sarmal in the terminal
