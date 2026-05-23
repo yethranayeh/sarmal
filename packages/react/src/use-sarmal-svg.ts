@@ -45,13 +45,20 @@ export function useSarmalSVG(
       ...(init?.headRadius !== undefined && { headRadius: init.headRadius }),
       ...(init?.autoStart !== undefined && { autoStart: init.autoStart }),
       ...(init?.initialPhase !== undefined && { initialPhase: init.initialPhase }),
+      ...(init?.pauseOnHidden !== undefined && { pauseOnHidden: init.pauseOnHidden }),
     });
     committedCurveRef.current = curve;
     return () => {
       instance.current?.destroy();
       instance.current = null;
     };
-  }, [init?.trailLength, init?.headRadius, init?.autoStart, init?.initialPhase]);
+  }, [
+    init?.trailLength,
+    init?.headRadius,
+    init?.autoStart,
+    init?.initialPhase,
+    init?.pauseOnHidden,
+  ]);
 
   return { svgRef, instance };
 }

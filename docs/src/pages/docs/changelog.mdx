@@ -386,6 +386,13 @@ const sarmal = createSarmal(canvas, curves.artemis2, { initialT: Math.PI })
 
 ## React
 
+### 0.7.0 - 24.05.2026
+
+Added `pauseOnHidden` prop to `<Sarmal>` and `<SarmalSVG>`. Controls whether the animation automatically pauses when the browser tab is hidden and resumes when it becomes visible again. Defaults to `true` (existing behavior unchanged). Changing the prop after mount destroys and recreates the instance.
+
+Added `morphStrategy` prop to `<Sarmal>` and `<SarmalSVG>`. Accepts `'normalized'` (default) or `'raw'`. Controls how the animation interpolates between curves with different periods. Also available as an option on `useSarmal` and `useSarmalSVG` hooks through the `morphOptions` argument.
+
+
 ### 0.6.0 - 17.05.2026
 
 Canvas and SVG instances are now initialized with `useLayoutEffect` instead of `useEffect`, so the element is sized and the animation starts before the browser's first paint. This eliminates the brief flash of an unsized canvas that could appear on first render.

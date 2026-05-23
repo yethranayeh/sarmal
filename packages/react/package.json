@@ -1,6 +1,6 @@
 {
   "name": "@sarmal/react",
-  "version": "0.6.2",
+  "version": "0.7.0",
   "description": "React wrapper for @sarmal/core",
   "keywords": [
     "animation",

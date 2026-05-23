@@ -4,6 +4,13 @@ import type { CSSProperties } from "react";
 /** Options forwarded to morphTo when the curve prop changes. */
 export interface MorphOptions {
   morphDuration?: number;
+  /**
+   * Strategy for lerping between curves with different periods.
+   * - `'normalized'`: maps phase proportionally into each curve's period (default, works well for all period ratios)
+   * - `'raw'`: uses the same phase value for both curves (can produce incoherent results for mismatched periods)
+   * @default 'normalized'
+   */
+  morphStrategy?: "raw" | "normalized";
 }
 
 /**
@@ -19,6 +26,13 @@ export interface BaseInit {
   autoStart?: boolean;
   /** @init */
   initialPhase?: number;
+  /**
+   * Whether to automatically pause the animation when the browser tab is hidden
+   *  and resume it when the tab becomes visible again.
+   * @init
+   * @default true
+   */
+  pauseOnHidden?: boolean;
 }
 
 /**
@@ -42,6 +56,11 @@ export interface BaseSarmalProps {
   headColor?: string;
   trailStyle?: TrailStyle;
   morphDuration?: number;
+  /**
+   * Strategy for lerping between curves with different periods when the `curve` prop changes.
+   * @default 'normalized'
+   */
+  morphStrategy?: "raw" | "normalized";
   onReady?: (instance: SarmalInstance) => void;
   /** changing after mount recreates the instance and resets the trail */
   trailLength?: number;
@@ -52,6 +71,8 @@ export interface BaseSarmalProps {
   autoStart?: boolean;
   /** changing after mount recreates the instance and resets the trail */
   initialPhase?: number;
+  /** changing after mount recreates the instance and resets the trail */
+  pauseOnHidden?: boolean;
 }
 
 /** Props for `<Sarmal>`. Extends {@link BaseSarmalProps} with canvas buffer sizing. */

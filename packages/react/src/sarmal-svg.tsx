@@ -11,6 +11,7 @@ const SarmalSVGInner = ({
   style,
   trailColor,
   morphDuration,
+  morphStrategy,
   onReady,
   skeletonColor,
   headColor,
@@ -20,6 +21,7 @@ const SarmalSVGInner = ({
   trailWidth,
   autoStart,
   initialPhase,
+  pauseOnHidden,
 }: SarmalSVGProps) => {
   const { svgRef, instance } = useSarmalSVG(
     curve,
@@ -34,8 +36,14 @@ const SarmalSVGInner = ({
       ...(trailLength !== undefined && { trailLength }),
       ...(autoStart !== undefined && { autoStart }),
       ...(initialPhase !== undefined && { initialPhase }),
+      ...(pauseOnHidden !== undefined && { pauseOnHidden }),
     },
-    morphDuration !== undefined ? { morphDuration } : undefined,
+    morphDuration !== undefined || morphStrategy !== undefined
+      ? {
+          ...(morphDuration !== undefined && { morphDuration }),
+          ...(morphStrategy !== undefined && { morphStrategy }),
+        }
+      : undefined,
   );
 
   useRenderOptions(instance, trailColor, skeletonColor, headColor, trailStyle, trailWidth);

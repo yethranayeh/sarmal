@@ -58,6 +58,7 @@ export function useSarmal(
       ...(init?.headRadius !== undefined && { headRadius: init.headRadius }),
       ...(init?.autoStart !== undefined && { autoStart: init.autoStart }),
       ...(init?.initialPhase !== undefined && { initialPhase: init.initialPhase }),
+      ...(init?.pauseOnHidden !== undefined && { pauseOnHidden: init.pauseOnHidden }),
     });
     committedCurveRef.current = curve;
     return () => {
@@ -71,6 +72,7 @@ export function useSarmal(
     init?.headRadius,
     init?.autoStart,
     init?.initialPhase,
+    init?.pauseOnHidden,
   ]);
 
   return { canvasRef, instance };

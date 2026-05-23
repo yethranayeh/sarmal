@@ -11,6 +11,7 @@ const SarmalInner = ({
   style,
   trailColor,
   morphDuration,
+  morphStrategy,
   onReady,
   skeletonColor,
   headColor,
@@ -22,6 +23,7 @@ const SarmalInner = ({
   trailWidth,
   autoStart,
   initialPhase,
+  pauseOnHidden,
 }: SarmalProps) => {
   const { canvasRef, instance } = useSarmal(
     curve,
@@ -38,8 +40,14 @@ const SarmalInner = ({
       ...(trailLength !== undefined && { trailLength }),
       ...(autoStart !== undefined && { autoStart }),
       ...(initialPhase !== undefined && { initialPhase }),
+      ...(pauseOnHidden !== undefined && { pauseOnHidden }),
     },
-    morphDuration !== undefined ? { morphDuration } : undefined,
+    morphDuration !== undefined || morphStrategy !== undefined
+      ? {
+          ...(morphDuration !== undefined && { morphDuration }),
+          ...(morphStrategy !== undefined && { morphStrategy }),
+        }
+      : undefined,
   );
 
   useRenderOptions(instance, trailColor, skeletonColor, headColor, trailStyle, trailWidth);

@@ -35,9 +35,13 @@ export function useMorphEffect(
       return;
     }
 
+    const rawOpts = morphOptionsRef.current;
     const opts =
-      morphOptionsRef.current?.morphDuration != null
-        ? { duration: morphOptionsRef.current.morphDuration }
+      rawOpts?.morphDuration != null || rawOpts?.morphStrategy != null
+        ? {
+            ...(rawOpts.morphDuration != null && { duration: rawOpts.morphDuration }),
+            ...(rawOpts.morphStrategy != null && { morphStrategy: rawOpts.morphStrategy }),
+          }
         : undefined;
 
     instance.current.morphTo(curve, opts).catch(() => {});
