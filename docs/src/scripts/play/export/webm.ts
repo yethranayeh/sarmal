@@ -115,6 +115,10 @@ export async function recordWebM(
     getComputedStyle(document.documentElement).getPropertyValue("--color-background").trim() ||
     "#131311";
 
+  const bgR = parseInt(bgColor.slice(1, 3), 16);
+  const bgG = parseInt(bgColor.slice(3, 5), 16);
+  const bgB = parseInt(bgColor.slice(5, 7), 16);
+
   const ctx = canvas.getContext("2d")!;
   const origClearRect = ctx.clearRect.bind(ctx);
   ctx.clearRect = (x: number, y: number, w: number, h: number) => {
@@ -135,6 +139,27 @@ export async function recordWebM(
 
   try {
     if (effectiveRenderer === "dotmatrix") {
+      const origPutImageData = ctx.putImageData.bind(ctx)
+      ctx.putImageData = function (imageData: ImageData, dx: number, dy: number) {
+        const data = imageData.data
+        const len = data.length
+        for (let i = 0; i < len; i += 4) {
+          const a = data[i + 3]!
+          if (a < 255) {
+            const alphaFactor = a / 255
+            const bgFactor = 1 - alphaFactor
+            data[i] = Math.round(data[i]! * alphaFactor + bgR * bgFactor)
+            data[i + 1] = Math.round(data[i + 1]! * alphaFactor + bgG * bgFactor)
+            data[i + 2] = Math.round(data[i + 2]! * alphaFactor + bgB * bgFactor)
+            data[i + 3] = 255
+          }
+        }
+        origPutImageData(imageData, dx, dy)
+      }
+
+      ctx.fillStyle = bgColor
+      ctx.fillRect(0, 0, canvas.width, canvas.height)
+
       instance = createSarmalDotMatrix(canvas, curve, {
         cols: effectiveCols,
         rows: effectiveRows,
