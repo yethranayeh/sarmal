@@ -1,23 +1,34 @@
 "use client";
-import type { CurveDef, SarmalInstance, SarmalOptions } from "@sarmal/core";
-import type { CanvasInit, MorphOptions } from "./types";
+import type {
+  CurveDef,
+  SarmalInstance,
+  DotMatrixSarmalOptions,
+  DotMatrixRuntimeRenderOptions,
+} from "@sarmal/core";
+import type { DotMatrixInit, MorphOptions } from "./types";
 
 import { useRef, useLayoutEffect } from "react";
-import { createSarmal } from "@sarmal/core";
+import { createSarmalDotMatrix } from "@sarmal/core";
 import { useMorphEffect } from "./use-morph";
 import { resolveCanvasSize } from "./utils";
 
-export function useSarmal(
+/**
+ * React hook for creating and managing a Sarmal dot matrix instance.
+ * Mirrors the lifecycle of `useSarmal` but calls {@link createSarmalDotMatrix}.
+ *
+ * @param curve The curve definition to render. Morphs on reference change.
+ * @param options Runtime visual options forwarded at creation.
+ * @param init Initialization options. Changing any of these destroys and recreates the instance.
+ * @param morphOptions Options forwarded to morphTo when the curve changes.
+ */
+export function useSarmalDotMatrix(
   curve: CurveDef,
-  options?: Partial<SarmalOptions>,
-  init?: CanvasInit,
+  options?: Partial<DotMatrixSarmalOptions>,
+  init?: DotMatrixInit,
   morphOptions?: MorphOptions,
-): {
-  canvasRef: React.RefObject<HTMLCanvasElement | null>;
-  instance: React.RefObject<SarmalInstance | null>;
-} {
+) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const instance = useRef<SarmalInstance>(null);
+  const instance = useRef<SarmalInstance<DotMatrixRuntimeRenderOptions>>(null);
   const committedCurveRef = useMorphEffect(curve, instance, morphOptions);
 
   // eslint-disable-next-line react-hooks/exhaustive-deps -- curve changes go through morphTo, not recreation
@@ -31,10 +42,12 @@ export function useSarmal(
     canvas.width = width;
     canvas.height = height;
 
-    instance.current = createSarmal(canvas, curve, {
+    instance.current = createSarmalDotMatrix(canvas, curve, {
       ...options,
+      ...(init?.cols !== undefined && { cols: init.cols }),
+      ...(init?.rows !== undefined && { rows: init.rows }),
+      ...(init?.roundness !== undefined && { roundness: init.roundness }),
       ...(init?.trailLength !== undefined && { trailLength: init.trailLength }),
-      ...(init?.headRadius !== undefined && { headRadius: init.headRadius }),
       ...(init?.autoStart !== undefined && { autoStart: init.autoStart }),
       ...(init?.initialPhase !== undefined && { initialPhase: init.initialPhase }),
       ...(init?.pauseOnHidden !== undefined && { pauseOnHidden: init.pauseOnHidden }),
@@ -47,8 +60,10 @@ export function useSarmal(
   }, [
     init?.width,
     init?.height,
+    init?.cols,
+    init?.rows,
+    init?.roundness,
     init?.trailLength,
-    init?.headRadius,
     init?.autoStart,
     init?.initialPhase,
     init?.pauseOnHidden,

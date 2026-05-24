@@ -394,6 +394,12 @@ const sarmal = createSarmal(canvas, curves.artemis2, { initialT: Math.PI })
 
 ## React
 
+### 0.8.0 - 24.05.2026
+
+Added `<SarmalDotMatrix>` component, `useSarmalDotMatrix` hook, and `SarmalDotMatrixProps` type. It follows the `<Sarmal>` / `<SarmalSVG>` pattern.
+
+`CanvasInit` is now exported from `@sarmal/react`. It was previously internal, leaving `useSarmal` callers without a named type for its `init` parameter.
+
 ### 0.7.0 - 24.05.2026
 
 Added `pauseOnHidden` prop to `<Sarmal>` and `<SarmalSVG>`. Controls whether the animation automatically pauses when the browser tab is hidden and resumes when it becomes visible again. Defaults to `true` (existing behavior unchanged). Changing the prop after mount destroys and recreates the instance.

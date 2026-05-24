@@ -1,5 +1,5 @@
 "use client";
-import type { CurveDef, SarmalInstance } from "@sarmal/core";
+import type { CurveDef, SarmalInstance, BaseRuntimeRenderOptions } from "@sarmal/core";
 import type { MorphOptions } from "./types";
 
 import { useRef, useEffect } from "react";
@@ -17,7 +17,7 @@ import { useRef, useEffect } from "react";
  */
 export function useMorphEffect(
   curve: CurveDef,
-  instance: React.RefObject<SarmalInstance | null>,
+  instance: React.RefObject<SarmalInstance<BaseRuntimeRenderOptions> | null>,
   morphOptions: MorphOptions | undefined,
 ): React.RefObject<CurveDef> {
   const committedCurveRef = useRef<CurveDef>(curve);
