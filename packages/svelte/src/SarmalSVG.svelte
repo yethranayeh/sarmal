@@ -1,33 +1,12 @@
 <script lang="ts">
   import type {
     CurveDef,
-    TrailColor,
-    TrailStyle,
     SarmalInstance,
   } from "@sarmal/core";
+  import type { SarmalSVGProps } from "./types";
 
   import { untrack } from "svelte";
   import { createSarmalSVG } from "@sarmal/core";
-
-  interface Props {
-    curve: CurveDef;
-    class?: string;
-    style?: string;
-    trailColor?: TrailColor;
-    skeletonColor?: string;
-    headColor?: string;
-    trailStyle?: TrailStyle;
-    morphDuration?: number;
-    morphStrategy?: "raw" | "normalized";
-    instance?: SarmalInstance | null;
-    trailLength?: number;
-    headRadius?: number;
-    trailWidth?: number;
-    autoStart?: boolean;
-    initialPhase?: number;
-    pauseOnHidden?: boolean;
-    onready?: (instance: SarmalInstance) => void;
-  }
 
   let {
     curve,
@@ -47,7 +26,7 @@
     initialPhase,
     pauseOnHidden,
     onready,
-  }: Props = $props();
+  }: SarmalSVGProps = $props();
 
   let svg = $state<SVGSVGElement | null>(null);
   let committedCurve: CurveDef | null = null;

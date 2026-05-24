@@ -1,4 +1,4 @@
-import type { CurveDef, SarmalInstance, SarmalOptions } from "@sarmal/core";
+import type { CurveDef, MorphStrategy, SarmalInstance, SarmalOptions } from "@sarmal/core";
 
 import { extractRuntimeOptions } from "./utils";
 
@@ -7,7 +7,7 @@ export function registerMorphEffect(
   committedCurve: { value: CurveDef | null },
   getCurve: () => CurveDef,
   getMorphDuration?: () => number | undefined,
-  getMorphStrategy?: () => "raw" | "normalized" | undefined,
+  getMorphStrategy?: () => MorphStrategy | undefined,
 ) {
   $effect(() => {
     const curve = getCurve();

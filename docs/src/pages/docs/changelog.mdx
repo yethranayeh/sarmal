@@ -396,13 +396,13 @@ const sarmal = createSarmal(canvas, curves.artemis2, { initialT: Math.PI })
 
 ### 0.8.0 - 24.05.2026
 
-Added `<SarmalDotMatrix>` component, `useSarmalDotMatrix` hook, and `SarmalDotMatrixProps` type. It follows the `<Sarmal>` / `<SarmalSVG>` pattern.
+Added `<SarmalDotMatrix>` component, `useSarmalDotMatrix` hook, and `SarmalDotMatrixProps` type. It follows the `<Sarmal>` & `<SarmalSVG>` pattern.
 
 `CanvasInit` is now exported from `@sarmal/react`. It was previously internal, leaving `useSarmal` callers without a named type for its `init` parameter.
 
 ### 0.7.0 - 24.05.2026
 
-Added `pauseOnHidden` prop to `<Sarmal>` and `<SarmalSVG>`. Controls whether the animation automatically pauses when the browser tab is hidden and resumes when it becomes visible again. Defaults to `true` (existing behavior unchanged). Changing the prop after mount destroys and recreates the instance.
+Added `pauseOnHidden` prop to `<Sarmal>` and `<SarmalSVG>`. Controls whether the animation automatically pauses when the browser tab is hidden and resumes when it becomes visible again. Defaults to `true` (existing behavior unchanged). Changing the prop after mount <strong class="text-error">destroys</strong> and recreates the instance.
 
 Added `morphStrategy` prop to `<Sarmal>` and `<SarmalSVG>`. Accepts `'normalized'` (default) or `'raw'`. Controls how the animation interpolates between curves with different periods. Also available as an option on `useSarmal` and `useSarmalSVG` hooks through the `morphOptions` argument.
 
@@ -453,7 +453,7 @@ If the parent reports <span title="0x0 size can be caused by `height: auto`">0x0
 ```
 
 
-`trailLength` and `headRadius` are now exposed as props on `<Sarmal>` and as init options on `useSarmal`. Note that changing them after mount **destroys** and *recreates* the instance, which resets the trail.
+`trailLength` and `headRadius` are now exposed as props on `<Sarmal>` and as init options on `useSarmal`. Note that changing them after mount <strong class="text-error">destroys</strong> and *recreates* the instance, which resets the trail.
 
 ---
 
@@ -485,9 +485,17 @@ Peer dependencies: `react >= 18` and `@sarmal/core`. The package bundle emits `"
 
 ## Svelte
 
+### 0.4.0 - 24.05.2026
+
+Added `<SarmalDotMatrix>` component, `useSarmalDotMatrix` composable, `sarmalDotMatrix` action, and `SarmalDotMatrixProps`, `SarmalDotMatrixActionOptions`, `DotMatrixInit` types. Follows the same `<Sarmal>` & `<SarmalSVG>` pattern.
+
+`cols`, `rows`, `roundness`, `trailLength`, `autoStart`, `initialPhase`, `pauseOnHidden`, `width`, and `height` are init-time options. Changing any of them after mount <strong class="text-error">destroys</strong> and recreates the instance. `trailColor`, `trailStyle`, and `skeletonColor` are runtime options that update without recreating.
+
+`headColor`, `headRadius`, and `trailWidth` are absent: the dot matrix renderer has no head dot or ribbon trail.
+
 ### 0.3.0 - 24.05.2026
 
-Added `pauseOnHidden` prop to `<Sarmal>` and `<SarmalSVG>` components, and to the `sarmal` and `sarmalSVG` actions. Controls whether the animation automatically pauses when the browser tab is hidden. Defaults to `true`. Changing the prop on a component after mount destroys and recreates the instance; the action handles it via destroy + recreate the same way other init options do.
+Added `pauseOnHidden` prop to `<Sarmal>` and `<SarmalSVG>` components, and to the `sarmal` and `sarmalSVG` actions. Controls whether the animation automatically pauses when the browser tab is hidden. Defaults to `true`. Changing the prop on a component after mount destroys and recreates the instance; the action handles it with destroy + recreate the same way other init options do.
 
 Added `morphStrategy` prop to `<Sarmal>` and `<SarmalSVG>` components, and to the `sarmal` and `sarmalSVG` actions. Accepts `'normalized'` (default) or `'raw'`. Also available as a `getMorphStrategy` argument on the `useSarmal` and `useSarmalSVG` composables.
 

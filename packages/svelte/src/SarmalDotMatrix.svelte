@@ -2,11 +2,12 @@
   import type {
     CurveDef,
     SarmalInstance,
+    DotMatrixRuntimeRenderOptions,
   } from "@sarmal/core";
-  import type { SarmalProps } from "./types";
+  import type { SarmalDotMatrixProps } from "./types";
 
   import { untrack } from "svelte";
-  import { createSarmal } from "@sarmal/core";
+  import { createSarmalDotMatrix } from "@sarmal/core";
   import { resolveCanvasSize } from "./utils";
 
   let {
@@ -14,22 +15,22 @@
     class: className = "",
     style: styleStr = "",
     trailColor,
-    skeletonColor,
-    headColor,
     trailStyle,
+    skeletonColor,
     morphDuration,
     morphStrategy,
-    instance = $bindable(null as SarmalInstance | null),
+    instance = $bindable(null as SarmalInstance<DotMatrixRuntimeRenderOptions> | null),
+    cols,
+    rows,
+    roundness,
     trailLength,
-    headRadius,
-    trailWidth,
     autoStart,
     initialPhase,
     pauseOnHidden,
     width,
     height,
     onready,
-  }: SarmalProps = $props();
+  }: SarmalDotMatrixProps = $props();
 
   let canvas = $state<HTMLCanvasElement | null>(null);
   let committedCurve: CurveDef | null = null;
@@ -47,16 +48,16 @@
     const initCurve = untrack(() => curve);
     const initRuntimeOpts = untrack(() => ({
       ...(trailColor !== undefined && { trailColor }),
-      ...(skeletonColor !== undefined && { skeletonColor }),
-      ...(headColor !== undefined && { headColor }),
       ...(trailStyle !== undefined && { trailStyle }),
-      ...(trailWidth !== undefined && { trailWidth }),
+      ...(skeletonColor !== undefined && { skeletonColor }),
     }));
 
-    const inst = createSarmal(c, initCurve, {
+    const inst = createSarmalDotMatrix(c, initCurve, {
       ...initRuntimeOpts,
+      ...(cols !== undefined && { cols }),
+      ...(rows !== undefined && { rows }),
+      ...(roundness !== undefined && { roundness }),
       ...(trailLength !== undefined && { trailLength }),
-      ...(headRadius !== undefined && { headRadius }),
       ...(autoStart !== undefined && { autoStart }),
       ...(initialPhase !== undefined && { initialPhase }),
       ...(pauseOnHidden !== undefined && { pauseOnHidden }),
@@ -99,9 +100,7 @@
     inst.setRenderOptions({
       ...(trailColor !== undefined && { trailColor }),
       ...(skeletonColor !== undefined && { skeletonColor }),
-      ...(headColor !== undefined ? { headColor } : { headColor: null }),
       ...(trailStyle !== undefined && { trailStyle }),
-      ...(trailWidth !== undefined && { trailWidth }),
     });
   });
 

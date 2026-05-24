@@ -1,5 +1,5 @@
 import type { RuntimeRenderOptions, SarmalOptions, TrailColor } from "@sarmal/core";
-import type { CanvasInit, Init } from "./types";
+import type { CanvasInit, DotMatrixInit, Init } from "./types";
 
 export function shallowEqualTrailColor(
   a: TrailColor | undefined,
@@ -75,6 +75,31 @@ export function extractRuntimeOptions(opts: Partial<SarmalOptions>): Partial<Run
   }
 
   return runtime;
+}
+
+export function dotMatrixInitValuesEqual(
+  a: DotMatrixInit | undefined,
+  b: DotMatrixInit | undefined,
+) {
+  if (a === b) {
+    return true;
+  }
+
+  if (!a || !b) {
+    return false;
+  }
+
+  return (
+    a.cols === b.cols &&
+    a.rows === b.rows &&
+    a.roundness === b.roundness &&
+    a.trailLength === b.trailLength &&
+    a.autoStart === b.autoStart &&
+    a.initialPhase === b.initialPhase &&
+    a.pauseOnHidden === b.pauseOnHidden &&
+    a.width === b.width &&
+    a.height === b.height
+  );
 }
 
 export function resolveCanvasSize(

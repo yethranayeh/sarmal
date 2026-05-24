@@ -1,4 +1,4 @@
-import type { CurveDef, SarmalInstance, SarmalOptions } from "@sarmal/core";
+import type { CurveDef, MorphStrategy, SarmalInstance, SarmalOptions } from "@sarmal/core";
 import type { Init } from "./types";
 
 import { untrack } from "svelte";
@@ -13,7 +13,7 @@ export function useSarmalSVG(
   getOptions?: () => Partial<SarmalOptions>,
   getInit?: () => Init,
   getMorphDuration?: () => number | undefined,
-  getMorphStrategy?: () => "raw" | "normalized" | undefined,
+  getMorphStrategy?: () => MorphStrategy | undefined,
 ): {
   get instance(): SarmalInstance | null;
 } {

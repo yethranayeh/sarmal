@@ -1,6 +1,6 @@
 {
   "name": "@sarmal/svelte",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "description": "Svelte wrapper for @sarmal/core",
   "keywords": [
     "animation",
@@ -42,7 +42,8 @@
       "require": "./dist/index.cjs"
     },
     "./Sarmal.svelte": "./src/Sarmal.svelte",
-    "./SarmalSVG.svelte": "./src/SarmalSVG.svelte"
+    "./SarmalSVG.svelte": "./src/SarmalSVG.svelte",
+    "./SarmalDotMatrix.svelte": "./src/SarmalDotMatrix.svelte"
   },
   "publishConfig": {
     "access": "public"
