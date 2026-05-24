@@ -278,12 +278,12 @@ Canvas and SVG ribbon renderers only:
 
 Dot matrix renderer only:
 
-| Attribute        | Mirrors option |
-| ---------------- | -------------- |
+| Attribute        | Mirrors option | Notes                                                                                                                            |
+| ---------------- | -------------- | -------------------------------------------------------------------------------------------------------------------------------- |
 | `data-renderer`  | —              | `"dot-matrix"` selects this renderer. `"canvas"` is accepted but redundant. Any other value logs an error and skips the element. |
-| `data-cols`      | `cols`         |
-| `data-rows`      | `rows`         |
-| `data-roundness` | `roundness`    |
+| `data-cols`      | `cols`         |                                                                                                                                  |
+| `data-rows`      | `rows`         |                                                                                                                                  |
+| `data-roundness` | `roundness`    |                                                                                                                                  |
 
 ## CDN usage
 

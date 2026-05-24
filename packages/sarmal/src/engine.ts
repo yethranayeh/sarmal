@@ -1,4 +1,4 @@
-import type { CurveDef, Engine, JumpOptions, MorpStrategy, Point, SeekOptions } from "./types";
+import type { CurveDef, Engine, JumpOptions, MorphStrategy, Point, SeekOptions } from "./types";
 
 const TWO_PI = Math.PI * 2;
 const POINTS_PER_PERIOD_UNIT = 50;
@@ -142,7 +142,7 @@ export function createEngine(curveDef: CurveDef, trailLength: number = 120): Eng
   // Morph state which is `null` when not morphing
   let morphCurveB: ResolvedCurve | null = null;
   let _morphAlpha: number | null = null;
-  let _morphStrategy: MorpStrategy = "normalized";
+  let _morphStrategy: MorphStrategy = "normalized";
 
   // Speed transition state which is `null` when not transitioning
   let _speedTransition: SpeedTransition | null = null;
@@ -251,7 +251,7 @@ export function createEngine(curveDef: CurveDef, trailLength: number = 120): Eng
       }
     },
 
-    startMorph(target: CurveDef, strategy: MorpStrategy = "normalized") {
+    startMorph(target: CurveDef, strategy: MorphStrategy = "normalized") {
       const resolvedTarget = resolveCurve(target);
 
       if (morphCurveB !== null && _morphAlpha !== null) {

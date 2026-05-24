@@ -73,7 +73,7 @@ export type SeekOptions = {
   step?: number;
 };
 
-export type MorpStrategy = "raw" | "normalized";
+export type MorphStrategy = "raw" | "normalized";
 
 /**
  * The shared animation state types
@@ -148,7 +148,7 @@ export type MorphOptions = {
    * - 'raw': uses the same `phase` for both curves (can produce incoherent results for mismatched periods)
    * @default 'normalized'
    */
-  morphStrategy?: MorpStrategy;
+  morphStrategy?: MorphStrategy;
 };
 
 export interface Engine extends AnimationControls {
@@ -194,7 +194,7 @@ export interface Engine extends AnimationControls {
    * @param target The curve to transition to
    * @param strategy 'normalized' maps phase proportionally into each curve's period (default), 'raw' uses the same phase
    */
-  startMorph(target: CurveDef, strategy?: MorpStrategy): void;
+  startMorph(target: CurveDef, strategy?: MorphStrategy): void;
   /**
    * Sets the interpolation amount between `curveA` and `curveB`.
    * 0 = full curveA

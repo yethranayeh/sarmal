@@ -1,5 +1,6 @@
 import type {
   CurveDef,
+  MorphStrategy,
   SarmalInstance,
   TrailColor,
   TrailStyle,
@@ -16,7 +17,7 @@ export interface MorphOptions {
    * - `'raw'`: uses the same phase value for both curves (can produce incoherent results for mismatched periods)
    * @default 'normalized'
    */
-  morphStrategy?: "raw" | "normalized";
+  morphStrategy?: MorphStrategy;
 }
 
 /**
@@ -66,7 +67,7 @@ export interface BaseSarmalProps {
    * Strategy for lerping between curves with different periods when the `curve` prop changes.
    * @default 'normalized'
    */
-  morphStrategy?: "raw" | "normalized";
+  morphStrategy?: MorphStrategy;
   onReady?: (instance: SarmalInstance) => void;
   /** changing after mount recreates the instance and resets the trail */
   trailLength?: number;
@@ -144,7 +145,7 @@ export interface SarmalDotMatrixProps {
 
   morphDuration?: number;
   /** @default 'normalized' */
-  morphStrategy?: "raw" | "normalized";
+  morphStrategy?: MorphStrategy;
 
   onReady?: (instance: SarmalInstance<DotMatrixRuntimeRenderOptions>) => void;
 

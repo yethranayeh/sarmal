@@ -13,6 +13,7 @@ export type {
   SarmalOptions,
   TrailStyle,
   TrailColor,
+  MorphStrategy,
   RuntimeRenderOptions,
   DotMatrixRuntimeRenderOptions,
 } from "./types";
