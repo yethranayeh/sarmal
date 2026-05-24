@@ -1,7 +1,7 @@
 # @sarmal/core
 
 <p align="center">
-  <strong>Parametric curve animations for loading/thinking indicators</strong>
+  <strong>Beautiful animated curves for loading states and ambient motion</strong>
 </p>
 
 <div align="center">
@@ -12,14 +12,14 @@
 
 ---
 
-**@sarmal/core** is a lightweight library for rendering elegant parametric curve animations.
+**@sarmal/core** is a lightweight library for animated curves on canvas and SVG.
 
-The animations can be used anywhere you want. Use it for loading spinners, progress indicators, or to indicate that your very special AI model is _thinking_, up to you.
+Use it for loading animations, thinking indicators, ambient decoration — or whatever else you have in mind.
 
 In web applications or directly in your terminal (`npx @sarmal/core`).
 
 - **Canvas & SVG renderers**: choose one or the other, but why not both?
-- **standard curves**: default cliche curves any LLM can generate in seconds, from classic spirals to custom parametric paths
+- **standard curves**: classic spirals, roses, Lissajous figures — plus draw your own with point arrays
 - **TIME CONTROL**: programmatic time stepping, seeking, and trail effects
 - **Zero dependencies**: tiny bundle, quick to get started
 - **TypeScript-first**: because who would build anyhing complex in pure JS?!

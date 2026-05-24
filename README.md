@@ -6,7 +6,7 @@
   </a>
 </div>
 
-This is a monorepo of the **Sarmal** project, which aims to be a parametric curve renderer, mainly for loading/thinking indicators, but you are also allowed to use it however you like :)
+**Sarmal** is an animated curve library for loading states, thinking indicators, and ambient motion.
 
 ## Packages
 

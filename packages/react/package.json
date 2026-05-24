@@ -1,16 +1,17 @@
 {
   "name": "@sarmal/react",
-  "version": "0.8.2",
-  "description": "React wrapper for @sarmal/core",
+  "version": "0.8.3",
+  "description": "React components and hooks for @sarmal/core animated curves",
   "keywords": [
     "animation",
     "canvas",
     "curve",
     "loading",
-    "parametric",
-    "spinner",
+    "loading-indicator",
+    "react",
     "svg",
-    "tanstack-intent"
+    "tanstack-intent",
+    "trail"
   ],
   "license": "MIT",
   "author": {

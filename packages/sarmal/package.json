@@ -1,16 +1,16 @@
 {
   "name": "@sarmal/core",
-  "version": "0.37.3",
-  "description": "Curve path based loading indicators and their renderer",
+  "version": "0.37.4",
+  "description": "Animated curve library for loading states and ambient motion",
   "keywords": [
     "animation",
     "canvas",
     "curve",
     "loading",
-    "parametric",
-    "spinner",
+    "loading-indicator",
     "svg",
-    "tanstack-intent"
+    "tanstack-intent",
+    "trail"
   ],
   "homepage": "https://sarmal.art",
   "bugs": {

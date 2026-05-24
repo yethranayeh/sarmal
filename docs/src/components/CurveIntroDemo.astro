@@ -14,7 +14,7 @@ const id = `pid-${Math.random().toString(36).slice(2, 8)}`;
 
 <div
 	id={id}
-	class="parametric-intro-demo max-w-xs rounded-lg overflow-hidden border border-border"
+	class="curve-intro-demo max-w-xs rounded-lg overflow-hidden border border-border"
 >
 	<div class="relative bg-surface-raised" style="height: 228px;">
 		<svg
@@ -178,7 +178,7 @@ const id = `pid-${Math.random().toString(36).slice(2, 8)}`;
 	}
 
 	document
-		.querySelectorAll<HTMLElement>(".parametric-intro-demo")
+		.querySelectorAll<HTMLElement>(".curve-intro-demo")
 		.forEach((wrapper) => {
 			const slider = wrapper.querySelector<HTMLInputElement>("[data-slider]")!;
 			const head = wrapper.querySelector<SVGCircleElement>("[data-head]")!;

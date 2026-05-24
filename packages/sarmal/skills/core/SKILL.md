@@ -1,7 +1,7 @@
 ---
 name: core
-description: Parametric curve loading indicators for the web. Use when adding animated
-  spinners or loading indicators with @sarmal/core — covers createSarmal (canvas),
+description: Animated curve library for the web. Use when adding animated curves,
+  loading indicators, or ambient motion with @sarmal/core — covers createSarmal (canvas),
   createSarmalSVG, createSarmalDotMatrix, terminal renderer, built-in curves,
   lifecycle, animation controls, and auto-init.
 license: MIT
@@ -9,7 +9,7 @@ license: MIT
 
 # @sarmal/core
 
-sarmal renders parametric math curves as animated loading/thinking indicators. It is not a CSS spinner — it is a canvas or SVG renderer that animates a moving "head" dot leaving a fading trail along a curve path.
+sarmal renders animated curves as loading indicators, thinking states, or ambient motion. It is a canvas or SVG renderer that animates a moving "head" dot leaving a fading trail along a curve path.
 
 ## Type definitions (read these first)
 

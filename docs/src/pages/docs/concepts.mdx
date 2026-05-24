@@ -3,7 +3,7 @@ layout: ../../layouts/DocsLayout.astro
 title: Concepts
 sidebarLabel: Concepts
 order: 1
-description: Understand parametric curves, the skeleton, and the engine.
+description: Understand curves, the skeleton, and the engine.
 ---
 
 import {ArrowRight} from "@lucide/astro"
@@ -12,20 +12,20 @@ import Alert from "../../components/Alert.astro";
 import SarmalBlueprint from "../../components/SarmalBlueprint.astro";
 import ConceptDemo from "../../components/ConceptDemo.astro";
 import PhasePositionDemo from "../../components/feature/demo/PhasePositionDemo.astro";
-import ParametricIntroDemo from "../../components/ParametricIntroDemo.astro";
+import CurveIntroDemo from "../../components/CurveIntroDemo.astro";
 import SkeletonModeDemo from "../../components/feature/demo/SkeletonModeDemo.astro";
 import EngineOutputDemo from "../../components/feature/demo/EngineOutputDemo.astro";
 
 # Concepts
 
-Understand parametric curves, the skeleton, and the engine.
+Understand curves, the skeleton, and the engine.
 
 ## Parametric Curves
 
 A parametric curve is a path drawn by a point moving through space. Instead of describing the shape directly, you describe how the point moves: where it is at each moment in time.
 
 <div class="grid grid-cols-1 md:grid-cols-2">
-  <div class="order-2 md:order-1"><ParametricIntroDemo /></div>
+  <div class="order-2 md:order-1"><CurveIntroDemo /></div>
   <p class="order-1 md:order-2">Imagine a dot moving across a piece of paper. At any instant, the dot has an exact position: an `x` coordinate and a `y` coordinate. As time passes, the dot traces a path. A parametric curve is simply the *record* of that path.</p>
 </div>
 
@@ -71,7 +71,7 @@ The key idea is that you control _when_ the dot is at each position. You can spe
   <div class="order-2 md:order-1"><PhasePositionDemo /></div>
 </div>
 
-You can head to <Link href='/play/'>the playground</Link> to experiment with parametric curves and try them out in real time.
+You can head to <Link href='/play/'>the playground</Link> to experiment with curves and try them out in real time.
 
 ## The Skeleton
 
@@ -273,10 +273,10 @@ For simple loading indicators, the defaults work without any lifecycle calls:
 
 ```ts
 // This is enough
-const spinner = createSarmal(canvas, curves.artemis2);
+const sarmal = createSarmal(canvas, curves.artemis2);
 
 // Cleanup when done
-spinner.destroy();
+sarmal.destroy();
 ```
 
 Use `autoStart: false` when you need precise control over when animation begins, such as:

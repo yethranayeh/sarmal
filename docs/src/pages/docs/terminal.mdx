@@ -11,7 +11,7 @@ import Link from "../../components/Link.astro";
 
 # Terminal & CLI
 
-Your loading spinner works in the terminal, too.
+Sarmal works in the terminal, too.
 
 ## Quick Try
 
@@ -53,7 +53,7 @@ npx @sarmal/core [options]
 | `--speed` | `number` | Curve default | Animation speed multiplier |
 | `--size` | `number` | `16` | Spinner width in characters |
 | `--color` | `string` | `#ec5571` | Trail color (`#rrggbb`, `#rgb`, `rgb()`, `rgba()`) |
-| `--verbose` | flag | off | Print curve name and hint above the spinner |
+| `--verbose` | flag | off | Print curve name and hint above the animation |
 | `--help` | flag | - | Show usage |
 
 ## Node API
@@ -100,7 +100,7 @@ The `./terminal` subpath export uses the `node` condition. Importing it in a bro
 `terminalSarmal` returns a `stop()` function. Calling it:
 - Clears the animation interval
 - Restores the cursor
-- Moves the cursor past the spinner area
+- Moves the cursor past the animation area
 
 **SIGINT** (<kbd>Ctrl+C</kbd>) does the same cleanup automatically.
 

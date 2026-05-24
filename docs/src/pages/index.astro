@@ -4,13 +4,13 @@ import BaseLayout from "../layouts/BaseLayout.astro";
 import HeroSection from "../components/feature/HeroSection.astro";
 import LiveDemoContainer from "../components/feature/demo/LiveDemoContainer.astro";
 
-import { PACKAGE_SIZE } from "../variables";
+import { PACKAGE_SIZE, SEPARATOR_DOT } from "../variables";
 ---
 
 <BaseLayout
-	title="Sarmal - Parametric Curve Animations for React & JavaScript"
-	description={`Parametric loading spinners and curve animations for React, JavaScript, and the web. ${PACKAGE_SIZE}KB, zero dependencies. A curve, a color, two lines of code.`}
-	ogTitle="Sarmal | Parametric Curve Animations for React & JavaScript"
+	title={`Sarmal ${SEPARATOR_DOT} Animated Curves for Loading States and Ambient Motion`}
+	description={`Animated curves for loading states and ambient motion. For React, JavaScript, and the web. ${PACKAGE_SIZE}KB, zero dependencies. A curve, a color, two lines of code.`}
+	ogTitle="Sarmal | Animated Curves for React & JavaScript"
 >
 	<script
 		is:inline
@@ -22,7 +22,7 @@ import { PACKAGE_SIZE } from "../variables";
 			name: "Sarmal",
 			applicationCategory: "DeveloperApplication",
 			operatingSystem: "Any",
-			description: `Beautiful parametric loading indicators. ${PACKAGE_SIZE}KB, zero dependencies. A curve, a color, two lines of HTML.`,
+			description: `Beautiful animated curves for loading states and ambient motion. ${PACKAGE_SIZE}KB, zero dependencies. A curve, a color, two lines of HTML.`,
 			url: "https://sarmal.art",
 			offers: {
 				"@type": "Offer",

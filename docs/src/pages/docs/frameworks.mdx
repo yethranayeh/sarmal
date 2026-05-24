@@ -25,7 +25,7 @@ npm install @sarmal/core @sarmal/react
 
 ### The Component
 
-The quickest way to get a spinner on screen in React:
+The quickest way to get an animation on screen in React:
 
 ```tsx
 import { Sarmal } from "@sarmal/react";
@@ -109,7 +109,7 @@ const myCurve = useMemo(
 
 #### Curve morphing
 
-When the `curve` prop changes, the spinner smoothly transitions using `morphTo`. The `morphDuration` prop controls how long the transition takes:
+When the `curve` prop changes, it smoothly transitions using `morphTo`. The `morphDuration` prop controls how long the transition takes:
 
 ```tsx
 const [curve, setCurve] = useState(curves.astroid);
@@ -148,7 +148,7 @@ For full control over the canvas element and instance lifecycle, you may prefer 
 import { useSarmal } from "@sarmal/react";
 import { curves } from "@sarmal/core";
 
-function MySpinner() {
+function MyLoader() {
   const { canvasRef, instance } = useSarmal(curves.astroid);
 
   return <canvas ref={canvasRef} style={{ width: 200, height: 200 }} />;
@@ -223,7 +223,7 @@ import { SarmalSVG } from "@sarmal/react";
 // Hook
 import { useSarmalSVG } from "@sarmal/react";
 
-function MySpinner() {
+function MyLoader() {
   const { svgRef, instance } = useSarmalSVG(curves.astroid);
   return <svg ref={svgRef} />;
 }
@@ -241,7 +241,7 @@ npm install @sarmal/core @sarmal/svelte
 
 ### The Component
 
-The quickest way to get a spinner on screen in Svelte 5:
+The quickest way to get an animation on screen in Svelte 5:
 
 ```svelte
 <script>
@@ -314,7 +314,7 @@ Use a module-level constant:
 
 #### Curve morphing
 
-When the `curve` prop changes, the spinner smoothly transitions using `morphTo`. The `morphDuration` prop controls how long the transition takes:
+When the `curve` prop changes, it smoothly transitions using `morphTo`. The `morphDuration` prop controls how long the transition takes:
 
 ```svelte
 <script>
@@ -469,7 +469,7 @@ Auto-init is Sarmal's **plug-n-play** option. Include the auto-init script and a
 <svg data-sarmal="rose3" style="width:200px; height:200px;"></svg>
 ```
 
-The script waits for `DOMContentLoaded`, scans for all `canvas[data-sarmal]` and `svg[data-sarmal]` elements, and starts a spinner for each one using the built-in curve name as the attribute value. Canvas renderers use pixel-space dimensions; SVG renderers set `viewBox="0 0 100 100"` automatically and are sized with CSS. That's all you need to get it working. No additional JavaScript required.
+The script waits for `DOMContentLoaded`, scans for all `canvas[data-sarmal]` and `svg[data-sarmal]` elements, and starts an animation for each one using the built-in curve name as the attribute value. Canvas renderers use pixel-space dimensions; SVG renderers set `viewBox="0 0 100 100"` automatically and are sized with CSS. That's all you need to get it working. No additional JavaScript required.
 
 You can also use **jsDelivr**:
 

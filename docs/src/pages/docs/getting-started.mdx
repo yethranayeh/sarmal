@@ -3,7 +3,7 @@ layout: ../../layouts/DocsLayout.astro
 title: Getting Started
 sidebarLabel: Getting Started
 order: 2
-description: Install @sarmal/core and animate your first spinner.
+description: Install @sarmal/core and animate your first curve.
 ---
 
 import Alert from "../../components/Alert.astro";
@@ -11,7 +11,7 @@ import Link from "../../components/Link.astro";
 
 # Getting Started
 
-Install `@sarmal/core` and animate your first spinner.
+Install `@sarmal/core` and animate your first curve.
 
 ## Installation
 
@@ -41,7 +41,7 @@ No build step? Drop in the auto-init script and add `data-sarmal` to any canvas 
 <svg data-sarmal="artemis2" style="width:200px; height:200px;"></svg>
 ```
 
-The script scans for `canvas[data-sarmal]` and `svg[data-sarmal]` on page load and starts a spinner for each one. Use any built-in curve name as the attribute value.
+The script scans for `canvas[data-sarmal]` and `svg[data-sarmal]` on page load and starts an animation for each one. Use any built-in curve name as the attribute value.
 
 To use the dot matrix renderer, add `data-renderer="dot-matrix"` to a canvas:
 
@@ -227,16 +227,16 @@ const sarmal = createSarmal(canvas, curves.astroid, {
 
 ## SVG renderer
 
-If you need the spinner to scale freely (no fixed pixel dimensions), use the SVG renderer instead:
+If you need the animation to scale freely (no fixed pixel dimensions), use the SVG renderer instead:
 
 ```html
-<svg id="spinner" style="width: 200px; height: 200px;"></svg>
+<svg id="sarmal" style="width: 200px; height: 200px;"></svg>
 ```
 
 ```ts
 import { createSarmalSVG, curves } from "@sarmal/core";
 
-const svg = document.getElementById("spinner")!;
+const svg = document.getElementById("sarmal")!;
 const sarmal = createSarmalSVG(svg, curves.lissajous32);
 ```
 
@@ -267,7 +267,7 @@ The engine is pure math and works _anywhere_, but the renderers need the **DOM**
 import { createSarmal, curves } from "@sarmal/core";
 
 if (typeof window !== "undefined") {
-	const canvas = document.getElementById("spinner") as HTMLCanvasElement;
+	const canvas = document.getElementById("sarmal") as HTMLCanvasElement;
 	const sarmal = createSarmal(canvas, curves.artemis2);
 }
 ```

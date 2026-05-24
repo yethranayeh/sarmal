@@ -146,7 +146,7 @@ import { useRef } from "react";
 import { useSarmal } from "@sarmal/react";
 import { curves } from "@sarmal/core";
 
-function Spinner() {
+function Loader() {
   const { canvasRef, instance } = useSarmal(curves.rose3);
 
   const handleClick = () => instance.current?.setSpeed(2);
@@ -164,7 +164,7 @@ function Spinner() {
 import { useSarmalDotMatrix } from "@sarmal/react";
 import { curves } from "@sarmal/core";
 
-function DotSpinner() {
+function DotLoader() {
   const { canvasRef, instance } = useSarmalDotMatrix(curves.rose3);
 
   const handleClick = () => instance.current?.setSpeed(2);

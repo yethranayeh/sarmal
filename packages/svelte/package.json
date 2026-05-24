@@ -1,16 +1,17 @@
 {
   "name": "@sarmal/svelte",
-  "version": "0.4.1",
-  "description": "Svelte wrapper for @sarmal/core",
+  "version": "0.4.2",
+  "description": "Svelte components and hooks for @sarmal/core animated curves",
   "keywords": [
     "animation",
     "canvas",
     "curve",
     "loading",
-    "parametric",
-    "spinner",
+    "loading-indicator",
+    "svelte",
     "svg",
-    "tanstack-intent"
+    "tanstack-intent",
+    "trail"
   ],
   "license": "MIT",
   "author": {

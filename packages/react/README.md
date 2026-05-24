@@ -12,7 +12,7 @@
 
 ---
 
-**@sarmal/react** gives you a `<Sarmal>` component and a `useSarmal` hook so you can drop parametric curve animations into React apps without the canvas wiring. SVG output is also supported with `<SarmalSVG>` and `useSarmalSVG`.
+**@sarmal/react** gives you a `<Sarmal>` component and a `useSarmal` hook so you can add animated curves to React apps without the canvas wiring. SVG output is also supported with `<SarmalSVG>` and `useSarmalSVG`.
 
 ## Install
 

@@ -42,14 +42,14 @@ The Canvas renderer is the default. It uses the HTML5 Canvas 2D API for renderin
 **Accessibility note:** Canvas only renders pixels, so screen readers see *nothing*. Consider adding a visually hidden label outside the canvas element:
 
 ```html
-<canvas id="spinner"></canvas>
+<canvas id="sarmal"></canvas>
 <span class="sr-only">Loading…</span>
 ```
 
 ```ts
 import { createSarmal, astroid, palettes } from "@sarmal/core";
 
-const canvas = document.getElementById("spinner") as HTMLCanvasElement;
+const canvas = document.getElementById("sarmal") as HTMLCanvasElement;
 const sarmal = createSarmal(canvas, astroid, {
   trailStyle: "gradient-animated",
   trailColor: palettes.bard,
@@ -85,7 +85,7 @@ The SVG renderer generates DOM elements and updates them via `requestAnimationFr
 ```ts
 import { createSarmalSVG, curves } from "@sarmal/core";
 
-const svg = document.getElementById("spinner")!;
+const svg = document.getElementById("sarmal")!;
 const sarmal = createSarmalSVG(svg, curves.lissajous32, {
   ariaLabel: "Loading data...",
 });
@@ -110,7 +110,7 @@ const sarmal = createSarmalSVG(svg, curves.lissajous32, {
 
 ### Choose SVG when:
 
-- The spinner lives in a responsive container
+- The animation lives in a responsive container
 - You need it to scale crisply at any size
 - Accessibility is a priority
 - You want to style or inspect the output with CSS or DevTools

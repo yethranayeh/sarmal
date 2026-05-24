@@ -51,7 +51,7 @@ import { useSarmal, useSarmalSVG } from "@sarmal/svelte";
 Note: the prop is `class`, not `className` (Svelte convention):
 
 ```svelte
-<Sarmal curve={curves.rose5} class="spinner" trailColor="#a78bfa" />
+<Sarmal curve={curves.rose5} class="loader" trailColor="#a78bfa" />
 ```
 
 ## `<SarmalSVG>` component

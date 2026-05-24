@@ -48,7 +48,7 @@ const curve: CurveData = {
 const usageSnippet = `import { createSarmal } from "@sarmal/core";
 import { ${curve.curveKey} } from "${curve.importPath}";
 
-const canvas = document.getElementById("spinner") as HTMLCanvasElement;
+const canvas = document.getElementById("sarmal") as HTMLCanvasElement;
 const sarmal = createSarmal(canvas, ${curve.curveKey});`;
 
 const reactSnippet = `import { Sarmal } from "@sarmal/react";
