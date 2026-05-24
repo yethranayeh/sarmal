@@ -110,6 +110,12 @@ import DemoDashboard from "./DemoDashboard.astro";
 		let idx = 0;
 		let mainTimer: ReturnType<typeof setTimeout> | null = null;
 
+		// Restart the current slide when renderer mode changes
+		new MutationObserver(() => showSlide(idx)).observe(
+			document.documentElement,
+			{ attributeFilter: ["data-sarmal-mode"] },
+		);
+
 		// Start on scroll into view
 		const card = document.getElementById("live-demo-card")!;
 		const observer = new IntersectionObserver(

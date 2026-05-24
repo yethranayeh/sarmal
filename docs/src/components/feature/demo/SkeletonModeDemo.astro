@@ -16,10 +16,18 @@ const id = `skel-${Math.random().toString(36).slice(2, 8)}`;
 						</span>
 						<span class="font-ui text-[0.57rem] text-muted">{mode.desc}</span>
 					</div>
-					<svg
-						id={`demo-skeleton-${mode.name}`}
-						class="skel-static-view w-full h-50 bg-surface"
-					/>
+					<div class="relative h-50">
+						<svg
+							id={`demo-skeleton-${mode.name}`}
+							data-sarmal-svg
+							class="skel-static-view absolute inset-0 w-full h-full bg-surface"
+						/>
+						<canvas
+							id={`demo-skeleton-${mode.name}-dm`}
+							data-sarmal-canvas
+							class="absolute inset-0 w-full h-full bg-surface"
+						/>
+					</div>
 				</div>
 			))
 		}
@@ -27,15 +35,31 @@ const id = `skel-${Math.random().toString(36).slice(2, 8)}`;
 </div>
 
 <script>
-	import { createSarmalSVG, lame, palettes } from "@sarmal/core";
+	import {
+		createSarmalSVG,
+		createSarmalDotMatrix,
+		lame,
+		palettes,
+	} from "@sarmal/core";
 	const modes = ["static", "live"] as const;
+
+	const isDM = () =>
+		document.documentElement.dataset.sarmalMode === "dotmatrix";
+
+	const instances: Array<{
+		svg: ReturnType<typeof createSarmalSVG>;
+		dm: ReturnType<typeof createSarmalDotMatrix>;
+	}> = [];
 
 	for (const mode of modes) {
 		const svg = document.querySelector<SVGSVGElement>(
 			`#demo-skeleton-${mode}`,
 		)!;
+		const dmCanvas = document.querySelector<HTMLCanvasElement>(
+			`#demo-skeleton-${mode}-dm`,
+		)!;
 
-		createSarmalSVG(
+		const svgInst = createSarmalSVG(
 			svg,
 			{ ...lame, skeleton: mode },
 			{
@@ -43,7 +67,40 @@ const id = `skel-${Math.random().toString(36).slice(2, 8)}`;
 				trailStyle: "gradient-static",
 				skeletonColor: "#c8c4be",
 				trailLength: 300,
+				autoStart: !isDM(),
 			},
 		);
+
+		dmCanvas.width = dmCanvas.offsetWidth || 200;
+		dmCanvas.height = dmCanvas.offsetHeight || 200;
+
+		const dmInst = createSarmalDotMatrix(
+			dmCanvas,
+			{ ...lame },
+			{
+				trailColor: palettes.sunset,
+				trailStyle: "gradient-static",
+				trailLength: 300,
+				cols: 28,
+				rows: 28,
+				autoStart: isDM(),
+			},
+		);
+
+		instances.push({ svg: svgInst, dm: dmInst });
 	}
+
+	new MutationObserver(() => {
+		for (const { svg, dm } of instances) {
+			if (isDM()) {
+				svg.pause();
+				dm.play();
+			} else {
+				dm.pause();
+				svg.play();
+			}
+		}
+	}).observe(document.documentElement, {
+		attributeFilter: ["data-sarmal-mode"],
+	});
 </script>

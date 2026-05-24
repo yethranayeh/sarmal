@@ -9,7 +9,16 @@ const id = `phasepos-${Math.random().toString(36).slice(2, 8)}`;
 >
 	<div class="relative bg-surface">
 		<div class="flex justify-center">
-			<svg class="phase-pos-view w-55 h-55"></svg>
+			<div class="relative w-55 h-55">
+				<svg
+					data-sarmal-svg
+					class="phase-pos-view absolute inset-0 w-full h-full"></svg>
+				<canvas
+					data-sarmal-canvas
+					class="phase-pos-canvas absolute inset-0 w-full h-full"
+					width="220"
+					height="220"></canvas>
+			</div>
 		</div>
 		<div
 			class="phase-pos-coords absolute top-3 left-3.5 flex flex-col gap-0.5 pointer-events-none select-none"
@@ -81,12 +90,19 @@ const id = `phasepos-${Math.random().toString(36).slice(2, 8)}`;
 </div>
 
 <script>
-	import { createSarmalSVG, curves, palettes } from "@sarmal/core";
+	import {
+		createSarmalSVG,
+		createSarmalDotMatrix,
+		curves,
+		palettes,
+	} from "@sarmal/core";
 
 	document
 		.querySelectorAll<HTMLElement>("[data-phase-pos-demo]")
 		.forEach((wrapper) => {
 			const view = wrapper.querySelector<SVGSVGElement>(".phase-pos-view")!;
+			const dotmatrixView =
+				wrapper.querySelector<HTMLCanvasElement>(".phase-pos-canvas")!;
 			const buttons =
 				wrapper.querySelectorAll<HTMLButtonElement>(".phase-pos-btn");
 			const coordX = wrapper.querySelector<HTMLElement>("[data-coord-x]")!;
@@ -101,6 +117,19 @@ const id = `phasepos-${Math.random().toString(36).slice(2, 8)}`;
 				headRadius: 2,
 			});
 
+			const dotmatrixInstance = createSarmalDotMatrix(
+				dotmatrixView,
+				curves.astroid,
+				{
+					autoStart: false,
+					initialPhase: 0,
+					trailColor: palettes.bard,
+					trailStyle: "gradient-static",
+					cols: 20,
+					rows: 20,
+				},
+			);
+
 			function updateCoords(phase: number) {
 				const pt = curves.astroid.fn(phase, 0, {});
 				coordX.textContent = pt.x.toFixed(3);
@@ -109,7 +138,11 @@ const id = `phasepos-${Math.random().toString(36).slice(2, 8)}`;
 
 			function renderOnce() {
 				instance.play();
-				requestAnimationFrame(() => instance.pause());
+				dotmatrixInstance.play();
+				requestAnimationFrame(() => {
+					instance.pause();
+					dotmatrixInstance.pause();
+				});
 			}
 
 			buttons.forEach((btn) => {
@@ -120,6 +153,7 @@ const id = `phasepos-${Math.random().toString(36).slice(2, 8)}`;
 					btn.dataset.active = "";
 
 					instance.seek(phase);
+					dotmatrixInstance.seek(phase);
 					renderOnce();
 					updateCoords(phase);
 				});

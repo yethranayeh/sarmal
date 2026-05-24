@@ -19,17 +19,33 @@ const entries = Object.entries(palettes);
 					<div class="font-ui text-xs font-medium text-foreground capitalize">
 						{name}
 					</div>
-					<div
-						class="h-4 w-full rounded-md"
-						style={`background-image: linear-gradient(to right, ${colors.join(", ")})`}
-					/>
+					<div class="relative h-4.5 w-full">
+						<div
+							data-palette-normal
+							class="absolute inset-0 rounded-md"
+							style={`background-image: linear-gradient(to right, ${colors.join(", ")})`}
+						/>
+						<div
+							data-palette-dots
+							class="absolute inset-0 rounded-md"
+							style={`background-image: linear-gradient(to right, ${colors.join(", ")})`}
+						/>
+					</div>
 					<div class="flex gap-1.5">
 						{colors.map((color) => (
 							<div class="flex flex-1 flex-col items-center">
-								<div
-									class="h-6 w-full rounded border border-border-subtle/50"
-									style={`background-color: ${color}`}
-								/>
+								<div class="relative h-6 w-full">
+									<div
+										data-palette-normal
+										class="absolute inset-0 rounded"
+										style={`background-color: ${color}`}
+									/>
+									<div
+										data-palette-dots
+										class="absolute inset-0"
+										style={`background-color: ${color}`}
+									/>
+								</div>
 								<span class="mt-0.5 block font-mono text-[10px] uppercase text-muted-gray">
 									{color}
 								</span>
@@ -41,3 +57,32 @@ const entries = Object.entries(palettes);
 		}
 	</div>
 </div>
+
+<style is:global>
+	[data-palette-normal],
+	[data-palette-dots] {
+		transition: opacity 300ms;
+	}
+
+	[data-palette-dots] {
+		mask-image: radial-gradient(circle, black 38%, transparent 39%);
+		mask-size: 6px 6px;
+		mask-repeat: repeat;
+		opacity: 0;
+	}
+
+	html[data-sarmal-mode="dotmatrix"] [data-palette-normal] {
+		opacity: 0;
+	}
+
+	html[data-sarmal-mode="dotmatrix"] [data-palette-dots] {
+		opacity: 1;
+	}
+
+	@media (prefers-reduced-motion: reduce) {
+		[data-palette-normal],
+		[data-palette-dots] {
+			transition: none;
+		}
+	}
+</style>

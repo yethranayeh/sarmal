@@ -1,0 +1,193 @@
+---
+import Button from "../../Button.astro";
+
+const dotArray = [2, 6, 10, 14];
+
+const dots = dotArray.flatMap((y) =>
+	dotArray.map((x) => ({ x, y, id: `dot-${x}-${y}` })),
+);
+---
+
+<Button
+	variant="ghost"
+	class="p-0! md:p-2!"
+	data-dotmatrix-toggle
+	aria-label="Toggle dot matrix mode"
+>
+	<div
+		class="relative h-4 w-4"
+		style="opacity:0;transition:opacity 0.3s"
+		data-dot-container
+	>
+		<svg
+			viewBox="0 0 16 16"
+			fill="none"
+			xmlns="http://www.w3.org/2000/svg"
+			class="absolute inset-0"
+			aria-hidden="true"
+		>
+			{
+				dots.map((dot) => (
+					<circle
+						id={dot.id}
+						cx={dot.x}
+						cy={dot.y}
+						r="1.5"
+						fill="currentColor"
+						opacity="0.4"
+						class="transition-opacity duration-300"
+					/>
+				))
+			}
+		</svg>
+	</div>
+</Button>
+
+<script is:inline>
+	(() => {
+		const STORAGE_KEY = "sarmalRenderMode";
+		const DATA_ATTR = "sarmalMode";
+		const WAVE_DURATION = 400;
+		const FADE_DURATION = 300;
+
+		let active = false;
+
+		const apply = (isDotMatrix) => {
+			if (isDotMatrix) {
+				document.documentElement.dataset[DATA_ATTR] = "dotmatrix";
+			} else {
+				delete document.documentElement.dataset[DATA_ATTR];
+			}
+		};
+
+		const getActiveOpacity = (dot, isActive) => {
+			const t = (dot.x - 2 + (dot.y - 2)) / 24;
+			return isActive ? 1 - t * 0.15 : 0.4;
+		};
+
+		const setOpacities = (svg, isActive) => {
+			const circles = svg.querySelectorAll("circle");
+			circles.forEach((circle) => {
+				const cx = parseFloat(circle.getAttribute("cx"));
+				const cy = parseFloat(circle.getAttribute("cy"));
+				circle.style.opacity = getActiveOpacity({ x: cx, y: cy }, isActive);
+			});
+		};
+
+		const fireWave = (svg, mouseX, mouseY, startOpacity) => {
+			const circles = svg.querySelectorAll("circle");
+			const maxDist = Math.sqrt(12 * 12 + 12 * 12);
+			const prefersReduced = window.matchMedia(
+				"(prefers-reduced-motion: reduce)",
+			).matches;
+
+			circles.forEach((circle) => {
+				const cx = parseFloat(circle.getAttribute("cx"));
+				const cy = parseFloat(circle.getAttribute("cy"));
+				const dist = Math.sqrt(
+					(cx - mouseX) * (cx - mouseX) + (cy - mouseY) * (cy - mouseY),
+				);
+				const delay = (dist / maxDist) * WAVE_DURATION;
+				const targetOpacity = getActiveOpacity({ x: cx, y: cy }, active);
+				const fromOpacity =
+					startOpacity !== undefined ? startOpacity : targetOpacity;
+
+				if (prefersReduced) {
+					circle.style.willChange = "opacity";
+					circle.style.transition = "none";
+					circle.style.opacity = fromOpacity;
+					setTimeout(() => {
+						circle.style.transition = `opacity ${FADE_DURATION}ms ease-out`;
+						circle.style.opacity = "1";
+						setTimeout(() => {
+							circle.style.transition = `opacity ${FADE_DURATION}ms ease-out`;
+							circle.style.opacity = targetOpacity;
+							circle.style.willChange = "auto";
+						}, FADE_DURATION);
+					}, delay);
+					return;
+				}
+
+				circle.style.willChange = "opacity";
+				circle.style.transition = "none";
+				circle.style.opacity = fromOpacity;
+
+				setTimeout(() => {
+					circle.style.transition = "opacity 150ms ease-out";
+					circle.style.opacity = "1";
+					setTimeout(() => {
+						circle.style.transition = `opacity ${FADE_DURATION}ms ease-out`;
+						circle.style.opacity = targetOpacity;
+						setTimeout(() => {
+							circle.style.willChange = "auto";
+						}, FADE_DURATION);
+					}, 150);
+				}, delay);
+			});
+		};
+
+		const resetOpacities = (svg) => {
+			const circles = svg.querySelectorAll("circle");
+			circles.forEach((circle) => {
+				const cx = parseFloat(circle.getAttribute("cx"));
+				const cy = parseFloat(circle.getAttribute("cy"));
+				circle.style.willChange = "opacity";
+				circle.style.transition = `opacity ${FADE_DURATION}ms ease-out`;
+				circle.style.opacity = getActiveOpacity({ x: cx, y: cy }, active);
+				setTimeout(() => {
+					circle.style.willChange = "auto";
+				}, FADE_DURATION);
+			});
+		};
+
+		const init = () => {
+			const container = document.querySelector("[data-dot-container]");
+			if (!container) return;
+
+			container.style.opacity = "1";
+
+			const button = document.querySelector("[data-dotmatrix-toggle]");
+			if (!button) return;
+
+			try {
+				active = localStorage.getItem(STORAGE_KEY) === "dotmatrix";
+			} catch (e) {}
+			apply(active);
+
+			const svg = container.querySelector("svg");
+			if (!svg) return;
+
+			if (active) {
+				setOpacities(svg, true);
+			}
+
+			button.addEventListener("click", () => {
+				active = !active;
+				try {
+					localStorage.setItem(STORAGE_KEY, active ? "dotmatrix" : "default");
+				} catch (e) {}
+				apply(active);
+				fireWave(svg, 8, 8, 0.4);
+			});
+
+			button.addEventListener("mouseenter", (e) => {
+				const rect = svg.getBoundingClientRect();
+				const scaleX = 16 / rect.width;
+				const scaleY = 16 / rect.height;
+				const mouseX = (e.clientX - rect.left) * scaleX;
+				const mouseY = (e.clientY - rect.top) * scaleY;
+				fireWave(svg, mouseX, mouseY);
+			});
+
+			button.addEventListener("mouseleave", () => {
+				resetOpacities(svg);
+			});
+		};
+
+		if (document.readyState === "loading") {
+			document.addEventListener("DOMContentLoaded", init);
+		} else {
+			init();
+		}
+	})();
+</script>

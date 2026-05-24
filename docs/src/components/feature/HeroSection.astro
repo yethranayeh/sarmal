@@ -63,32 +63,77 @@ const codeSnippet = `<script src="https://unpkg.com/@sarmal/core/dist/auto-init.
 			class="relative h-full w-full flex flex-col justify-center items-center gap-5"
 		>
 			<DotGrid />
-			<canvas id="hero-sarmal" width="360" height="360"></canvas>
+			<div class="relative">
+				<canvas id="hero-sarmal" data-sarmal-svg width="360" height="360"
+				></canvas>
+				<canvas
+					id="hero-sarmal-dm"
+					data-sarmal-canvas
+					class="absolute inset-0"
+					width="360"
+					height="360"></canvas>
+			</div>
 		</div>
 		<span class="font-ui text-[9px] tracking-[0.25em] uppercase text-muted">
 			lissajous 4:3
 		</span>
 	</div>
 	<script>
-		import { createSarmal, curves, palettes } from "@sarmal/core";
+		import {
+			createSarmal,
+			createSarmalDotMatrix,
+			curves,
+			palettes,
+		} from "@sarmal/core";
 
 		const canvas = document.getElementById(
 			"hero-sarmal",
 		) as HTMLCanvasElement | null;
-		if (canvas) {
+		const dmCanvas = document.getElementById(
+			"hero-sarmal-dm",
+		) as HTMLCanvasElement | null;
+
+		if (canvas && dmCanvas) {
+			const isDM = () =>
+				document.documentElement.dataset.sarmalMode === "dotmatrix";
+
 			const sarmal = createSarmal(canvas, curves.lissajous43, {
 				skeletonColor: "#c8c5c0",
 				headRadius: 2.5,
 				trailStyle: "gradient-animated",
 				trailColor: palettes.bard,
 				trailLength: 150,
+				autoStart: !isDM(),
+			});
+
+			const dmSarmal = createSarmalDotMatrix(dmCanvas, curves.lissajous43, {
+				trailStyle: "gradient-animated",
+				trailColor: palettes.bard,
+				trailLength: 150,
+				cols: 28,
+				rows: 28,
+				autoStart: isDM(),
 			});
 
 			canvas.addEventListener("mouseenter", () => {
 				sarmal.setSpeedOver(0.3, 400).catch(() => {});
+				dmSarmal.setSpeedOver(0.3, 400).catch(() => {});
 			});
 			canvas.addEventListener("mouseleave", () => {
 				sarmal.setSpeedOver(1.0, 500).catch(() => {});
+				dmSarmal.setSpeedOver(1.0, 500).catch(() => {});
+			});
+
+			new MutationObserver(() => {
+				if (isDM()) {
+					sarmal.pause();
+					dmSarmal.play();
+				} else {
+					dmSarmal.pause();
+					sarmal.play();
+				}
+			}).observe(document.documentElement, {
+				attributeFilter: ["data-sarmal-mode"],
 			});
 		}
 	</script>

@@ -607,23 +607,27 @@ function getCollapsedAtStart(slug: string): boolean {
 		}
 	}
 
-	// One-time click listeners on chevron buttons — never recreated on render
-	const chevronBtns = nav?.querySelectorAll<HTMLButtonElement>(".toc-chevron");
+	// One-time click listeners on chevron buttons. It's never recreated on render
+	const chevronBtns =
+		nav?.querySelectorAll<HTMLButtonElement>(".toc-chevron") ?? [];
 
 	// Pre-populate collapsedH2s from SSR-marked buttons
-	for (const btn of chevronBtns ?? []) {
+	for (const btn of chevronBtns) {
 		if (btn.dataset.collapsedAtStart === "true") {
 			collapsedH2s.add(btn.dataset.slug ?? "");
 		}
 	}
 
-	for (const btn of chevronBtns ?? []) {
+	for (const btn of chevronBtns) {
 		btn.addEventListener("click", () => {
 			const slug = btn.dataset.slug ?? "";
 			const expanding = btn.getAttribute("aria-expanded") === "false";
 			btn.setAttribute("aria-expanded", expanding ? "true" : "false");
-			if (expanding) collapsedH2s.delete(slug);
-			else collapsedH2s.add(slug);
+			if (expanding) {
+				collapsedH2s.delete(slug);
+			} else {
+				collapsedH2s.add(slug);
+			}
 			render();
 		});
 	}

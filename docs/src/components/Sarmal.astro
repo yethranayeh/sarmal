@@ -36,20 +36,101 @@ const serializedTrailColor = Array.isArray(trailColor)
 	: trailColor;
 ---
 
-<canvas
-	id={curveId}
-	width={width}
-	height={height}
-	data-sarmal={lazy ? undefined : curve}
-	data-sarmal-lazy={lazy ? curve : undefined}
-	data-skeleton-color={skeletonColor}
-	data-trail-color={serializedTrailColor}
-	data-head-color={resolvedHeadColor}
-	data-head-radius={headRadius}
-	data-trail-length={trailLength}
-	data-trail-style={trailStyle}
-	data-speed={speed}></canvas>
+<div
+	class="relative inline-block"
+	style={`width:${width}px;height:${height}px`}
+>
+	<canvas
+		id={curveId}
+		data-sarmal-svg
+		width={width}
+		height={height}
+		data-sarmal={lazy ? undefined : curve}
+		data-sarmal-lazy={lazy ? curve : undefined}
+		data-skeleton-color={skeletonColor}
+		data-trail-color={serializedTrailColor}
+		data-head-color={resolvedHeadColor}
+		data-head-radius={headRadius}
+		data-trail-length={trailLength}
+		data-trail-style={trailStyle}
+		data-speed={speed}
+		class="absolute inset-0"></canvas>
+	<canvas
+		data-sarmal-canvas
+		width={width}
+		height={height}
+		class="absolute inset-0"></canvas>
+</div>
 
 <script>
 	import "@sarmal/core/auto";
+</script>
+
+<script>
+	import { createSarmalDotMatrix, curves } from "@sarmal/core";
+	import type { CurveName, TrailStyle } from "@sarmal/core";
+
+	function setupDotMatrix() {
+		document
+			.querySelectorAll<HTMLCanvasElement>(
+				"[data-sarmal-svg]:not([data-dm-setup])",
+			)
+			.forEach((mainCanvas) => {
+				mainCanvas.dataset.dmSetup = "1";
+
+				const dotmatrixCanvas =
+					mainCanvas.nextElementSibling as HTMLCanvasElement | null;
+				if (!dotmatrixCanvas?.hasAttribute("data-sarmal-canvas")) {
+					return;
+				}
+
+				const curveName =
+					mainCanvas.dataset.sarmal ?? mainCanvas.dataset.sarmalLazy;
+				if (!curveName || !(curveName in curves)) {
+					return;
+				}
+
+				const trailColorRaw = mainCanvas.dataset.trailColor ?? "#ffffff";
+				const trailColor = trailColorRaw.startsWith("[")
+					? (JSON.parse(trailColorRaw) as string[])
+					: trailColorRaw;
+				const trailLength = parseInt(mainCanvas.dataset.trailLength ?? "120");
+				const trailStyle = (mainCanvas.dataset.trailStyle ??
+					"default") as TrailStyle;
+				const speed = mainCanvas.dataset.speed
+					? parseFloat(mainCanvas.dataset.speed)
+					: undefined;
+
+				const isDM = () =>
+					document.documentElement.dataset.sarmalMode === "dotmatrix";
+
+				const dotmatrixInstance = createSarmalDotMatrix(
+					dotmatrixCanvas,
+					curves[curveName as CurveName],
+					{
+						trailColor,
+						trailLength,
+						trailStyle,
+						cols: 32,
+						rows: 32,
+						autoStart: isDM(),
+					},
+				);
+				if (speed !== undefined) {
+					dotmatrixInstance.setSpeed(speed);
+				}
+
+				new MutationObserver(() => {
+					if (isDM()) {
+						dotmatrixInstance.play();
+					} else {
+						dotmatrixInstance.pause();
+					}
+				}).observe(document.documentElement, {
+					attributeFilter: ["data-sarmal-mode"],
+				});
+			});
+	}
+
+	setupDotMatrix();
 </script>

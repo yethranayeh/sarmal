@@ -7,71 +7,132 @@
 	class="absolute space-y-4 inset-0 p-8 flex flex-col justify-center opacity-0 transition-opacity duration-400 pointer-events-none [&.active]:opacity-100 [&.active]:pointer-events-auto"
 >
 	<p class="font-ui text-[9px] tracking-[0.25em] uppercase text-muted">
-		Processing
+		Macrodata Refinement
 	</p>
 	<div class="flex flex-col">
 		<div class="flex items-start gap-3">
 			<div class="flex flex-col items-center">
 				<div
-					class="w-9.5 h-9.5 rounded-lg bg-surface border border-border overflow-hidden shrink-0 transition-all duration-400 [&.done]:bg-green-400/[0.07] [&.done]:border-green-400/20 [&.done]:flex [&.done]:items-center [&.done]:justify-center [&.done]:text-base [&.done]:text-green-400"
+					data-pipe-card="0"
+					class="w-9.5 h-9.5 rounded-lg bg-surface border border-border overflow-hidden shrink-0 transition-all duration-400 [&.done]:bg-green-400/[0.07] [&.done]:border-green-400/20"
 				>
-					<svg data-pipe-dot="0" class="w-full h-full"></svg>
+					<div class="relative flex items-center justify-center w-full h-full">
+						<svg
+							data-pipe-dot="0"
+							data-sarmal-svg
+							class="absolute inset-0 w-full h-full"></svg>
+						<canvas
+							data-pipe-canvas="0"
+							data-sarmal-canvas
+							class="absolute inset-0 w-full h-full"
+							width="38"
+							height="38"></canvas>
+						<span
+							data-pipe-check
+							class="hidden absolute inset-0 items-center justify-center text-base text-green-400 z-10"
+						></span>
+					</div>
 				</div>
 				<div class="w-px h-3 bg-border"></div>
 			</div>
 			<span
 				data-pipe-label="0"
 				class="font-body text-[13px] pt-2.5 leading-none transition-colors duration-300 text-muted [&.active]:text-foreground [&.done]:text-muted"
-				>Parsing files</span
+				>Scouting numbers</span
 			>
 		</div>
 		<div class="flex items-start gap-3">
 			<div class="flex flex-col items-center">
 				<div
-					class="w-9.5 h-9.5 rounded-lg bg-surface border border-border-subtle overflow-hidden shrink-0 transition-all duration-400 [&.done]:bg-green-400/[0.07] [&.done]:border-green-400/20 [&.done]:flex [&.done]:items-center [&.done]:justify-center [&.done]:text-base [&.done]:text-green-400"
+					data-pipe-card="1"
+					class="w-9.5 h-9.5 rounded-lg bg-surface border border-border-subtle overflow-hidden shrink-0 transition-all duration-400 [&.done]:bg-green-400/[0.07] [&.done]:border-green-400/20"
 				>
-					<svg data-pipe-dot="1" class="w-full h-full"></svg>
+					<div class="relative flex items-center justify-center w-full h-full">
+						<svg
+							data-pipe-dot="1"
+							data-sarmal-svg
+							class="absolute inset-0 w-full h-full"></svg>
+						<canvas
+							data-pipe-canvas="1"
+							data-sarmal-canvas
+							class="absolute inset-0 w-full h-full"
+							width="38"
+							height="38"></canvas>
+						<span
+							data-pipe-check
+							class="hidden absolute inset-0 items-center justify-center text-base text-green-400 z-10"
+						></span>
+					</div>
 				</div>
 				<div class="w-px h-3 bg-border"></div>
 			</div>
 			<span
 				data-pipe-label="1"
 				class="font-body text-[13px] pt-2.5 leading-none transition-colors duration-300 text-muted [&.active]:text-foreground [&.done]:text-muted"
-				>Analysing patterns</span
+				>Sorting into bins</span
 			>
 		</div>
 		<div class="flex items-start gap-3">
 			<div class="flex flex-col items-center">
 				<div
-					class="w-9.5 h-9.5 rounded-lg bg-surface border border-border-subtle overflow-hidden shrink-0 transition-all duration-400 [&.done]:bg-green-400/[0.07] [&.done]:border-green-400/20 [&.done]:flex [&.done]:items-center [&.done]:justify-center [&.done]:text-base [&.done]:text-green-400"
+					data-pipe-card="2"
+					class="w-9.5 h-9.5 rounded-lg bg-surface border border-border-subtle overflow-hidden shrink-0 transition-all duration-400 [&.done]:bg-green-400/[0.07] [&.done]:border-green-400/20"
 				>
-					<svg data-pipe-dot="2" class="w-full h-full"></svg>
+					<div class="relative flex items-center justify-center w-full h-full">
+						<svg
+							data-pipe-dot="2"
+							data-sarmal-svg
+							class="absolute inset-0 w-full h-full"></svg>
+						<canvas
+							data-pipe-canvas="2"
+							data-sarmal-canvas
+							class="absolute inset-0 w-full h-full"
+							width="38"
+							height="38"></canvas>
+						<span
+							data-pipe-check
+							class="hidden absolute inset-0 items-center justify-center text-base text-green-400 z-10"
+						></span>
+					</div>
 				</div>
 			</div>
 			<span
 				data-pipe-label="2"
 				class="font-body text-[13px] pt-2.5 leading-none transition-colors duration-300 text-muted [&.active]:text-foreground [&.done]:text-muted"
-				>Generating output</span
+				>Completing the file</span
 			>
 		</div>
 	</div>
 </div>
 
 <script>
-	import { createSarmalSVG, curves } from "@sarmal/core";
+	import { createSarmalSVG, createSarmalDotMatrix, curves } from "@sarmal/core";
 	import type { DemoScenarioAPI } from "../../../lib/demo";
 
-	type Instance = ReturnType<typeof createSarmalSVG>;
+	type SVGInstance = ReturnType<typeof createSarmalSVG>;
+	type DMInstance = ReturnType<typeof createSarmalDotMatrix>;
 
-	function stop(s: Instance | null, slot: SVGSVGElement): null {
+	const isDM = () =>
+		document.documentElement.dataset.sarmalMode === "dotmatrix";
+
+	function stopSVG(s: SVGInstance | null, slot: SVGSVGElement): null {
 		s?.pause();
 		slot.innerHTML = "";
+		return null;
+	}
+
+	function stopDM(s: DMInstance | null, canvas: HTMLCanvasElement): null {
+		s?.destroy();
+		const ctx = canvas.getContext("2d");
+		if (ctx) ctx.clearRect(0, 0, canvas.width, canvas.height);
 		return null;
 	}
 
 	const PIPE_STEPS = [
 		{
 			dotSelector: "[data-pipe-dot='0']",
+			canvasSelector: "[data-pipe-canvas='0']",
+			cardSelector: "[data-pipe-card='0']",
 			labelSelector: "[data-pipe-label='0']",
 			curve: curves.lissajous43,
 			color: "#2dd4bf",
@@ -79,6 +140,8 @@
 		},
 		{
 			dotSelector: "[data-pipe-dot='1']",
+			canvasSelector: "[data-pipe-canvas='1']",
+			cardSelector: "[data-pipe-card='1']",
 			labelSelector: "[data-pipe-label='1']",
 			curve: curves.rose3,
 			color: "#a78bfa",
@@ -86,6 +149,8 @@
 		},
 		{
 			dotSelector: "[data-pipe-dot='2']",
+			canvasSelector: "[data-pipe-canvas='2']",
+			cardSelector: "[data-pipe-card='2']",
 			labelSelector: "[data-pipe-label='2']",
 			curve: curves.epitrochoid7,
 			color: "#2dd4bf",
@@ -93,19 +158,11 @@
 		},
 	];
 
-	const stepDotBaseClasses =
-		"w-9.5 h-9.5 rounded-lg bg-surface border border-border-subtle overflow-hidden shrink-0 transition-all duration-400";
-	const stepDotDoneClasses =
-		"w-9.5 h-9.5 rounded-lg border overflow-hidden shrink-0 transition-all duration-400 bg-green-400/[0.07] border-green-400/20 flex items-center justify-center text-base text-green-400";
-
 	function initPipeline(container: HTMLElement): DemoScenarioAPI {
-		let pipeSarmals: (Instance | null)[] = [null, null, null];
+		let pipeSarmals: (SVGInstance | null)[] = [null, null, null];
+		let pipeDMs: (DMInstance | null)[] = [null, null, null];
 		let pipeGen = 0;
 		let pipeTimer: ReturnType<typeof setTimeout> | null = null;
-		const cards = PIPE_STEPS.map(
-			(step) =>
-				container.querySelector(step.dotSelector)?.parentElement as HTMLElement,
-		);
 
 		function cleanup() {
 			pipeGen++;
@@ -114,13 +171,18 @@
 				pipeTimer = null;
 			}
 			PIPE_STEPS.forEach((step, idx) => {
-				const card = cards[idx]!;
-				const dot = card.querySelector(
-					step.dotSelector,
-				) as SVGSVGElement | null;
-				if (dot) pipeSarmals[idx] = stop(pipeSarmals[idx], dot);
-				card.className = stepDotBaseClasses;
-				card.innerHTML = `<svg data-pipe-dot="${idx}" class="w-full h-full"></svg>`;
+				const card = container.querySelector(step.cardSelector) as HTMLElement;
+				const dot = container.querySelector(step.dotSelector) as SVGSVGElement;
+				const canvas = container.querySelector(
+					step.canvasSelector,
+				) as HTMLCanvasElement;
+				pipeSarmals[idx] = stopSVG(pipeSarmals[idx], dot);
+				pipeDMs[idx] = stopDM(pipeDMs[idx], canvas);
+				card.classList.remove("done");
+				const check = card.querySelector("[data-pipe-check]") as HTMLElement;
+				check.classList.add("hidden");
+				check.classList.remove("flex");
+				check.textContent = "";
 				const label = container.querySelector(
 					step.labelSelector,
 				) as HTMLElement;
@@ -135,27 +197,45 @@
 			function activateStep(i: number) {
 				if (pipeGen !== gen) return;
 				const step = PIPE_STEPS[i]!;
-				const card = cards[i]!;
-				const dot = card.querySelector(step.dotSelector) as SVGSVGElement;
+				const card = container.querySelector(step.cardSelector) as HTMLElement;
+				const dot = container.querySelector(step.dotSelector) as SVGSVGElement;
+				const canvas = container.querySelector(
+					step.canvasSelector,
+				) as HTMLCanvasElement;
 				const label = container.querySelector(
 					step.labelSelector,
 				) as HTMLElement;
 
 				label.classList.add("active");
-				pipeSarmals[i] = createSarmalSVG(dot, step.curve, {
-					trailColor: step.color,
-					skeletonColor: "transparent",
-					headColor: step.color,
-					headRadius: 1.5,
-					trailLength: 70,
-				});
-				pipeSarmals[i]!.setSpeed(step.speed);
+
+				if (isDM()) {
+					pipeDMs[i] = createSarmalDotMatrix(canvas, step.curve, {
+						trailColor: step.color,
+						trailLength: 70,
+						cols: 10,
+						rows: 10,
+					});
+					pipeDMs[i]!.setSpeed(step.speed);
+				} else {
+					pipeSarmals[i] = createSarmalSVG(dot, step.curve, {
+						trailColor: step.color,
+						skeletonColor: "transparent",
+						headColor: step.color,
+						headRadius: 1.5,
+						trailLength: 70,
+					});
+					pipeSarmals[i]!.setSpeed(step.speed);
+				}
 
 				pipeTimer = setTimeout(() => {
 					if (pipeGen !== gen) return;
-					pipeSarmals[i] = stop(pipeSarmals[i], dot);
-					card.className = stepDotDoneClasses;
-					card.textContent = "✓";
+					pipeSarmals[i] = stopSVG(pipeSarmals[i], dot);
+					pipeDMs[i] = stopDM(pipeDMs[i], canvas);
+					card.classList.add("done");
+					const check = card.querySelector("[data-pipe-check]") as HTMLElement;
+					check.textContent = "✓";
+					check.classList.remove("hidden");
+					check.classList.add("flex");
 					label.classList.remove("active");
 					label.classList.add("done");
 
@@ -173,7 +253,6 @@
 		return { start, cleanup };
 	}
 
-	// Register on DOM ready
 	const container = document.querySelector(
 		'[data-scenario="pipeline"]',
 	) as HTMLElement;

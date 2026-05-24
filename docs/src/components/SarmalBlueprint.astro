@@ -33,7 +33,7 @@ const {
 	curve = "lissajous32",
 	autoStart = true,
 	initialPhase,
-	// Canvas renderer requires resolved color values — CSS variables cannot be used as prop defaults.
+	// Canvas renderer requires resolved color values. CSS variables cannot be used as prop defaults.
 	// headColor matches --color-primary; trailColor/skeletonColor are blueprint-specific neutrals.
 	trailColor = "#3a3b37",
 	skeletonColor = "#b0aca4",
@@ -75,7 +75,8 @@ const id = `sbp-${Math.random().toString(36).slice(2, 8)}`;
 	data-callouts={JSON.stringify(callouts)}
 >
 	<DotGrid />
-	<svg class="absolute inset-0 w-full h-full"></svg>
+	<svg data-sarmal-svg class="absolute inset-0 w-full h-full"></svg>
+	<canvas data-sarmal-canvas class="absolute"></canvas>
 </div>
 
 <style>
@@ -93,9 +94,13 @@ const id = `sbp-${Math.random().toString(36).slice(2, 8)}`;
 </style>
 
 <script>
-	import type { CurveName, SVGSarmalOptions } from "@sarmal/core";
+	import type {
+		CurveName,
+		SVGSarmalOptions,
+		SarmalInstance,
+	} from "@sarmal/core";
 
-	import { createSarmalSVG, curves } from "@sarmal/core";
+	import { createSarmalSVG, createSarmalDotMatrix, curves } from "@sarmal/core";
 
 	const _css = getComputedStyle(document.documentElement);
 	const ANNOT_COLORS = {
@@ -138,8 +143,14 @@ const id = `sbp-${Math.random().toString(36).slice(2, 8)}`;
 	}
 
 	function resolveSelector(target: string): string {
-		if (target === "head") return '[data-sarmal-role="head"]';
-		if (target === "skeleton") return '[data-sarmal-role="skeleton"]';
+		if (target === "head") {
+			return '[data-sarmal-role="head"]';
+		}
+
+		if (target === "skeleton") {
+			return '[data-sarmal-role="skeleton"]';
+		}
+
 		return target;
 	}
 
@@ -151,16 +162,22 @@ const id = `sbp-${Math.random().toString(36).slice(2, 8)}`;
 	): Placement {
 		const inRight = tx > cw / 2;
 		const inBottom = ty > ch / 2;
-		if (inRight && inBottom) return "top-left";
-		if (inRight) return "bottom-left";
-		if (inBottom) return "top-right";
+		if (inRight && inBottom) {
+			return "top-left";
+		}
+
+		if (inRight) {
+			return "bottom-left";
+		}
+
+		if (inBottom) {
+			return "top-right";
+		}
+
 		return "bottom-right";
 	}
 
-	function getHeadPos(
-		headEl: Element,
-		svg: SVGSVGElement,
-	): { x: number; y: number } {
+	function getHeadPos(headEl: Element, svg: SVGSVGElement) {
 		const vb = svg.getAttribute("viewBox");
 		const parts = vb ? vb.split(/[\s,]+/).map(Number) : [0, 0, 100, 100];
 		const svgRect = svg.getBoundingClientRect();
@@ -181,10 +198,7 @@ const id = `sbp-${Math.random().toString(36).slice(2, 8)}`;
 		return { x: offsetX + cx * scale, y: offsetY + cy * scale };
 	}
 
-	function getElPos(
-		el: Element,
-		wrapper: HTMLElement,
-	): { x: number; y: number } {
+	function getElPos(el: Element, wrapper: HTMLElement) {
 		const rect = el.getBoundingClientRect();
 		const wr = wrapper.getBoundingClientRect();
 		return {
@@ -248,8 +262,14 @@ const id = `sbp-${Math.random().toString(36).slice(2, 8)}`;
 		state.labelDiv.style.top = `${labelY}px`;
 	}
 
+	const isDM = () =>
+		document.documentElement.dataset.sarmalMode === "dotmatrix";
+
 	function initBlueprint(wrapper: HTMLElement) {
 		const svgEl = wrapper.querySelector("svg") as SVGSVGElement;
+		const dotmatrixCanvas = wrapper.querySelector<HTMLCanvasElement>(
+			"canvas[data-sarmal-canvas]",
+		);
 		const curveName = (wrapper.dataset.curve ?? "lissajous32") as CurveName;
 		const autoStart = wrapper.dataset.autoStart !== "false";
 		const initialPhase =
@@ -259,11 +279,12 @@ const id = `sbp-${Math.random().toString(36).slice(2, 8)}`;
 		const callouts: Callout[] = JSON.parse(wrapper.dataset.callouts ?? "[]");
 
 		const opts: SVGSarmalOptions = {
-			autoStart,
+			autoStart: !isDM() && autoStart,
 			trailColor: wrapper.dataset.trailColor,
 			skeletonColor: wrapper.dataset.skeletonColor,
 			headColor: wrapper.dataset.headColor,
 		};
+
 		if (initialPhase !== undefined) {
 			opts.initialPhase = initialPhase;
 		}
@@ -279,21 +300,156 @@ const id = `sbp-${Math.random().toString(36).slice(2, 8)}`;
 		const curve = curves[curveName];
 		const instance = createSarmalSVG(svgEl, curve, opts);
 
+		// Tracks whether the user animation playing.
+		// The MutationObserver uses this to avoid overriding a user pause when switching between SVG and dot-matrix modes.
+		let userWantsPlaying = autoStart;
+
+		let dotmatrixInstnace: ReturnType<typeof createSarmalDotMatrix> | null =
+			null;
+
+		if (dotmatrixCanvas) {
+			const dotmatrixSize = Math.min(wrapper.offsetWidth, wrapper.offsetHeight);
+			dotmatrixCanvas.width = dotmatrixSize;
+			dotmatrixCanvas.height = dotmatrixSize;
+
+			Object.assign(dotmatrixCanvas.style, {
+				width: `${dotmatrixSize}px`,
+				height: `${dotmatrixSize}px`,
+				top: "50%",
+				left: "50%",
+				transform: "translate(-50%, -50%)",
+			});
+			const dmOpts: Record<string, unknown> = {
+				trailColor: wrapper.dataset.trailColor,
+				cols: 28,
+				rows: 28,
+				autoStart: isDM() && autoStart,
+			};
+
+			if (wrapper.dataset.trailLength !== undefined) {
+				dmOpts.trailLength = parseFloat(wrapper.dataset.trailLength);
+			}
+
+			if (initialPhase !== undefined) {
+				dmOpts.initialPhase = initialPhase;
+			}
+
+			dotmatrixInstnace = createSarmalDotMatrix(
+				dotmatrixCanvas,
+				curve,
+				dmOpts as Parameters<typeof createSarmalDotMatrix>[2],
+			);
+
+			new MutationObserver(() => {
+				if (isDM()) {
+					instance.pause();
+					if (userWantsPlaying) {
+						dotmatrixInstnace!.play();
+					}
+				} else {
+					dotmatrixInstnace!.pause();
+					if (userWantsPlaying) {
+						instance.play();
+					}
+				}
+			}).observe(document.documentElement, {
+				attributeFilter: ["data-sarmal-mode"],
+			});
+		}
+
+		// Unified facade: routes play/pause/reset/destroy to the active renderer and
+		// keeps userWantsPlaying in sync so mode switches don't override user intent.
+		const facade: SarmalInstance = {
+			play() {
+				userWantsPlaying = true;
+				if (isDM()) {
+					dotmatrixInstnace?.play();
+				} else {
+					instance.play();
+				}
+			},
+			pause() {
+				userWantsPlaying = false;
+				if (isDM()) {
+					dotmatrixInstnace?.pause();
+				} else {
+					instance.pause();
+				}
+			},
+			reset() {
+				if (isDM()) {
+					dotmatrixInstnace?.reset();
+				} else {
+					instance.reset();
+				}
+			},
+			destroy() {
+				instance.destroy();
+				dotmatrixInstnace?.destroy();
+			},
+			jump(phase, opts) {
+				instance.jump(phase, opts);
+				dotmatrixInstnace?.jump(phase, opts);
+			},
+			seek(phase, opts) {
+				instance.seek(phase, opts);
+				dotmatrixInstnace?.seek(phase, opts);
+			},
+			setSpeed(s) {
+				instance.setSpeed(s);
+				dotmatrixInstnace?.setSpeed(s);
+			},
+			getSpeed() {
+				return isDM()
+					? (dotmatrixInstnace?.getSpeed() ?? instance.getSpeed())
+					: instance.getSpeed();
+			},
+			resetSpeed() {
+				instance.resetSpeed();
+				dotmatrixInstnace?.resetSpeed();
+			},
+			setSpeedOver(s, d) {
+				return isDM()
+					? (dotmatrixInstnace?.setSpeedOver(s, d) ?? Promise.resolve())
+					: instance.setSpeedOver(s, d);
+			},
+			morphTo(target, opts) {
+				return isDM()
+					? (dotmatrixInstnace?.morphTo(target, opts) ?? Promise.resolve())
+					: instance.morphTo(target, opts);
+			},
+			// eslint-disable-next-line @typescript-eslint/no-explicit-any
+			setRenderOptions(opts: any) {
+				try {
+					instance.setRenderOptions(opts);
+				} catch {}
+				try {
+					dotmatrixInstnace?.setRenderOptions(opts);
+				} catch {}
+			},
+			getSarmalSkeleton() {
+				return instance.getSarmalSkeleton();
+			},
+		};
+
 		if (callouts.length === 0) {
 			requestAnimationFrame(() => {
 				wrapper.dispatchEvent(
 					new CustomEvent("sarmal:ready", {
 						bubbles: true,
-						detail: { instance },
+						detail: { instance: facade },
 					}),
 				);
 			});
+
 			return;
 		}
 
 		requestAnimationFrame(() => {
 			const svg = wrapper.querySelector("svg") as SVGSVGElement | null;
-			if (!svg) return;
+			if (!svg) {
+				return;
+			}
 
 			const annotSvg = document.createElementNS(
 				"http://www.w3.org/2000/svg",
@@ -303,6 +459,7 @@ const id = `sbp-${Math.random().toString(36).slice(2, 8)}`;
 				"class",
 				"absolute inset-0 w-full h-full pointer-events-none overflow-visible",
 			);
+			annotSvg.setAttribute("data-sarmal-svg", "");
 
 			const sarmalRect = svg.getBoundingClientRect();
 			annotSvg.setAttribute(
@@ -401,6 +558,7 @@ const id = `sbp-${Math.random().toString(36).slice(2, 8)}`;
 			const headStates = states.filter((s) => s.isHead && !s.callout.static);
 			if (headStates.length > 0) {
 				const headEl = svg.querySelector('[data-sarmal-role="head"]');
+
 				if (headEl) {
 					const obs = new MutationObserver(() => {
 						const wr = wrapper.getBoundingClientRect();
@@ -408,6 +566,7 @@ const id = `sbp-${Math.random().toString(36).slice(2, 8)}`;
 							applyCallout(s, getHeadPos(headEl, svg), wr.width, wr.height);
 						}
 					});
+
 					obs.observe(headEl, {
 						attributes: true,
 						attributeFilter: ["cx", "cy"],
@@ -419,6 +578,7 @@ const id = `sbp-${Math.random().toString(36).slice(2, 8)}`;
 			const nonHeadStates = states.filter(
 				(s) => !s.isHead && !s.callout.static,
 			);
+
 			if (nonHeadStates.length > 0) {
 				function rafLoop() {
 					const wr = wrapper.getBoundingClientRect();
@@ -426,18 +586,21 @@ const id = `sbp-${Math.random().toString(36).slice(2, 8)}`;
 						const targetEl =
 							svg!.querySelector(s.selector) ??
 							wrapper.querySelector(s.selector);
-						if (targetEl)
+						if (targetEl) {
 							applyCallout(s, getElPos(targetEl, wrapper), wr.width, wr.height);
+						}
 					}
+
 					requestAnimationFrame(rafLoop);
 				}
+
 				requestAnimationFrame(rafLoop);
 			}
 
 			wrapper.dispatchEvent(
 				new CustomEvent("sarmal:ready", {
 					bubbles: true,
-					detail: { instance },
+					detail: { instance: facade },
 				}),
 			);
 		});

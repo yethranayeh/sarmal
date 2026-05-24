@@ -9,7 +9,16 @@ const id = `eng-${Math.random().toString(36).slice(2, 8)}`;
 >
 	<div class="flex flex-col md:flex-row">
 		<div class="flex-1 min-w-0 bg-surface flex justify-center">
-			<svg data-eng-view class="size-60"></svg>
+			<div class="relative size-60">
+				<svg data-eng-view data-sarmal-svg class="absolute inset-0 size-full"
+				></svg>
+				<canvas
+					data-eng-view-dm
+					data-sarmal-canvas
+					class="absolute inset-0 size-full"
+					width="240"
+					height="240"></canvas>
+			</div>
 		</div>
 		<div
 			class="w-full md:w-36 shrink-0 border-t border-l-0 md:border-t-0 md:border-l border-border bg-surface-raised flex flex-col justify-center md:justify-start py-2 px-4 md:py-4 md:gap-3"
@@ -38,53 +47,72 @@ const id = `eng-${Math.random().toString(36).slice(2, 8)}`;
 </div>
 
 <script>
-	import type { Point } from "@sarmal/core";
+	import type { Point, CurveDef } from "@sarmal/core";
 	import {
-		createSVGRenderer,
-		createEngine,
+		createSarmalSVG,
+		createSarmalDotMatrix,
 		curves,
 		palettes,
 	} from "@sarmal/core";
+
 	const wrapper = document.querySelector(
 		"[data-engine-output-demo]",
 	) as HTMLElement;
 	const view = wrapper.querySelector<SVGSVGElement>("[data-eng-view]")!;
+	const dmView =
+		wrapper.querySelector<HTMLCanvasElement>("[data-eng-view-dm]")!;
 	const coordX = wrapper.querySelector<HTMLElement>("[data-coord-x]")!;
 	const coordY = wrapper.querySelector<HTMLElement>("[data-coord-y]")!;
 
-	const base = createEngine(curves.astroid, 300);
-	let lastHead: Point | null = null;
+	const isDM = () =>
+		document.documentElement.dataset.sarmalMode === "dotmatrix";
 
-	// Intercept tick() so the renderer's loop also captures the head position
-	const engine = new Proxy(base, {
-		get(target, prop) {
-			if (prop === "tick")
-				return (dt: number) => {
-					const trail = target.tick(dt);
-					if (target.trailCount > 0) {
-						lastHead = trail[target.trailCount - 1];
-					}
-					return trail;
-				};
-			return Reflect.get(target, prop);
+	// Wrapped curve: captures the latest head position on every fn() call.
+	// The engine calls fn() once per tick, so lastHead always reflects the current head.
+	let lastHead: Point = { x: 0, y: 0 };
+	const trackedCurve: CurveDef = {
+		...curves.astroid,
+		fn(phase, elapsed, params) {
+			const pt = curves.astroid.fn(phase, elapsed, params);
+			lastHead = pt;
+			return pt;
 		},
-	});
+	};
 
-	const sarmal = createSVGRenderer({
-		container: view,
-		engine,
+	const sarmal = createSarmalSVG(view, trackedCurve, {
 		trailColor: palettes.bard,
 		trailStyle: "gradient-animated",
 		skeletonColor: "#c8c4be",
 		headRadius: 1,
+		autoStart: !isDM(),
 	});
 	sarmal.setSpeed(0.3);
 
+	const dmSarmal = createSarmalDotMatrix(dmView, trackedCurve, {
+		trailColor: palettes.bard,
+		trailStyle: "gradient-animated",
+		cols: 20,
+		rows: 20,
+		autoStart: isDM(),
+	});
+	// Dot Matrix runs at the curve's natural speed
+	// setSpeed(0.3) would make the short trail (60 pts) nearly static on the 20x20 grid
+
 	requestAnimationFrame(function update() {
-		if (lastHead) {
-			coordX.textContent = lastHead.x.toFixed(3);
-			coordY.textContent = lastHead.y.toFixed(3);
-		}
+		coordX.textContent = lastHead.x.toFixed(3);
+		coordY.textContent = lastHead.y.toFixed(3);
 		requestAnimationFrame(update);
+	});
+
+	new MutationObserver(() => {
+		if (isDM()) {
+			sarmal.pause();
+			dmSarmal.play();
+		} else {
+			dmSarmal.pause();
+			sarmal.play();
+		}
+	}).observe(document.documentElement, {
+		attributeFilter: ["data-sarmal-mode"],
 	});
 </script>

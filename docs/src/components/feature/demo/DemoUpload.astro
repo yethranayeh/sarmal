@@ -8,7 +8,18 @@ import { Check } from "@lucide/astro";
 >
 	<div class="relative flex items-center justify-center min-h-22">
 		<div data-upload-spinner class="flex flex-col items-center gap-2 absolute">
-			<svg data-upload-slot class="w-15 h-15"></svg>
+			<div class="relative w-15 h-15 shrink-0">
+				<svg
+					data-upload-slot
+					data-sarmal-svg
+					class="absolute inset-0 w-full h-full"></svg>
+				<canvas
+					data-upload-canvas
+					data-sarmal-canvas
+					class="absolute inset-0 w-full h-full"
+					width="60"
+					height="60"></canvas>
+			</div>
 			<span data-upload-status class="font-body text-[12px] text-muted"
 				>Uploading…</span
 			>
@@ -48,19 +59,31 @@ import { Check } from "@lucide/astro";
 </div>
 
 <script>
-	import { createSarmalSVG, curves } from "@sarmal/core";
+	import { createSarmalSVG, createSarmalDotMatrix, curves } from "@sarmal/core";
 	import type { DemoScenarioAPI } from "../../../lib/demo";
 
-	type Instance = ReturnType<typeof createSarmalSVG>;
+	type SVGInstance = ReturnType<typeof createSarmalSVG>;
+	type DMInstance = ReturnType<typeof createSarmalDotMatrix>;
 
-	function stop(s: Instance | null, slot: SVGSVGElement): null {
+	const isDM = () =>
+		document.documentElement.dataset.sarmalMode === "dotmatrix";
+
+	function stopSVG(s: SVGInstance | null, slot: SVGSVGElement): null {
 		s?.pause();
 		slot.innerHTML = "";
 		return null;
 	}
 
+	function stopDM(s: DMInstance | null, canvas: HTMLCanvasElement): null {
+		s?.destroy();
+		const ctx = canvas.getContext("2d");
+		if (ctx) ctx.clearRect(0, 0, canvas.width, canvas.height);
+		return null;
+	}
+
 	function initUpload(container: HTMLElement): DemoScenarioAPI {
-		let uploadSarmal: Instance | null = null;
+		let uploadSarmal: SVGInstance | null = null;
+		let uploadDM: DMInstance | null = null;
 		let uploadGen = 0;
 		let uploadTimers: ReturnType<typeof setTimeout>[] = [];
 
@@ -71,7 +94,11 @@ import { Check } from "@lucide/astro";
 			const slot = container.querySelector(
 				"[data-upload-slot]",
 			) as SVGSVGElement;
-			uploadSarmal = stop(uploadSarmal, slot);
+			const cleanupCanvas = container.querySelector(
+				"[data-upload-canvas]",
+			) as HTMLCanvasElement;
+			uploadSarmal = stopSVG(uploadSarmal, slot);
+			uploadDM = stopDM(uploadDM, cleanupCanvas);
 
 			const fc1 = container.querySelector(
 				"[data-upload-check='1']",
@@ -79,7 +106,6 @@ import { Check } from "@lucide/astro";
 			const fc2 = container.querySelector(
 				"[data-upload-check='2']",
 			) as HTMLElement;
-
 			const spinnerArea = container.querySelector(
 				"[data-upload-spinner]",
 			) as HTMLElement;
@@ -107,6 +133,9 @@ import { Check } from "@lucide/astro";
 			const slot = container.querySelector(
 				"[data-upload-slot]",
 			) as SVGSVGElement;
+			const canvas = container.querySelector(
+				"[data-upload-canvas]",
+			) as HTMLCanvasElement;
 			const spinnerArea = container.querySelector(
 				"[data-upload-spinner]",
 			) as HTMLElement;
@@ -123,13 +152,22 @@ import { Check } from "@lucide/astro";
 				"[data-upload-check='2']",
 			) as HTMLElement;
 
-			uploadSarmal = createSarmalSVG(slot, curves.rose5, {
-				trailColor: "#fb923c",
-				skeletonColor: "rgba(251,146,60,0.07)",
-				headColor: "#fb923c",
-				headRadius: 2,
-				trailLength: 80,
-			});
+			if (isDM()) {
+				uploadDM = createSarmalDotMatrix(canvas, curves.rose5, {
+					trailColor: "#fb923c",
+					trailLength: 80,
+					cols: 12,
+					rows: 12,
+				});
+			} else {
+				uploadSarmal = createSarmalSVG(slot, curves.rose5, {
+					trailColor: "#fb923c",
+					skeletonColor: "rgba(251,146,60,0.07)",
+					headColor: "#fb923c",
+					headRadius: 2,
+					trailLength: 80,
+				});
+			}
 
 			uploadTimers.push(
 				setTimeout(() => {
@@ -151,7 +189,8 @@ import { Check } from "@lucide/astro";
 			uploadTimers.push(
 				setTimeout(() => {
 					if (uploadGen !== gen) return;
-					uploadSarmal = stop(uploadSarmal, slot);
+					uploadSarmal = stopSVG(uploadSarmal, slot);
+					uploadDM = stopDM(uploadDM, canvas);
 					spinnerArea.classList.add("hidden");
 					spinnerArea.classList.remove("flex");
 					doneArea.classList.remove("hidden");
@@ -164,7 +203,6 @@ import { Check } from "@lucide/astro";
 		return { start, cleanup };
 	}
 
-	// Register on DOM ready
 	const container = document.querySelector(
 		'[data-scenario="upload"]',
 	) as HTMLElement;

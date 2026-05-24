@@ -9,14 +9,23 @@
 	<div
 		class="self-end font-body text-[13px] px-3.5 py-2 rounded-[14px_14px_4px_14px] bg-surface text-foreground max-w-[82%]"
 	>
-		Summarise this document
+		Summarise this macrodata report
 	</div>
 	<div
 		data-chat-thinking
 		class="flex flex-col items-start gap-1.5 transition-all duration-450 ease-out [&.exiting]:opacity-0 [&.exiting]:-translate-y-2.5 [&.exiting]:pointer-events-none"
 	>
-		<svg data-chat-slot class="w-14 h-14"></svg>
-		<span class="font-ui text-[11px] tracking-widest text-muted">Thinking…</span
+		<div class="relative w-14 h-14 shrink-0">
+			<svg data-chat-slot data-sarmal-svg class="absolute inset-0 w-full h-full"
+			></svg>
+			<canvas
+				data-chat-canvas
+				data-sarmal-canvas
+				class="absolute inset-0 w-full h-full"
+				width="56"
+				height="56"></canvas>
+		</div>
+		<span class="font-ui text-[11px] tracking-widest text-muted">Refining…</span
 		>
 	</div>
 	<div
@@ -27,22 +36,39 @@
 </div>
 
 <script>
-	import { createSarmalSVG, curves, palettes } from "@sarmal/core";
+	import {
+		createSarmalSVG,
+		createSarmalDotMatrix,
+		curves,
+		palettes,
+	} from "@sarmal/core";
 	import type { DemoScenarioAPI } from "../../../lib/demo";
 
-	type Instance = ReturnType<typeof createSarmalSVG>;
+	type SVGInstance = ReturnType<typeof createSarmalSVG>;
+	type DMInstance = ReturnType<typeof createSarmalDotMatrix>;
 
-	function stop(s: Instance | null, slot: SVGSVGElement): null {
+	const isDM = () =>
+		document.documentElement.dataset.sarmalMode === "dotmatrix";
+
+	function stopSVG(s: SVGInstance | null, slot: SVGSVGElement): null {
 		s?.pause();
 		slot.innerHTML = "";
 		return null;
 	}
 
+	function stopDM(s: DMInstance | null, canvas: HTMLCanvasElement): null {
+		s?.destroy();
+		const ctx = canvas.getContext("2d");
+		if (ctx) ctx.clearRect(0, 0, canvas.width, canvas.height);
+		return null;
+	}
+
 	const CHAT_RESPONSE =
-		"Three key findings, all pointing to strong Q1 growth across every segment.";
+		"Key findings: all four tempers remain within acceptable thresholds, the numbers are refining as expected. The work is mysterious and important.";
 
 	function initChat(container: HTMLElement): DemoScenarioAPI {
-		let chatSarmal: Instance | null = null;
+		let chatSarmal: SVGInstance | null = null;
+		let chatDM: DMInstance | null = null;
 		let chatGen = 0;
 		let chatTimer: ReturnType<typeof setTimeout> | null = null;
 		let chatTicker: ReturnType<typeof setInterval> | null = null;
@@ -60,7 +86,11 @@
 			const chatSlot = container.querySelector(
 				"[data-chat-slot]",
 			) as SVGSVGElement;
-			chatSarmal = stop(chatSarmal, chatSlot);
+			const chatCanvas = container.querySelector(
+				"[data-chat-canvas]",
+			) as HTMLCanvasElement;
+			chatSarmal = stopSVG(chatSarmal, chatSlot);
+			chatDM = stopDM(chatDM, chatCanvas);
 			const thinkingArea = container.querySelector(
 				"[data-chat-thinking]",
 			) as HTMLElement;
@@ -79,6 +109,9 @@
 			const chatSlot = container.querySelector(
 				"[data-chat-slot]",
 			) as SVGSVGElement;
+			const chatCanvas = container.querySelector(
+				"[data-chat-canvas]",
+			) as HTMLCanvasElement;
 			const thinkingArea = container.querySelector(
 				"[data-chat-thinking]",
 			) as HTMLElement;
@@ -86,18 +119,29 @@
 				"[data-chat-response]",
 			) as HTMLElement;
 
-			chatSarmal = createSarmalSVG(chatSlot, curves.lissajous43, {
-				skeletonColor: "transparent",
-				trailColor: palettes.bard,
-				trailStyle: "gradient-animated",
-				headRadius: 1.5,
-				trailLength: 65,
-			});
+			if (isDM()) {
+				chatDM = createSarmalDotMatrix(chatCanvas, curves.lissajous43, {
+					trailColor: palettes.bard,
+					trailStyle: "gradient-animated",
+					trailLength: 65,
+					cols: 12,
+					rows: 12,
+				});
+			} else {
+				chatSarmal = createSarmalSVG(chatSlot, curves.lissajous43, {
+					skeletonColor: "transparent",
+					trailColor: palettes.bard,
+					trailStyle: "gradient-animated",
+					headRadius: 1.5,
+					trailLength: 65,
+				});
+			}
 
 			chatTimer = setTimeout(() => {
 				if (chatGen !== gen) return;
 				thinkingArea.classList.add("exiting");
-				chatSarmal = stop(chatSarmal, chatSlot);
+				chatSarmal = stopSVG(chatSarmal, chatSlot);
+				chatDM = stopDM(chatDM, chatCanvas);
 
 				chatTimer = setTimeout(() => {
 					if (chatGen !== gen) return;
@@ -127,7 +171,6 @@
 		return { start, cleanup };
 	}
 
-	// Register on DOM ready
 	const container = document.querySelector(
 		'[data-scenario="chat"]',
 	) as HTMLElement;

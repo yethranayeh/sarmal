@@ -1,8 +1,5 @@
 ---
 import { XIcon } from "@lucide/astro";
-
-import DocNavLinks from "./DocNavLinks.astro";
-
 import { navigationLinks } from "./constants";
 
 interface Props {
@@ -60,13 +57,7 @@ const { currentPath } = Astro.props;
 			</nav>
 		</div>
 
-		<!-- Sidebar doc links -->
-		<nav class="flex-1 overflow-y-auto p-4" aria-label="Documentation sections">
-			<p class="px-3 pb-2 text-xs font-ui tracking-widest uppercase text-muted">
-				Documentation
-			</p>
-			<DocNavLinks currentPath={currentPath} />
-		</nav>
+		<slot />
 	</div>
 
 	<!-- Overlay -->

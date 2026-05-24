@@ -333,6 +333,51 @@ html.dark .astro-code span {
   text-decoration: var(--shiki-dark-text-decoration) !important;
 }
 
+/* Dot matrix mode visibility */
+[data-sarmal-canvas] {
+  opacity: 0;
+  filter: blur(8px);
+  pointer-events: none;
+  transition:
+    opacity 220ms ease,
+    filter 220ms ease;
+}
+
+[data-sarmal-svg] {
+  transition:
+    opacity 220ms ease,
+    filter 220ms ease;
+}
+
+:root[data-sarmal-mode="dotmatrix"] [data-sarmal-canvas] {
+  opacity: 1;
+  filter: none;
+  pointer-events: auto;
+}
+
+:root[data-sarmal-mode="dotmatrix"] [data-sarmal-svg] {
+  opacity: 0;
+  filter: blur(8px);
+  pointer-events: none;
+}
+
+:root[data-sarmal-mode="dotmatrix"] .sarmal-blueprint-label {
+  opacity: 0;
+  pointer-events: none;
+}
+
+:root[data-sarmal-mode="dotmatrix"] [data-dot-grid] {
+  opacity: 0 !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  [data-sarmal-canvas],
+  [data-sarmal-svg] {
+    transition: none;
+    filter: none !important;
+  }
+}
+
 /* Minimal scrollbars */
 ::-webkit-scrollbar {
   width: 6px;

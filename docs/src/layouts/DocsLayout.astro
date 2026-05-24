@@ -7,8 +7,8 @@ import BaseLayout from "./BaseLayout.astro";
 import Navbar from "../components/feature/navigation/Navbar.astro";
 import NavLinks from "../components/feature/navigation/NavLinks.astro";
 import DocNavLinks from "../components/feature/navigation/DocNavLinks.astro";
+import MobileDrawer from "../components/feature/navigation/MobileDrawer.astro";
 import TableOfContents from "../components/TableOfContents.astro";
-import DocsMobileDrawer from "../components/feature/navigation/DocsMobileDrawer.astro";
 
 interface DocFrontmatter {
 	title: string;
@@ -60,6 +60,15 @@ const currentPath = Astro.url.pathname;
 		</button>
 	</Navbar>
 
+	<MobileDrawer slot="mobileDrawer" currentPath={currentPath}>
+		<nav class="flex-1 overflow-y-auto p-4" aria-label="Documentation sections">
+			<p class="px-3 pb-2 text-xs font-ui tracking-widest uppercase text-muted">
+				Documentation
+			</p>
+			<DocNavLinks currentPath={currentPath} />
+		</nav>
+	</MobileDrawer>
+
 	<div class="flex flex-1">
 		<!-- Desktop sidebar -->
 		<aside
@@ -70,8 +79,6 @@ const currentPath = Astro.url.pathname;
 				<DocNavLinks currentPath={currentPath} />
 			</nav>
 		</aside>
-
-		<DocsMobileDrawer currentPath={currentPath} />
 
 		<main class="flex-1 min-w-0 p-4 md:p-8">
 			<div
@@ -87,36 +94,3 @@ const currentPath = Astro.url.pathname;
 		</main>
 	</div>
 </BaseLayout>
-
-<script>
-	const menuBtn = document.getElementById("mobile-menu-btn");
-	const closeBtn = document.getElementById("mobile-menu-close");
-	const wrapper = document.getElementById("mobile-menu-wrapper");
-	const overlay = document.getElementById("sidebar-overlay");
-
-	function openMenu() {
-		wrapper?.setAttribute("data-open", "true");
-		menuBtn?.setAttribute("aria-expanded", "true");
-		document.body.style.overflow = "hidden";
-	}
-
-	function closeMenu() {
-		wrapper?.setAttribute("data-open", "false");
-		menuBtn?.setAttribute("aria-expanded", "false");
-		document.body.style.overflow = "";
-	}
-
-	menuBtn?.addEventListener("click", openMenu);
-	closeBtn?.addEventListener("click", closeMenu);
-	overlay?.addEventListener("click", closeMenu);
-
-	document.addEventListener("keydown", (e) => {
-		if (e.key === "Escape") {
-			closeMenu();
-		}
-	});
-
-	wrapper?.querySelectorAll("a").forEach((link) => {
-		link.addEventListener("click", closeMenu);
-	});
-</script>

@@ -1,9 +1,12 @@
 ---
 import "../styles/globals.css";
 import { Font } from "astro:assets";
+import { Menu } from "@lucide/astro";
 import Navbar from "../components/feature/navigation/Navbar.astro";
 import NavLinks from "../components/feature/navigation/NavLinks.astro";
+import MobileDrawer from "../components/feature/navigation/MobileDrawer.astro";
 import Footer from "../components/Footer.astro";
+import { SEPARATOR_DOT } from "../variables";
 
 const SITE_NAME = "Sarmal";
 const SITE_URL = "https://sarmal.art";
@@ -27,7 +30,7 @@ const {
 	ogTitle = title,
 	ogDescription = description,
 	ogImage = DEFAULT_OG_IMAGE,
-	ogImageAlt = "Sarmal - Parametric loading spinner",
+	ogImageAlt = `Sarmal ${SEPARATOR_DOT} Animated curve library`,
 	ogLocale = "en_US",
 	robots = "index, follow",
 	canonical,
@@ -83,6 +86,10 @@ const resolvedOgImage = ogImage.startsWith("/")
 				} else {
 					document.documentElement.classList.add("light");
 				}
+
+				if (localStorage.getItem("sarmalRenderMode") === "dotmatrix") {
+					document.documentElement.dataset.sarmalMode = "dotmatrix";
+				}
 			})();
 		</script>
 		<slot name="head" />
@@ -102,8 +109,23 @@ const resolvedOgImage = ogImage.startsWith("/")
 	<body class="min-h-screen flex flex-col">
 		<slot name="navbar">
 			<Navbar>
-				<NavLinks slot="nav" />
+				<div slot="nav" class="hidden lg:block">
+					<NavLinks />
+				</div>
+				<button
+					id="mobile-menu-btn"
+					class="lg:hidden flex items-center justify-center w-9 h-9 rounded-md hover:bg-surface transition-colors"
+					aria-label="Open navigation menu"
+					aria-expanded="false"
+					aria-controls="mobile-drawer"
+				>
+					<Menu size={20} />
+				</button>
 			</Navbar>
+		</slot>
+
+		<slot name="mobileDrawer">
+			<MobileDrawer currentPath={Astro.url.pathname} />
 		</slot>
 
 		<slot />
@@ -113,3 +135,36 @@ const resolvedOgImage = ogImage.startsWith("/")
 		</slot>
 	</body>
 </html>
+
+<script>
+	const menuBtn = document.getElementById("mobile-menu-btn");
+	const closeBtn = document.getElementById("mobile-menu-close");
+	const wrapper = document.getElementById("mobile-menu-wrapper");
+	const overlay = document.getElementById("sidebar-overlay");
+
+	function openMenu() {
+		wrapper?.setAttribute("data-open", "true");
+		menuBtn?.setAttribute("aria-expanded", "true");
+		document.body.style.overflow = "hidden";
+	}
+
+	function closeMenu() {
+		wrapper?.setAttribute("data-open", "false");
+		menuBtn?.setAttribute("aria-expanded", "false");
+		document.body.style.overflow = "";
+	}
+
+	menuBtn?.addEventListener("click", openMenu);
+	closeBtn?.addEventListener("click", closeMenu);
+	overlay?.addEventListener("click", closeMenu);
+
+	document.addEventListener("keydown", (e) => {
+		if (e.key === "Escape") {
+			closeMenu();
+		}
+	});
+
+	wrapper?.querySelectorAll("a").forEach((link) => {
+		link.addEventListener("click", closeMenu);
+	});
+</script>
