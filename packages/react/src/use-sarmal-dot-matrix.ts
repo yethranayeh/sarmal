@@ -4,8 +4,9 @@ import type {
   SarmalInstance,
   DotMatrixSarmalOptions,
   DotMatrixRuntimeRenderOptions,
+  DotMatrixInit,
 } from "@sarmal/core";
-import type { DotMatrixInit, MorphOptions } from "./types";
+import type { MorphOptions } from "./types";
 
 import { useRef, useLayoutEffect } from "react";
 import { createSarmalDotMatrix } from "@sarmal/core";

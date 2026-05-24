@@ -17,6 +17,10 @@ Version history notes of the <Link href="#core">Core</Link>, <Link href="#react"
 
 ## Core
 
+### 0.37.2 - 24.05.2026
+
+`BaseInit`, `CanvasInit`, `DotMatrixInit`, `BaseSarmalOptions`, and `BaseDotMatrixOptions` are now named exports from `@sarmal/core`. These types were previously defined independently in each framework package. They now have a single source of truth.
+
 ### 0.37.0 - 24.05.2026
 
 Auto-init (`@sarmal/core/auto`) now supports the dot matrix renderer and several previously unmapped options.
@@ -58,7 +62,7 @@ createSarmalDotMatrix(canvas, curve, { skeletonColor: "transparent" })
 
 ### 0.35.1 - 23.05.2026
 
-Dot-matrix gradient colors are now interpolated in Oklab space. This will eliminate the gray midpoint that could appear with certain palettes. The `gradient-animated` style now cycles continuously through the palette instead of oscillating.
+Dot-matrix gradient colors are now interpolated in Oklab space. This will eliminate the gray midpoint that could appear with certain palettes. The `gradient-animated` style now cycles continuously through the palette instead of <span>oscillating</span>.
 
 ### 0.35.0 - 22.05.2026
 
@@ -484,6 +488,19 @@ import { curves } from "@sarmal/core";
 Peer dependencies: `react >= 18` and `@sarmal/core`. The package bundle emits `"use client"` for SSR compatibility.
 
 ## Svelte
+
+### 0.4.1 - 24.05.2026
+
+<Alert label="Breaking" variant="error">`Init` type is renamed to `BaseInit`</Alert>
+
+
+```ts
+// Before
+import type { Init } from '@sarmal/svelte'
+
+// After
+import type { BaseInit } from '@sarmal/svelte'
+```
 
 ### 0.4.0 - 24.05.2026
 

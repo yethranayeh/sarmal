@@ -1,6 +1,6 @@
 "use client";
-import type { CurveDef, SarmalInstance, SVGSarmalOptions } from "@sarmal/core";
-import type { BaseInit, MorphOptions } from "./types";
+import type { CurveDef, SarmalInstance, SVGSarmalOptions, BaseInit } from "@sarmal/core";
+import type { MorphOptions } from "./types";
 
 import { useRef, useLayoutEffect } from "react";
 import { createSarmalSVG } from "@sarmal/core";

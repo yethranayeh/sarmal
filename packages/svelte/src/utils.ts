@@ -1,5 +1,11 @@
-import type { RuntimeRenderOptions, SarmalOptions, TrailColor } from "@sarmal/core";
-import type { CanvasInit, DotMatrixInit, Init } from "./types";
+import type {
+  RuntimeRenderOptions,
+  SarmalOptions,
+  TrailColor,
+  BaseInit,
+  CanvasInit,
+  DotMatrixInit,
+} from "@sarmal/core";
 
 export function shallowEqualTrailColor(
   a: TrailColor | undefined,
@@ -16,10 +22,8 @@ export function shallowEqualTrailColor(
   return false;
 }
 
-export function initValuesEqual(
-  a: CanvasInit | Init | undefined,
-  b: CanvasInit | Init | undefined,
-): boolean {
+type Comparand = CanvasInit | BaseInit | undefined;
+export function initValuesEqual(a: Comparand, b: Comparand): boolean {
   if (a === b) {
     return true;
   }

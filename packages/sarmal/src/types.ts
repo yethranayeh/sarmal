@@ -367,3 +367,106 @@ export interface SarmalOptions extends Omit<RendererOptions, "canvas" | "engine"
   /** @default 120 */
   trailLength?: number;
 }
+
+/**
+ * Shared init options for canvas and SVG renderer bindings.
+ * Changing any of these after mount destroys and recreates the instance.
+ */
+export interface BaseInit {
+  trailLength?: number;
+  headRadius?: number;
+  autoStart?: boolean;
+  initialPhase?: number;
+  /** @default true */
+  pauseOnHidden?: boolean;
+}
+
+/**
+ * Canvas-specific init options. Extends {@link BaseInit} with buffer sizing.
+ * Changing any of these after mount destroys and recreates the instance.
+ */
+export interface CanvasInit extends BaseInit {
+  width?: number;
+  height?: number;
+}
+
+/**
+ * Dot matrix renderer init options.
+ * Changing any of these after mount destroys and recreates the instance.
+ */
+export interface DotMatrixInit {
+  /** @default 32 */
+  cols?: number;
+  /** @default 32 */
+  rows?: number;
+  /**
+   * Corner rounding of each dot: `0` = sharp square, `1` = full circle.
+   * @default 1
+   */
+  roundness?: number;
+  /**
+   * Number of trail points to keep. Defaults to `cols * 3` (computed by core at construction).
+   *
+   * If `cols` changes and triggers recreation, the new instance uses the new default (`newCols * 3`).
+   * If you set `trailLength` explicitly, that value persists across recreations regardless of `cols`.
+   */
+  trailLength?: number;
+  autoStart?: boolean;
+  initialPhase?: number;
+  /** @default true */
+  pauseOnHidden?: boolean;
+  /** Canvas buffer width in pixels. Falls back to parent `clientWidth`, then 300. */
+  width?: number;
+  /** Canvas buffer height in pixels. Falls back to parent `clientHeight`, then 300. */
+  height?: number;
+}
+
+/**
+ * Framework-agnostic configuration shared by all canvas/SVG renderer bindings.
+ *
+ * Framework packages (React, Svelte, etc.) extend this with their specific
+ * surface: `class`/`className`, style type, event naming, bindable instance.
+ */
+export interface BaseSarmalOptions {
+  curve: CurveDef;
+  trailColor?: TrailColor;
+  skeletonColor?: string;
+  headColor?: string;
+  trailStyle?: TrailStyle;
+  morphDuration?: number;
+  /** @default 'normalized' */
+  morphStrategy?: MorphStrategy;
+  trailLength?: number;
+  headRadius?: number;
+  trailWidth?: number;
+  autoStart?: boolean;
+  initialPhase?: number;
+  /** @default true */
+  pauseOnHidden?: boolean;
+}
+
+/**
+ * Framework-agnostic configuration shared by all dot matrix renderer bindings.
+ *
+ * Framework packages extend this with their specific surface: `class`/`className`, etc.
+ */
+export interface BaseDotMatrixOptions {
+  curve: CurveDef;
+  trailColor?: TrailColor;
+  trailStyle?: TrailStyle;
+  skeletonColor?: string;
+  morphDuration?: number;
+  /** @default 'normalized' */
+  morphStrategy?: MorphStrategy;
+  /** @default 32 */
+  cols?: number;
+  /** @default 32 */
+  rows?: number;
+  /** Corner rounding: `0` = square, `1` = circle. @default 1 */
+  roundness?: number;
+  trailLength?: number;
+  autoStart?: boolean;
+  initialPhase?: number;
+  /** @default true */
+  pauseOnHidden?: boolean;
+}

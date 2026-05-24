@@ -1,5 +1,10 @@
-import type { CurveDef, MorphStrategy, SarmalInstance, SarmalOptions } from "@sarmal/core";
-import type { CanvasInit } from "./types";
+import type {
+  CurveDef,
+  MorphStrategy,
+  SarmalInstance,
+  SarmalOptions,
+  CanvasInit,
+} from "@sarmal/core";
 
 import { untrack } from "svelte";
 import { createSarmal } from "@sarmal/core";

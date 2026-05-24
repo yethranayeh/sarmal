@@ -1,6 +1,6 @@
 "use client";
-import type { CurveDef, SarmalInstance, SarmalOptions } from "@sarmal/core";
-import type { CanvasInit, MorphOptions } from "./types";
+import type { CurveDef, SarmalInstance, SarmalOptions, CanvasInit } from "@sarmal/core";
+import type { MorphOptions } from "./types";
 
 import { useRef, useLayoutEffect } from "react";
 import { createSarmal } from "@sarmal/core";

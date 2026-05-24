@@ -84,6 +84,10 @@ trailColor={["#ff0080", "#7928ca", "#0070f3"]}
 
 See [sarmal.art/docs/api](https://sarmal.art/docs/api) for the full props reference.
 
+### Prop lifecycle
+
+Props marked `@init` in the type definitions are constructor-only. They are passed to the Sarmal instance at mount time, and changing them after mount **destroys and recreates the instance**. This means that changing these props resets the trail animation. All other props update live without side effects.
+
 ## SVG output
 
 The `<SarmalSVG>` component and `useSarmalSVG` hook render to SVG instead of canvas. The API mirrors `<Sarmal>` and `useSarmal`, with these differences:

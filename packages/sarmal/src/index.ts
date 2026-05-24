@@ -16,6 +16,11 @@ export type {
   MorphStrategy,
   RuntimeRenderOptions,
   DotMatrixRuntimeRenderOptions,
+  BaseInit,
+  CanvasInit,
+  DotMatrixInit,
+  BaseSarmalOptions,
+  BaseDotMatrixOptions,
 } from "./types";
 export type { CurveName } from "./curves";
 export type { SarmalPalette, BoundaryResult } from "./renderer-shared";

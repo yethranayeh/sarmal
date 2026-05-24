@@ -1,6 +1,6 @@
 {
   "name": "@sarmal/svelte",
-  "version": "0.4.0",
+  "version": "0.4.1",
   "description": "Svelte wrapper for @sarmal/core",
   "keywords": [
     "animation",

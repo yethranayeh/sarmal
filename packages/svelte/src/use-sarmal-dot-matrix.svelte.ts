@@ -4,8 +4,8 @@ import type {
   SarmalInstance,
   DotMatrixSarmalOptions,
   DotMatrixRuntimeRenderOptions,
+  DotMatrixInit,
 } from "@sarmal/core";
-import type { DotMatrixInit } from "./types";
 
 import { untrack } from "svelte";
 import { createSarmalDotMatrix } from "@sarmal/core";

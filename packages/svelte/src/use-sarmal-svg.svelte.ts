@@ -1,5 +1,10 @@
-import type { CurveDef, MorphStrategy, SarmalInstance, SarmalOptions } from "@sarmal/core";
-import type { Init } from "./types";
+import type {
+  CurveDef,
+  MorphStrategy,
+  SarmalInstance,
+  SarmalOptions,
+  BaseInit,
+} from "@sarmal/core";
 
 import { untrack } from "svelte";
 import { createSarmalSVG } from "@sarmal/core";
@@ -11,7 +16,7 @@ export function useSarmalSVG(
   svgElement: SVGSVGElement | null,
   getCurve: () => CurveDef,
   getOptions?: () => Partial<SarmalOptions>,
-  getInit?: () => Init,
+  getInit?: () => BaseInit,
   getMorphDuration?: () => number | undefined,
   getMorphStrategy?: () => MorphStrategy | undefined,
 ): {
@@ -19,7 +24,7 @@ export function useSarmalSVG(
 } {
   let instance = $state<SarmalInstance | null>(null);
   let committedCurve: CurveDef | null = null;
-  let prevInit: Init | undefined;
+  let prevInit: BaseInit | undefined;
 
   $effect(() => {
     const init = getInit?.();
