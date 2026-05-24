@@ -1,6 +1,6 @@
 {
   "name": "@sarmal/core",
-  "version": "0.36.5",
+  "version": "0.37.0",
   "description": "Curve path based loading indicators and their renderer",
   "keywords": [
     "animation",
@@ -85,6 +85,7 @@
     "bench": "vitest bench"
   },
   "devDependencies": {
+    "@tanstack/intent": "0.0.41",
     "@types/node": "^25.5.2",
     "jsdom": "^29.0.2",
     "oxfmt": "^0.44.0",

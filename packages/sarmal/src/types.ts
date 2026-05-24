@@ -257,9 +257,10 @@ export interface SarmalInstance<
 export type TrailStyle = "default" | "gradient-static" | "gradient-animated";
 
 /**
- * The value must be a single hex string or an array of hex strings.
+ * A single color string or an array of color strings for gradient trails.
  *
- * ! Named colors, shorthand hex, `rgb()`,  and `hsl()` notations are not yet supported.
+ * Accepted formats: `#rrggbb`, `#rgb`, `rgb()`, `rgba()`, `oklch()`.
+ * ! `hsl()` and named colors (e.g. `"red"`) are not supported.
  */
 export type TrailColor = string | string[];
 

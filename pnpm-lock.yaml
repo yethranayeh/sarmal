@@ -156,6 +156,9 @@ importers:
 
   packages/sarmal:
     devDependencies:
+      '@tanstack/intent':
+        specifier: 0.0.41
+        version: 0.0.41
       '@types/node':
         specifier: ^25.5.2
         version: 25.5.2

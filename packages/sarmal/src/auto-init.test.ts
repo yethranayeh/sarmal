@@ -3,15 +3,19 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 
 const mockSetSpeedCanvas = vi.fn();
 const mockSetSpeedSvg = vi.fn();
+const mockSetSpeedDotMatrix = vi.fn();
 const mockInstanceCanvas = { setSpeed: mockSetSpeedCanvas };
 const mockInstanceSvg = { setSpeed: mockSetSpeedSvg };
+const mockInstanceDotMatrix = { setSpeed: mockSetSpeedDotMatrix };
 
 const mockCreateSarmal = vi.fn(() => mockInstanceCanvas);
 const mockCreateSarmalSvg = vi.fn(() => mockInstanceSvg);
+const mockCreateSarmalDotMatrix = vi.fn(() => mockInstanceDotMatrix);
 
 vi.mock("./index", () => ({
   createSarmal: mockCreateSarmal,
   createSarmalSVG: mockCreateSarmalSvg,
+  createSarmalDotMatrix: mockCreateSarmalDotMatrix,
 }));
 
 vi.mock("./curves", () => ({
@@ -63,12 +67,25 @@ describe("auto-init", () => {
     document.body.innerHTML = "";
     mockSetSpeedCanvas.mockClear();
     mockSetSpeedSvg.mockClear();
+    mockSetSpeedDotMatrix.mockClear();
     mockCreateSarmal.mockClear();
     mockCreateSarmalSvg.mockClear();
+    mockCreateSarmalDotMatrix.mockClear();
     vi.resetModules();
   });
 
   describe("canvas elements", () => {
+    it("calls createSarmal, not createSarmalSVG or createSarmalDotMatrix", async () => {
+      makeCanvas("rose3");
+
+      const { init } = await import("./auto-init");
+      init();
+
+      expect(mockCreateSarmal).toHaveBeenCalledOnce();
+      expect(mockCreateSarmalSvg).not.toHaveBeenCalled();
+      expect(mockCreateSarmalDotMatrix).not.toHaveBeenCalled();
+    });
+
     it("calls setSpeed when data-speed is present", async () => {
       makeCanvas("rose3", { "data-speed": "0.3" });
 
@@ -88,19 +105,87 @@ describe("auto-init", () => {
       expect(mockSetSpeedCanvas).not.toHaveBeenCalled();
     });
 
-    it("calls createSarmal, not createSarmalSVG", async () => {
+    it("passes trailColor to createSarmal", async () => {
+      makeCanvas("rose3", { "data-trail-color": "#ff0000" });
+
+      const { init } = await import("./auto-init");
+      init();
+
+      expect(mockCreateSarmal).toHaveBeenCalledWith(
+        expect.anything(),
+        expect.anything(),
+        expect.objectContaining({ trailColor: "#ff0000" }),
+      );
+    });
+
+    it("passes trailWidth to createSarmal", async () => {
+      makeCanvas("rose3", { "data-trail-width": "1.5" });
+
+      const { init } = await import("./auto-init");
+      init();
+
+      expect(mockCreateSarmal).toHaveBeenCalledWith(
+        expect.anything(),
+        expect.anything(),
+        expect.objectContaining({ trailWidth: 1.5 }),
+      );
+    });
+
+    it("passes autoStart: false when data-auto-start is 'false'", async () => {
+      makeCanvas("rose3", { "data-auto-start": "false" });
+
+      const { init } = await import("./auto-init");
+      init();
+
+      expect(mockCreateSarmal).toHaveBeenCalledWith(
+        expect.anything(),
+        expect.anything(),
+        expect.objectContaining({ autoStart: false }),
+      );
+    });
+
+    it("does not pass autoStart when data-auto-start is absent", async () => {
       makeCanvas("rose3");
 
       const { init } = await import("./auto-init");
       init();
 
-      expect(mockCreateSarmal).toHaveBeenCalledOnce();
-      expect(mockCreateSarmalSvg).not.toHaveBeenCalled();
+      expect(mockCreateSarmal).not.toHaveBeenCalledWith(
+        expect.anything(),
+        expect.anything(),
+        expect.objectContaining({ autoStart: expect.anything() }),
+      );
+    });
+
+    it("passes initialPhase to createSarmal", async () => {
+      makeCanvas("rose3", { "data-initial-phase": "1.57" });
+
+      const { init } = await import("./auto-init");
+      init();
+
+      expect(mockCreateSarmal).toHaveBeenCalledWith(
+        expect.anything(),
+        expect.anything(),
+        expect.objectContaining({ initialPhase: 1.57 }),
+      );
+    });
+
+    it("passes initialPhase: 0 when data-initial-phase is '0'", async () => {
+      makeCanvas("rose3", { "data-initial-phase": "0" });
+
+      const { init } = await import("./auto-init");
+      init();
+
+      expect(mockCreateSarmal).toHaveBeenCalledWith(
+        expect.anything(),
+        expect.anything(),
+        expect.objectContaining({ initialPhase: 0 }),
+      );
     });
   });
 
   describe("SVG elements", () => {
-    it("calls createSarmalSVG, not createSarmal", async () => {
+    it("calls createSarmalSVG, not createSarmal or createSarmalDotMatrix", async () => {
       makeSVG("rose3");
 
       const { init } = await import("./auto-init");
@@ -108,6 +193,7 @@ describe("auto-init", () => {
 
       expect(mockCreateSarmalSvg).toHaveBeenCalledOnce();
       expect(mockCreateSarmal).not.toHaveBeenCalled();
+      expect(mockCreateSarmalDotMatrix).not.toHaveBeenCalled();
     });
 
     it("calls setSpeed when data-speed is present", async () => {
@@ -141,18 +227,185 @@ describe("auto-init", () => {
         expect.objectContaining({ trailColor: "#ff0000" }),
       );
     });
+
+    it("passes trailWidth to createSarmalSVG", async () => {
+      makeSVG("rose3", { "data-trail-width": "2" });
+
+      const { init } = await import("./auto-init");
+      init();
+
+      expect(mockCreateSarmalSvg).toHaveBeenCalledWith(
+        expect.anything(),
+        expect.anything(),
+        expect.objectContaining({ trailWidth: 2 }),
+      );
+    });
+
+    it("passes autoStart: false when data-auto-start is 'false'", async () => {
+      makeSVG("rose3", { "data-auto-start": "false" });
+
+      const { init } = await import("./auto-init");
+      init();
+
+      expect(mockCreateSarmalSvg).toHaveBeenCalledWith(
+        expect.anything(),
+        expect.anything(),
+        expect.objectContaining({ autoStart: false }),
+      );
+    });
+
+    it("passes initialPhase: 0 when data-initial-phase is '0'", async () => {
+      makeSVG("rose3", { "data-initial-phase": "0" });
+
+      const { init } = await import("./auto-init");
+      init();
+
+      expect(mockCreateSarmalSvg).toHaveBeenCalledWith(
+        expect.anything(),
+        expect.anything(),
+        expect.objectContaining({ initialPhase: 0 }),
+      );
+    });
+  });
+
+  describe("dot matrix renderer", () => {
+    it("routes canvas[data-renderer='dot-matrix'] to createSarmalDotMatrix", async () => {
+      makeCanvas("rose3", { "data-renderer": "dot-matrix" });
+
+      const { init } = await import("./auto-init");
+      init();
+
+      expect(mockCreateSarmalDotMatrix).toHaveBeenCalledOnce();
+      expect(mockCreateSarmal).not.toHaveBeenCalled();
+      expect(mockCreateSarmalSvg).not.toHaveBeenCalled();
+    });
+
+    it("calls setSpeed on the dot matrix instance when data-speed is present", async () => {
+      makeCanvas("rose3", { "data-renderer": "dot-matrix", "data-speed": "2" });
+
+      const { init } = await import("./auto-init");
+      init();
+
+      expect(mockSetSpeedDotMatrix).toHaveBeenCalledOnce();
+      expect(mockSetSpeedDotMatrix).toHaveBeenCalledWith(2);
+    });
+
+    it("passes cols to createSarmalDotMatrix", async () => {
+      makeCanvas("rose3", { "data-renderer": "dot-matrix", "data-cols": "16" });
+
+      const { init } = await import("./auto-init");
+      init();
+
+      expect(mockCreateSarmalDotMatrix).toHaveBeenCalledWith(
+        expect.anything(),
+        expect.anything(),
+        expect.objectContaining({ cols: 16 }),
+      );
+    });
+
+    it("passes rows to createSarmalDotMatrix", async () => {
+      makeCanvas("rose3", { "data-renderer": "dot-matrix", "data-rows": "24" });
+
+      const { init } = await import("./auto-init");
+      init();
+
+      expect(mockCreateSarmalDotMatrix).toHaveBeenCalledWith(
+        expect.anything(),
+        expect.anything(),
+        expect.objectContaining({ rows: 24 }),
+      );
+    });
+
+    it("passes roundness to createSarmalDotMatrix", async () => {
+      makeCanvas("rose3", { "data-renderer": "dot-matrix", "data-roundness": "0.5" });
+
+      const { init } = await import("./auto-init");
+      init();
+
+      expect(mockCreateSarmalDotMatrix).toHaveBeenCalledWith(
+        expect.anything(),
+        expect.anything(),
+        expect.objectContaining({ roundness: 0.5 }),
+      );
+    });
+
+    it("passes trailColor to createSarmalDotMatrix", async () => {
+      makeCanvas("rose3", { "data-renderer": "dot-matrix", "data-trail-color": "#00ff00" });
+
+      const { init } = await import("./auto-init");
+      init();
+
+      expect(mockCreateSarmalDotMatrix).toHaveBeenCalledWith(
+        expect.anything(),
+        expect.anything(),
+        expect.objectContaining({ trailColor: "#00ff00" }),
+      );
+    });
+
+    it("passes autoStart: false when data-auto-start is 'false'", async () => {
+      makeCanvas("rose3", { "data-renderer": "dot-matrix", "data-auto-start": "false" });
+
+      const { init } = await import("./auto-init");
+      init();
+
+      expect(mockCreateSarmalDotMatrix).toHaveBeenCalledWith(
+        expect.anything(),
+        expect.anything(),
+        expect.objectContaining({ autoStart: false }),
+      );
+    });
+
+    it("passes initialPhase: 0 when data-initial-phase is '0'", async () => {
+      makeCanvas("rose3", { "data-renderer": "dot-matrix", "data-initial-phase": "0" });
+
+      const { init } = await import("./auto-init");
+      init();
+
+      expect(mockCreateSarmalDotMatrix).toHaveBeenCalledWith(
+        expect.anything(),
+        expect.anything(),
+        expect.objectContaining({ initialPhase: 0 }),
+      );
+    });
   });
 
   describe("mixed elements", () => {
-    it("handles both canvas and SVG in the same init call", async () => {
+    it("handles canvas, SVG, and dot-matrix canvas in the same init call", async () => {
       makeCanvas("rose3");
       makeSVG("rose3");
+      makeCanvas("rose3", { "data-renderer": "dot-matrix" });
 
       const { init } = await import("./auto-init");
       init();
 
       expect(mockCreateSarmal).toHaveBeenCalledOnce();
       expect(mockCreateSarmalSvg).toHaveBeenCalledOnce();
+      expect(mockCreateSarmalDotMatrix).toHaveBeenCalledOnce();
+    });
+  });
+
+  describe("data-renderer routing", () => {
+    it("routes canvas with explicit data-renderer='canvas' to createSarmal", async () => {
+      makeCanvas("rose3", { "data-renderer": "canvas" });
+
+      const { init } = await import("./auto-init");
+      init();
+
+      expect(mockCreateSarmal).toHaveBeenCalledOnce();
+      expect(mockCreateSarmalDotMatrix).not.toHaveBeenCalled();
+    });
+
+    it("errors and skips on an unknown data-renderer value", async () => {
+      const errorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+      makeCanvas("rose3", { "data-renderer": "typo" });
+
+      const { init } = await import("./auto-init");
+      init();
+
+      expect(errorSpy).toHaveBeenCalledWith(expect.stringContaining('"typo"'));
+      expect(mockCreateSarmal).not.toHaveBeenCalled();
+      expect(mockCreateSarmalDotMatrix).not.toHaveBeenCalled();
+      errorSpy.mockRestore();
     });
   });
 
@@ -167,6 +420,7 @@ describe("auto-init", () => {
 
       expect(mockCreateSarmal).not.toHaveBeenCalled();
       expect(mockCreateSarmalSvg).not.toHaveBeenCalled();
+      expect(mockCreateSarmalDotMatrix).not.toHaveBeenCalled();
     });
   });
 });
