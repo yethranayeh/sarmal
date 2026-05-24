@@ -43,6 +43,46 @@ No build step? Drop in the auto-init script and add `data-sarmal` to any canvas 
 
 The script scans for `canvas[data-sarmal]` and `svg[data-sarmal]` on page load and starts a spinner for each one. Use any built-in curve name as the attribute value.
 
+To use the dot matrix renderer, add `data-renderer="dot-matrix"` to a canvas:
+
+```html
+<canvas data-sarmal="rose3" data-renderer="dot-matrix"
+        data-cols="32" data-rows="32" width="200" height="200"></canvas>
+```
+
+### Data attributes
+
+All three renderers (canvas, SVG, dot matrix) support these attributes:
+
+| Attribute | Type | Description |
+|---|---|---|
+| `data-sarmal`<span class="text-accent">*</span> | curve name | <strong class="text-accent">Required.</strong> The curve to animate. Any built-in curve name. |
+| `data-trail-color` | color or JSON array | Single color string or a JSON array of colors for gradient trails. Accepts `#rrggbb`, `#rgb`, `rgb()`, `rgba()`, `oklch()`. |
+| `data-skeleton-color` | color | Skeleton dot color. Pass `"transparent"` to hide. |
+| `data-trail-style` | `"default"` \| `"gradient-static"` \| `"gradient-animated"` | Trail rendering style. Gradient modes require an array in `data-trail-color`. |
+| `data-trail-length` | integer | Number of trail points to keep. |
+| `data-speed` | number | Speed multiplier, applied after creation via `setSpeed()`. |
+| `data-auto-start` | `"false"` | Set to `"false"` to prevent auto-play. Omit to auto-play (default). |
+| `data-pause-on-hidden` | `"false"` | Set to `"false"` to disable tab-visibility pausing. |
+| `data-initial-phase` | number | Seek to this phase before the first frame. |
+
+The canvas and SVG renderers also support:
+
+| Attribute | Type | Description |
+|---|---|---|
+| `data-head-color` | color | Head dot color. |
+| `data-head-radius` | number | Head dot radius. |
+| `data-trail-width` | number | Trail width multiplier (`1` = default, `2` = double width). |
+
+The dot matrix renderer also supports:
+
+| Attribute | Type | Description |
+|---|---|---|
+| `data-renderer` | `"dot-matrix"` | Selects the dot matrix renderer on a canvas element. |
+| `data-cols` | integer | Number of dot columns. Default: `32`. |
+| `data-rows` | integer | Number of dot rows. Default: `32`. |
+| `data-roundness` | number | Corner rounding: `0` = square, `1` = circle. Default: `1`. |
+
 See <Link href="/docs/frameworks/#cdn">CDN</Link> section in Framework Guides page for more details.
 
 ## Your first curve

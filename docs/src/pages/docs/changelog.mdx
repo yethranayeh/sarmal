@@ -17,6 +17,14 @@ Version history notes of the <Link href="#core">Core</Link>, <Link href="#react"
 
 ## Core
 
+### 0.37.0 - 24.05.2026
+
+Auto-init (`@sarmal/core/auto`) now supports the dot matrix renderer and several previously unmapped options.
+
+New data attributes for all three renderers: `data-trail-width`, `data-auto-start`, `data-pause-on-hidden`, `data-initial-phase`.
+
+Dot matrix renderer support: add `data-renderer="dot-matrix"` to a canvas element to use `createSarmalDotMatrix`. Dot-matrix-specific attributes `data-cols`, `data-rows`, and `data-roundness` are also supported. `data-renderer="canvas"` is accepted as an explicit but <strong class="text-muted">redundant</strong> value. Any unrecognised `data-renderer` value is now an error. The element with the unknown `data-renderer` is skipped and a `console.error` is printed.
+
 ### 0.36.4 - 23.05.2026
 
 `createSarmalDotMatrix` now uses the same shared color utilities (`resolveTrailMainColor`, `resolveTrailPalette`, `warnIfTrailColorMismatch`) as the canvas and SVG renderers. Three observable changes:
