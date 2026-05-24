@@ -740,3 +740,124 @@ describe("pauseOnHidden (SVG)", () => {
     instance.destroy();
   });
 });
+
+// ─── destroy() — one-way door ────────────────────────────────────────────────
+
+describe("destroy() — one-way door (SVG)", () => {
+  it("destroy() removes the <g> group from the container", () => {
+    const container = makeContainer();
+    const engine = createEngine(testCircle);
+    const instance = createSVGRenderer({ container, engine, autoStart: false });
+    expect(container.querySelector("g")).not.toBeNull();
+    instance.destroy();
+    expect(container.querySelector("g")).toBeNull();
+  });
+
+  it("destroy() removes the <g> group even when called before play()", () => {
+    const container = makeContainer();
+    const instance = createSarmalSVG(container, testCircle, { autoStart: false });
+    instance.destroy(); // loop was never started
+    expect(container.querySelector("g")).toBeNull();
+  });
+
+  it("destroy() is idempotent — second call is a no-op", () => {
+    const container = makeContainer();
+    const engine = createEngine(testCircle);
+    const instance = createSVGRenderer({ container, engine, autoStart: false });
+    instance.destroy();
+    expect(() => instance.destroy()).not.toThrow();
+    expect(container.querySelector("g")).toBeNull();
+  });
+
+  it("play() after destroy() throws", () => {
+    const container = makeContainer();
+    const instance = createSarmalSVG(container, testCircle, { autoStart: false });
+    instance.destroy();
+    expect(() => instance.play()).toThrow("destroyed");
+  });
+
+  it("pause() after destroy() throws", () => {
+    const container = makeContainer();
+    const instance = createSarmalSVG(container, testCircle, { autoStart: false });
+    instance.destroy();
+    expect(() => instance.pause()).toThrow("destroyed");
+  });
+
+  it("reset() after destroy() throws", () => {
+    const container = makeContainer();
+    const instance = createSarmalSVG(container, testCircle, { autoStart: false });
+    instance.destroy();
+    expect(() => instance.reset()).toThrow("destroyed");
+  });
+
+  it("seek() after destroy() throws", () => {
+    const container = makeContainer();
+    const instance = createSarmalSVG(container, testCircle, { autoStart: false });
+    instance.destroy();
+    expect(() => instance.seek(0)).toThrow("destroyed");
+  });
+
+  it("jump() after destroy() throws", () => {
+    const container = makeContainer();
+    const instance = createSarmalSVG(container, testCircle, { autoStart: false });
+    instance.destroy();
+    expect(() => instance.jump(0)).toThrow("destroyed");
+  });
+
+  it("setSpeed() after destroy() throws", () => {
+    const container = makeContainer();
+    const instance = createSarmalSVG(container, testCircle, { autoStart: false });
+    instance.destroy();
+    expect(() => instance.setSpeed(1)).toThrow("destroyed");
+  });
+
+  it("getSpeed() after destroy() throws", () => {
+    const container = makeContainer();
+    const instance = createSarmalSVG(container, testCircle, { autoStart: false });
+    instance.destroy();
+    expect(() => instance.getSpeed()).toThrow("destroyed");
+  });
+
+  it("morphTo() after destroy() throws", () => {
+    const container = makeContainer();
+    const instance = createSarmalSVG(container, testCircle, { autoStart: false });
+    instance.destroy();
+    expect(() => instance.morphTo(testCircle)).toThrow("destroyed");
+  });
+
+  it("setRenderOptions() after destroy() throws", () => {
+    const container = makeContainer();
+    const instance = createSarmalSVG(container, testCircle, { autoStart: false });
+    instance.destroy();
+    expect(() => instance.setRenderOptions({ trailColor: "#ff0000" })).toThrow("destroyed");
+  });
+
+  it("resetSpeed() after destroy() throws", () => {
+    const container = makeContainer();
+    const instance = createSarmalSVG(container, testCircle, { autoStart: false });
+    instance.destroy();
+    expect(() => instance.resetSpeed()).toThrow("destroyed");
+  });
+
+  it("setSpeedOver() after destroy() throws", () => {
+    const container = makeContainer();
+    const instance = createSarmalSVG(container, testCircle, { autoStart: false });
+    instance.destroy();
+    expect(() => instance.setSpeedOver(2, 500)).toThrow("destroyed");
+  });
+
+  it("getSarmalSkeleton() after destroy() throws", () => {
+    const container = makeContainer();
+    const instance = createSarmalSVG(container, testCircle, { autoStart: false });
+    instance.destroy();
+    expect(() => instance.getSarmalSkeleton()).toThrow("destroyed");
+  });
+
+  it("destroy() rejects a pending setSpeedOver() promise", async () => {
+    const container = makeContainer();
+    const instance = createSarmalSVG(container, testCircle, { autoStart: false });
+    const promise = instance.setSpeedOver(2, 5000);
+    instance.destroy();
+    await expect(promise).rejects.toThrow("Speed transition cancelled");
+  });
+});

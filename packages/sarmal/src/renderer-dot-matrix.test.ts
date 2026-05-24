@@ -35,6 +35,7 @@ function makeCanvas(width = 240, height = 240): HTMLCanvasElement {
     if (contextId === "2d") {
       return {
         putImageData: () => {},
+        clearRect: () => {},
         fillStyle: "",
         globalAlpha: 1,
       };
@@ -387,6 +388,7 @@ describe("createSarmalDotMatrix — gradient color rendering", () => {
             putImageData(imageData: ImageData) {
               capturedData = new Uint8ClampedArray(imageData.data);
             },
+            clearRect: () => {},
             fillStyle: "",
             globalAlpha: 1,
           }
@@ -448,6 +450,7 @@ describe("createSarmalDotMatrix — gradient color rendering", () => {
             putImageData(imageData: ImageData) {
               latestData = new Uint8ClampedArray(imageData.data);
             },
+            clearRect: () => {},
             fillStyle: "",
             globalAlpha: 1,
           }
@@ -517,6 +520,7 @@ describe("createSarmalDotMatrix — gradient color rendering", () => {
             putImageData(imageData: ImageData) {
               capturedData = new Uint8ClampedArray(imageData.data);
             },
+            clearRect: () => {},
             fillStyle: "",
             globalAlpha: 1,
           }
@@ -593,6 +597,7 @@ describe("createSarmalDotMatrix — gradient color rendering", () => {
             putImageData(imageData: ImageData) {
               capturedData = new Uint8ClampedArray(imageData.data);
             },
+            clearRect: () => {},
             fillStyle: "",
             globalAlpha: 1,
           }
@@ -656,6 +661,7 @@ describe("createSarmalDotMatrix — skeleton", () => {
             putImageData(imageData: ImageData) {
               capturedData = new Uint8ClampedArray(imageData.data);
             },
+            clearRect: () => {},
             fillStyle: "",
             globalAlpha: 1,
           }
@@ -736,6 +742,7 @@ describe("createSarmalDotMatrix — skeleton", () => {
             putImageData(imageData: ImageData) {
               latestData = new Uint8ClampedArray(imageData.data);
             },
+            clearRect: () => {},
             fillStyle: "",
             globalAlpha: 1,
           }
@@ -813,6 +820,7 @@ describe("createSarmalDotMatrix — skeleton", () => {
             putImageData(imageData: ImageData) {
               frames.push(new Uint8ClampedArray(imageData.data));
             },
+            clearRect: () => {},
             fillStyle: "",
             globalAlpha: 1,
           }
@@ -898,6 +906,7 @@ describe("createSarmalDotMatrix — skeleton", () => {
             putImageData(imageData: ImageData) {
               frames.push(new Uint8ClampedArray(imageData.data));
             },
+            clearRect: () => {},
             fillStyle: "",
             globalAlpha: 1,
           }
@@ -971,7 +980,9 @@ describe("createSarmalDotMatrix — pixel output", () => {
     canvas.height = 240;
     // @ts-ignore
     canvas.getContext = (id: string) =>
-      id === "2d" ? { putImageData: putSpy, fillStyle: "", globalAlpha: 1 } : null;
+      id === "2d"
+        ? { putImageData: putSpy, clearRect: () => {}, fillStyle: "", globalAlpha: 1 }
+        : null;
 
     const instance = createSarmalDotMatrix(canvas, circle, { autoStart: false });
     expect(putSpy).toHaveBeenCalledTimes(1); // init renderFrame(0)
@@ -1027,6 +1038,7 @@ describe("createSarmalDotMatrix — pixel output", () => {
               }
               capturedAlphas = dst;
             },
+            clearRect: () => {},
             fillStyle: "",
             globalAlpha: 1,
           }
@@ -1081,5 +1093,157 @@ describe("createSarmalDotMatrix — pixel output", () => {
     instance.destroy();
     rafSpy.mockRestore();
     cafSpy.mockRestore();
+  });
+});
+
+// ─── destroy() — one-way door ────────────────────────────────────────────────
+
+function makeCanvasWithClearRectTracker(
+  width = 240,
+  height = 240,
+): {
+  canvas: HTMLCanvasElement;
+  getClearRectCallCount: () => number;
+} {
+  const canvas = document.createElement("canvas");
+  canvas.width = width;
+  canvas.height = height;
+  let callCount = 0;
+  // @ts-ignore - jsdom does not implement canvas 2d context
+  canvas.getContext = (contextId: string) => {
+    if (contextId === "2d") {
+      return {
+        putImageData: () => {},
+        fillStyle: "",
+        globalAlpha: 1,
+        clearRect: () => {
+          callCount++;
+        },
+      };
+    }
+    return null;
+  };
+  return { canvas, getClearRectCallCount: () => callCount };
+}
+
+describe("destroy() — one-way door (dot-matrix)", () => {
+  beforeEach(() => {
+    vi.spyOn(globalThis, "requestAnimationFrame").mockImplementation(() => 1);
+    vi.spyOn(globalThis, "cancelAnimationFrame").mockImplementation(() => {});
+  });
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  it("destroy() clears the canvas", () => {
+    const { canvas, getClearRectCallCount } = makeCanvasWithClearRectTracker();
+    const instance = createSarmalDotMatrix(canvas, circle, { autoStart: false });
+    instance.destroy();
+    expect(getClearRectCallCount()).toBeGreaterThan(0);
+  });
+
+  it("destroy() clears the canvas even when called before play()", () => {
+    const { canvas, getClearRectCallCount } = makeCanvasWithClearRectTracker();
+    const instance = createSarmalDotMatrix(canvas, circle, { autoStart: false });
+    instance.destroy(); // loop was never started
+    expect(getClearRectCallCount()).toBeGreaterThan(0);
+  });
+
+  it("destroy() clears the canvas even when called while paused", () => {
+    const { canvas, getClearRectCallCount } = makeCanvasWithClearRectTracker();
+    const instance = createSarmalDotMatrix(canvas, circle, { autoStart: false });
+    instance.play();
+    instance.pause();
+    instance.destroy(); // animationId is null at this point
+    expect(getClearRectCallCount()).toBeGreaterThan(0);
+  });
+
+  it("destroy() is idempotent — second call is a no-op", () => {
+    const { canvas, getClearRectCallCount } = makeCanvasWithClearRectTracker();
+    const instance = createSarmalDotMatrix(canvas, circle, { autoStart: false });
+    instance.destroy();
+    const countAfterFirstDestroy = getClearRectCallCount();
+    expect(() => instance.destroy()).not.toThrow();
+    // No additional clearRect from second destroy
+    expect(getClearRectCallCount()).toBe(countAfterFirstDestroy);
+  });
+
+  it("play() after destroy() throws", () => {
+    const instance = createSarmalDotMatrix(makeCanvas(), circle, { autoStart: false });
+    instance.destroy();
+    expect(() => instance.play()).toThrow("destroyed");
+  });
+
+  it("pause() after destroy() throws", () => {
+    const instance = createSarmalDotMatrix(makeCanvas(), circle, { autoStart: false });
+    instance.destroy();
+    expect(() => instance.pause()).toThrow("destroyed");
+  });
+
+  it("reset() after destroy() throws", () => {
+    const instance = createSarmalDotMatrix(makeCanvas(), circle, { autoStart: false });
+    instance.destroy();
+    expect(() => instance.reset()).toThrow("destroyed");
+  });
+
+  it("seek() after destroy() throws", () => {
+    const instance = createSarmalDotMatrix(makeCanvas(), circle, { autoStart: false });
+    instance.destroy();
+    expect(() => instance.seek(0)).toThrow("destroyed");
+  });
+
+  it("jump() after destroy() throws", () => {
+    const instance = createSarmalDotMatrix(makeCanvas(), circle, { autoStart: false });
+    instance.destroy();
+    expect(() => instance.jump(0)).toThrow("destroyed");
+  });
+
+  it("setSpeed() after destroy() throws", () => {
+    const instance = createSarmalDotMatrix(makeCanvas(), circle, { autoStart: false });
+    instance.destroy();
+    expect(() => instance.setSpeed(1)).toThrow("destroyed");
+  });
+
+  it("getSpeed() after destroy() throws", () => {
+    const instance = createSarmalDotMatrix(makeCanvas(), circle, { autoStart: false });
+    instance.destroy();
+    expect(() => instance.getSpeed()).toThrow("destroyed");
+  });
+
+  it("morphTo() after destroy() throws", () => {
+    const instance = createSarmalDotMatrix(makeCanvas(), circle, { autoStart: false });
+    instance.destroy();
+    expect(() => instance.morphTo(circle)).toThrow("destroyed");
+  });
+
+  it("setRenderOptions() after destroy() throws", () => {
+    const instance = createSarmalDotMatrix(makeCanvas(), circle, { autoStart: false });
+    instance.destroy();
+    expect(() => instance.setRenderOptions({ trailColor: "#ff0000" })).toThrow("destroyed");
+  });
+
+  it("resetSpeed() after destroy() throws", () => {
+    const instance = createSarmalDotMatrix(makeCanvas(), circle, { autoStart: false });
+    instance.destroy();
+    expect(() => instance.resetSpeed()).toThrow("destroyed");
+  });
+
+  it("setSpeedOver() after destroy() throws", () => {
+    const instance = createSarmalDotMatrix(makeCanvas(), circle, { autoStart: false });
+    instance.destroy();
+    expect(() => instance.setSpeedOver(2, 500)).toThrow("destroyed");
+  });
+
+  it("getSarmalSkeleton() after destroy() throws", () => {
+    const instance = createSarmalDotMatrix(makeCanvas(), circle, { autoStart: false });
+    instance.destroy();
+    expect(() => instance.getSarmalSkeleton()).toThrow("destroyed");
+  });
+
+  it("destroy() rejects a pending setSpeedOver() promise", async () => {
+    const instance = createSarmalDotMatrix(makeCanvas(), circle, { autoStart: false });
+    const promise = instance.setSpeedOver(2, 5000);
+    instance.destroy();
+    await expect(promise).rejects.toThrow("Speed transition cancelled");
   });
 });

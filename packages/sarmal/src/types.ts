@@ -227,7 +227,11 @@ export interface SarmalInstance<
   play(): void;
   /** Pauses the animation loop (cancelAnimationFrame) and cancels any speed transition. Preserves state. */
   pause(): void;
-  /** Stops the animation and cleans up resources */
+  /**
+   * Permanently stops the animation and clears the visual output.
+   * Calling any method on a destroyed instance throws.
+   * Calling `destroy()` more than once is safe
+   */
   destroy(): void;
   /**
    * Returns the skeleton of the curve:

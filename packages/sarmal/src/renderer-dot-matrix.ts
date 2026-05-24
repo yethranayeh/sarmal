@@ -13,6 +13,7 @@ import { createEngine } from "./engine";
 import {
   DEFAULT_MORPH_DURATION_MS,
   DEFAULT_SKELETON_OPACITY,
+  DESTROYED_ERROR,
   colorToRgb,
   computeBoundaries,
   enginePassthroughs,
@@ -139,6 +140,7 @@ export function createSarmalDotMatrix(
   let animationId: number | null = null;
   let lastTime = 0;
   let pausedByVisibility = false;
+  let destroyed = false;
 
   // Morph state: same pattern as the canvas renderer
   let morphResolve: (() => void) | null = null;
@@ -530,6 +532,10 @@ export function createSarmalDotMatrix(
   const instance: SarmalInstance<DotMatrixRuntimeRenderOptions> = {
     /** Starts the animation loop. Does nothing if already running. */
     play() {
+      if (destroyed) {
+        throw new Error(DESTROYED_ERROR);
+      }
+
       if (animationId !== null) {
         return;
       }
@@ -540,6 +546,10 @@ export function createSarmalDotMatrix(
 
     /** Pauses the animation loop. Preserves current trail state. */
     pause() {
+      if (destroyed) {
+        throw new Error(DESTROYED_ERROR);
+      }
+
       if (animationId === null) {
         return;
       }
@@ -551,25 +561,46 @@ export function createSarmalDotMatrix(
 
     /** Resets the animation to the start of the curve and clears the grid. */
     reset() {
+      if (destroyed) {
+        throw new Error(DESTROYED_ERROR);
+      }
+
       engine.reset();
       grid.fill(0);
     },
 
-    /** Stops the animation and removes all event listeners. */
+    /**
+     * Permanently stops the animation and clears the visual output.
+     * Calling any method on a destroyed instance throws an error.
+     * `destroy()` is idempotent — calling it multiple times is safe.
+     */
     destroy() {
+      if (destroyed) {
+        return;
+      }
+
+      destroyed = true;
+
       if (animationId !== null) {
         cancelAnimationFrame(animationId);
         animationId = null;
       }
+
       document.removeEventListener("visibilitychange", handleVisibilityChange);
+
+      engine.cancelSpeedTransition();
+
       if (morphReject !== null) {
         morphReject(new Error("[sarmal] Instance destroyed during morph"));
         morphResolve = null;
         morphReject = null;
       }
+
+      grid.fill(0);
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
     },
 
-    ...enginePassthroughs(engine),
+    ...enginePassthroughs(engine, () => destroyed),
 
     /**
      * Smoothly transitions from the current curve to `target`.
@@ -577,6 +608,10 @@ export function createSarmalDotMatrix(
      * @returns A Promise that resolves when the transition finishes.
      */
     morphTo(target: CurveDef, opts?: MorphOptions): Promise<void> {
+      if (destroyed) {
+        throw new Error(DESTROYED_ERROR);
+      }
+
       if (morphResolve !== null) {
         completeMorphNow();
       }
@@ -599,6 +634,10 @@ export function createSarmalDotMatrix(
      * ! Validation fails the entire call if any field is invalid, leaving options unchanged.
      */
     setRenderOptions(partial: DotMatrixRuntimeRenderOptions): void {
+      if (destroyed) {
+        throw new Error(DESTROYED_ERROR);
+      }
+
       validateBaseRenderOptions(partial);
 
       let needsRebuildBg = false;

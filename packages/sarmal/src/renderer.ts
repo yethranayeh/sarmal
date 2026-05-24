@@ -15,6 +15,7 @@ export type { Oklab } from "./renderer-shared";
 import {
   DEFAULT_MORPH_DURATION_MS,
   DEFAULT_SKELETON_OPACITY,
+  DESTROYED_ERROR,
   TRAIL_MIN_WIDTH,
   TRAIL_MAX_WIDTH,
   computeBoundaries,
@@ -163,6 +164,7 @@ export function createRenderer(options: RendererOptions): SarmalInstance {
   let animationId: number | null = null;
   let lastTime = 0;
   let pausedByVisibility = false;
+  let destroyed = false;
 
   let morphResolve: (() => void) | null = null;
   let morphReject: ((error: Error) => void) | null = null;
@@ -410,6 +412,10 @@ export function createRenderer(options: RendererOptions): SarmalInstance {
 
   const instance = {
     play() {
+      if (destroyed) {
+        throw new Error(DESTROYED_ERROR);
+      }
+
       if (animationId !== null) {
         return;
       }
@@ -419,6 +425,10 @@ export function createRenderer(options: RendererOptions): SarmalInstance {
     },
 
     pause() {
+      if (destroyed) {
+        throw new Error(DESTROYED_ERROR);
+      }
+
       if (animationId === null) {
         return;
       }
@@ -429,12 +439,22 @@ export function createRenderer(options: RendererOptions): SarmalInstance {
     },
 
     reset() {
+      if (destroyed) {
+        throw new Error(DESTROYED_ERROR);
+      }
+
       engine.reset();
       trail = [];
       head = null;
     },
 
     destroy() {
+      if (destroyed) {
+        return;
+      }
+
+      destroyed = true;
+
       if (animationId !== null) {
         cancelAnimationFrame(animationId);
         animationId = null;
@@ -442,16 +462,24 @@ export function createRenderer(options: RendererOptions): SarmalInstance {
 
       document.removeEventListener("visibilitychange", handleVisibilityChange);
 
+      engine.cancelSpeedTransition();
+
       if (morphReject !== null) {
-        morphReject(new Error("Instance destroyed during morph"));
+        morphReject(new Error("[sarmal] Instance destroyed during morph"));
         morphResolve = null;
         morphReject = null;
       }
+
+      ctx.clearRect(0, 0, logicalWidth, logicalHeight);
     },
 
-    ...enginePassthroughs(engine),
+    ...enginePassthroughs(engine, () => destroyed),
 
     morphTo(target: CurveDef, options?: MorphOptions): Promise<void> {
+      if (destroyed) {
+        throw new Error(DESTROYED_ERROR);
+      }
+
       if (morphResolve !== null) {
         engine.completeMorph();
         morphResolve();
@@ -472,6 +500,10 @@ export function createRenderer(options: RendererOptions): SarmalInstance {
     },
 
     setRenderOptions(partial: RuntimeRenderOptions): void {
+      if (destroyed) {
+        throw new Error(DESTROYED_ERROR);
+      }
+
       validateRenderOptions(partial);
 
       if (partial.trailColor !== undefined) {

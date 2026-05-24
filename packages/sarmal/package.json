@@ -1,6 +1,6 @@
 {
   "name": "@sarmal/core",
-  "version": "0.37.4",
+  "version": "0.38.0",
   "description": "Animated curve library for loading states and ambient motion",
   "keywords": [
     "animation",

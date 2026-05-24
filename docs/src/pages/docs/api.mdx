@@ -238,7 +238,7 @@ sarmal.reset();
 
 ### destroy()
 
-Stops the animation and cleans up resources. Call in component unmount / cleanup handlers. The instance cannot be restarted after destruction.
+Permanently stops the animation and clears the visual output. Calling any instance method after `destroy()` throws. `destroy()` itself is safe to call multiple times. For temporary suspension, use `pause()` and continue afterwards with `play()`.
 
 ```ts
 // React example
@@ -258,7 +258,7 @@ useEffect(() => {
       <div class="cdemo-dot" data-sarmal-dot data-state="playing"></div>
       <span data-sarmal-state-text class="text-foreground">playing</span>
     </div>
-    <span class="text-[0.62rem] text-muted">Stops the loop and removes the SVG. The instance cannot be restarted.</span>
+    <span class="text-[0.62rem] text-muted">Permanently stops the animation and clears the visual output. Use pause() for temporary suspension.</span>
   </div>
   <button slot="controls" class="cdemo-btn cdemo-btn-danger" data-sarmal-action="destroy">Destroy</button>
 </ConceptDemo>
@@ -593,6 +593,8 @@ const sarmal = createSarmal(canvas, curves.lissajous32, {
 9. **`pause()` during a speed transition**: The pending `setSpeedOver()` Promise rejects with `'Speed transition cancelled'`, but `userSpeedOverride` is *not* cleared. On `play()`, the animation does not resume with curve's default, but with the interpolated speed from when it had paused.
    - Call `resetSpeed()` after `pause()` to return to the natural rhythm.
 
+10. **Post-`destroy()` calls throw**: After `destroy()`, calling any method on the instance throws an error. In component cleanup handlers, null the reference after destroying to make accidental access obvious: `sarmal.destroy(); sarmal = null;`. Use `pause()` instead of `destroy()` if you plan to resume the animation.
+
 ## TypeScript Types
 
 ```ts
@@ -615,6 +617,7 @@ interface SarmalInstance {
   play(): void;
   pause(): void;
   reset(): void;
+  /** Permanently stops the animation and clears the visual output. Idempotent. Post-destroy calls throw. */
   destroy(): void;
   jump(phase: number, options?: { clearTrail?: boolean }): void;
   seek(phase: number, options?: { wrap?: boolean; step?: number }): void;

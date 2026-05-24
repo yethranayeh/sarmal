@@ -18,6 +18,17 @@ Version history notes of the <Link href="#core">Core</Link>, <Link href="#react"
 
 ## Core
 
+### 0.38.0 - 24.05.2026
+
+`destroy()` now clears the visual output in all renderers. Previously, canvas and dot matrix renderers left the last painted frame frozen on the canvas after destruction, whereas the SVG renderer completely removed its elements.
+
+Calling any instance method after `destroy()` now throws an error. Previously, calling `play()` after `destroy()` on a canvas or dot matrix instance would silently restart the animation loop. On an SVG instance it would start a ghost loop (engine ticking with nothing visible).
+
+Calling `destroy()` multiple times is safe and subsequent calls do nothing.
+
+For temporarily suspending an animation, `pause()` should be used, which preserves all state and can be followed by `play()` at any time.
+
+
 ### 0.37.2 - 24.05.2026
 
 `BaseInit`, `CanvasInit`, `DotMatrixInit`, `BaseSarmalOptions`, and `BaseDotMatrixOptions` are now named exports from `@sarmal/core`. These types were previously defined independently in each framework package. They now have a single source of truth.

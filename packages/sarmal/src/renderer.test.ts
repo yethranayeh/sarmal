@@ -2464,3 +2464,235 @@ describe("Phase 2 — SVG regression baseline", () => {
     instance.destroy();
   });
 });
+
+// ─── destroy() — one-way door ────────────────────────────────────────────────
+
+function makeCanvasWithClearRectTracker(): {
+  canvas: HTMLCanvasElement;
+  getClearRectCallCount: () => number;
+} {
+  const canvas = document.createElement("canvas");
+  canvas.width = 200;
+  canvas.height = 200;
+  canvas.getBoundingClientRect = () => ({
+    width: 200,
+    height: 200,
+    top: 0,
+    left: 0,
+    bottom: 200,
+    right: 200,
+    x: 0,
+    y: 0,
+    toJSON: () => {},
+  });
+  let callCount = 0;
+  // biome-ignore lint/suspicious/noExplicitAny: minimal mock context for tracking clearRect
+  (canvas as any).getContext = (contextId: string) => {
+    if (contextId !== "2d") {
+      return null;
+    }
+    return {
+      save: () => {},
+      restore: () => {},
+      clearRect: () => {
+        callCount++;
+      },
+      fillRect: () => {},
+      stroke: () => {},
+      fill: () => {},
+      beginPath: () => {},
+      moveTo: () => {},
+      lineTo: () => {},
+      closePath: () => {},
+      setTransform: () => {},
+      fillStyle: "",
+      strokeStyle: "",
+      lineWidth: 1,
+      globalAlpha: 1,
+      drawImage: () => {},
+      arc: () => {},
+    };
+  };
+  return { canvas, getClearRectCallCount: () => callCount };
+}
+
+describe("destroy() — one-way door (canvas)", () => {
+  beforeEach(() => {
+    vi.spyOn(globalThis, "requestAnimationFrame").mockImplementation(() => 1);
+    vi.spyOn(globalThis, "cancelAnimationFrame").mockImplementation(() => {});
+  });
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  it("destroy() clears the canvas", () => {
+    const { canvas, getClearRectCallCount } = makeCanvasWithClearRectTracker();
+    const engine = createEngine(testCircle);
+    const renderer = createRenderer({ canvas, engine, autoStart: false });
+    const countAfterInit = getClearRectCallCount();
+    renderer.destroy();
+    expect(getClearRectCallCount()).toBeGreaterThan(countAfterInit);
+  });
+
+  it("destroy() clears the canvas even when called before play()", () => {
+    const { canvas, getClearRectCallCount } = makeCanvasWithClearRectTracker();
+    const engine = createEngine(testCircle);
+    const renderer = createRenderer({ canvas, engine, autoStart: false });
+    const countAfterInit = getClearRectCallCount();
+    renderer.destroy(); // loop was never started
+    expect(getClearRectCallCount()).toBeGreaterThan(countAfterInit);
+  });
+
+  it("destroy() clears the canvas even when called while paused", () => {
+    const { canvas, getClearRectCallCount } = makeCanvasWithClearRectTracker();
+    const engine = createEngine(testCircle);
+    const renderer = createRenderer({ canvas, engine, autoStart: false });
+    renderer.play();
+    renderer.pause();
+    const countAfterPause = getClearRectCallCount();
+    renderer.destroy(); // animationId is null at this point
+    expect(getClearRectCallCount()).toBeGreaterThan(countAfterPause);
+  });
+
+  it("destroy() is idempotent — second call is a no-op", () => {
+    const { canvas, getClearRectCallCount } = makeCanvasWithClearRectTracker();
+    const engine = createEngine(testCircle);
+    const renderer = createRenderer({ canvas, engine, autoStart: false });
+    renderer.destroy();
+    const countAfterFirstDestroy = getClearRectCallCount();
+    expect(() => renderer.destroy()).not.toThrow();
+    // No additional clearRect from second destroy
+    expect(getClearRectCallCount()).toBe(countAfterFirstDestroy);
+  });
+
+  it("play() after destroy() throws", () => {
+    const renderer = createRenderer({
+      canvas: makeCanvas(),
+      engine: createEngine(testCircle),
+      autoStart: false,
+    });
+    renderer.destroy();
+    expect(() => renderer.play()).toThrow("destroyed");
+  });
+
+  it("pause() after destroy() throws", () => {
+    const renderer = createRenderer({
+      canvas: makeCanvas(),
+      engine: createEngine(testCircle),
+      autoStart: false,
+    });
+    renderer.destroy();
+    expect(() => renderer.pause()).toThrow("destroyed");
+  });
+
+  it("reset() after destroy() throws", () => {
+    const renderer = createRenderer({
+      canvas: makeCanvas(),
+      engine: createEngine(testCircle),
+      autoStart: false,
+    });
+    renderer.destroy();
+    expect(() => renderer.reset()).toThrow("destroyed");
+  });
+
+  it("seek() after destroy() throws", () => {
+    const renderer = createRenderer({
+      canvas: makeCanvas(),
+      engine: createEngine(testCircle),
+      autoStart: false,
+    });
+    renderer.destroy();
+    expect(() => renderer.seek(0)).toThrow("destroyed");
+  });
+
+  it("jump() after destroy() throws", () => {
+    const renderer = createRenderer({
+      canvas: makeCanvas(),
+      engine: createEngine(testCircle),
+      autoStart: false,
+    });
+    renderer.destroy();
+    expect(() => renderer.jump(0)).toThrow("destroyed");
+  });
+
+  it("setSpeed() after destroy() throws", () => {
+    const renderer = createRenderer({
+      canvas: makeCanvas(),
+      engine: createEngine(testCircle),
+      autoStart: false,
+    });
+    renderer.destroy();
+    expect(() => renderer.setSpeed(1)).toThrow("destroyed");
+  });
+
+  it("getSpeed() after destroy() throws", () => {
+    const renderer = createRenderer({
+      canvas: makeCanvas(),
+      engine: createEngine(testCircle),
+      autoStart: false,
+    });
+    renderer.destroy();
+    expect(() => renderer.getSpeed()).toThrow("destroyed");
+  });
+
+  it("morphTo() after destroy() throws", () => {
+    const renderer = createRenderer({
+      canvas: makeCanvas(),
+      engine: createEngine(testCircle),
+      autoStart: false,
+    });
+    renderer.destroy();
+    expect(() => renderer.morphTo(testCircle)).toThrow("destroyed");
+  });
+
+  it("setRenderOptions() after destroy() throws", () => {
+    const renderer = createRenderer({
+      canvas: makeCanvas(),
+      engine: createEngine(testCircle),
+      autoStart: false,
+    });
+    renderer.destroy();
+    expect(() => renderer.setRenderOptions({ trailColor: "#ff0000" })).toThrow("destroyed");
+  });
+
+  it("resetSpeed() after destroy() throws", () => {
+    const renderer = createRenderer({
+      canvas: makeCanvas(),
+      engine: createEngine(testCircle),
+      autoStart: false,
+    });
+    renderer.destroy();
+    expect(() => renderer.resetSpeed()).toThrow("destroyed");
+  });
+
+  it("setSpeedOver() after destroy() throws", () => {
+    const renderer = createRenderer({
+      canvas: makeCanvas(),
+      engine: createEngine(testCircle),
+      autoStart: false,
+    });
+    renderer.destroy();
+    expect(() => renderer.setSpeedOver(2, 500)).toThrow("destroyed");
+  });
+
+  it("getSarmalSkeleton() after destroy() throws", () => {
+    const renderer = createRenderer({
+      canvas: makeCanvas(),
+      engine: createEngine(testCircle),
+      autoStart: false,
+    });
+    renderer.destroy();
+    expect(() => renderer.getSarmalSkeleton()).toThrow("destroyed");
+  });
+
+  it("destroy() rejects a pending setSpeedOver() promise", async () => {
+    const renderer = createRenderer({
+      canvas: makeCanvas(),
+      engine: createEngine(testCircle),
+      autoStart: false,
+    });
+    const promise = renderer.setSpeedOver(2, 5000);
+    renderer.destroy();
+    await expect(promise).rejects.toThrow("Speed transition cancelled");
+  });
+});

@@ -1,8 +1,10 @@
 import type {
   BaseRuntimeRenderOptions,
   Engine,
+  JumpOptions,
   Point,
   RuntimeRenderOptions,
+  SeekOptions,
   TrailColor,
   TrailStyle,
 } from "./types";
@@ -213,19 +215,50 @@ export function computeBoundaries(
   };
 }
 
+export const DESTROYED_ERROR =
+  "[sarmal] Instance has been destroyed and cannot be used again. Call pause() instead of destroy() for temporary suspension.";
+
 /**
- * Returns the engine methods that are pure pass-throughs on both renderers
- * The engine does not use `this`, so direct assignment is safe
+ * Returns the engine methods wrapped with a destroyed guard.
+ * Throws if the instance has been destroyed before delegating to the engine.
+ * @param isDestroyed A function that returns true once the instance is destroyed.
  */
-export function enginePassthroughs(engine: Engine) {
+export function enginePassthroughs(engine: Engine, isDestroyed: () => boolean) {
+  function guard(): void {
+    if (isDestroyed()) {
+      throw new Error(DESTROYED_ERROR);
+    }
+  }
+
   return {
-    jump: engine.jump,
-    seek: engine.seek,
-    setSpeed: engine.setSpeed,
-    getSpeed: engine.getSpeed,
-    resetSpeed: engine.resetSpeed,
-    setSpeedOver: engine.setSpeedOver,
-    getSarmalSkeleton: engine.getSarmalSkeleton,
+    jump(phase: number, options?: JumpOptions): void {
+      guard();
+      engine.jump(phase, options);
+    },
+    seek(phase: number, options?: SeekOptions): void {
+      guard();
+      engine.seek(phase, options);
+    },
+    setSpeed(speed: number): void {
+      guard();
+      engine.setSpeed(speed);
+    },
+    getSpeed(): number {
+      guard();
+      return engine.getSpeed();
+    },
+    resetSpeed(): void {
+      guard();
+      engine.resetSpeed();
+    },
+    setSpeedOver(speed: number, duration: number): Promise<void> {
+      guard();
+      return engine.setSpeedOver(speed, duration);
+    },
+    getSarmalSkeleton(): Array<Point> {
+      guard();
+      return engine.getSarmalSkeleton();
+    },
   };
 }
 
