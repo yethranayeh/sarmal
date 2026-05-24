@@ -9,6 +9,7 @@ description: Version history and migration notes.
 import { MoveRight } from "@lucide/astro";
 import Alert from "../../components/Alert.astro";
 import Link from "../../components/Link.astro";
+import SplitText from "../../components/vanity/SplitText.astro";
 
 
 # Changelog
@@ -62,7 +63,13 @@ createSarmalDotMatrix(canvas, curve, { skeletonColor: "transparent" })
 
 ### 0.35.1 - 23.05.2026
 
-Dot-matrix gradient colors are now interpolated in Oklab space. This will eliminate the gray midpoint that could appear with certain palettes. The `gradient-animated` style now cycles continuously through the palette instead of <span>oscillating</span>.
+<style>{`
+.oscillating:hover span:nth-child(odd)  { transform: translateY(-1px); }
+.oscillating:hover span:nth-child(even) { transform: translateY(1px);  }
+.oscillating span { transition-delay: calc(var(--i) * 25ms); }
+`}
+</style>
+Dot-matrix gradient colors are now interpolated in Oklab space. This will eliminate the gray midpoint that could appear with certain palettes. The `gradient-animated` style now cycles continuously through the palette instead of <span class="oscillating"><SplitText text="oscillating" /></span>.
 
 ### 0.35.0 - 22.05.2026
 

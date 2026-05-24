@@ -22,7 +22,7 @@ import DotMatrixColorModes from "../../components/DotMatrixColorModes.astro";
 
 ## How It Works
 
-Each frame, trail points are mapped to grid cells. Adjacent points are gap-filled so no cell is skipped, even at coarse densities. Each lit dot gets an intensity from 0 to 1 based on its position in the trail. The final frame is written in a single `putImageData` call — performance is flat regardless of grid size.
+Each frame, trail points are mapped to grid cells. Adjacent points are gap-filled so no cell is skipped, even at coarse densities. Each lit dot gets an intensity from 0 to 1 based on its position in the trail. The final frame is written in a single `putImageData` call. Performance is flat regardless of grid size.
 
 
 ## Grid Density

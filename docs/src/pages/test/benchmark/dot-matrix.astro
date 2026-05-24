@@ -2,69 +2,6 @@
 
 ---
 
-<!doctype html>
-<html lang="en">
-	<head>
-		<meta charset="UTF-8" />
-		<title>Dot Matrix — Drawing Approach Benchmark</title>
-		<style>
-			body {
-				background: #0c0c0c;
-				color: #888;
-				font-family: monospace;
-				margin: 0;
-				padding: 2rem;
-			}
-			h1 {
-				color: #ccc;
-				font-size: 0.9rem;
-				letter-spacing: 0.08em;
-				text-transform: uppercase;
-				margin: 0 0 0.5rem;
-			}
-			p {
-				font-size: 0.65rem;
-				color: #444;
-				margin: 0 0 1.5rem;
-			}
-			#status {
-				font-size: 0.7rem;
-				color: #2dd4bf;
-				margin-bottom: 1rem;
-			}
-			table {
-				border-collapse: collapse;
-				font-size: 0.65rem;
-			}
-			th {
-				color: #555;
-				text-align: left;
-				padding: 0.2rem 1rem 0.2rem 0;
-				text-transform: uppercase;
-				letter-spacing: 0.06em;
-			}
-			td {
-				color: #888;
-				padding: 0.15rem 1rem 0.15rem 0;
-				font-variant-numeric: tabular-nums;
-			}
-			tr:hover td {
-				color: #ccc;
-			}
-		</style>
-	</head>
-	<body>
-		<h1>Dot Matrix — Drawing Approach Benchmark</h1>
-		<p>
-			Compares 5 drawing strategies × 4 grid sizes.<br />
-			Open DevTools console for raw table. Results are written to
-			<code>window.__dotMatrixBenchResults</code> for Playwright.
-		</p>
-		<div id="status">running…</div>
-		<table id="results-table"></table>
-	</body>
-</html>
-
 <script>
 	import { createEngine, curves } from "@sarmal/core";
 
@@ -477,52 +414,6 @@
 		return results;
 	}
 
-	// ── Run and report ────────────────────────────────────────────────────────────
-
-	const statusEl = document.getElementById("status")!;
-	const tableEl = document.getElementById("results-table")!;
-
-	// Defer so the page paints "running…" before we block
-	requestAnimationFrame(() => {
-		const results = benchmark();
-
-		(window as unknown as Record<string, unknown>)["__dotMatrixBenchResults"] =
-			results;
-
-		statusEl.textContent = "done";
-		statusEl.style.color = "#888";
-
-		console.table(
-			results.map((r) => ({
-				approach: r.approach,
-				size: `${r.gridSize}×${r.gridSize}`,
-				"avg (ms)": r.avgFrameMs.toFixed(4),
-				"min (ms)": r.minFrameMs.toFixed(4),
-				"max (ms)": r.maxFrameMs.toFixed(4),
-				"fills/frame": r.fillCallsPerFrame.toFixed(1),
-			})),
-		);
-
-		// Build a readable table in the page too
-		const header = [
-			"approach",
-			"size",
-			"avg ms",
-			"min ms",
-			"max ms",
-			"fills/frame",
-		];
-		const rows = results.map((r) => [
-			r.approach,
-			`${r.gridSize}×${r.gridSize}`,
-			r.avgFrameMs.toFixed(4),
-			r.minFrameMs.toFixed(4),
-			r.maxFrameMs.toFixed(4),
-			r.fillCallsPerFrame.toFixed(1),
-		]);
-
-		tableEl.innerHTML =
-			`<thead><tr>${header.map((h) => `<th>${h}</th>`).join("")}</tr></thead>` +
-			`<tbody>${rows.map((row) => `<tr>${row.map((cell) => `<td>${cell}</td>`).join("")}</tr>`).join("")}</tbody>`;
-	});
+	(window as unknown as Record<string, unknown>)["__dotMatrixBenchResults"] =
+		benchmark();
 </script>

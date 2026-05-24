@@ -150,7 +150,7 @@ export async function recordWebM(
       ? "video/webm;codecs=vp9"
       : "video/webm";
 
-    recorder = new MediaRecorder(stream, { mimeType: codec });
+    recorder = new MediaRecorder(stream, { mimeType: codec, videoBitsPerSecond: 8_000_000 });
 
     signal?.addEventListener("abort", abortHandler);
 

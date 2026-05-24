@@ -1,0 +1,17 @@
+---
+interface Props {
+	text: string;
+}
+const { text } = Astro.props;
+---
+
+{
+	text.split("").map((c, i) => (
+		<span
+			style={`--i: ${i}`}
+			class="inline-block transition-transform duration-200"
+		>
+			{c}
+		</span>
+	))
+}
