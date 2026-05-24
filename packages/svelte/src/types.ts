@@ -2,6 +2,13 @@ import type { CurveDef, TrailColor, TrailStyle, SarmalInstance } from "@sarmal/c
 
 export interface MorphOptions {
   morphDuration?: number;
+  /**
+   * Strategy for lerping between curves with different periods.
+   * - `'normalized'`: maps phase proportionally into each curve's period (default, works well for all period ratios)
+   * - `'raw'`: uses the same phase value for both curves (can produce incoherent results for mismatched periods)
+   * @default 'normalized'
+   */
+  morphStrategy?: "raw" | "normalized";
 }
 
 /**
@@ -12,6 +19,12 @@ export interface Init {
   headRadius?: number;
   autoStart?: boolean;
   initialPhase?: number;
+  /**
+   * Whether to automatically pause the animation when the browser tab is hidden
+   *  and resume it when the tab becomes visible again.
+   * @default true
+   */
+  pauseOnHidden?: boolean;
 }
 
 /**
@@ -31,11 +44,15 @@ export interface SarmalActionOptions {
   headColor?: string;
   trailStyle?: TrailStyle;
   morphDuration?: number;
+  /** @default 'normalized' */
+  morphStrategy?: "raw" | "normalized";
   trailLength?: number;
   headRadius?: number;
   trailWidth?: number;
   autoStart?: boolean;
   initialPhase?: number;
+  /** @default true */
+  pauseOnHidden?: boolean;
 }
 
 export interface SarmalProps {
@@ -47,6 +64,8 @@ export interface SarmalProps {
   headColor?: string;
   trailStyle?: TrailStyle;
   morphDuration?: number;
+  /** @default 'normalized' */
+  morphStrategy?: "raw" | "normalized";
   /** Bindable instance which can be used with `bind:instance` to get the live `SarmalInstance` */
   instance?: SarmalInstance | null;
   trailLength?: number;
@@ -54,6 +73,8 @@ export interface SarmalProps {
   trailWidth?: number;
   autoStart?: boolean;
   initialPhase?: number;
+  /** Changing after mount recreates the instance and resets the trail. @default true */
+  pauseOnHidden?: boolean;
   width?: number;
   height?: number;
   /** Callback fired once when the instance is ready */

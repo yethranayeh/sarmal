@@ -14,6 +14,7 @@ export function buildOptions(opts: SarmalActionOptions) {
     ...(opts.headRadius !== undefined && { headRadius: opts.headRadius }),
     ...(opts.autoStart !== undefined && { autoStart: opts.autoStart }),
     ...(opts.initialPhase !== undefined && { initialPhase: opts.initialPhase }),
+    ...(opts.pauseOnHidden !== undefined && { pauseOnHidden: opts.pauseOnHidden }),
   };
 }
 
@@ -22,7 +23,8 @@ export function initOptionsChanged(prev: SarmalActionOptions, next: SarmalAction
     prev.trailLength !== next.trailLength ||
     prev.headRadius !== next.headRadius ||
     prev.autoStart !== next.autoStart ||
-    prev.initialPhase !== next.initialPhase
+    prev.initialPhase !== next.initialPhase ||
+    prev.pauseOnHidden !== next.pauseOnHidden
   );
 }
 

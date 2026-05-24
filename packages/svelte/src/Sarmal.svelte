@@ -19,12 +19,14 @@
     headColor?: string;
     trailStyle?: TrailStyle;
     morphDuration?: number;
+    morphStrategy?: "raw" | "normalized";
     instance?: SarmalInstance | null;
     trailLength?: number;
     headRadius?: number;
     trailWidth?: number;
     autoStart?: boolean;
     initialPhase?: number;
+    pauseOnHidden?: boolean;
     width?: number;
     height?: number;
     onready?: (instance: SarmalInstance) => void;
@@ -39,12 +41,14 @@
     headColor,
     trailStyle,
     morphDuration,
+    morphStrategy,
     instance = $bindable(null as SarmalInstance | null),
     trailLength,
     headRadius,
     trailWidth,
     autoStart,
     initialPhase,
+    pauseOnHidden,
     width,
     height,
     onready,
@@ -78,6 +82,7 @@
       ...(headRadius !== undefined && { headRadius }),
       ...(autoStart !== undefined && { autoStart }),
       ...(initialPhase !== undefined && { initialPhase }),
+      ...(pauseOnHidden !== undefined && { pauseOnHidden }),
     });
 
     instance = inst;
@@ -101,10 +106,10 @@
 
     committedCurve = curve;
     instance
-      ?.morphTo(
-        curve,
-        morphDuration != null ? { duration: morphDuration } : undefined,
-      )
+      ?.morphTo(curve, {
+        ...(morphDuration != null && { duration: morphDuration }),
+        ...(morphStrategy != null && { morphStrategy }),
+      })
       .catch(() => {});
   });
 

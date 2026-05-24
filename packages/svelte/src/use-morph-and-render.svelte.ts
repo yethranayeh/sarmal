@@ -7,6 +7,7 @@ export function registerMorphEffect(
   committedCurve: { value: CurveDef | null },
   getCurve: () => CurveDef,
   getMorphDuration?: () => number | undefined,
+  getMorphStrategy?: () => "raw" | "normalized" | undefined,
 ) {
   $effect(() => {
     const curve = getCurve();
@@ -20,8 +21,12 @@ export function registerMorphEffect(
 
     committedCurve.value = curve;
     const dur = getMorphDuration?.();
+    const strategy = getMorphStrategy?.();
     getInstance()
-      ?.morphTo(curve, dur != null ? { duration: dur } : undefined)
+      ?.morphTo(curve, {
+        ...(dur != null && { duration: dur }),
+        ...(strategy != null && { morphStrategy: strategy }),
+      })
       .catch(() => {});
   });
 }

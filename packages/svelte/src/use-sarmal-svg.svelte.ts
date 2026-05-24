@@ -13,6 +13,7 @@ export function useSarmalSVG(
   getOptions?: () => Partial<SarmalOptions>,
   getInit?: () => Init,
   getMorphDuration?: () => number | undefined,
+  getMorphStrategy?: () => "raw" | "normalized" | undefined,
 ): {
   get instance(): SarmalInstance | null;
 } {
@@ -43,6 +44,7 @@ export function useSarmalSVG(
       ...(init?.headRadius !== undefined && { headRadius: init.headRadius }),
       ...(init?.autoStart !== undefined && { autoStart: init.autoStart }),
       ...(init?.initialPhase !== undefined && { initialPhase: init.initialPhase }),
+      ...(init?.pauseOnHidden !== undefined && { pauseOnHidden: init.pauseOnHidden }),
     });
 
     instance = inst;
@@ -67,6 +69,7 @@ export function useSarmalSVG(
     },
     getCurve,
     getMorphDuration,
+    getMorphStrategy,
   );
 
   registerRenderOptionsEffect(() => instance, getOptions);

@@ -31,10 +31,10 @@ export function sarmalSVG(node: SVGSVGElement, options: SarmalActionOptions) {
 
       if (prevOpts.curve !== newOpts.curve) {
         instance
-          .morphTo(
-            newOpts.curve,
-            newOpts.morphDuration != null ? { duration: newOpts.morphDuration } : undefined,
-          )
+          .morphTo(newOpts.curve, {
+            ...(newOpts.morphDuration != null && { duration: newOpts.morphDuration }),
+            ...(newOpts.morphStrategy != null && { morphStrategy: newOpts.morphStrategy }),
+          })
           .catch(() => {});
       }
 

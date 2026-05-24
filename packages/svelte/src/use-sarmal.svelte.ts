@@ -13,6 +13,7 @@ export function useSarmal(
   getOptions?: () => Partial<SarmalOptions>,
   getInit?: () => CanvasInit,
   getMorphDuration?: () => number | undefined,
+  getMorphStrategy?: () => "raw" | "normalized" | undefined,
 ): {
   get instance(): SarmalInstance | null;
 } {
@@ -47,6 +48,7 @@ export function useSarmal(
       ...(init?.headRadius !== undefined && { headRadius: init.headRadius }),
       ...(init?.autoStart !== undefined && { autoStart: init.autoStart }),
       ...(init?.initialPhase !== undefined && { initialPhase: init.initialPhase }),
+      ...(init?.pauseOnHidden !== undefined && { pauseOnHidden: init.pauseOnHidden }),
     });
 
     instance = inst;
@@ -71,6 +73,7 @@ export function useSarmal(
     },
     getCurve,
     getMorphDuration,
+    getMorphStrategy,
   );
 
   registerRenderOptionsEffect(() => instance, getOptions);

@@ -32,7 +32,8 @@ export function initValuesEqual(
     a.trailLength === b.trailLength &&
     a.headRadius === b.headRadius &&
     a.autoStart === b.autoStart &&
-    a.initialPhase === b.initialPhase
+    a.initialPhase === b.initialPhase &&
+    a.pauseOnHidden === b.pauseOnHidden
   );
 }
 
