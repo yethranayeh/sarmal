@@ -395,9 +395,15 @@ export interface CanvasInit extends BaseInit {
  * Changing any of these after mount destroys and recreates the instance.
  */
 export interface DotMatrixInit {
-  /** @default 32 */
+  /**
+   * Number of dot columns in the grid.
+   * @default 32
+   */
   cols?: number;
-  /** @default 32 */
+  /**
+   * Number of dot rows in the grid.
+   * @default 32
+   */
   rows?: number;
   /**
    * Corner rounding of each dot: `0` = sharp square, `1` = full circle.
@@ -405,10 +411,9 @@ export interface DotMatrixInit {
    */
   roundness?: number;
   /**
-   * Number of trail points to keep. Defaults to `cols * 3` (computed by core at construction).
-   *
-   * If `cols` changes and triggers recreation, the new instance uses the new default (`newCols * 3`).
-   * If you set `trailLength` explicitly, that value persists across recreations regardless of `cols`.
+   * Number of trail points to keep.
+   * Larger values produce longer trails.
+   * If omitted, a value is chosen based on the grid density.
    */
   trailLength?: number;
   autoStart?: boolean;
@@ -419,6 +424,38 @@ export interface DotMatrixInit {
   width?: number;
   /** Canvas buffer height in pixels. Falls back to parent `clientHeight`, then 300. */
   height?: number;
+}
+
+/**
+ * Options for `createSarmalDotMatrix`
+ *
+ * Init fields (`cols`, `rows`, `roundness`, `trailLength`, `autoStart`, `initialPhase`, `pauseOnHidden`)
+ *  require recreating the instance on change.
+ * Runtime fields (`trailColor`, `trailStyle`, `skeletonColor`)
+ *  can be updated live through {@link SarmalInstance.setRenderOptions}.
+ */
+export interface DotMatrixSarmalOptions extends Omit<DotMatrixInit, "width" | "height"> {
+  /**
+   * Color of lit dots. Single color string for solid mode; array of two or more colors for gradient mode.
+   * Gradient mode samples a color per dot based on its position in the trail (tail to head).
+   * Background dots always use the first color at 5% opacity.
+   * @default '#ffffff'
+   */
+  trailColor?: TrailColor;
+  /**
+   * Trail rendering style.
+   * - `'default'`: solid color, alpha varies by intensity.
+   * - `'gradient-static'`: each dot's color is sampled from the `trailColor` gradient. Requires `trailColor` array.
+   * - `'gradient-animated'`: same as `gradient-static` but the gradient phase shifts over time.
+   * @default 'default'
+   */
+  trailStyle?: TrailStyle;
+  /**
+   * Color of the skeleton dots. Accepts `#rrggbb`, `#rgb`, `rgb()`, `rgba()`, or `oklch()`.
+   * Pass `"transparent"` to disable the skeleton entirely.
+   * @default '#ffffff'
+   */
+  skeletonColor?: string;
 }
 
 /**
@@ -450,23 +487,9 @@ export interface BaseSarmalOptions {
  *
  * Framework packages extend this with their specific surface: `class`/`className`, etc.
  */
-export interface BaseDotMatrixOptions {
+export interface BaseDotMatrixOptions extends DotMatrixSarmalOptions {
   curve: CurveDef;
-  trailColor?: TrailColor;
-  trailStyle?: TrailStyle;
-  skeletonColor?: string;
   morphDuration?: number;
   /** @default 'normalized' */
   morphStrategy?: MorphStrategy;
-  /** @default 32 */
-  cols?: number;
-  /** @default 32 */
-  rows?: number;
-  /** Corner rounding: `0` = square, `1` = circle. @default 1 */
-  roundness?: number;
-  trailLength?: number;
-  autoStart?: boolean;
-  initialPhase?: number;
-  /** @default true */
-  pauseOnHidden?: boolean;
 }

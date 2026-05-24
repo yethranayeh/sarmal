@@ -1,7 +1,7 @@
 import type {
-  BaseRendererOptions,
   CurveDef,
   DotMatrixRuntimeRenderOptions,
+  DotMatrixSarmalOptions,
   MorphOptions,
   SarmalInstance,
   TrailColor,
@@ -24,51 +24,6 @@ import {
   validateBaseRenderOptions,
   warnIfTrailColorMismatch,
 } from "./renderer-shared";
-
-export interface DotMatrixSarmalOptions extends Pick<
-  BaseRendererOptions,
-  "autoStart" | "pauseOnHidden" | "initialPhase" | "skeletonColor"
-> {
-  /**
-   * Number of dot columns in the grid.
-   * @default 32
-   */
-  cols?: number;
-  /**
-   * Number of dot rows in the grid.
-   * @default 32
-   */
-  rows?: number;
-  /**
-   * Controls the corner rounding of each dot.
-   * `0` renders as a sharp-cornered square,
-   * `1` renders as a full circle.
-   * Values between `0` and `1` give rounded rectangles.
-   * @default 1
-   */
-  roundness?: number;
-  /**
-   * Number of trail points to keep.
-   * Larger values mean the trail extends further back from the head.
-   * @default cols * 3
-   */
-  trailLength?: number;
-  /**
-   * Color of lit dots. Single color string for solid mode; array of two or more colors for gradient mode.
-   * Gradient mode samples a color per dot based on its position in the trail (tail → head).
-   * Background dots always use the first color at 5% opacity.
-   * @default '#ffffff'
-   */
-  trailColor?: TrailColor;
-  /**
-   * Trail rendering style.
-   * - `'default'` — solid color, alpha varies by intensity.
-   * - `'gradient-static'` — each dot's color is sampled from the `trailColor` gradient. Requires `trailColor` array.
-   * - `'gradient-animated'` — same as `gradient-static` but the gradient phase shifts over time.
-   * @default 'default'
-   */
-  trailStyle?: TrailStyle;
-}
 
 /**
  * Creates a dot matrix renderer for a sarmal animation on a canvas element.

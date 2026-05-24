@@ -21,10 +21,10 @@ export type {
   DotMatrixInit,
   BaseSarmalOptions,
   BaseDotMatrixOptions,
+  DotMatrixSarmalOptions,
 } from "./types";
 export type { CurveName } from "./curves";
 export type { SarmalPalette, BoundaryResult } from "./renderer-shared";
-export type { DotMatrixSarmalOptions } from "./renderer-dot-matrix";
 
 export { createEngine } from "./engine";
 export { createRenderer } from "./renderer";
