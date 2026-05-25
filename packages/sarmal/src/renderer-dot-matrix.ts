@@ -7,7 +7,7 @@ import type {
   TrailColor,
   TrailStyle,
 } from "./types";
-import type { Oklab, Rgb } from "./renderer-shared";
+import type { GridColorState, Oklab, Rgb } from "./renderer-shared";
 
 import { createEngine } from "./engine";
 import {
@@ -72,6 +72,7 @@ export function createSarmalDotMatrix(
     trailColor: initialColor = "#ffffff",
     trailStyle: initialTrailStyle = "default",
     skeletonColor: skeletonColorOpt = "#ffffff",
+    gridColor: gridColorOpt,
     autoStart = true,
     pauseOnHidden: pauseOnHiddenOpt = true,
     initialPhase,
@@ -135,6 +136,10 @@ export function createSarmalDotMatrix(
   // `skeletonDotGrid` is a flat boolean mask (0 or 1) over the grid, updated whenever boundaries change.
   // `skeletonColorOklab` is null when skeleton is 'transparent' (disabled)
   let skeletonColorOklab: Oklab | null = null;
+  // null: use colorRgb (trail primary, default)
+  // 'transparent': skip background dots
+  // Rgb: use this color at 5%
+  let gridColorState: GridColorState = null;
   const skeletonDotGrid = new Uint8Array(cols * rows);
 
   let animationId: number | null = null;
@@ -226,7 +231,11 @@ export function createSarmalDotMatrix(
   function buildBgImageData() {
     bgImageData = new ImageData(W, H);
 
-    const bg = colorRgb;
+    if (gridColorState === "transparent") {
+      return;
+    }
+
+    const bg = gridColorState ?? colorRgb;
     const baseAlpha = 0.05 * 255;
     const { data } = bgImageData;
     const n = cols * rows;
@@ -253,6 +262,16 @@ export function createSarmalDotMatrix(
 
   function applySkeletonColor(color: string) {
     skeletonColorOklab = color === "transparent" ? null : parseColorToOklab(color)!;
+  }
+
+  function applyGridColor(color: string | undefined) {
+    if (color === undefined) {
+      gridColorState = null;
+    } else if (color === "transparent") {
+      gridColorState = "transparent";
+    } else {
+      gridColorState = colorToRgb(color);
+    }
   }
 
   /**
@@ -511,9 +530,14 @@ export function createSarmalDotMatrix(
 
   // ── Init ────────────────────────────────────────────────────────────────────
 
-  validateBaseRenderOptions({ trailColor: initialColor, skeletonColor: skeletonColorOpt });
+  validateBaseRenderOptions({
+    trailColor: initialColor,
+    skeletonColor: skeletonColorOpt,
+    ...(gridColorOpt !== undefined && { gridColor: gridColorOpt }),
+  });
   applyColor(initialColor);
   applySkeletonColor(skeletonColorOpt);
+  applyGridColor(gridColorOpt);
   warnIfTrailColorMismatch(trailColor, trailStyle);
   calculateBoundaries(engine.getSarmalSkeleton());
   computePixelMask();
@@ -640,16 +664,21 @@ export function createSarmalDotMatrix(
 
       validateBaseRenderOptions(partial);
 
-      let needsRebuildBg = false;
+      let needsBgRebuilt = false;
 
       if (partial.trailColor !== undefined) {
         trailColor = partial.trailColor;
         applyColor(trailColor);
-        needsRebuildBg = true;
+        needsBgRebuilt = true;
       }
 
       if (partial.skeletonColor !== undefined) {
         applySkeletonColor(partial.skeletonColor);
+      }
+
+      if (partial.gridColor !== undefined) {
+        applyGridColor(partial.gridColor);
+        needsBgRebuilt = true;
       }
 
       if (partial.trailStyle !== undefined) {
@@ -659,7 +688,7 @@ export function createSarmalDotMatrix(
         }
       }
 
-      if (needsRebuildBg) {
+      if (needsBgRebuilt) {
         buildBgImageData();
       }
 

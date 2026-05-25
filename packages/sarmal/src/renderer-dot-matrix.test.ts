@@ -965,6 +965,189 @@ describe("createSarmalDotMatrix — skeleton", () => {
   });
 });
 
+describe("createSarmalDotMatrix — gridColor", () => {
+  function makeCapturingCanvas(width = 240, height = 240) {
+    let capturedData: Uint8ClampedArray | null = null;
+    const canvas = document.createElement("canvas");
+    canvas.width = width;
+    canvas.height = height;
+    // @ts-ignore
+    canvas.getContext = (id: string) =>
+      id === "2d"
+        ? {
+            putImageData(imageData: ImageData) {
+              capturedData = new Uint8ClampedArray(imageData.data);
+            },
+            clearRect: () => {},
+            fillStyle: "",
+            globalAlpha: 1,
+          }
+        : null;
+    return { canvas, getCaptured: () => capturedData };
+  }
+
+  it("gridColor: 'transparent' produces no low-alpha background pixels in the first frame", () => {
+    const { canvas, getCaptured } = makeCapturingCanvas();
+    createSarmalDotMatrix(canvas, circle, {
+      autoStart: false,
+      cols: 8,
+      rows: 8,
+      trailLength: 24,
+      skeletonColor: "transparent",
+      gridColor: "transparent",
+    }).destroy();
+
+    const data = getCaptured()!;
+    expect(data).not.toBeNull();
+
+    let hasBgPixel = false;
+    for (let i = 0; i < data.length; i += 4) {
+      const a = data[i + 3]!;
+      if (a >= 1 && a <= 15) {
+        hasBgPixel = true;
+        break;
+      }
+    }
+    expect(hasBgPixel).toBe(false);
+  });
+
+  it("default gridColor (unset) produces background pixels at ~5% opacity", () => {
+    const { canvas, getCaptured } = makeCapturingCanvas();
+    createSarmalDotMatrix(canvas, circle, {
+      autoStart: false,
+      cols: 8,
+      rows: 8,
+      trailLength: 24,
+      skeletonColor: "transparent",
+    }).destroy();
+
+    const data = getCaptured()!;
+    expect(data).not.toBeNull();
+
+    let hasBgPixel = false;
+    for (let i = 0; i < data.length; i += 4) {
+      const a = data[i + 3]!;
+      if (a >= 1 && a <= 15) {
+        hasBgPixel = true;
+        break;
+      }
+    }
+    expect(hasBgPixel).toBe(true);
+  });
+
+  it("gridColor: '#ff0000' makes background pixels red, not trail color", () => {
+    const { canvas, getCaptured } = makeCapturingCanvas();
+    createSarmalDotMatrix(canvas, circle, {
+      autoStart: false,
+      cols: 8,
+      rows: 8,
+      trailLength: 24,
+      trailColor: "#0000ff",
+      skeletonColor: "transparent",
+      gridColor: "#ff0000",
+    }).destroy();
+
+    const data = getCaptured()!;
+    expect(data).not.toBeNull();
+
+    let hasRedBgPixel = false;
+    for (let i = 0; i < data.length; i += 4) {
+      const r = data[i]!;
+      const g = data[i + 1]!;
+      const b = data[i + 2]!;
+      const a = data[i + 3]!;
+      if (a >= 1 && a <= 15 && r > 200 && g < 20 && b < 20) {
+        hasRedBgPixel = true;
+        break;
+      }
+    }
+    expect(hasRedBgPixel).toBe(true);
+  });
+
+  it("setRenderOptions({ gridColor: 'transparent' }) disables background dots on a live instance", () => {
+    const { canvas, getCaptured } = makeCapturingCanvas();
+    const instance = createSarmalDotMatrix(canvas, circle, {
+      autoStart: false,
+      cols: 8,
+      rows: 8,
+      trailLength: 24,
+      skeletonColor: "transparent",
+    });
+
+    // First frame: background dots present (default)
+    const dataBefore = getCaptured()!;
+    let hasBgBefore = false;
+    for (let i = 0; i < dataBefore.length; i += 4) {
+      const a = dataBefore[i + 3]!;
+      if (a >= 1 && a <= 15) {
+        hasBgBefore = true;
+        break;
+      }
+    }
+    expect(hasBgBefore).toBe(true);
+
+    // Set gridColor to transparent — triggers bgImageData rebuild
+    instance.setRenderOptions({ gridColor: "transparent" });
+    instance.play();
+    instance.pause();
+
+    const dataAfter = getCaptured()!;
+    let hasBgAfter = false;
+    for (let i = 0; i < dataAfter.length; i += 4) {
+      const a = dataAfter[i + 3]!;
+      if (a >= 1 && a <= 15) {
+        hasBgAfter = true;
+        break;
+      }
+    }
+    expect(hasBgAfter).toBe(false);
+
+    instance.destroy();
+  });
+
+  it("gridColor: 'transparent' stays transparent after trailColor change via setRenderOptions", () => {
+    const { canvas, getCaptured } = makeCapturingCanvas();
+    const instance = createSarmalDotMatrix(canvas, circle, {
+      autoStart: false,
+      cols: 8,
+      rows: 8,
+      trailLength: 24,
+      skeletonColor: "transparent",
+      gridColor: "transparent",
+    });
+
+    // First frame: no background dots
+    const dataBefore = getCaptured()!;
+    let hasBgBefore = false;
+    for (let i = 0; i < dataBefore.length; i += 4) {
+      const a = dataBefore[i + 3]!;
+      if (a >= 1 && a <= 15) {
+        hasBgBefore = true;
+        break;
+      }
+    }
+    expect(hasBgBefore).toBe(false);
+
+    // Change trailColor — triggers bgImageData rebuild, gridColorState is 'transparent' so stays transparent
+    instance.setRenderOptions({ trailColor: "#ff0000" });
+    instance.play();
+    instance.pause();
+
+    const dataAfter = getCaptured()!;
+    let hasBgAfter = false;
+    for (let i = 0; i < dataAfter.length; i += 4) {
+      const a = dataAfter[i + 3]!;
+      if (a >= 1 && a <= 15) {
+        hasBgAfter = true;
+        break;
+      }
+    }
+    expect(hasBgAfter).toBe(false);
+
+    instance.destroy();
+  });
+});
+
 describe("createSarmalDotMatrix — pixel output", () => {
   it("calls putImageData exactly once per rendered frame", () => {
     const pending: FrameRequestCallback[] = [];

@@ -1,5 +1,5 @@
 import type {
-  BaseRuntimeRenderOptions,
+  DotMatrixRuntimeRenderOptions,
   Engine,
   JumpOptions,
   Point,
@@ -431,6 +431,8 @@ export interface Oklab {
   b: number;
 }
 
+export type GridColorState = Rgb | "transparent" | null;
+
 /**
  * sRGB Rgb to OKLab
  * @see {@link https://bottosson.github.io/posts/oklab/}
@@ -517,6 +519,7 @@ const BASE_RENDER_OPTION_KEYS: ReadonlySet<string> = new Set([
   "trailColor",
   "trailStyle",
   "skeletonColor",
+  "gridColor",
 ]);
 
 const RENDER_OPTION_KEYS: ReadonlySet<string> = new Set([
@@ -529,10 +532,10 @@ const RENDER_OPTION_KEYS: ReadonlySet<string> = new Set([
 ]);
 
 /**
- * Validates options for renderers that support `trailColor`, `trailStyle`, and `skeletonColor`.
+ * Validates options for renderers that support `trailColor`, `trailStyle`, `skeletonColor`, and `gridColor`.
  * Throws a `TypeError` if any canvas-only field (`headColor`, `headRadius`, `trailWidth`) is passed.
  */
-export function validateBaseRenderOptions(partial: BaseRuntimeRenderOptions) {
+export function validateBaseRenderOptions(partial: DotMatrixRuntimeRenderOptions) {
   for (const key of Object.keys(partial)) {
     if (!BASE_RENDER_OPTION_KEYS.has(key)) {
       throw new TypeError(`[sarmal] setRenderOptions: unsupported key "${key}" for this renderer`);
@@ -546,6 +549,9 @@ export function validateBaseRenderOptions(partial: BaseRuntimeRenderOptions) {
   }
   if (partial.skeletonColor !== undefined) {
     assertSkeletonColor(partial.skeletonColor);
+  }
+  if (partial.gridColor !== undefined) {
+    assertGridColor(partial.gridColor);
   }
 }
 
@@ -645,6 +651,18 @@ function assertSkeletonColor(value: string) {
   if (typeof value !== "string" || parseColorToOklab(value) === null) {
     throw new TypeError(
       `[sarmal] setRenderOptions: skeletonColor must be a valid color string (#rrggbb, #rgb, rgb(), rgba(), oklch()) or "transparent", got ${JSON.stringify(value)}`,
+    );
+  }
+}
+
+function assertGridColor(value: string) {
+  if (value === "transparent") {
+    return;
+  }
+
+  if (typeof value !== "string" || parseColorToOklab(value) === null) {
+    throw new TypeError(
+      `[sarmal] setRenderOptions: gridColor must be a valid color string (#rrggbb, #rgb, rgb(), rgba(), oklch()) or "transparent", got ${JSON.stringify(value)}`,
     );
   }
 }

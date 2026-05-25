@@ -273,7 +273,18 @@ export type TrailColor = string | string[];
  * Use this as the type parameter for `SarmalInstance` when storing instances polymorphically.
  */
 export interface BaseRuntimeRenderOptions {
+  /**
+   * Single color string for solid mode, or array of color strings for gradient mode.
+   * @default '#ffffff'
+   */
   trailColor?: TrailColor;
+  /**
+   * Trail rendering style.
+   * - `'default'`: solid color, alpha varies by intensity.
+   * - `'gradient-static'`: each dot's color is sampled from the `trailColor` gradient. Requires `trailColor` array.
+   * - `'gradient-animated'`: same as `gradient-static` but the gradient phase shifts over time.
+   * @default 'default'
+   */
   trailStyle?: TrailStyle;
   /** Color string (`#rrggbb`, `#rgb`, `rgb()`, `rgba()`, `oklch()`), or `"transparent"` to hide the skeleton. */
   skeletonColor?: string;
@@ -308,10 +319,18 @@ export interface RuntimeRenderOptions extends BaseRuntimeRenderOptions {
 
 /**
  * Runtime-renderable options for the dot matrix renderer.
- * Supports `trailColor`, `trailStyle`, and `skeletonColor`.
+ * Supports `trailColor`, `trailStyle`, `skeletonColor`, and `gridColor`.
  * ! Canvas-only fields (headColor, headRadius, trailWidth) will throw if passed.
  */
-export type DotMatrixRuntimeRenderOptions = BaseRuntimeRenderOptions;
+export interface DotMatrixRuntimeRenderOptions extends BaseRuntimeRenderOptions {
+  /**
+   * Color of the background dot grid (all cells at 5% opacity).
+   * Accepts `#rrggbb`, `#rgb`, `rgb()`, `rgba()`, or `oklch()`.
+   * Pass `"transparent"` to disable the background grid entirely.
+   * When omitted, the background dots use the trail's primary color.
+   */
+  gridColor?: string;
+}
 
 /**
  * Common renderer options shared between canvas and SVG renderers.
@@ -435,32 +454,11 @@ export interface DotMatrixInit {
  *
  * Init fields (`cols`, `rows`, `roundness`, `trailLength`, `autoStart`, `initialPhase`, `pauseOnHidden`)
  *  require recreating the instance on change.
- * Runtime fields (`trailColor`, `trailStyle`, `skeletonColor`)
+ * Runtime fields (`trailColor`, `trailStyle`, `skeletonColor`, `gridColor`)
  *  can be updated live through {@link SarmalInstance.setRenderOptions}.
  */
-export interface DotMatrixSarmalOptions extends Omit<DotMatrixInit, "width" | "height"> {
-  /**
-   * Color of lit dots. Single color string for solid mode; array of two or more colors for gradient mode.
-   * Gradient mode samples a color per dot based on its position in the trail (tail to head).
-   * Background dots always use the first color at 5% opacity.
-   * @default '#ffffff'
-   */
-  trailColor?: TrailColor;
-  /**
-   * Trail rendering style.
-   * - `'default'`: solid color, alpha varies by intensity.
-   * - `'gradient-static'`: each dot's color is sampled from the `trailColor` gradient. Requires `trailColor` array.
-   * - `'gradient-animated'`: same as `gradient-static` but the gradient phase shifts over time.
-   * @default 'default'
-   */
-  trailStyle?: TrailStyle;
-  /**
-   * Color of the skeleton dots. Accepts `#rrggbb`, `#rgb`, `rgb()`, `rgba()`, or `oklch()`.
-   * Pass `"transparent"` to disable the skeleton entirely.
-   * @default '#ffffff'
-   */
-  skeletonColor?: string;
-}
+export interface DotMatrixSarmalOptions
+  extends Omit<DotMatrixInit, "width" | "height">, DotMatrixRuntimeRenderOptions {}
 
 /**
  * Framework-agnostic configuration shared by all canvas/SVG renderer bindings.

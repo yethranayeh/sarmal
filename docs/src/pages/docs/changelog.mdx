@@ -18,6 +18,12 @@ Version history notes of the <Link href="#core">Core</Link>, <Link href="#react"
 
 ## Core
 
+### 0.40.0 - 25.05.2026
+
+New `gridColor` option for the dot matrix renderer. Controls the color of the background dot layer (all grid cells at 5% opacity). `'transparent'` can be passed to hide the background grid entirely, or any color string to decouple the background hue from the trail color.
+
+When omitted, background dots use the trail's primary color (existing behavior unchanged).
+
 ### 0.39.0 - 25.05.2026
 
 <Alert label="Breaking" variant="error">The `@sarmal/core/curves` barrel subpath export has been removed.</Alert>
@@ -441,6 +447,10 @@ Added `<SarmalDotMatrix>` component, `useSarmalDotMatrix` hook, and `SarmalDotMa
 
 `CanvasInit` is now exported from `@sarmal/react`. It was previously internal, leaving `useSarmal` callers without a named type for its `init` parameter.
 
+### 0.8.1 - 25.05.2026
+
+`<SarmalDotMatrix>` now accepts a `gridColor` prop, passed through as a runtime option. Supports the same values as `@sarmal/core` — `'transparent'` to hide the background grid, or any color string to override its color.
+
 ### 0.7.0 - 24.05.2026
 
 Added `pauseOnHidden` prop to `<Sarmal>` and `<SarmalSVG>`. Controls whether the animation automatically pauses when the browser tab is hidden and resumes when it becomes visible again. Defaults to `true` (existing behavior unchanged). Changing the prop after mount <strong class="text-error">destroys</strong> and recreates the instance.
@@ -538,6 +548,10 @@ import type { Init } from '@sarmal/svelte'
 // After
 import type { BaseInit } from '@sarmal/svelte'
 ```
+
+### 0.4.2 - 25.05.2026
+
+`<SarmalDotMatrix>`, `useSarmalDotMatrix`, and `sarmalDotMatrix` now accept a `gridColor` option, passed through as a runtime option. Supports the same values as `@sarmal/core` — `'transparent'` to hide the background grid, or any color string to override its color.
 
 ### 0.4.0 - 24.05.2026
 

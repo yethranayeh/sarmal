@@ -16,6 +16,7 @@
 		trailColor: palettes.sunset,
 		trailStyle: "gradient-static",
 		skeletonColor: "#3a3b37",
+		gridColor: "transparent",
 		autoStart: false,
 	});
 
@@ -31,4 +32,11 @@
 	);
 
 	observer.observe(canvas);
+
+	canvas.addEventListener("mouseenter", () => {
+		inst.setSpeedOver(0.3, 400).catch(() => {});
+	});
+	canvas.addEventListener("mouseleave", () => {
+		inst.setSpeedOver(1.0, 500).catch(() => {});
+	});
 </script>
