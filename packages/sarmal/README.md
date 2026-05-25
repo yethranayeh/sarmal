@@ -18,12 +18,12 @@ Use it for loading animations, thinking indicators, ambient decoration — or wh
 
 In web applications or directly in your terminal (`npx @sarmal/core`).
 
-- **Canvas & SVG renderers**: choose one or the other, but why not both?
-- **standard curves**: classic spirals, roses, Lissajous figures — plus draw your own with point arrays
-- **TIME CONTROL**: programmatic time stepping, seeking, and trail effects
-- **Zero dependencies**: tiny bundle, quick to get started
-- **TypeScript-first**: because who would build anyhing complex in pure JS?!
-  - full type safety, but no assurance it will work in runtime!
+- **Canvas, SVG, and dot-matrix renderers**: pick one, or use them all
+- **Built-in curves**: classic spirals, roses, Lissajous figures, plus draw your own with point arrays
+- **TIME CONTROL**: programmatic seeking, speed transitions, and morph between curves
+- **Zero dependencies**: tiny bundle (single renderer + one curve, minified + tree-shaken)
+- **TypeScript-first**: full type safety, ships with `.d.ts` declarations
+  - but no assurance it will work in runtime!
 
 ## Install
 
@@ -52,7 +52,7 @@ const sarmal = createSarmal(canvas, rose3, {
   trailWidth: 2,
 });
 
-sarmal.start();
+sarmal.play();
 ```
 
 Or with **auto-init** without having to write any JS:

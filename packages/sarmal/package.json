@@ -1,6 +1,6 @@
 {
   "name": "@sarmal/core",
-  "version": "0.38.0",
+  "version": "0.39.0",
   "description": "Animated curve library for loading states and ambient motion",
   "keywords": [
     "animation",
@@ -47,11 +47,6 @@
       "types": "./dist/index.d.ts",
       "import": "./dist/index.js",
       "require": "./dist/index.cjs"
-    },
-    "./curves": {
-      "types": "./dist/curves/index.d.ts",
-      "import": "./dist/curves/index.js",
-      "require": "./dist/curves/index.cjs"
     },
     "./curves/*": {
       "types": "./dist/curves/*.d.ts",

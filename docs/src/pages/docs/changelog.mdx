@@ -18,6 +18,25 @@ Version history notes of the <Link href="#core">Core</Link>, <Link href="#react"
 
 ## Core
 
+### 0.39.0 - 25.05.2026
+
+<Alert label="Breaking" variant="error">The `@sarmal/core/curves` barrel subpath export has been removed.</Alert>
+
+
+```ts
+// Before
+import { rose3 } from "@sarmal/core/curves";
+
+// After
+// use the main entry (identical output, no duplication)
+import { rose3 } from "@sarmal/core";
+
+// Or a deep import if you need curves with no renderer dependency
+import { rose3 } from "@sarmal/core/curves/rose3";
+```
+
+The barrel was producing larger bundles than the main entry in every practical scenario because both `dist/index.js` and `dist/curves/index.js` inline the same catmull-rom utility code, and consumer bundlers cannot deduplicate code across two separately pre-bundled files. Individual deep imports (`@sarmal/core/curves/<name>`) are unaffected and continue to work.
+
 ### 0.38.0 - 24.05.2026
 
 `destroy()` now clears the visual output in all renderers. Previously, canvas and dot matrix renderers left the last painted frame frozen on the canvas after destruction, whereas the SVG renderer completely removed its elements.
