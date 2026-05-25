@@ -17,6 +17,7 @@
     trailColor,
     trailStyle,
     skeletonColor,
+    gridColor,
     morphDuration,
     morphStrategy,
     instance = $bindable(null as SarmalInstance<DotMatrixRuntimeRenderOptions> | null),
@@ -50,6 +51,7 @@
       ...(trailColor !== undefined && { trailColor }),
       ...(trailStyle !== undefined && { trailStyle }),
       ...(skeletonColor !== undefined && { skeletonColor }),
+      ...(gridColor !== undefined && { gridColor }),
     }));
 
     const inst = createSarmalDotMatrix(c, initCurve, {
@@ -101,6 +103,7 @@
       ...(trailColor !== undefined && { trailColor }),
       ...(skeletonColor !== undefined && { skeletonColor }),
       ...(trailStyle !== undefined && { trailStyle }),
+      ...(gridColor !== undefined && { gridColor }),
     });
   });
 

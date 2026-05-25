@@ -1020,6 +1020,14 @@ describe("sarmalDotMatrix (canvas action)", () => {
     expect(mockInstance.setRenderOptions).toHaveBeenCalledWith({ skeletonColor: "transparent" });
   });
 
+  it("calls setRenderOptions when gridColor changes", () => {
+    const action = createAction({ curve: circle, gridColor: "#ff0000" });
+
+    action.update!({ curve: circle, gridColor: "transparent" });
+
+    expect(mockInstance.setRenderOptions).toHaveBeenCalledWith({ gridColor: "transparent" });
+  });
+
   it("calls setRenderOptions when trailStyle changes", () => {
     const action = createAction({ curve: circle, trailStyle: "default" });
 
@@ -1135,6 +1143,16 @@ describe("sarmalDotMatrix (canvas action)", () => {
 
   it("does not call setRenderOptions when trailColor is removed", () => {
     const action = createAction({ curve: circle, trailColor: "#ff0000" });
+
+    action.update!({ curve: circle });
+
+    expect(mockInstance.setRenderOptions).not.toHaveBeenCalled();
+  });
+
+  it("does not call setRenderOptions when gridColor is removed", () => {
+    // Removing gridColor (going to undefined) is a silent drop — the action
+    // cannot restore the default through setRenderOptions.
+    const action = createAction({ curve: circle, gridColor: "#ff0000" });
 
     action.update!({ curve: circle });
 

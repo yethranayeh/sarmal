@@ -12,6 +12,7 @@ const SarmalDotMatrixInner = ({
   trailColor,
   trailStyle,
   skeletonColor,
+  gridColor,
   morphDuration,
   morphStrategy,
   onReady,
@@ -31,6 +32,7 @@ const SarmalDotMatrixInner = ({
       ...(trailColor !== undefined && { trailColor }),
       ...(trailStyle !== undefined && { trailStyle }),
       ...(skeletonColor !== undefined && { skeletonColor }),
+      ...(gridColor !== undefined && { gridColor }),
     },
     {
       ...(cols !== undefined && { cols }),
@@ -51,7 +53,7 @@ const SarmalDotMatrixInner = ({
       : undefined,
   );
 
-  useDotMatrixRenderOptions(instance, trailColor, trailStyle, skeletonColor);
+  useDotMatrixRenderOptions(instance, trailColor, trailStyle, skeletonColor, gridColor);
 
   useLayoutEffect(() => {
     if (instance.current) {

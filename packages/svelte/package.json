@@ -1,6 +1,6 @@
 {
   "name": "@sarmal/svelte",
-  "version": "0.4.3",
+  "version": "0.5.0",
   "description": "Svelte components and hooks for @sarmal/core animated curves",
   "keywords": [
     "animation",

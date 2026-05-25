@@ -9,6 +9,7 @@ function buildOptions(opts: SarmalDotMatrixActionOptions) {
     ...(opts.trailColor !== undefined && { trailColor: opts.trailColor }),
     ...(opts.trailStyle !== undefined && { trailStyle: opts.trailStyle }),
     ...(opts.skeletonColor !== undefined && { skeletonColor: opts.skeletonColor }),
+    ...(opts.gridColor !== undefined && { gridColor: opts.gridColor }),
     ...(opts.cols !== undefined && { cols: opts.cols }),
     ...(opts.rows !== undefined && { rows: opts.rows }),
     ...(opts.roundness !== undefined && { roundness: opts.roundness }),
@@ -58,6 +59,12 @@ function diffRenderOptions(
     }
   }
 
+  if (prev.gridColor !== next.gridColor) {
+    if (next.gridColor !== undefined) {
+      changes.gridColor = next.gridColor;
+    }
+  }
+
   return changes;
 }
 
@@ -72,7 +79,7 @@ function diffRenderOptions(
  * The action responds to option changes through its `update` callback:
  * - Init-time options (`cols`, `rows`, `roundness`, `trailLength`, `autoStart`, `initialPhase`, `pauseOnHidden`) trigger destroy + recreate
  * - The `curve` option triggers `morphTo`, which preserves the trail
- * - Runtime visual options (`trailColor`, `trailStyle`, `skeletonColor`) trigger `setRenderOptions` without recreating
+ * - Runtime visual options (`trailColor`, `trailStyle`, `skeletonColor`, `gridColor`) trigger `setRenderOptions` without recreating
  *
  * Note: `headColor`, `headRadius`, and `trailWidth` are not supported by the dot matrix renderer.
  */

@@ -441,15 +441,15 @@ const sarmal = createSarmal(canvas, curves.artemis2, { initialT: Math.PI })
 
 ## React
 
+### 0.9.0 - 25.05.2026
+
+`<SarmalDotMatrix>` now accepts a `gridColor` prop, passed through as a runtime option. Supports the same values as `@sarmal/core`.
+
 ### 0.8.0 - 24.05.2026
 
 Added `<SarmalDotMatrix>` component, `useSarmalDotMatrix` hook, and `SarmalDotMatrixProps` type. It follows the `<Sarmal>` & `<SarmalSVG>` pattern.
 
 `CanvasInit` is now exported from `@sarmal/react`. It was previously internal, leaving `useSarmal` callers without a named type for its `init` parameter.
-
-### 0.8.1 - 25.05.2026
-
-`<SarmalDotMatrix>` now accepts a `gridColor` prop, passed through as a runtime option. Supports the same values as `@sarmal/core` — `'transparent'` to hide the background grid, or any color string to override its color.
 
 ### 0.7.0 - 24.05.2026
 
@@ -536,6 +536,10 @@ Peer dependencies: `react >= 18` and `@sarmal/core`. The package bundle emits `"
 
 ## Svelte
 
+### 0.5.0 - 25.05.2026
+
+`<SarmalDotMatrix>`, `useSarmalDotMatrix`, and `sarmalDotMatrix` now accept a `gridColor` option, passed through as a runtime option. Supports the same values as `@sarmal/core`.
+
 ### 0.4.1 - 24.05.2026
 
 <Alert label="Breaking" variant="error">`Init` type is renamed to `BaseInit`</Alert>
@@ -548,10 +552,6 @@ import type { Init } from '@sarmal/svelte'
 // After
 import type { BaseInit } from '@sarmal/svelte'
 ```
-
-### 0.4.2 - 25.05.2026
-
-`<SarmalDotMatrix>`, `useSarmalDotMatrix`, and `sarmalDotMatrix` now accept a `gridColor` option, passed through as a runtime option. Supports the same values as `@sarmal/core` — `'transparent'` to hide the background grid, or any color string to override its color.
 
 ### 0.4.0 - 24.05.2026
 

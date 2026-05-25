@@ -12,8 +12,8 @@ import { shallowEqualTrailColor } from "./utils";
 
 /**
  * Calls `setRenderOptions` on a dot matrix instance when runtime visual props change.
- * Only the three options supported by the dot matrix renderer are handled:
- *  `trailColor`, `trailStyle`, and `skeletonColor`
+ * Only the four options supported by the dot matrix renderer are handled:
+ *  `trailColor`, `trailStyle`, `skeletonColor`, and `gridColor`
  *
  * ! `headColor`, `headRadius`, and `trailWidth` are not available on the dot matrix renderer.
  */
@@ -22,6 +22,7 @@ export function useDotMatrixRenderOptions(
   trailColor: TrailColor | undefined,
   trailStyle: TrailStyle | undefined,
   skeletonColor: string | undefined,
+  gridColor: string | undefined,
 ) {
   const initializedRef = useRef(false);
   const prevTrailColorRef = useRef<TrailColor | undefined>(trailColor);
@@ -44,6 +45,7 @@ export function useDotMatrixRenderOptions(
       ...(trailColorChanged && trailColor !== undefined && { trailColor }),
       ...(skeletonColor !== undefined && { skeletonColor }),
       ...(trailStyle !== undefined && { trailStyle }),
+      ...(gridColor !== undefined && { gridColor }),
     });
-  }, [trailColor, skeletonColor, trailStyle]);
+  }, [trailColor, skeletonColor, trailStyle, gridColor]);
 }
