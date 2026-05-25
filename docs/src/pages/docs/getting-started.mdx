@@ -43,6 +43,10 @@ No build step? Drop in the auto-init script and add `data-sarmal` to any canvas 
 
 The script scans for `canvas[data-sarmal]` and `svg[data-sarmal]` on page load and starts an animation for each one. Use any built-in curve name as the attribute value.
 
+<Alert variant="warning" label="CDN-only">
+  `auto-init.js` bundles all renderers, all curves, and DOM scanning code (~75 KB unminified). It is designed exclusively for `<script src>` / CDN use. **Do not `import '@sarmal/core/auto'` inside a bundled application** — it will pull everything into your bundle and the side-effect initialization will run unconditionally.
+</Alert>
+
 To use the dot matrix renderer, add `data-renderer="dot-matrix"` to a canvas:
 
 ```html
@@ -118,11 +122,27 @@ curves.astroid; // 4-pointed star
 // ...
 ```
 
-### Import paths
+### Import paths and tree-shaking
 
-There are three ways to import curves, each with different bundle-size characteristics:
+`@sarmal/core` ships as a standard ESM module with `"sideEffects"` properly marked, so modern bundlers (Vite, Rollup, webpack 5, esbuild) can tree-shake it. Here is what that means in practice:
 
-**1. Convenience: `@sarmal/core`**
+**Named imports from the main entry (recommended)**
+
+```ts
+import { createSarmal, rose3 } from "@sarmal/core";
+
+const sarmal = createSarmal(canvas, rose3);
+```
+
+This is the best approach for almost every use case. Tree-shaking works correctly:
+
+- Only the renderer you actually call (`createSarmal`, `createSarmalSVG`, or `createSarmalDotMatrix`) is included. The other two are eliminated.
+- Only the named curves you import are included. Unused curves are dropped.
+- All color utilities, palettes, and the engine are included because the renderer depends on them.
+
+Measured output (minified): **~16.5 KB raw / ~6.3 KB gzip** for `createSarmal` + one curve.
+
+**Using the `curves` collection**
 
 ```ts
 import { createSarmal, curves } from "@sarmal/core";
@@ -130,35 +150,37 @@ import { createSarmal, curves } from "@sarmal/core";
 const sarmal = createSarmal(canvas, curves.rose3);
 ```
 
-All curves are available through the `curves` object. Modern bundlers will tree-shake unused individual curves, but the main entry point (`index.js`) is still resolved into the module graph first. This means that the engine and renderer modules are always processed by the bundler even if they end up *unused*.
+Convenient for runtime curve selection or when you want all curves available. The tradeoff: because `curves` is a plain object containing all 14 curves as properties, no bundler can eliminate the unused ones at build time.
 
-**2. Barrel subpath: `@sarmal/core/curves`**
+Measured output: **~19.2 KB raw / ~7.1 KB gzip**, which is roughly +2.7 KB raw over named imports.
 
-```ts
-import { createSarmal } from "@sarmal/core";
-import { rose3 } from "@sarmal/core/curves";
+If you pick one curve and it won't change, prefer named imports. If you swap curves at runtime or render from user input, the collection is the right tool.
 
-const sarmal = createSarmal(canvas, rose3);
-```
-
-Directly imports the curves file. You end up only pulling in the curve files you reference, so individual named imports are still tree-shakable.
-
-This is the best balance of convenience and bundle size: you get all named exports without the engine/renderer module graph.
-
-**3. Deep import: `@sarmal/core/curves/<name>`**
+**Deep imports: `@sarmal/core/curves/<name>`**
 
 ```ts
-import { createSarmal } from "@sarmal/core";
 import { rose3 } from "@sarmal/core/curves/rose3";
-
-const sarmal = createSarmal(canvas, rose3);
 ```
 
-Imports a single curve definition file, resulting in maximum tree-shaking. You can use this to guarantee the smallest possible bundle and already know exactly which curve you need.
+Each curve ships as a standalone file (e.g., `dist/curves/rose3.js` is 375 bytes). The measured difference versus named imports from the main entry is negligible (~21 bytes raw) when also importing a renderer. The only reason to reach for deep imports is when building a library that ships curve definitions with no renderer dependency at all.
+
+**Engine only**
+
+If you only need the math for custom rendering, SSR pre-computation, scrubbing without a display:
+
+```ts
+import { createEngine, rose3 } from "@sarmal/core";
+```
+
+The renderer and color utilities are tree-shaken away. Measured output: **~5.1 KB raw / ~2.2 KB gzip**. The engine accounts for roughly 30% of the full renderer bundle.
 
 <Alert variant='tip'>
-	If you need both engine/renderer **and** curves, option 2 or 3 won't save much over option 1, because you're already pulling the main modules. The subpath advantage matters most when you only need curve definitions, for whatever reason *I won't judge*.
+  **In short:** use named imports from `@sarmal/core`. Tree-shaking works. The `curves` collection is fine when you need runtime selection; it costs ~2.7 KB raw.
 </Alert>
+
+**Terminal subpath: `@sarmal/core/terminal`**
+
+The terminal renderer (`terminalSarmal`) lives at `@sarmal/core/terminal` and is gated behind a `"node"` export condition. Modern browser bundlers (Vite, webpack) will not include it unless you explicitly override the condition, so it does not affect browser bundle size.
 
 ## Custom curves
 
