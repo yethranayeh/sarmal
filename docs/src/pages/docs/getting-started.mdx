@@ -8,6 +8,16 @@ description: Install @sarmal/core and animate your first curve.
 
 import Alert from "../../components/Alert.astro";
 import Link from "../../components/Link.astro";
+import {
+  PACKAGE_SIZE,
+  PACKAGE_SIZE_ENGINE,
+  PACKAGE_SIZE_ALL_CURVES,
+  PACKAGE_SIZE_DIFF,
+  PACKAGE_SIZE_ENGINE_PCT,
+  PACKAGE_SIZE_AUTOINIT_KB,
+  CURVE_TYPICAL_SIZE_B,
+  CURVE_COUNT,
+} from "../../variables";
 
 # Getting Started
 
@@ -44,7 +54,9 @@ No build step? Drop in the auto-init script and add `data-sarmal` to any canvas 
 The script scans for `canvas[data-sarmal]` and `svg[data-sarmal]` on page load and starts an animation for each one. Use any built-in curve name as the attribute value.
 
 <Alert variant="warning" label="CDN-only">
-  `auto-init.js` bundles all renderers, all curves, and DOM scanning code (~75 KB unminified). It is designed exclusively for `<script src>` / CDN use. **Do not `import '@sarmal/core/auto'` inside a bundled application** — it will pull everything into your bundle and the side-effect initialization will run unconditionally.
+  `auto-init.js` bundles all renderers, all curves, and DOM scanning code (~{PACKAGE_SIZE_AUTOINIT_KB} KB raw, unminified). It is designed exclusively for `<script src>` / CDN use.
+
+  **Do not `import '@sarmal/core/auto'` inside a bundled application**. It will pull everything into your bundle and the side-effect initialization will run unconditionally.
 </Alert>
 
 To use the dot matrix renderer, add `data-renderer="dot-matrix"` to a canvas:
@@ -124,7 +136,7 @@ curves.astroid; // 4-pointed star
 
 ### Import paths and tree-shaking
 
-`@sarmal/core` ships as a standard ESM module with `"sideEffects"` properly marked, so modern bundlers (Vite, Rollup, webpack 5, esbuild) can tree-shake it. Here is what that means in practice:
+`@sarmal/core` is built with `preserveModules` output and `"sideEffects"` properly marked, so modern bundlers (Vite, Rollup, webpack 5, esbuild) can tree-shake at the module level. Each source file is its own output module, not one flat bundle.
 
 **Named imports from the main entry (recommended)**
 
@@ -138,9 +150,9 @@ This is the best approach for almost every use case. Tree-shaking works correctl
 
 - Only the renderer you actually call (`createSarmal`, `createSarmalSVG`, or `createSarmalDotMatrix`) is included. The other two are eliminated.
 - Only the named curves you import are included. Unused curves are dropped.
-- All color utilities, palettes, and the engine are included because the renderer depends on them.
+- Drawn curves (like <Link href="/docs/curves/artemis2/">artemis2</Link>) carry the catmull-rom library as a real module import. Pure math curves (like <Link href="/docs/curves/rose3/">rose3</Link>) do not pull extra logic. So, catmull-rom is opt-in and only ships when you use a drawn curve.
 
-Measured output (minified): **~16.5 KB raw / ~6.3 KB gzip** for `createSarmal` + one curve.
+> Measured output: **{PACKAGE_SIZE} KB gzip** for `createSarmal` + one curve.
 
 **Using the `curves` collection**
 
@@ -150,9 +162,9 @@ import { createSarmal, curves } from "@sarmal/core";
 const sarmal = createSarmal(canvas, curves.rose3);
 ```
 
-Convenient for runtime curve selection or when you want all curves available. The tradeoff: because `curves` is a plain object containing all 14 curves as properties, no bundler can eliminate the unused ones at build time.
+Convenient for runtime curve selection or when you want all curves available. The tradeoff: because `curves` is a plain object assembling all {CURVE_COUNT} built-in curves, no bundler can eliminate the unused ones at build time.
 
-Measured output: **~19.2 KB raw / ~7.1 KB gzip**, which is roughly +2.7 KB raw over named imports.
+> Measured output: **{PACKAGE_SIZE_ALL_CURVES} KB gzip**, which is roughly +{PACKAGE_SIZE_DIFF} KB gzip over a named import.
 
 If you pick one curve and it won't change, prefer named imports. If you swap curves at runtime or render from user input, the collection is the right tool.
 
@@ -162,20 +174,22 @@ If you pick one curve and it won't change, prefer named imports. If you swap cur
 import { rose3 } from "@sarmal/core/curves/rose3";
 ```
 
-Each curve ships as a standalone file (e.g., `dist/curves/rose3.js` is 375 bytes). The measured difference versus named imports from the main entry is negligible (~21 bytes raw) when also importing a renderer. The only reason to reach for deep imports is when building a library that ships curve definitions with no renderer dependency at all.
+Each curve ships as a standalone file (~{CURVE_TYPICAL_SIZE_B} B gzip for `rose3`). The difference with named imports from the main entry is negligible when also importing a renderer. The only reason to reach for deep imports is when building a library that ships curve definitions with no renderer dependency at all. And I honestly don't know why you would need my <span class="underline decoration-wavy decoration-primary">curves</span>, but I don't judge.
 
 **Engine only**
 
-If you only need the math for custom rendering, SSR pre-computation, scrubbing without a display:
+If you only need the math for custom rendering, SSR pre-computation, or scrubbing without a display:
 
 ```ts
 import { createEngine, rose3 } from "@sarmal/core";
 ```
 
-The renderer and color utilities are tree-shaken away. Measured output: **~5.1 KB raw / ~2.2 KB gzip**. The engine accounts for roughly 30% of the full renderer bundle.
+The renderer and color utilities are tree-shaken away.
+
+> Measured output: **{PACKAGE_SIZE_ENGINE} KB gzip**, which is roughly {PACKAGE_SIZE_ENGINE_PCT}% of the full canvas renderer bundle.
 
 <Alert variant='tip'>
-  **In short:** use named imports from `@sarmal/core`. Tree-shaking works. The `curves` collection is fine when you need runtime selection; it costs ~2.7 KB raw.
+  **In short:** use named imports from `@sarmal/core`. Tree-shaking works. The `curves` collection is fine when you need runtime selection; it costs +{PACKAGE_SIZE_DIFF} KB gzip over a single named curve.
 </Alert>
 
 **Terminal subpath: `@sarmal/core/terminal`**
