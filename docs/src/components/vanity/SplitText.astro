@@ -1,16 +1,14 @@
 ---
 interface Props {
 	text: string;
+	className?: string;
 }
-const { text } = Astro.props;
+const { text, className } = Astro.props;
 ---
 
 {
 	text.split("").map((c, i) => (
-		<span
-			style={`--i: ${i}`}
-			class="inline-block transition-transform duration-200"
-		>
+		<span style={`--i: ${i}`} class={className}>
 			{c}
 		</span>
 	))

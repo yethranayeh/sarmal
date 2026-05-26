@@ -1,0 +1,190 @@
+---
+import SectionLabel from "../SectionLabel.astro";
+import {
+	PACKAGE_SIZE,
+	PACKAGE_SIZE_ENGINE,
+	RENDERER_DELTA_CANVAS_KB,
+	RENDERER_DELTA_SVG_KB,
+	RENDERER_DELTA_DOTMATRIX_KB,
+	CURVE_TYPICAL_SIZE_B,
+	CURVE_COUNT,
+	CURVE_SIZES,
+	RUNTIME_DEPENDENCIES,
+} from "../../variables";
+import SplitText from "../vanity/SplitText.astro";
+import { Package, PackageOpen } from "@lucide/astro";
+
+const curveDisplaySize = `~${Math.round(CURVE_TYPICAL_SIZE_B / 100) * 100} B`;
+
+const stats = [
+	{
+		value: `${PACKAGE_SIZE} KB`,
+		title: "Canvas renderer",
+		description: "With one curve, tree-shaken",
+	},
+	{
+		value: `${PACKAGE_SIZE_ENGINE} KB`,
+		title: "Engine only",
+		description: "Math without rendering",
+	},
+	{
+		value: curveDisplaySize,
+		title: "Per curve",
+		description: `${CURVE_COUNT} built-in, all tree-shakeable`,
+	},
+	{
+		value: `${RUNTIME_DEPENDENCIES}`,
+		title: "Runtime dependencies",
+		description: "None required, ever",
+	},
+] as const;
+
+const renderers = [
+	{ name: "createEngine()", size: `${PACKAGE_SIZE_ENGINE} KB`, isBase: true },
+	{
+		name: "createSarmal()",
+		size: `+${RENDERER_DELTA_CANVAS_KB} KB`,
+		isBase: false,
+	},
+	{
+		name: "createSarmalSVG()",
+		size: `+${RENDERER_DELTA_SVG_KB} KB`,
+		isBase: false,
+	},
+	{
+		name: "createSarmalDotMatrix()",
+		size: `+${RENDERER_DELTA_DOTMATRIX_KB} KB`,
+		isBase: false,
+	},
+] as const;
+
+const fmtCurveSize = (bytes: number) =>
+	bytes < 1024 ? `+${bytes} B` : `+${(bytes / 1024).toFixed(2)} KB`;
+---
+
+<section class="py-10 md:py-16 px-6 md:px-8">
+	<div class="max-w-4xl mx-auto flex flex-col gap-10 items-center">
+		<!-- Header -->
+		<div class="flex flex-col gap-2 items-center text-center">
+			<SectionLabel size="sm" label="Bundle size" />
+			<p class="text-left font-body text-base text-muted max-w-sm group">
+				Only the code you <br class="md:hidden" /> import makes it to your <span
+					class="inline-flex flex-col relative"
+				>
+					<svg
+						viewBox="59 100 50 50"
+						class="z-1 absolute w-14 bottom-4 group-hover:-bottom-2 left-0 group-hover:-left-2 group-hover:-rotate-45 group-hover:opacity-0 transition-all duration-150"
+					>
+						<path
+							id="curve"
+							d="M70.2,148.6c4-10.1,5.3-100,500,0,0,0,0"
+							class="fill-transparent"></path>
+						<text
+							><textPath xlink:href="#curve" class="fill-primary"
+								>bundle.</textPath
+							>
+						</text>
+					</svg>
+					<Package
+						class="absolute z-10 text-primary translate-y-3 group-hover:translate-y-1 opacity-0 blur-[1px] group-hover:opacity-100 group-hover:blur-none transition-all duration-300"
+					/>
+					<PackageOpen
+						class="text-accent z-10 translate-y-3 group-hover:translate-y-1 group-hover:opacity-0 group-hover:blur-[1px] transition-all duration-300"
+					/>
+					<span
+						class="hidden md:inline z-1 text-primary font-mono absolute min-w-max left-4 blur-[1px] group-hover:blur-none group-hover:left-7 top-3 opacity-0 group-hover:top-1 group-hover:opacity-100 transition-all duration-300"
+						>{(PACKAGE_SIZE / 1024 / 1024).toFixed(7)} GB</span
+					>
+				</span>
+			</p>
+		</div>
+
+		<!-- Headline stat cards -->
+		<div class="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4 w-full">
+			{
+				stats.map((stat) => (
+					<div class="bg-surface-raised rounded-2xl p-5 md:p-6 flex flex-col gap-3 shadow-xs">
+						<span class="font-mono text-3xl md:text-4xl text-foreground tabular-nums leading-none">
+							{stat.value}
+						</span>
+
+						<div class="flex flex-col gap-0.5">
+							<span class="font-ui text-[10px] uppercase tracking-[0.15em] font-bold text-foreground">
+								{stat.title}
+							</span>
+
+							<span class="font-body text-xs text-muted">
+								{stat.description}
+							</span>
+						</div>
+					</div>
+				))
+			}
+		</div>
+
+		<!-- Per-module breakdown (Floating UI style) -->
+		<div class="w-full grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-16">
+			<!-- Renderers -->
+			<div class="flex flex-col gap-3">
+				<span
+					class="font-ui text-[10px] uppercase tracking-[0.15em] font-bold text-muted"
+				>
+					Renderers
+				</span>
+				<div class="flex flex-col">
+					{
+						renderers.map((item) => (
+							<div class="flex justify-between items-baseline gap-4 py-2 border-b border-border last:border-b-0">
+								<span class="font-mono text-sm text-foreground">
+									{item.name}
+								</span>
+								<span
+									class={`font-mono text-sm tabular-nums ${item.isBase ? "text-foreground" : "text-muted"}`}
+								>
+									{item.size}
+								</span>
+							</div>
+						))
+					}
+				</div>
+				<p class="font-body text-xs text-muted">
+					Base includes one curve. Renderers are <span
+						class="group cursor-s-resize"
+					>
+						<SplitText
+							text="additive"
+							className="translate-y-[calc(var(--i)*-0.5px)] inline-block group-hover:translate-y-0 transition-transform"
+						/>
+						<span
+							class="inline-block -translate-y-1 group-hover:translate-y-0 transition-transform"
+							>on top.</span
+						>
+					</span>
+				</p>
+			</div>
+
+			<!-- Curves -->
+			<div class="flex flex-col gap-3">
+				<span
+					class="font-ui text-[10px] uppercase tracking-[0.15em] font-bold text-muted"
+				>
+					{CURVE_COUNT} Curves
+				</span>
+				<div class="flex flex-col">
+					{
+						CURVE_SIZES.map((curve) => (
+							<div class="flex justify-between items-baseline gap-4 py-2 border-b border-border last:border-b-0">
+								<span class="font-mono text-sm text-foreground">
+									{curve.name}
+								</span>
+								<span class="font-mono text-sm text-muted tabular-nums">
+									{fmtCurveSize(curve.bytes)}
+								</span>
+							</div>
+						))
+					}
+				</div>
+			</div>
+		</div>
+	</div>
+</section>

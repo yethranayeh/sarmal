@@ -105,7 +105,7 @@ createSarmalDotMatrix(canvas, curve, { skeletonColor: "transparent" })
 .oscillating span { transition-delay: calc(var(--i) * 25ms); }
 `}
 </style>
-Dot-matrix gradient colors are now interpolated in Oklab space. This will eliminate the gray midpoint that could appear with certain palettes. The `gradient-animated` style now cycles continuously through the palette instead of <span class="oscillating"><SplitText text="oscillating" /></span>.
+Dot-matrix gradient colors are now interpolated in Oklab space. This will eliminate the gray midpoint that could appear with certain palettes. The `gradient-animated` style now cycles continuously through the palette instead of <span class="oscillating"><SplitText text="oscillating" className="inline-block transition-transform duration-200" /></span>.
 
 ### 0.35.0 - 22.05.2026
 
