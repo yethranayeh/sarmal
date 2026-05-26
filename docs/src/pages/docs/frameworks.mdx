@@ -193,6 +193,8 @@ For reactive updates after mount, call `instance.current.setRenderOptions(...)` 
 
 **Next.js App Router:** Importing `@sarmal/react` inside a Server Component will fail. Add `"use client"` to the file that imports it, or wrap the `<Sarmal>` usage in a dedicated `ClientWrapper.tsx` that is itself marked `"use client"`.
 
+This also applies when a curve definition is passed as a prop **from** a server component **to** a client child. `CurveDef` contains a function (`fn`) which React cannot serialize across the server/client boundary. The fix is the same: move the curve import and the component that uses it into a file that has `"use client"`.
+
 ```tsx
 // ClientWrapper.tsx
 "use client";

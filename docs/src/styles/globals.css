@@ -366,6 +366,12 @@ html.dark .astro-code span {
   pointer-events: none;
 }
 
+/* Static callouts remain visible in dot-matrix mode
+    their position is fixed at creation so they never chase a stale SVG head. */
+:root[data-sarmal-mode="dotmatrix"] .sarmal-blueprint-label[data-callout-static] {
+  opacity: 1;
+}
+
 :root[data-sarmal-mode="dotmatrix"] [data-dot-grid] {
   opacity: 0 !important;
 }
@@ -402,4 +408,38 @@ html {
   scrollbar-width: thin;
   scrollbar-gutter: stable;
   scrollbar-color: color-mix(in srgb, var(--color-muted) 30%, transparent) transparent;
+}
+
+/* Keyboard key styling */
+.prose kbd {
+  display: inline-block;
+  padding: 0 5px;
+  font-family: var(--font-mono);
+  font-size: 0.8em;
+  line-height: 1.6;
+  background: var(--color-surface-raised);
+  border: 1px solid var(--color-border);
+  border-bottom-width: 2px;
+  border-radius: var(--radius-sm);
+  box-shadow: 0 1px 0 color-mix(in srgb, var(--color-border) 80%, transparent);
+  cursor: default;
+  user-select: none;
+
+  transition:
+    transform 200ms ease-out,
+    box-shadow 200ms ease-out,
+    border-bottom-width 200ms ease-out;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .prose kbd:hover {
+    transform: translateY(1px);
+    box-shadow: none;
+    border-bottom-width: 1px;
+
+    transition:
+      transform 60ms ease-in,
+      box-shadow 60ms ease-in,
+      border-bottom-width 60ms ease-in;
+  }
 }
