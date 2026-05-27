@@ -459,7 +459,7 @@ const id = `sbp-${Math.random().toString(36).slice(2, 8)}`;
 				"class",
 				"absolute inset-0 w-full h-full pointer-events-none overflow-visible",
 			);
-			annotSvg.setAttribute("data-sarmal-svg", "");
+			annotSvg.setAttribute("data-sarmal-annotation", "");
 
 			const sarmalRect = svg.getBoundingClientRect();
 			annotSvg.setAttribute(
@@ -527,6 +527,9 @@ const id = `sbp-${Math.random().toString(36).slice(2, 8)}`;
 				labelDiv.className = `sarmal-blueprint-label absolute pointer-events-none flex flex-col ${dx < 0 ? "items-end" : "items-start"} gap-px`;
 				labelDiv.style.left = `${labelX}px`;
 				labelDiv.style.top = `${labelY}px`;
+				if (callout.static) {
+					labelDiv.dataset.calloutStatic = "";
+				}
 
 				const primary = document.createElement("span");
 				primary.textContent = callout.label;
