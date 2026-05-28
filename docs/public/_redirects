@@ -1,0 +1,107 @@
+# /docs/getting-started/
+/docs/quickstart             /docs/getting-started/  301
+/docs/quickstart/            /docs/getting-started/  301
+/docs/quick-start            /docs/getting-started/  301
+/docs/quick-start/           /docs/getting-started/  301
+/docs/installation           /docs/getting-started/  301
+/docs/installation/          /docs/getting-started/  301
+/docs/setup                  /docs/getting-started/  301
+/docs/setup/                 /docs/getting-started/  301
+/docs/usage                  /docs/getting-started/  301
+/docs/usage/                 /docs/getting-started/  301
+
+# /docs/api/
+/docs/api-reference          /docs/api/  301
+/docs/api-reference/         /docs/api/  301
+/docs/reference              /docs/api/  301
+/docs/reference/             /docs/api/  301
+/docs/options                /docs/api/  301
+/docs/options/               /docs/api/  301
+/docs/configuration          /docs/api/  301
+/docs/configuration/         /docs/api/  301
+/docs/parameters             /docs/api/  301
+/docs/parameters/            /docs/api/  301
+/docs/methods                /docs/api/  301
+/docs/methods/               /docs/api/  301
+
+# /docs/concepts/
+/docs/custom-curves          /docs/concepts/  301
+/docs/custom-curves/         /docs/concepts/  301
+/docs/how-it-works           /docs/concepts/  301
+/docs/how-it-works/          /docs/concepts/  301
+/docs/overview               /docs/concepts/  301
+/docs/overview/              /docs/concepts/  301
+/docs/architecture           /docs/concepts/  301
+/docs/architecture/          /docs/concepts/  301
+/docs/guide                  /docs/concepts/  301
+/docs/guide/                 /docs/concepts/  301
+
+# /docs/curves/
+/docs/curve-catalog          /docs/curves/  301
+/docs/curve-catalog/         /docs/curves/  301
+/docs/curves-catalog         /docs/curves/  301
+/docs/curves-catalog/        /docs/curves/  301
+/docs/built-in-curves        /docs/curves/  301
+/docs/built-in-curves/       /docs/curves/  301
+/docs/available-curves       /docs/curves/  301
+/docs/available-curves/      /docs/curves/  301
+/docs/curve-library          /docs/curves/  301
+/docs/curve-library/         /docs/curves/  301
+
+# /docs/canvas-vs-svg/
+/docs/renderers              /docs/canvas-vs-svg/  301
+/docs/renderers/             /docs/canvas-vs-svg/  301
+/docs/rendering              /docs/canvas-vs-svg/  301
+/docs/rendering/             /docs/canvas-vs-svg/  301
+/docs/svg                    /docs/canvas-vs-svg/  301
+/docs/svg/                   /docs/canvas-vs-svg/  301
+/docs/canvas                 /docs/canvas-vs-svg/  301
+/docs/canvas/                /docs/canvas-vs-svg/  301
+
+# /docs/frameworks/
+/docs/integrations           /docs/frameworks/  301
+/docs/integrations/          /docs/frameworks/  301
+/docs/framework-integration  /docs/frameworks/  301
+/docs/framework-integration/ /docs/frameworks/  301
+/docs/react                  /docs/frameworks/  301
+/docs/react/                 /docs/frameworks/  301
+/docs/vue                    /docs/frameworks/  301
+/docs/vue/                   /docs/frameworks/  301
+/docs/svelte                 /docs/frameworks/  301
+/docs/svelte/                /docs/frameworks/  301
+
+# /docs/terminal/
+/docs/cli                    /docs/terminal/  301
+/docs/cli/                   /docs/terminal/  301
+/docs/terminal-renderer      /docs/terminal/  301
+/docs/terminal-renderer/     /docs/terminal/  301
+/docs/node                   /docs/terminal/  301
+/docs/node/                  /docs/terminal/  301
+
+# /docs/dot-matrix/
+/docs/dot-matrix-mode        /docs/dot-matrix/  301
+/docs/dot-matrix-mode/       /docs/dot-matrix/  301
+/docs/modes                  /docs/dot-matrix/  301
+/docs/modes/                 /docs/dot-matrix/  301
+
+# /docs/changelog/
+/changelog                   /docs/changelog/  301
+/changelog/                  /docs/changelog/  301
+/docs/releases               /docs/changelog/  301
+/docs/releases/              /docs/changelog/  301
+/docs/release-notes          /docs/changelog/  301
+/docs/release-notes/         /docs/changelog/  301
+/docs/versions               /docs/changelog/  301
+/docs/versions/              /docs/changelog/  301
+
+# /play/
+/playground                  /play/  301
+/playground/                 /play/  301
+/demo                        /play/  301
+/demo/                       /play/  301
+/sandbox                     /play/  301
+/sandbox/                    /play/  301
+
+# /docs/ catch-all for anything else under /docs/ not matched above
+/docs/examples               /docs/  301
+/docs/examples/              /docs/  301

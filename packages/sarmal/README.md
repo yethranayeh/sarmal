@@ -1,7 +1,7 @@
 # @sarmal/core
 
 <p align="center">
-  <strong>Beautiful animated curves for loading states and ambient motion</strong>
+  <strong>Animated curves for hero sections, loading states, and ambient motion</strong>
 </p>
 
 <div align="center">
@@ -12,9 +12,9 @@
 
 ---
 
-**@sarmal/core** is a lightweight library for animated curves on canvas and SVG.
+**@sarmal/core** renders animated curves and/or drawn paths on canvas, SVG, and dot-matrix grids
 
-Use it for loading animations, thinking indicators, ambient decoration — or whatever else you have in mind.
+Use it for hero section animations, loading states, ambient motion in feature cards, or splash screens.
 
 In web applications or directly in your terminal (`npx @sarmal/core`).
 
@@ -68,7 +68,7 @@ See [sarmal.art/docs/curves](https://sarmal.art/docs/curves) for the full list o
 
 ## Documentation
 
-Full API reference, examples, SVG renderer usage, engine time control (`seek`, `seekWithTrail`), custom curve definitions, and framework guides are available at [sarmal.art/docs](https://sarmal.art/docs)
+Full API reference, examples, SVG renderer usage, engine time control (`seek`, `jump`, `morphTo`), custom curve definitions, and framework guides are available at [sarmal.art/docs](https://sarmal.art/docs)
 
 ## Inspiration
 

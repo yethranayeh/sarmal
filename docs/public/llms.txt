@@ -1,12 +1,29 @@
 # Sarmal
 
-> Parametric curve renderer for loading indicators. Beautiful spinners from two lines of math.
+> Animated parametric curves for web. Lissajous figures, rose curves, epicycloids, and more — rendered as glowing gradient trails on canvas or SVG.
 
-Sarmal is a tiny, zero-dependency JavaScript library that renders animated
-loading indicators by tracing parametric curves on an HTML canvas or SVG element.
+Sarmal is a tiny, zero-dependency JavaScript library that renders mathematical curve
+animations. These are not traditional spinners — they are visually distinct, art-quality
+animations built from parametric equations. Common uses: hero section decorations,
+full-page loading screens, ambient motion in feature cards, and styled transition states.
 
 Sarmal is a [TanStack Intent](https://tanstack.com/intent/latest/docs/overview)-compatible
 package. Claude Code and other Intent-aware tools load the full API context automatically.
+
+## Documentation pages
+
+All documentation is at `https://sarmal.art/docs/`. The exact pages are:
+
+- Getting started: https://sarmal.art/docs/getting-started/
+- API reference: https://sarmal.art/docs/api/
+- Concepts: https://sarmal.art/docs/concepts/
+- Curve catalog: https://sarmal.art/docs/curves/
+- Canvas vs SVG: https://sarmal.art/docs/canvas-vs-svg/
+- Dot matrix mode: https://sarmal.art/docs/dot-matrix/
+- Framework integration: https://sarmal.art/docs/frameworks/
+- Terminal renderer: https://sarmal.art/docs/terminal/
+- Changelog: https://sarmal.art/docs/changelog/
+- Playground: https://sarmal.art/play/
 
 ## Quick start
 
