@@ -170,7 +170,7 @@ Actions respond to option changes reactively and clean up on destroy.
 
 ## Documentation
 
-Full API reference and examples are at [sarmal.art/docs](https://sarmal.art/docs)
+Full API reference and examples are at [sarmal.art/docs/frameworks](https://sarmal.art/docs/frameworks/#svelte)
 
 ## License
 

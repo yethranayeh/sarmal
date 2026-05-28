@@ -82,7 +82,7 @@ trailColor={["#ff0080", "#7928ca", "#0070f3"]}
 
 ## Props
 
-See [sarmal.art/docs/api](https://sarmal.art/docs/api) for the full props reference.
+See [sarmal.art/docs/frameworks](https://sarmal.art/docs/frameworks) for the full props reference.
 
 ### Prop lifecycle
 

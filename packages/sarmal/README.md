@@ -19,11 +19,11 @@ Use it for loading animations, thinking indicators, ambient decoration — or wh
 In web applications or directly in your terminal (`npx @sarmal/core`).
 
 - **Canvas, SVG, and dot-matrix renderers**: pick one, or use them all
-- **Built-in curves**: classic spirals, roses, Lissajous figures, plus draw your own with point arrays
+- **Built-in curves**: roses, Lissajous figures, stars, epitrochoids, and more.
+  - You can also draw your own curve with point arrays!
 - **TIME CONTROL**: programmatic seeking, speed transitions, and morph between curves
 - **Zero dependencies**: tiny bundle (single renderer + one curve, minified + tree-shaken)
 - **TypeScript-first**: full type safety, ships with `.d.ts` declarations
-  - but no assurance it will work in runtime!
 
 ## Install
 
@@ -64,7 +64,7 @@ Or with **auto-init** without having to write any JS:
 
 ## Standard Curves
 
-See [sarmal.art/docs#curves](https://sarmal.art/docs#curves) for the full list of built-in curves.
+See [sarmal.art/docs/curves](https://sarmal.art/docs/curves) for the full list of built-in curves.
 
 ## Documentation
 
