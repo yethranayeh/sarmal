@@ -12,6 +12,7 @@ import {
 	RUNTIME_DEPENDENCIES,
 } from "../../variables";
 import SplitText from "../vanity/SplitText.astro";
+import SizeDiagram from "./SizeDiagram.astro";
 import { Package, PackageOpen } from "@lucide/astro";
 
 const curveDisplaySize = `~${Math.round(CURVE_TYPICAL_SIZE_B / 100) * 100} B`;
@@ -162,6 +163,11 @@ const fmtCurveSize = (bytes: number) =>
 						>
 					</span>
 				</p>
+				<SizeDiagram
+					engineSize={PACKAGE_SIZE_ENGINE}
+					canvasDelta={RENDERER_DELTA_CANVAS_KB}
+					totalSize={PACKAGE_SIZE}
+				/>
 			</div>
 
 			<!-- Curves -->

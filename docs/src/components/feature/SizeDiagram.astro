@@ -1,0 +1,260 @@
+---
+interface Props {
+	engineSize: number;
+	canvasDelta: number;
+	totalSize: number;
+}
+
+const { engineSize, canvasDelta, totalSize } = Astro.props;
+
+const rose3Path = Array.from({ length: 201 }, (_, i) => {
+	const t = (i / 200) * 2 * Math.PI;
+	const r = Math.cos(3 * t);
+	return `${i === 0 ? "M" : "L"}${(155 + r * Math.cos(t) * 88).toFixed(1)},${(26 + r * Math.sin(t) * 12).toFixed(1)}`;
+}).join(" ");
+---
+
+<div class="iso-diagram">
+	<svg
+		class="w-full h-auto block"
+		viewBox="0 0 440 190"
+		fill="none"
+		aria-hidden="true"
+	>
+		<!-- Engine disc (base) — stationary -->
+		<g>
+			<g>
+				<path
+					style="fill: var(--iso-body-1)"
+					d="M55,122 L155,138 L255,122 V144 L155,160 L55,144 Z"></path>
+				<path
+					style="fill: var(--iso-face-1)"
+					d="M155,106 L255,122 L155,138 L55,122 Z"></path>
+				<path
+					style="stroke: var(--iso-edge-1)"
+					stroke-width="0.5"
+					d="M155,106 L255,122 V144 L155,160 L55,144 V122 Z"></path>
+				<path
+					style="stroke: var(--iso-edge-1)"
+					stroke-width="0.5"
+					d="M55,122 L155,138 L255,122"></path>
+			</g>
+			<line
+				x1="256"
+				y1="122"
+				x2="271"
+				y2="122"
+				style="stroke: var(--iso-connector)"
+				stroke-width="0.5"></line>
+			<text
+				x="275"
+				y="118"
+				font-family="ui-monospace,'SF Mono',Menlo,monospace"
+				font-size="9"
+				style="fill: var(--iso-label-lo)">createEngine()</text
+			>
+			<text
+				x="275"
+				y="129"
+				font-family="ui-monospace,'SF Mono',Menlo,monospace"
+				font-size="8"
+				font-variant-numeric="tabular-nums"
+				style="fill: var(--iso-label-val)">{engineSize} KB</text
+			>
+		</g>
+
+		<!-- Canvas renderer disc — floats -->
+		<g class="iso-float-renderer">
+			<g>
+				<path
+					style="fill: var(--iso-body-2)"
+					d="M55,70 L155,86 L255,70 V82 L155,98 L55,82 Z"></path>
+				<path
+					style="fill: var(--iso-face-2)"
+					d="M155,54 L255,70 L155,86 L55,70 Z"></path>
+				<path
+					style="stroke: var(--iso-edge-2)"
+					stroke-width="0.5"
+					d="M155,54 L255,70 V82 L155,98 L55,82 V70 Z"></path>
+				<path
+					style="stroke: var(--iso-edge-2)"
+					stroke-width="0.5"
+					d="M55,70 L155,86 L255,70"></path>
+			</g>
+			<line
+				x1="256"
+				y1="70"
+				x2="271"
+				y2="70"
+				style="stroke: var(--iso-connector)"
+				stroke-width="0.5"></line>
+			<text
+				x="275"
+				y="66"
+				font-family="ui-monospace,'SF Mono',Menlo,monospace"
+				font-size="9"
+				style="fill: var(--iso-label-hi)">createSarmal()</text
+			>
+			<text
+				x="275"
+				y="77"
+				font-family="ui-monospace,'SF Mono',Menlo,monospace"
+				font-size="8"
+				font-variant-numeric="tabular-nums"
+				style="fill: var(--iso-label-val)">+{canvasDelta} KB</text
+			>
+		</g>
+
+		<!-- Curve slice (top, highlighted) — floats with offset -->
+		<g class="iso-float-curve">
+			<g>
+				<path
+					style="fill: var(--iso-body-3)"
+					d="M55,26 L155,42 L255,26 V30 L155,46 L55,30 Z"></path>
+				<path
+					style="fill: var(--iso-face-3)"
+					d="M155,10 L255,26 L155,42 L55,26 Z"></path>
+				<path
+					class="iso-rose3"
+					pathLength="1"
+					d={rose3Path}
+					stroke-opacity="0.85"
+					stroke-width="1"
+					stroke-linecap="round"
+					stroke-linejoin="round"></path>
+				<path
+					style="stroke: var(--iso-edge-3)"
+					stroke-width="0.5"
+					d="M155,10 L255,26 V30 L155,46 L55,30 V26 Z"></path>
+				<path
+					style="stroke: var(--iso-edge-3)"
+					stroke-width="0.5"
+					d="M55,26 L155,42 L255,26"></path>
+			</g>
+			<line
+				x1="256"
+				y1="26"
+				x2="271"
+				y2="26"
+				style="stroke: var(--iso-connector)"
+				stroke-width="0.5"></line>
+			<text
+				x="275"
+				y="22"
+				font-family="ui-monospace,'SF Mono',Menlo,monospace"
+				font-size="9"
+				style="fill: var(--iso-accent)">rose3</text
+			>
+			<text
+				x="275"
+				y="33"
+				font-family="ui-monospace,'SF Mono',Menlo,monospace"
+				font-size="8"
+				style="fill: var(--iso-label-sub)">~300 B per curve</text
+			>
+		</g>
+
+		<text
+			x="56"
+			y="178"
+			font-family="ui-monospace,'SF Mono',Menlo,monospace"
+			font-size="8"
+			style="fill: var(--iso-total)"
+			>{totalSize} KB total · tree-shaken · gzipped</text
+		>
+	</svg>
+</div>
+
+<style>
+	/* ── Isometric diagram palette ───────────────────────────────── */
+	.iso-diagram {
+		--iso-body-1: #c2beb7;
+		--iso-face-1: #d8d4cc;
+		--iso-edge-1: #a8a49e;
+
+		--iso-body-2: #ccc8c1;
+		--iso-face-2: #e2dfd8;
+		--iso-edge-2: #929088;
+
+		--iso-body-3: #d6d2ca;
+		--iso-face-3: #edeae3;
+		--iso-edge-3: #525048;
+
+		--iso-accent: #c0143c;
+		--iso-label-hi: #1b1c1a;
+		--iso-label-lo: #4a4640;
+		--iso-label-val: #7a7067;
+		--iso-label-sub: #8a8580;
+		--iso-connector: #c0bbb4;
+		--iso-total: #a09890;
+	}
+
+	:global(.dark) .iso-diagram {
+		--iso-body-1: #0c0c0a;
+		--iso-face-1: #191816;
+		--iso-edge-1: #3a3830;
+
+		--iso-body-2: #0d0d0b;
+		--iso-face-2: #1f1e1b;
+		--iso-edge-2: #6a6562;
+
+		--iso-body-3: #0e0e0c;
+		--iso-face-3: #272522;
+		--iso-edge-3: #d1cdc6;
+
+		--iso-accent: #ec5571;
+		--iso-label-hi: #d1cdc6;
+		--iso-label-lo: #6e6862;
+		--iso-label-val: #6e6862;
+		--iso-label-sub: #6e6862;
+		--iso-connector: #3a3830;
+		--iso-total: #3a3830;
+	}
+
+	/* ── Float animation ─────────────────────────────────────────── */
+	@keyframes iso-float {
+		0%,
+		100% {
+			transform: translateY(0);
+		}
+		50% {
+			transform: translateY(-3px);
+		}
+	}
+
+	@media (prefers-reduced-motion: no-preference) {
+		.iso-float-renderer {
+			will-change: transform;
+			animation: iso-float 4s ease-in-out infinite;
+		}
+		.iso-float-curve {
+			will-change: transform;
+			animation: iso-float 4s ease-in-out infinite 0.8s;
+		}
+	}
+
+	/* ── Rose3 draw-in animation ─────────────────────────────────── */
+	.iso-rose3 {
+		stroke: var(--iso-accent);
+		stroke-dasharray: 1;
+		stroke-dashoffset: 1;
+	}
+
+	@keyframes iso-draw-in {
+		to {
+			stroke-dashoffset: 0;
+		}
+	}
+
+	@media (prefers-reduced-motion: no-preference) {
+		.iso-rose3 {
+			animation: iso-draw-in 2.2s ease-out 1s forwards;
+		}
+	}
+
+	@media (prefers-reduced-motion: reduce) {
+		.iso-rose3 {
+			stroke-dashoffset: 0;
+		}
+	}
+</style>
