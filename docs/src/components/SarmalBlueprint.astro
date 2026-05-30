@@ -134,6 +134,7 @@ const id = `sbp-${Math.random().toString(36).slice(2, 8)}`;
 		callout: Callout;
 		selector: string;
 		isHead: boolean;
+		targetEl: Element;
 		lineEl: SVGLineElement;
 		ringEl: SVGCircleElement;
 		labelDiv: HTMLDivElement;
@@ -548,6 +549,7 @@ const id = `sbp-${Math.random().toString(36).slice(2, 8)}`;
 					callout,
 					selector,
 					isHead,
+					targetEl,
 					lineEl: line,
 					ringEl: ring,
 					labelDiv,
@@ -586,12 +588,7 @@ const id = `sbp-${Math.random().toString(36).slice(2, 8)}`;
 				function rafLoop() {
 					const wr = wrapper.getBoundingClientRect();
 					for (const s of nonHeadStates) {
-						const targetEl =
-							svg!.querySelector(s.selector) ??
-							wrapper.querySelector(s.selector);
-						if (targetEl) {
-							applyCallout(s, getElPos(targetEl, wrapper), wr.width, wr.height);
-						}
+						applyCallout(s, getElPos(s.targetEl, wrapper), wr.width, wr.height);
 					}
 
 					requestAnimationFrame(rafLoop);

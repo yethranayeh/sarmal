@@ -65,25 +65,19 @@ const dots = dotArray.flatMap((y) =>
 			return isActive ? 1 - t * 0.15 : 0.4;
 		};
 
-		const setOpacities = (svg, isActive) => {
-			const circles = svg.querySelectorAll("circle");
-			circles.forEach((circle) => {
-				const cx = parseFloat(circle.getAttribute("cx"));
-				const cy = parseFloat(circle.getAttribute("cy"));
-				circle.style.opacity = getActiveOpacity({ x: cx, y: cy }, isActive);
+		const setOpacities = (dots, isActive) => {
+			dots.forEach(({ el, cx, cy }) => {
+				el.style.opacity = getActiveOpacity({ x: cx, y: cy }, isActive);
 			});
 		};
 
-		const fireWave = (svg, mouseX, mouseY, startOpacity) => {
-			const circles = svg.querySelectorAll("circle");
+		const fireWave = (dots, mouseX, mouseY, startOpacity) => {
 			const maxDist = Math.sqrt(12 * 12 + 12 * 12);
 			const prefersReduced = window.matchMedia(
 				"(prefers-reduced-motion: reduce)",
 			).matches;
 
-			circles.forEach((circle) => {
-				const cx = parseFloat(circle.getAttribute("cx"));
-				const cy = parseFloat(circle.getAttribute("cy"));
+			dots.forEach(({ el: circle, cx, cy }) => {
 				const dist = Math.sqrt(
 					(cx - mouseX) * (cx - mouseX) + (cy - mouseY) * (cy - mouseY),
 				);
@@ -126,28 +120,29 @@ const dots = dotArray.flatMap((y) =>
 			});
 		};
 
-		const resetOpacities = (svg) => {
-			const circles = svg.querySelectorAll("circle");
-			circles.forEach((circle) => {
-				const cx = parseFloat(circle.getAttribute("cx"));
-				const cy = parseFloat(circle.getAttribute("cy"));
-				circle.style.willChange = "opacity";
-				circle.style.transition = `opacity ${FADE_DURATION}ms ease-out`;
-				circle.style.opacity = getActiveOpacity({ x: cx, y: cy }, active);
+		const resetOpacities = (dots) => {
+			dots.forEach(({ el, cx, cy }) => {
+				el.style.willChange = "opacity";
+				el.style.transition = `opacity ${FADE_DURATION}ms ease-out`;
+				el.style.opacity = getActiveOpacity({ x: cx, y: cy }, active);
 				setTimeout(() => {
-					circle.style.willChange = "auto";
+					el.style.willChange = "auto";
 				}, FADE_DURATION);
 			});
 		};
 
 		const init = () => {
 			const container = document.querySelector("[data-dot-container]");
-			if (!container) return;
+			if (!container) {
+				return;
+			}
 
 			container.style.opacity = "1";
 
 			const button = document.querySelector("[data-dotmatrix-toggle]");
-			if (!button) return;
+			if (!button) {
+				return;
+			}
 
 			try {
 				active = localStorage.getItem(STORAGE_KEY) === "dotmatrix";
@@ -155,10 +150,20 @@ const dots = dotArray.flatMap((y) =>
 			apply(active);
 
 			const svg = container.querySelector("svg");
-			if (!svg) return;
+			if (!svg) {
+				return;
+			}
+
+			const circleDots = Array.from(svg.querySelectorAll("circle")).map(
+				(circle) => ({
+					el: circle,
+					cx: parseFloat(circle.getAttribute("cx") ?? "0"),
+					cy: parseFloat(circle.getAttribute("cy") ?? "0"),
+				}),
+			);
 
 			if (active) {
-				setOpacities(svg, true);
+				setOpacities(circleDots, true);
 			}
 
 			button.addEventListener("click", () => {
@@ -166,8 +171,9 @@ const dots = dotArray.flatMap((y) =>
 				try {
 					localStorage.setItem(STORAGE_KEY, active ? "dotmatrix" : "default");
 				} catch (e) {}
+
 				apply(active);
-				fireWave(svg, 8, 8, 0.4);
+				fireWave(circleDots, 8, 8, 0.4);
 			});
 
 			button.addEventListener("mouseenter", (e) => {
@@ -176,11 +182,11 @@ const dots = dotArray.flatMap((y) =>
 				const scaleY = 16 / rect.height;
 				const mouseX = (e.clientX - rect.left) * scaleX;
 				const mouseY = (e.clientY - rect.top) * scaleY;
-				fireWave(svg, mouseX, mouseY);
+				fireWave(circleDots, mouseX, mouseY);
 			});
 
 			button.addEventListener("mouseleave", () => {
-				resetOpacities(svg);
+				resetOpacities(circleDots);
 			});
 		};
 

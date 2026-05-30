@@ -144,6 +144,7 @@ function getCollapsedAtStart(slug: string): boolean {
 
 	const items = Array.from(tocListItems ?? []).map((el) => ({
 		el,
+		a: el.querySelector<HTMLElement>("a"),
 		depth: parseInt(el.dataset.depth ?? "2"),
 	}));
 
@@ -152,6 +153,7 @@ function getCollapsedAtStart(slug: string): boolean {
 
 	let totalLen = 0;
 	let mergedPathEl: SVGPathElement | null = null;
+	let activeDotEl: SVGEllipseElement | null = null;
 	let dotPositions: Array<{ x: number; y: number }> = [];
 	let headingScrollPositions: number[] = [];
 	let lengthFracs: number[] = [];
@@ -186,8 +188,7 @@ function getCollapsedAtStart(slug: string): boolean {
 
 	function updatePadding() {
 		const IX = LX + IX_OFFSET;
-		for (const { el, depth } of items) {
-			const a = el.querySelector<HTMLElement>("a");
+		for (const { a, depth } of items) {
 			if (a) {
 				a.style.paddingLeft =
 					depth === 3 ? `${IX + H3R + TEXT_GAP}px` : `${LX + H2R + TEXT_GAP}px`;
@@ -495,12 +496,11 @@ function getCollapsedAtStart(slug: string): boolean {
 				dotsGroup.appendChild(makeCircle(IX, effectiveRects[i].mid, H3R));
 		}
 
-		dotsGroup.appendChild(
-			makeEllipse(baseR, baseR, {
-				id: "active-dot",
-				transform: "translate(-99,-99)",
-			}),
-		);
+		activeDotEl = makeEllipse(baseR, baseR, {
+			id: "active-dot",
+			transform: "translate(-99,-99)",
+		});
+		dotsGroup.appendChild(activeDotEl);
 		svgEl.appendChild(dotsGroup);
 
 		moveDot();
@@ -537,7 +537,7 @@ function getCollapsedAtStart(slug: string): boolean {
 		const currentLen = totalLen * scrollFrac;
 		const pt = mergedPathEl.getPointAtLength(Math.min(currentLen, totalLen));
 
-		const dot = document.getElementById("active-dot");
+		const dot = activeDotEl;
 		if (dot) {
 			let nearestDist = Infinity;
 			let nearestDx = 0;
@@ -585,9 +585,8 @@ function getCollapsedAtStart(slug: string): boolean {
 			}
 		}
 
-		for (const { el } of items) {
+		for (const { el, a } of items) {
 			const isActive = el === items[activeIdx].el;
-			const a = el.querySelector("a");
 			if (a) {
 				a.setAttribute("aria-current", isActive ? "true" : "false");
 			}

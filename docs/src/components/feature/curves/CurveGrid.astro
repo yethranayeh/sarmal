@@ -287,19 +287,40 @@ const entries = entriesWithDuration.map(({ pathLen, ...rest }) => {
 		const grids = document.querySelectorAll("[data-glow-grid]");
 		if (grids.length === 0) return;
 
+		const cards: HTMLElement[] = [];
+		for (const grid of grids) {
+			for (const card of grid.querySelectorAll<HTMLElement>(
+				"[data-glow-card]",
+			)) {
+				cards.push(card);
+			}
+		}
+		if (cards.length === 0) {
+			return;
+		}
+
+		let rects: DOMRect[] = [];
+		let dirty = true;
+		const markDirty = () => {
+			dirty = true;
+		};
+		window.addEventListener("resize", markDirty, { passive: true });
+		window.addEventListener("scroll", markDirty, { passive: true });
+
 		document.addEventListener("pointermove", (event) => {
-			for (const grid of grids) {
-				const cards: NodeListOf<HTMLElement> =
-					grid.querySelectorAll("[data-glow-card]");
-				cards.forEach((card) => {
-					const rect = card.getBoundingClientRect();
-					const centerX = rect.left + rect.width / 2;
-					const centerY = rect.top + rect.height / 2;
-					const x = (event.clientX - centerX) / (rect.width / 2);
-					const y = (event.clientY - centerY) / (rect.height / 2);
-					card.style.setProperty("--pointer-x", x.toFixed(3));
-					card.style.setProperty("--pointer-y", y.toFixed(3));
-				});
+			if (dirty) {
+				rects = cards.map((card) => card.getBoundingClientRect());
+				dirty = false;
+			}
+
+			for (let i = 0; i < cards.length; i++) {
+				const rect = rects[i]!;
+				const centerX = rect.left + rect.width / 2;
+				const centerY = rect.top + rect.height / 2;
+				const x = (event.clientX - centerX) / (rect.width / 2);
+				const y = (event.clientY - centerY) / (rect.height / 2);
+				cards[i]!.style.setProperty("--pointer-x", x.toFixed(3));
+				cards[i]!.style.setProperty("--pointer-y", y.toFixed(3));
 			}
 		});
 	}
