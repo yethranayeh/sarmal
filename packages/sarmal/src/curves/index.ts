@@ -37,19 +37,19 @@ import { artemis2 } from "./artemis2";
  * Import individual curves for better tree-shaking
  */
 export const curves = {
-  artemis2,
-  epitrochoid7,
-  astroid,
-  deltoid,
   rose3,
   rose5,
   rose52,
-  star,
-  star4,
-  star7,
+  astroid,
+  deltoid,
   lissajous32,
   lissajous43,
   epicycloid3,
+  epitrochoid7,
+  star,
+  star4,
+  star7,
   lame,
+  artemis2,
 } as const;
 export type CurveName = keyof typeof curves;

@@ -40,10 +40,14 @@ export {
   deltoid,
   rose5,
   rose3,
+  rose52,
   lissajous32,
   lissajous43,
   epicycloid3,
   lame,
+  star,
+  star4,
+  star7,
 } from "./curves";
 
 import { createEngine } from "./engine";
