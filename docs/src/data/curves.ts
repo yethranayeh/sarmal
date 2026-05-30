@@ -1,5 +1,16 @@
 import type { CurveName } from "@sarmal/core";
 
+// Canonical hue per family — individual curves may use lighter/darker siblings
+export const FAMILY_COLORS = {
+  Rose: "#e879f9",
+  Hypocycloid: "#fb923c",
+  Roulette: "#60a5fa",
+  Lissajous: "#4ade80",
+  "Fourier polar": "#fbbf24",
+  NASA: "#60a5fa",
+  Superellipse: "#2dd4bf",
+} as const;
+
 interface CurveDocsMetaBase {
   name: string;
   color: string;
@@ -45,68 +56,6 @@ export const CURVE_DOCS: Record<CurveName, CurveDocsMeta> = {
     speed: 0.7,
     skeleton: "static",
     kind: "drawn",
-  },
-  epitrochoid7: {
-    name: "Epitrochoid",
-    color: "#a78bfa",
-    family: "Roulette",
-    equation:
-      "x = 7\\cos(t) - d\\cos(7t) \\\\ y = 7\\sin(t) - d\\sin(7t) \\\\ \\text{where } d = 1.0 + 0.55\\sin(0.5t)",
-    equationSimple: "x = 7cos(t) - d·cos(7t), y = 7sin(t) - d·sin(7t)",
-    description:
-      "A roulette tracing 7 lobes with an animated distance parameter that creates organic, undulating motion.",
-    descriptionLong:
-      "A roulette tracing 7 lobes with an animated distance parameter that creates organic, undulating motion.",
-    features: [
-      "7 lobes with flower-like symmetry",
-      "Dynamic distance parameter creates organic motion",
-      "Custom skeleton uses fixed d=1.275 for stability",
-    ],
-    importPath: "@sarmal/core/curves/epitrochoid7",
-    periodStr: "2π",
-    speed: 1.4,
-    skeleton: "custom (stabilized)",
-    kind: "parametric",
-  },
-  astroid: {
-    name: "Astroid",
-    color: "#38bdf8",
-    family: "Hypocycloid",
-    equation: "x = \\cos^3(t) \\\\ y = \\sin^3(t)",
-    equationSimple: "x = cos³(t), y = sin³(t)",
-    description:
-      "A hypocycloid with 4 sharp cusps, forming a star-like shape within a square boundary.",
-    descriptionLong:
-      "A hypocycloid with 4 sharp cusps, forming a star-like shape within a square boundary.",
-    features: [
-      "4 sharp cusps at cardinal points",
-      "Star-like shape inscribed in a square",
-      "Classic hypocycloid with n=4",
-    ],
-    importPath: "@sarmal/core/curves/astroid",
-    periodStr: "2π",
-    speed: 1.1,
-    skeleton: "static",
-    kind: "parametric",
-  },
-  deltoid: {
-    name: "Deltoid",
-    color: "#fb923c",
-    family: "Hypocycloid",
-    equation: "x = 2\\cos(t) + \\cos(2t) \\\\ y = 2\\sin(t) - \\sin(2t)",
-    equationSimple: "x = 2cos(t) + cos(2t), y = 2sin(t) - sin(2t)",
-    description: "A 3-cusped hypocycloid tracing a triangular-like curve with curved sides.",
-    descriptionLong: "A 3-cusped hypocycloid tracing a triangular-like curve with curved sides.",
-    features: [
-      "3 cusps creating triangular symmetry",
-      "Curved sides between cusps",
-      "Classic hypocycloid with n=3",
-    ],
-    importPath: "@sarmal/core/curves/deltoid",
-    periodStr: "2π",
-    speed: 0.9,
-    skeleton: "static",
-    kind: "parametric",
   },
   rose3: {
     name: "Rose (n=3)",
@@ -171,9 +120,71 @@ export const CURVE_DOCS: Record<CurveName, CurveDocsMeta> = {
     skeleton: "static",
     kind: "parametric",
   },
+  epitrochoid7: {
+    name: "Epitrochoid",
+    color: "#60a5fa",
+    family: "Roulette",
+    equation:
+      "x = 7\\cos(t) - d\\cos(7t) \\\\ y = 7\\sin(t) - d\\sin(7t) \\\\ \\text{where } d = 1.0 + 0.55\\sin(0.5t)",
+    equationSimple: "x = 7cos(t) - d·cos(7t), y = 7sin(t) - d·sin(7t)",
+    description:
+      "A roulette tracing 7 lobes with an animated distance parameter that creates organic, undulating motion.",
+    descriptionLong:
+      "A roulette tracing 7 lobes with an animated distance parameter that creates organic, undulating motion.",
+    features: [
+      "7 lobes with flower-like symmetry",
+      "Dynamic distance parameter creates organic motion",
+      "Custom skeleton uses fixed d=1.275 for stability",
+    ],
+    importPath: "@sarmal/core/curves/epitrochoid7",
+    periodStr: "2π",
+    speed: 1.4,
+    skeleton: "custom (stabilized)",
+    kind: "parametric",
+  },
+  astroid: {
+    name: "Astroid",
+    color: "#fb923c",
+    family: "Hypocycloid",
+    equation: "x = \\cos^3(t) \\\\ y = \\sin^3(t)",
+    equationSimple: "x = cos³(t), y = sin³(t)",
+    description:
+      "A hypocycloid with 4 sharp cusps, forming a star-like shape within a square boundary.",
+    descriptionLong:
+      "A hypocycloid with 4 sharp cusps, forming a star-like shape within a square boundary.",
+    features: [
+      "4 sharp cusps at cardinal points",
+      "Star-like shape inscribed in a square",
+      "Classic hypocycloid with n=4",
+    ],
+    importPath: "@sarmal/core/curves/astroid",
+    periodStr: "2π",
+    speed: 1.1,
+    skeleton: "static",
+    kind: "parametric",
+  },
+  deltoid: {
+    name: "Deltoid",
+    color: "#fb923c",
+    family: "Hypocycloid",
+    equation: "x = 2\\cos(t) + \\cos(2t) \\\\ y = 2\\sin(t) - \\sin(2t)",
+    equationSimple: "x = 2cos(t) + cos(2t), y = 2sin(t) - sin(2t)",
+    description: "A 3-cusped hypocycloid tracing a triangular-like curve with curved sides.",
+    descriptionLong: "A 3-cusped hypocycloid tracing a triangular-like curve with curved sides.",
+    features: [
+      "3 cusps creating triangular symmetry",
+      "Curved sides between cusps",
+      "Classic hypocycloid with n=3",
+    ],
+    importPath: "@sarmal/core/curves/deltoid",
+    periodStr: "2π",
+    speed: 0.9,
+    skeleton: "static",
+    kind: "parametric",
+  },
   lissajous32: {
     name: "Lissajous 3:2",
-    color: "#fb923c",
+    color: "#4ade80",
     family: "Lissajous",
     equation:
       "x = \\sin(3t + \\varphi) \\\\ y = \\sin(2t) \\\\ \\text{where } \\varphi = t_{\\text{time}} \\cdot 0.45",
@@ -195,7 +206,7 @@ export const CURVE_DOCS: Record<CurveName, CurveDocsMeta> = {
   },
   lissajous43: {
     name: "Lissajous 4:3",
-    color: "#2dd4bf",
+    color: "#4ade80",
     family: "Lissajous",
     equation:
       "x = \\sin(4t + \\varphi) \\\\ y = \\sin(3t) \\\\ \\text{where } \\varphi = t_{\\text{time}} \\cdot 0.38",
@@ -238,7 +249,7 @@ export const CURVE_DOCS: Record<CurveName, CurveDocsMeta> = {
   },
   lame: {
     name: "Lamé Curve",
-    color: "#a78bfa",
+    color: "#2dd4bf",
     family: "Superellipse",
     equation:
       "x = \\operatorname{sgn}(\\cos t)\\,|\\cos t|^{p} \\\\ y = \\operatorname{sgn}(\\sin t)\\,|\\sin t|^{p} \\\\ \\text{where } p = 1.75 + 1.25\\sin(t_{\\text{time}} \\cdot 0.48)",
@@ -280,7 +291,7 @@ export const CURVE_DOCS: Record<CurveName, CurveDocsMeta> = {
   },
   star4: {
     name: "Star (4-arm)",
-    color: "#f472b6",
+    color: "#fbbf24",
     family: "Fourier polar",
     equation:
       "r = \\left|\\cos(2t)\\right| + 0.35\\left|\\cos(6t)\\right| + 0.15\\left|\\cos(10t)\\right| \\\\ x = r\\cos(t) \\\\ y = r\\sin(t)",
@@ -300,7 +311,7 @@ export const CURVE_DOCS: Record<CurveName, CurveDocsMeta> = {
   },
   star7: {
     name: "Star (7-arm)",
-    color: "#34d399",
+    color: "#fbbf24",
     family: "Fourier polar",
     equation:
       "r = \\left|\\cos\\!\\left(\\tfrac{7}{2}t\\right)\\right| + 0.35\\left|\\cos\\!\\left(\\tfrac{21}{2}t\\right)\\right| + 0.15\\left|\\cos\\!\\left(\\tfrac{35}{2}t\\right)\\right| \\\\ x = r\\cos(t) \\\\ y = r\\sin(t)",
