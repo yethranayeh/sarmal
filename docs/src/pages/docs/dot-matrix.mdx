@@ -112,6 +112,23 @@ instance.setRenderOptions({ gridColor: "transparent" });
 
 When omitted, the background dots use the trail's <span title="Primary color means the first color if given value is an array.">primary<span class="text-accent" >*</span></span> color. Setting `gridColor` to any value other than `"transparent"` overrides the color while keeping the 5% opacity.
 
+## Morphing
+
+`morphTo` works the same as on the canvas and SVG renderers. The dot grid adapts frame by frame as the trail fills with points from the new curve.
+
+```ts
+const sarmal = createSarmalDotMatrix(canvas, curves.lissajous43, {
+  trailColor: "#2dd4bf",
+});
+
+await sarmal.morphTo(curves.deltoid);
+
+// Custom duration and strategy
+await sarmal.morphTo(curves.rose3, { duration: 600, morphStrategy: "normalized" });
+```
+
+See [Morphing](/docs/getting-started/#morphing) in Getting Started for the full model.
+
 ---
 
 ## When to Use
@@ -152,19 +169,26 @@ Returns the same `SarmalInstance` interface as `createSarmal` and `createSarmalS
 
 ## Options
 
+**Init options**: changing any of these destroys and recreates the instance:
+
 | Option | Type | Default | Description |
 |--------|------|---------|-------------|
 | cols | `number` | `32` | Number of dot columns |
 | rows | `number` | `32` | Number of dot rows |
 | roundness | `number` | `1` | Dot shape. `0` = square, `1` = circle |
 | trailLength | `number` | `cols * 3` | Trail length. Larger values extend the tail further |
-| trailColor | `string \| string[]` | `'#ffffff'` | Dot color. Array enables gradient modes |
-| skeletonColor | `string` | `'#ffffff'` | Color of the background skeleton dots. Use `'transparent'` to hide |
-| gridColor | `string` | - | Color of the background dot grid at 5% opacity. Use `'transparent'` to hide |
-| trailStyle | `TrailStyle` | `'default'` | `'default'`, `'gradient-static'`, or `'gradient-animated'` |
 | autoStart | `boolean` | `true` | Start animation on creation |
 | initialPhase | `number` | `undefined` | Initial position along the curve |
 | pauseOnHidden | `boolean` | `true` | Pause when tab is hidden |
+
+**Runtime options**: update live via `setRenderOptions` without recreating:
+
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| trailColor | `string \| string[]` | `'#ffffff'` | Dot color. Array enables gradient modes |
+| trailStyle | `TrailStyle` | `'default'` | `'default'`, `'gradient-static'`, or `'gradient-animated'` |
+| skeletonColor | `string` | `'#ffffff'` | Color of the background skeleton dots. Use `'transparent'` to hide |
+| gridColor | `string` | `undefined` | Color of the background dot grid at 5% opacity. Use `'transparent'` to hide |
 
 See the <Link href="/docs/api/#createsarmaldotmatrix">API Reference</Link> for full details on each option.
 
