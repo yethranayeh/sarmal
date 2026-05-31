@@ -492,7 +492,12 @@ export interface DotMatrixSarmalOptions
 export interface BaseMorphOptions {
   curve: CurveDef;
   morphDuration?: number;
-  /** @default 'normalized' */
+  /**
+   * Strategy for lerping between curves with different periods:
+   * - 'normalized': maps `phase` proportionally into each curve's period (smooth for all period ratios)
+   * - 'raw': uses the same `phase` for both curves (can produce incoherent results for mismatched periods)
+   * @default 'normalized'
+   */
   morphStrategy?: MorphStrategy;
   /**
    * Easing applied to the morph triggered when the `curve` changes.
