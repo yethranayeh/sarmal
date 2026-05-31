@@ -16,6 +16,7 @@ import {
   DESTROYED_ERROR,
   TRAIL_MIN_WIDTH,
   TRAIL_MAX_WIDTH,
+  easeInOutCubic,
   computeBoundaries,
   computeTrailQuad,
   enginePassthroughs,
@@ -316,7 +317,10 @@ export function createSVGRenderer(options: SVGRendererOptions): SarmalInstance {
   let morphReject: ((error: Error) => void) | null = null;
   let morphDurationMs = DEFAULT_MORPH_DURATION_MS;
   let morphTarget: CurveDef | null = null;
-  let morphAlpha = 0;
+  // Raw linear progress of the morph over time (0 to 1), used for timing and completion.
+  // The eased value derived from it drives both the blend and the skeleton crossfade.
+  let morphProgress = 0;
+  let morphEasingFn: (t: number) => number = easeInOutCubic;
 
   function renderFrame(deltaTime: number) {
     if (trailStyle === "gradient-animated") {
@@ -324,31 +328,34 @@ export function createSVGRenderer(options: SVGRendererOptions): SarmalInstance {
     }
 
     if (engine.morphAlpha !== null) {
-      morphAlpha = Math.min(1, morphAlpha + deltaTime / (morphDurationMs / 1000));
-      engine.setMorphAlpha(morphAlpha);
+      morphProgress = Math.min(1, morphProgress + deltaTime / (morphDurationMs / 1000));
+      // Eased progress drives the blend; the skeleton opacity crossfade uses the same
+      // eased value so the fading shapes stay in lockstep with the morph.
+      const easedAlpha = morphEasingFn(morphProgress);
+      engine.setMorphAlpha(easedAlpha);
 
       if (morphPathABuilt) {
         skeletonPathA.setAttribute("d", morphPathABuilt);
         skeletonPathA.setAttribute("visibility", "visible");
         skeletonPathA.setAttribute(
           "stroke-opacity",
-          String((1 - morphAlpha) * DEFAULT_SKELETON_OPACITY),
+          String((1 - easedAlpha) * DEFAULT_SKELETON_OPACITY),
         );
       }
 
       if (morphPathBBuilt) {
         skeletonPathB.setAttribute("d", morphPathBBuilt);
         skeletonPathB.setAttribute("visibility", "visible");
-        skeletonPathB.setAttribute("stroke-opacity", String(morphAlpha * DEFAULT_SKELETON_OPACITY));
+        skeletonPathB.setAttribute("stroke-opacity", String(easedAlpha * DEFAULT_SKELETON_OPACITY));
       }
 
-      if (morphAlpha >= 1) {
+      if (morphProgress >= 1) {
         engine.completeMorph();
         morphResolve?.();
         morphResolve = null;
         morphReject = null;
         morphTarget = null;
-        morphAlpha = 0;
+        morphProgress = 0;
         morphPathABuilt = "";
         morphPathBBuilt = "";
         skeletonPathA.setAttribute("visibility", "hidden");
@@ -469,19 +476,20 @@ export function createSVGRenderer(options: SVGRendererOptions): SarmalInstance {
         morphResolve();
         morphResolve = null;
         morphReject = null;
-        morphAlpha = 0;
+        morphProgress = 0;
         skeletonPathA.setAttribute("visibility", "hidden");
         skeletonPathB.setAttribute("visibility", "hidden");
       }
 
       morphDurationMs = options?.duration ?? DEFAULT_MORPH_DURATION_MS;
+      morphEasingFn = options?.easing ?? easeInOutCubic;
       morphTarget = target;
-      morphAlpha = 0;
+      morphProgress = 0;
 
       const currentSkeleton = engine.getSarmalSkeleton();
       morphPathABuilt = pointsToPathString(currentSkeleton, scale, offsetX, offsetY);
 
-      engine.startMorph(target, options?.morphStrategy);
+      engine.startMorph(target, options?.morphStrategy, options?.align ?? false);
 
       if (morphTarget) {
         const targetSkeleton = sampleCurveSkeleton(target);

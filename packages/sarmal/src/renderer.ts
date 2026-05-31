@@ -18,6 +18,7 @@ import {
   DESTROYED_ERROR,
   TRAIL_MIN_WIDTH,
   TRAIL_MAX_WIDTH,
+  easeInOutCubic,
   computeBoundaries,
   computeTrailQuad,
   enginePassthroughs,
@@ -169,7 +170,10 @@ export function createRenderer(options: RendererOptions): SarmalInstance {
   let morphResolve: (() => void) | null = null;
   let morphReject: ((error: Error) => void) | null = null;
   let morphDurationMs = DEFAULT_MORPH_DURATION_MS;
-  let morphAlpha = 0;
+  // Raw linear progress of the morph over time (0 to 1), used for timing and completion.
+  // The eased value derived from it is what actually drives the blend via setMorphAlpha.
+  let morphProgress = 0;
+  let morphEasingFn: (t: number) => number = easeInOutCubic;
 
   /** Accumulated time for "gradient-animated" trail style */
   let gradientAnimTime = 0;
@@ -336,8 +340,10 @@ export function createRenderer(options: RendererOptions): SarmalInstance {
     }
 
     if (engine.morphAlpha !== null) {
-      morphAlpha = Math.min(1, morphAlpha + deltaTime / (morphDurationMs / 1000));
-      engine.setMorphAlpha(morphAlpha);
+      morphProgress = Math.min(1, morphProgress + deltaTime / (morphDurationMs / 1000));
+      // Drive the blend with the eased progress
+      // Keep raw `morphProgress` for completion timing.
+      engine.setMorphAlpha(morphEasingFn(morphProgress));
 
       /**
        * Compute bounds from the actual interpolated skeleton during morph
@@ -352,12 +358,12 @@ export function createRenderer(options: RendererOptions): SarmalInstance {
         offsetY = bounds.offsetY;
       }
 
-      if (morphAlpha >= 1) {
+      if (morphProgress >= 1) {
         engine.completeMorph();
         morphResolve?.();
         morphResolve = null;
         morphReject = null;
-        morphAlpha = 0;
+        morphProgress = 0;
 
         skeleton = engine.getSarmalSkeleton();
         if (!engine.isLiveSkeleton && skeletonColor !== "transparent") {
@@ -485,13 +491,14 @@ export function createRenderer(options: RendererOptions): SarmalInstance {
         morphResolve();
         morphResolve = null;
         morphReject = null;
-        morphAlpha = 0;
+        morphProgress = 0;
       }
 
       morphDurationMs = options?.duration ?? DEFAULT_MORPH_DURATION_MS;
-      morphAlpha = 0;
+      morphEasingFn = options?.easing ?? easeInOutCubic;
+      morphProgress = 0;
 
-      engine.startMorph(target, options?.morphStrategy);
+      engine.startMorph(target, options?.morphStrategy, options?.align ?? false);
 
       return new Promise<void>((resolve, reject) => {
         morphResolve = resolve;

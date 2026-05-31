@@ -18,6 +18,12 @@ Version history notes of the <Link href="#core">Core</Link>, <Link href="#react"
 
 ## Core
 
+### 0.41.0 - 31.05.2026
+
+`morphTo` accepts an `easing` option (default `easeInOutCubic`) that shapes the transition's progress over time. The morph now eases in and out instead of moving at a constant rate. Pass `(t) => t` to restore the previous linear ramp, or any custom easing function.
+
+`morphTo` also accepts `align` (default `false`). When `true`, the target curve starts from the point nearest the current head instead of its own phase 0, removing the visual "snap" at the start of the morph. It is off by default because it only reliably improves asymmetric transitions.
+
 ### 0.40.0 - 25.05.2026
 
 New `gridColor` option for the dot matrix renderer. Controls the color of the background dot layer (all grid cells at 5% opacity). `'transparent'` can be passed to hide the background grid entirely, or any color string to decouple the background hue from the trail color.

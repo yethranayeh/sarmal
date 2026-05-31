@@ -11,6 +11,25 @@ import type {
 
 export const DEFAULT_MORPH_DURATION_MS = 300;
 export const DEFAULT_SKELETON_OPACITY = 0.15;
+
+/**
+ * Default morph easing: a cubic ease-in-out.
+ *
+ * Takes the raw linear progress of a morph (0 at the start, 1 at the end) and
+ *  reshapes it so the transition starts slowly, speeds up through the middle,
+ *  and slows down again at the end.
+ * Without it the morph moves at a constant rate and starts/stops abruptly, which reads as mechanical.
+ *
+ * The curve is symmetric: `f(0) = 0`, `f(1) = 1`, and `f(0.5) = 0.5` exactly.
+ * The non-linearity is in between. e.g. `f(0.25) = 0.0625` (much slower than linear early on).
+ *
+ * @param t raw linear progress in [0, 1]
+ * @returns the eased progress in [0, 1]
+ */
+// TODO: reconsider re-exporting this from the package entry (index.ts) so users can reference the morph default by name.
+export function easeInOutCubic(t: number): number {
+  return t < 0.5 ? 4 * t * t * t : 1 - (-2 * t + 2) ** 3 / 2;
+}
 /** Fraction of the bounding-box dimension added as proportional padding on each side when fitting the curve. */
 export const FIT_PADDING = 0.1;
 export const FIT_PADDING_MIN = 4;

@@ -1430,3 +1430,64 @@ describe("destroy() — one-way door (dot-matrix)", () => {
     await expect(promise).rejects.toThrow("Speed transition cancelled");
   });
 });
+
+describe("morphTo easing (dot matrix renderer)", () => {
+  // createSarmalDotMatrix builds its own engine (no injection), so we observe morph
+  // completion through the morphTo Promise rather than the engine directly. The
+  // eased-value-to-engine assertion is covered by the canvas/SVG tests, which share
+  // this exact code path, plus the easeInOutCubic unit test.
+  let rafCallbacks: FrameRequestCallback[] = [];
+  let nowMs = 0;
+
+  function setupClock() {
+    rafCallbacks = [];
+    nowMs = 1000;
+    vi.spyOn(globalThis, "requestAnimationFrame").mockImplementation((cb) => {
+      rafCallbacks.push(cb);
+      return rafCallbacks.length;
+    });
+    vi.spyOn(globalThis, "cancelAnimationFrame").mockImplementation(() => {});
+    vi.spyOn(performance, "now").mockImplementation(() => nowMs);
+  }
+
+  /** Advance the clock by `dtMs` and run one render frame. */
+  function frame(dtMs: number) {
+    nowMs += dtMs;
+    const cb = rafCallbacks[rafCallbacks.length - 1];
+    rafCallbacks = [];
+    cb?.(nowMs);
+  }
+
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  it("completes on raw progress (not the eased value), even if easing saturates early", async () => {
+    setupClock();
+    const instance = createSarmalDotMatrix(makeCanvas(), circle, { autoStart: false });
+
+    // This easing reaches 1 at raw progress 0.5. If completion were driven by the eased
+    // value the morph would resolve at raw 0.5; it must instead wait for raw progress = 1.
+    // Each 30ms frame (under the loop's 1/30s cap) advances raw progress by 0.3.
+    let resolved = false;
+    instance
+      .morphTo(circle, { duration: 100, easing: (t) => Math.min(1, t * 2) })
+      .then(() => {
+        resolved = true;
+      })
+      .catch(() => {});
+    instance.play();
+
+    frame(30); // raw 0.3
+    frame(30); // raw 0.6 → eased saturates at 1.0, but raw < 1
+    await Promise.resolve();
+    expect(resolved).toBe(false); // not done — raw progress governs completion
+
+    frame(30); // raw 0.9
+    frame(30); // raw 1.2 → clamps to 1 → morph completes
+    await Promise.resolve();
+    expect(resolved).toBe(true);
+
+    instance.destroy();
+  });
+});

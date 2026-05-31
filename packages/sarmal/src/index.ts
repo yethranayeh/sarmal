@@ -19,6 +19,7 @@ export type {
   BaseInit,
   CanvasInit,
   DotMatrixInit,
+  BaseMorphOptions,
   BaseSarmalOptions,
   BaseDotMatrixOptions,
   DotMatrixSarmalOptions,

@@ -14,6 +14,7 @@ import {
   DEFAULT_MORPH_DURATION_MS,
   DEFAULT_SKELETON_OPACITY,
   DESTROYED_ERROR,
+  easeInOutCubic,
   colorToRgb,
   computeBoundaries,
   enginePassthroughs,
@@ -151,7 +152,9 @@ export function createSarmalDotMatrix(
   let morphResolve: (() => void) | null = null;
   let morphReject: ((error: Error) => void) | null = null;
   let morphDurationMs = DEFAULT_MORPH_DURATION_MS;
+  // Raw linear progress (0 to 1) for timing/completion. The eased value drives the blend.
   let morphProgress = 0;
+  let morphEasingFn: (t: number) => number = easeInOutCubic;
 
   /**
    * Pre-computes which canvas pixels belong to each dot using a rounded-rectangle SDF,
@@ -496,7 +499,8 @@ export function createSarmalDotMatrix(
   function renderFrame(deltaTime: number) {
     if (engine.morphAlpha !== null) {
       morphProgress = Math.min(1, morphProgress + deltaTime / (morphDurationMs / 1000));
-      engine.setMorphAlpha(morphProgress);
+      // Drive the blend with eased progress. Keep raw `morphProgress` for completion timing.
+      engine.setMorphAlpha(morphEasingFn(morphProgress));
       // Boundaries must track the interpolated skeleton during morph so the curve stays centered
       calculateBoundaries(engine.getSarmalSkeleton());
 
@@ -641,8 +645,9 @@ export function createSarmalDotMatrix(
       }
 
       morphDurationMs = opts?.duration ?? DEFAULT_MORPH_DURATION_MS;
+      morphEasingFn = opts?.easing ?? easeInOutCubic;
       morphProgress = 0;
-      engine.startMorph(target, opts?.morphStrategy);
+      engine.startMorph(target, opts?.morphStrategy, opts?.align ?? false);
 
       return new Promise<void>((resolve, reject) => {
         morphResolve = resolve;

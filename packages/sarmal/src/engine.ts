@@ -126,6 +126,66 @@ function resolveCurve(curveDef: CurveDef): ResolvedCurve {
   };
 }
 
+/**
+ * Wrap a phase value into the half-open range [0, period).
+ *
+ * Phases can drift negative (e.g. after applying a morph offset) or exceed one period as time advances.
+ * The double-mod handles negatives
+ */
+function wrapPhase(phase: number, period: number) {
+  return ((phase % period) + period) % period;
+}
+
+/**
+ * Find how far to shift curveB's evaluation phase so the morph begins from the
+ * point on curveB that is physically closest to curveA's current head.
+ *
+ * Without this, curveB starts at its "natural" phase — the phase that maps to the
+ * same normalized position along the curve as curveA. That phase is often visually
+ * far from where curveA's head actually is, so the head appears to snap across the
+ * canvas when the morph begins. Aligning to the nearest point removes that snap.
+ *
+ * The search samples curveB once over its whole period (≈315 points for a 2π curve)
+ * and keeps the sample nearest to curveA's head by squared distance (no `sqrt` —
+ * we only compare distances, so the square root would be wasted work). It returns
+ * the offset to add to the natural phase, i.e. `closestPhase - naturalPhaseB`.
+ *
+ * @param curveA - the curve currently being traced (the morph's source)
+ * @param targetB - the curve being morphed toward
+ * @param phase - curveA's current phase
+ * @param actualTime - elapsed time, passed through so animated curves sample correctly
+ * @param strategy - how curveB's phase tracks curveA's ("normalized" rescales by period)
+ * @returns the phase offset to add to curveB's natural phase during the morph
+ */
+function computeMorphPhaseOffset(
+  curveA: ResolvedCurve,
+  targetB: ResolvedCurve,
+  phase: number,
+  actualTime: number,
+  strategy: MorphStrategy,
+): number {
+  const currentA = curveA.fn(phase, actualTime, EMPTY_PARAMS);
+  const naturalPhaseB =
+    strategy === "normalized" ? (phase / curveA.period) * targetB.period : phase;
+
+  const steps = Math.ceil(targetB.period * POINTS_PER_PERIOD_UNIT);
+  let bestOffset = 0;
+  let bestDist = Infinity;
+  for (let i = 0; i < steps; i++) {
+    const samplePhase = (i / steps) * targetB.period;
+    const pt = targetB.fn(samplePhase, actualTime, EMPTY_PARAMS);
+    const dx = pt.x - currentA.x;
+    const dy = pt.y - currentA.y;
+    const dist = dx * dx + dy * dy;
+    if (dist < bestDist) {
+      bestDist = dist;
+      bestOffset = samplePhase - naturalPhaseB;
+    }
+  }
+
+  return bestOffset;
+}
+
 export function createEngine(curveDef: CurveDef, trailLength: number = 120): Engine {
   if (!Number.isFinite(trailLength) || trailLength <= 0) {
     throw new RangeError(
@@ -143,6 +203,10 @@ export function createEngine(curveDef: CurveDef, trailLength: number = 120): Eng
   let morphCurveB: ResolvedCurve | null = null;
   let _morphAlpha: number | null = null;
   let _morphStrategy: MorphStrategy = "normalized";
+  // How far curveB's evaluation phase is shifted so the morph starts from the point
+  //  on curveB nearest curveA's head (see computeMorphPhaseOffset).
+  // 0 when not morphing.
+  let morphPhaseOffsetB: number = 0;
 
   // Speed transition state which is `null` when not transitioning
   let _speedTransition: SpeedTransition | null = null;
@@ -184,8 +248,9 @@ export function createEngine(curveDef: CurveDef, trailLength: number = 120): Eng
 
       if (morphCurveB !== null && _morphAlpha !== null) {
         const a = curve.fn(phase, actualTime, EMPTY_PARAMS);
-        const phaseB =
+        const naturalPhaseB =
           _morphStrategy === "normalized" ? (phase / curve.period) * morphCurveB.period : phase;
+        const phaseB = wrapPhase(naturalPhaseB + morphPhaseOffsetB, morphCurveB.period);
         const b = morphCurveB.fn(phaseB, actualTime, EMPTY_PARAMS);
         trail.push(a.x + (b.x - a.x) * _morphAlpha, a.y + (b.y - a.y) * _morphAlpha);
       } else {
@@ -251,7 +316,7 @@ export function createEngine(curveDef: CurveDef, trailLength: number = 120): Eng
       }
     },
 
-    startMorph(target: CurveDef, strategy: MorphStrategy = "normalized") {
+    startMorph(target: CurveDef, strategy: MorphStrategy = "normalized", align: boolean = false) {
       const resolvedTarget = resolveCurve(target);
 
       if (morphCurveB !== null && _morphAlpha !== null) {
@@ -259,15 +324,21 @@ export function createEngine(curveDef: CurveDef, trailLength: number = 120): Eng
         const frozenA = curve;
         const frozenB = morphCurveB;
         const frozenStrategy = _morphStrategy;
+        // Capture the in-progress offset so the frozen snapshot evaluates curveB at the
+        //  exact phase it was being rendered at
+        // ! otherwise the interpolated head we freeze wouldn't match
+        //  what was actually on screen when the interrupt happened.
+        const frozenPhaseOffsetB = morphPhaseOffsetB;
 
         curve = {
           ...frozenB,
           fn: (samplePhase: number, elapsed: number, params: Record<string, number>) => {
             const a = frozenA.fn(samplePhase, elapsed, params);
-            const phaseB =
+            const naturalPhaseB =
               frozenStrategy === "normalized"
                 ? (samplePhase / frozenA.period) * frozenB.period
                 : samplePhase;
+            const phaseB = wrapPhase(naturalPhaseB + frozenPhaseOffsetB, frozenB.period);
             const b = frozenB.fn(phaseB, elapsed, params);
 
             return {
@@ -281,6 +352,14 @@ export function createEngine(curveDef: CurveDef, trailLength: number = 120): Eng
       _morphStrategy = strategy;
       morphCurveB = resolvedTarget;
       _morphAlpha = 0;
+      // When alignment is requested, start curveB from the point nearest curveA's current
+      //  head to remove the visual snap.
+      // After an interrupt, `curve` is the frozen snapshot above, so this measures from the live interpolated position,
+      //  not the original source curve.
+      // When off, the offset stays 0 and curveB starts from its phase 0.
+      morphPhaseOffsetB = align
+        ? computeMorphPhaseOffset(curve, resolvedTarget, phase, actualTime, strategy)
+        : 0;
     },
 
     setMorphAlpha(alpha: number) {
@@ -295,10 +374,15 @@ export function createEngine(curveDef: CurveDef, trailLength: number = 120): Eng
         if (_morphStrategy === "normalized" && curve.period !== morphCurveB.period) {
           phase = (phase / curve.period) * morphCurveB.period;
         }
+        // Fold the alignment offset into `phase` so the now-active curveB continues from
+        //  exactly where the morph left the head
+        // ! Without this the head would jump from the aligned position back to curveB's natural phase on the next tick.
+        phase = wrapPhase(phase + morphPhaseOffsetB, morphCurveB.period);
         curve = morphCurveB;
       }
       morphCurveB = null;
       _morphAlpha = null;
+      morphPhaseOffsetB = 0;
     },
 
     getSarmalSkeleton(): Array<Point> {

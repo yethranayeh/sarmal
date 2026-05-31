@@ -18,6 +18,7 @@ import {
 import {
   computeBoundaries,
   computeTrailQuad,
+  easeInOutCubic,
   FIT_PADDING,
   FIT_PADDING_MIN,
   TRAIL_MIN_WIDTH,
@@ -123,6 +124,40 @@ function makeCanvas(): HTMLCanvasElement {
   };
   return canvas;
 }
+
+describe("easeInOutCubic", () => {
+  it("pins the endpoints: f(0) = 0 and f(1) = 1", () => {
+    expect(easeInOutCubic(0)).toBe(0);
+    expect(easeInOutCubic(1)).toBe(1);
+  });
+
+  it("is symmetric about its midpoint: f(0.5) = 0.5 exactly", () => {
+    // An ease-in-out is symmetric, so the midpoint is a fixed point. This is WHY the
+    // morph test below probes t=0.25 for non-linearity, not t=0.5.
+    expect(easeInOutCubic(0.5)).toBe(0.5);
+  });
+
+  it("eases in: early progress is slower than linear (f(0.25) well below 0.25)", () => {
+    // Cubic ease-in: f(0.25) = 4 * 0.25^3 = 0.0625.
+    expect(easeInOutCubic(0.25)).toBeCloseTo(0.0625, 6);
+    expect(easeInOutCubic(0.25)).toBeLessThan(0.25);
+  });
+
+  it("eases out: late progress is faster than linear (f(0.75) well above 0.75)", () => {
+    // Cubic ease-out, mirror of the ease-in: f(0.75) = 1 - 4 * 0.25^3 = 0.9375.
+    expect(easeInOutCubic(0.75)).toBeCloseTo(0.9375, 6);
+    expect(easeInOutCubic(0.75)).toBeGreaterThan(0.75);
+  });
+
+  it("is monotonic across the unit interval", () => {
+    let prev = -Infinity;
+    for (let i = 0; i <= 20; i++) {
+      const v = easeInOutCubic(i / 20);
+      expect(v).toBeGreaterThanOrEqual(prev);
+      prev = v;
+    }
+  });
+});
 
 describe("colorToRgbComponents", () => {
   it("parses valid 6-digit hex colors", () => {
@@ -346,6 +381,144 @@ describe("morphTo type shape", () => {
       morphTo: () => Promise.resolve(),
     };
     expect(shape.morphTo).toBeDefined();
+  });
+});
+
+describe("morphTo easing (canvas renderer)", () => {
+  // Drive the render loop deterministically: capture the RAF callback scheduled by the
+  // loop and control time via performance.now(). play() runs the first frame synchronously
+  // (deltaTime 0), then schedules the next via RAF — which we invoke manually per `frame()`.
+  let rafCallbacks: FrameRequestCallback[] = [];
+  let nowMs = 0;
+
+  function setupClock() {
+    rafCallbacks = [];
+    nowMs = 1000;
+    vi.spyOn(globalThis, "requestAnimationFrame").mockImplementation((cb) => {
+      rafCallbacks.push(cb);
+      return rafCallbacks.length;
+    });
+    vi.spyOn(globalThis, "cancelAnimationFrame").mockImplementation(() => {});
+    vi.spyOn(performance, "now").mockImplementation(() => nowMs);
+  }
+
+  /** Advance the clock by `dtMs` and run one render frame. */
+  function frame(dtMs: number) {
+    nowMs += dtMs;
+    const cb = rafCallbacks[rafCallbacks.length - 1];
+    rafCallbacks = [];
+    cb?.(nowMs);
+  }
+
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  it("sends the eased value to the engine, not the raw progress", () => {
+    setupClock();
+    const engine = createEngine(testCircle);
+    const setSpy = vi.spyOn(engine, "setMorphAlpha");
+    const renderer = createRenderer({ canvas: makeCanvas(), engine, autoStart: false });
+
+    renderer.morphTo(testCircle, { duration: 100 }).catch(() => {}); // default easing
+    renderer.play();
+    frame(25); // raw progress = 0.025s / 0.1s = 0.25
+
+    // easeInOutCubic(0.25) = 0.0625 — the eased value, NOT the raw 0.25.
+    const lastVal = setSpy.mock.calls[setSpy.mock.calls.length - 1]![0];
+    expect(lastVal).toBeCloseTo(0.0625, 4);
+    expect(lastVal).not.toBeCloseTo(0.25, 4);
+    expect(engine.morphAlpha).toBeCloseTo(0.0625, 4);
+
+    renderer.destroy();
+  });
+
+  it("calls a custom easing function with the raw linear progress", () => {
+    setupClock();
+    const engine = createEngine(testCircle);
+    const easing = vi.fn((t: number) => t);
+    const renderer = createRenderer({ canvas: makeCanvas(), engine, autoStart: false });
+
+    renderer.morphTo(testCircle, { duration: 100, easing }).catch(() => {});
+    renderer.play();
+    frame(25); // raw progress = 0.25
+
+    const rawArg = easing.mock.calls[easing.mock.calls.length - 1]![0];
+    expect(rawArg).toBeCloseTo(0.25, 4);
+
+    renderer.destroy();
+  });
+
+  it("uses raw progress (not the eased value) for completion timing", () => {
+    setupClock();
+    const engine = createEngine(testCircle);
+    const renderer = createRenderer({ canvas: makeCanvas(), engine, autoStart: false });
+
+    // This easing reaches 1 at raw progress 0.5. If completion were driven by the eased
+    // value, the morph would finish at raw 0.5. It must instead run until raw progress = 1.
+    // Each frame advances 30ms (under the loop's 1/30s deltaTime cap), so raw progress
+    // climbs by 0.3 per frame against the 100ms duration.
+    renderer
+      .morphTo(testCircle, { duration: 100, easing: (t) => Math.min(1, t * 2) })
+      .catch(() => {});
+    renderer.play();
+
+    frame(30); // raw 0.3
+    frame(30); // raw 0.6 → eased = 1.0, but raw < 1 so the morph must continue
+    expect(engine.morphAlpha).not.toBeNull(); // still morphing (eased hit 1, raw did not)
+
+    frame(30); // raw 0.9
+    frame(30); // raw 1.2 → clamps to 1 → morph completes
+    expect(engine.morphAlpha).toBeNull();
+
+    renderer.destroy(); // clean up the visibility listener so later tests aren't polluted
+  });
+
+  it("a linear easing override reproduces the old constant-rate ramp", () => {
+    setupClock();
+    const engine = createEngine(testCircle);
+    const setSpy = vi.spyOn(engine, "setMorphAlpha");
+    const renderer = createRenderer({ canvas: makeCanvas(), engine, autoStart: false });
+
+    renderer.morphTo(testCircle, { duration: 100, easing: (t) => t }).catch(() => {});
+    renderer.play();
+    frame(25); // raw progress = 0.25
+
+    // With a linear override the eased value equals the raw progress.
+    expect(setSpy.mock.calls[setSpy.mock.calls.length - 1]![0]).toBeCloseTo(0.25, 4);
+
+    renderer.destroy();
+  });
+});
+
+describe("morphTo align option (canvas renderer)", () => {
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  it("does not request phase alignment by default", () => {
+    const engine = createEngine(testCircle);
+    const startSpy = vi.spyOn(engine, "startMorph");
+    const renderer = createRenderer({ canvas: makeCanvas(), engine, autoStart: false });
+
+    renderer.morphTo(testCircle).catch(() => {});
+
+    // Third arg is the align flag — must be false when the caller omits it.
+    expect(startSpy.mock.calls[0]![2]).toBe(false);
+
+    renderer.destroy();
+  });
+
+  it("forwards align: true to the engine", () => {
+    const engine = createEngine(testCircle);
+    const startSpy = vi.spyOn(engine, "startMorph");
+    const renderer = createRenderer({ canvas: makeCanvas(), engine, autoStart: false });
+
+    renderer.morphTo(testCircle, { align: true }).catch(() => {});
+
+    expect(startSpy.mock.calls[0]![2]).toBe(true);
+
+    renderer.destroy();
   });
 });
 

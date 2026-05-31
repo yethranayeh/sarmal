@@ -606,9 +606,14 @@ describe("getSarmalSkeleton() with skeleton modes", () => {
 
 // ─── morph support ───────────────────────────────────────────────────────────
 //
-// Fixtures: xCurve outputs {x:t, y:0}, yCurve outputs {x:0, y:t}, both period=10.
-// Using tick(5) to land t at 5, then tick(0) to read without advancing.
-// Same-period fixtures so normalized and raw lerp are identical — tests focus on alpha math.
+// Convention: tick(5) lands t at 5, then tick(0) reads the head without advancing.
+//
+// Phase alignment (the morph starts curveB from the point nearest curveA's head)
+// means the *geometry* of a fixture pair now affects the result, not just alpha.
+// Tests that isolate alpha math or the period remap therefore use fixtures where
+// alignment is a no-op (offset 0) — see the per-block comments. The dedicated
+// "phase alignment at morph start" block uses orthogonal fixtures where the offset
+// is non-zero and hand-verifiable.
 
 describe("morphAlpha state", () => {
   const xCurve: CurveDef = {
@@ -652,6 +657,11 @@ describe("morphAlpha state", () => {
   });
 });
 
+// These tests isolate the *alpha lerp* math, so they use PARALLEL fixtures where
+// phase alignment is a no-op: at t=5 the source head is (5, 0) and the closest point
+// on upCurve (which traces (phase, 10)) is (5, 10) at the same phase — offset 0. That
+// keeps alpha the only variable. Phase alignment itself is covered separately in the
+// "phase alignment at morph start" block, which uses orthogonal fixtures.
 describe("tick() during morph", () => {
   const xCurve: CurveDef = {
     name: "x-curve",
@@ -660,9 +670,9 @@ describe("tick() during morph", () => {
     speed: 1,
   };
 
-  const yCurve: CurveDef = {
-    name: "y-curve",
-    fn: (phase) => ({ x: 0, y: phase }),
+  const upCurve: CurveDef = {
+    name: "up-curve",
+    fn: (phase) => ({ x: phase, y: 10 }),
     period: 10,
     speed: 1,
   };
@@ -757,7 +767,7 @@ describe("tick() during morph", () => {
   it("setMorphAlpha(0) → tick output matches curveA", () => {
     const engine = createEngine(xCurve);
     engine.tick(5); // t=5, actualTime=5
-    engine.startMorph(yCurve);
+    engine.startMorph(upCurve);
     engine.setMorphAlpha(0);
     const trail = engine.tick(0); // t stays at 5
     const p = lastPoint(trail, engine.trailCount);
@@ -768,39 +778,40 @@ describe("tick() during morph", () => {
   it("setMorphAlpha(1) → tick output matches curveB", () => {
     const engine = createEngine(xCurve);
     engine.tick(5); // t=5
-    engine.startMorph(yCurve);
+    engine.startMorph(upCurve);
     engine.setMorphAlpha(1);
     const trail = engine.tick(0);
     const p = lastPoint(trail, engine.trailCount);
-    expect(p.x).toBe(0); // yCurve(5) = {x:0, y:5}
-    expect(p.y).toBe(5);
+    // Aligned offset is 0 here, so curveB evaluates at its natural phase 5: upCurve(5) = {x:5, y:10}
+    expect(p.x).toBe(5);
+    expect(p.y).toBe(10);
   });
 
   it("setMorphAlpha(0.5) → tick output is exact midpoint", () => {
     const engine = createEngine(xCurve);
     engine.tick(5); // t=5
-    engine.startMorph(yCurve);
+    engine.startMorph(upCurve);
     engine.setMorphAlpha(0.5);
     const trail = engine.tick(0);
     const p = lastPoint(trail, engine.trailCount);
-    expect(p.x).toBe(2.5); // lerp(5, 0, 0.5) = 2.5
-    expect(p.y).toBe(2.5); // lerp(0, 5, 0.5) = 2.5
+    expect(p.x).toBe(5); // lerp(5, 5, 0.5) = 5
+    expect(p.y).toBe(5); // lerp(0, 10, 0.5) = 5
   });
 
   it("completeMorph() → subsequent tick uses curveB", () => {
     const engine = createEngine(xCurve);
     engine.tick(5); // t=5
-    engine.startMorph(yCurve);
+    engine.startMorph(upCurve);
     engine.setMorphAlpha(1);
     engine.completeMorph();
     const trail = engine.tick(0);
     const p = lastPoint(trail, engine.trailCount);
-    expect(p.x).toBe(0); // yCurve(5) = {x:0, y:5}
-    expect(p.y).toBe(5);
+    expect(p.x).toBe(5); // upCurve(5) = {x:5, y:10}
+    expect(p.y).toBe(10);
   });
 
   it("mid-morph startMorph() → synthetic curveA captures frozen interpolated state", () => {
-    // Start morph from xCurve → yCurve, freeze at alpha=0.5
+    // Start morph from xCurve → upCurve, freeze at alpha=0.5
     // Then interrupt with a new morph to diagonal (t→t, t→t)
     // At alpha=0 of new morph, output should equal frozen midpoint
     const diagonal: CurveDef = {
@@ -811,14 +822,14 @@ describe("tick() during morph", () => {
     };
     const engine = createEngine(xCurve);
     engine.tick(5); // t=5
-    engine.startMorph(yCurve);
-    engine.setMorphAlpha(0.5); // frozen state: lerp(xCurve(5), yCurve(5), 0.5) = {x:2.5, y:2.5}
+    engine.startMorph(upCurve);
+    engine.setMorphAlpha(0.5); // frozen state: lerp(xCurve(5), upCurve(5), 0.5) = {x:5, y:5}
     engine.startMorph(diagonal); // interrupt — syntheticA = frozen midpoint fn
     // alpha resets to 0; output should match syntheticA at t=5
     const trail = engine.tick(0);
     const p = lastPoint(trail, engine.trailCount);
-    expect(p.x).toBe(2.5);
-    expect(p.y).toBe(2.5);
+    expect(p.x).toBe(5);
+    expect(p.y).toBe(5);
   });
 
   it("handles three sequential morph interrupts without NaN or errors", () => {
@@ -906,13 +917,16 @@ describe("getSarmalSkeleton() during morph", () => {
   });
 
   it("completeMorph() remaps t to curveB period for normalized strategy", () => {
-    // circle-fast: period=π, astroid-like: period=2π
-    // normalized lerp drives curveB at tB = (t/π)*2π = 2t
-    // so at t=π/2 the morph ends with curveB sampled at π
-    // → after completeMorph t must be remapped to π (not left at π/2)
+    // This test isolates the *period remap*, so the fixtures are chosen so phase
+    // alignment is a no-op. circleA traces the FULL circle over period π (angle = 2·phase),
+    // so its head coincides with curveB's natural normalized phase — the closest point —
+    // giving an alignment offset of 0. Then the only thing changing `phase` is the remap.
+    //
+    // normalized lerp drives curveB at tB = (t/π)*2π = 2t, so at t=π/2 the morph ends
+    // with curveB sampled at π → after completeMorph t must be remapped to π (not left at π/2).
     const circleA: CurveDef = {
       name: "circle-a",
-      fn: (phase) => ({ x: Math.cos(phase), y: Math.sin(phase) }),
+      fn: (phase) => ({ x: Math.cos(2 * phase), y: Math.sin(2 * phase) }),
       period: Math.PI,
       speed: 1,
     };
@@ -923,7 +937,7 @@ describe("getSarmalSkeleton() during morph", () => {
       speed: 1,
     };
     const engine = createEngine(circleA);
-    engine.jump(Math.PI / 2); // t = π/2, curveA head = (0, 1)
+    engine.jump(Math.PI / 2); // t = π/2, curveA head = (cos π, sin π) = (-1, 0)
     engine.startMorph(curveB, "normalized");
     engine.setMorphAlpha(1);
     // Last morph point: curveB.fn(tB) = curveB.fn(2*(π/2)) = curveB.fn(π) = (-1, 0)
@@ -931,7 +945,7 @@ describe("getSarmalSkeleton() during morph", () => {
     // After completion, t must be π so the trail continues from (-1, 0)
     const trail = engine.tick(0.0001);
     const p = lastPoint(trail, engine.trailCount);
-    // curveB.fn(π + tiny) ≈ (-1, tiny positive) — close to (-1, 0)
+    // curveB.fn(π + tiny) ≈ (-1, tiny negative) — close to (-1, 0)
     expect(p.x).toBeCloseTo(-1, 1);
     // NOT close to curveB.fn(π/2 + tiny) = (0, 1), which would indicate no remap
     expect(p.y).not.toBeCloseTo(1, 1);
@@ -981,6 +995,131 @@ describe("getSarmalSkeleton() during morph", () => {
     const s2 = engine.getSarmalSkeleton();
     // curveA is live — its skeleton changes with actualTime, so lerped skeleton changes too
     expect(s1[s1.length - 1]?.x).not.toBeCloseTo(s2[s2.length - 1]?.x ?? 0);
+  });
+});
+
+// ─── phase alignment at morph start ──────────────────────────────────────────
+//
+// When a morph begins, curveB should start interpolating from the point on curveB
+// that is physically *closest* to curveA's current head — not from curveB's
+// "natural" phase. This removes the visible snap where the head jumps across the
+// canvas at the start of a transition.
+//
+// Fixtures here are deliberately ORTHOGONAL so the closest point on curveB differs
+// from its natural phase, producing a non-zero, hand-verifiable offset:
+//   hLine  outputs (phase, 0)  — a horizontal line along the x-axis
+//   vLine  outputs (0, phase)  — a vertical line along the y-axis
+// Both period 10. At t=5, hLine's head is (5, 0). The closest point on vLine
+// (which only ever has x=0) is the origin (0, 0) at phase 0 — distance 5 — whereas
+// vLine's natural phase 5 sits at (0, 5) — distance √50 ≈ 7.07, further away.
+// So alignment must shift curveB's evaluation phase by offset = 0 - 5 = -5.
+
+describe("phase alignment at morph start", () => {
+  const hLine: CurveDef = {
+    name: "h-line",
+    fn: (phase) => ({ x: phase, y: 0 }),
+    period: 10,
+    speed: 1,
+  };
+
+  const vLine: CurveDef = {
+    name: "v-line",
+    fn: (phase) => ({ x: 0, y: phase }),
+    period: 10,
+    speed: 1,
+  };
+
+  it("startMorph aligns curveB to the closest point on curveB, not its natural phase", () => {
+    const engine = createEngine(hLine);
+    engine.tick(5); // advance head to hLine(5) = (5, 0)
+    engine.startMorph(vLine, "normalized", true);
+    engine.setMorphAlpha(1); // fully on curveB; offset must already be applied
+
+    const trail = engine.tick(0); // read curveB's aligned position without advancing
+    const p = lastPoint(trail, engine.trailCount);
+
+    // Aligned: closest point on vLine to (5, 0) is the origin (0, 0) at phase 0.
+    expect(p.x).toBe(0);
+    expect(p.y).toBe(0);
+    // Guard against the old un-aligned behavior, which would land at vLine(5) = (0, 5).
+    expect(p.y).not.toBe(5);
+  });
+
+  it("tick wraps the aligned phase back into curveB's period as the morph advances", () => {
+    const engine = createEngine(hLine);
+    engine.tick(8); // head at hLine(8) = (8, 0); closest vLine point is (0,0) → offset = 0 - 8 = -8
+    engine.startMorph(vLine, "normalized", true);
+    engine.setMorphAlpha(1);
+
+    // Advance the morph: at speed 1, phase moves to (8 + 5) % 10 = 3.
+    // Aligned phaseB = ((3 + (-8)) mod 10) = 5, so the head sits at vLine(5) = (0, 5).
+    // This only resolves to a valid in-range point if the offset is wrapped (it goes
+    // negative before wrapping), which is what this test pins down.
+    const trail = engine.tick(5);
+    const p = lastPoint(trail, engine.trailCount);
+    expect(p.x).toBe(0);
+    expect(p.y).toBeCloseTo(5);
+  });
+
+  it("completeMorph folds the offset into phase so the head carries over with no jump", () => {
+    const engine = createEngine(hLine);
+    engine.tick(5); // head (5, 0); offset = -5
+    engine.startMorph(vLine, "normalized", true);
+    engine.setMorphAlpha(1);
+
+    // The aligned curveB head at the final morph frame: vLine((5 - 5)) = vLine(0) = (0, 0).
+    const before = lastPoint(engine.tick(0), engine.trailCount);
+    expect(before.x).toBe(0);
+    expect(before.y).toBe(0);
+
+    engine.completeMorph();
+    const after = lastPoint(engine.tick(0), engine.trailCount);
+
+    // No jump: completeMorph must fold the offset into phase so the now-active curveB
+    // continues from exactly where the morph left the head.
+    expect(after.x).toBe(before.x);
+    expect(after.y).toBe(before.y);
+    // Guard: without folding the offset in, phase would stay 5 → vLine(5) = (0, 5).
+    expect(after.y).not.toBe(5);
+  });
+
+  it("interrupting a morph recomputes the offset from the current interpolated head", () => {
+    // A horizontal line at y=10. Closest point to the origin is (0, 10) at phase 0.
+    const upLine: CurveDef = {
+      name: "up-line",
+      fn: (phase) => ({ x: phase, y: 10 }),
+      period: 10,
+      speed: 1,
+    };
+    const engine = createEngine(hLine);
+    engine.tick(5); // hLine head (5, 0)
+    engine.startMorph(vLine, "normalized", true);
+    engine.setMorphAlpha(1); // first morph fully applied → interpolated head at vLine(0) = (0, 0)
+
+    engine.startMorph(upLine, "normalized", true); // interrupt — fresh offset must align to (0, 0), not the stale (5, 0)
+    engine.setMorphAlpha(1);
+    const p = lastPoint(engine.tick(0), engine.trailCount);
+
+    // Closest point on upLine to the current head (0, 0) is (0, 10) at phase 0.
+    expect(p.x).toBe(0);
+    expect(p.y).toBe(10);
+    // If the offset were computed from the stale original head (5, 0), it would land at
+    // upLine(5) = (5, 10) instead — proving the recompute uses the live interpolated position.
+    expect(p.x).not.toBe(5);
+  });
+
+  it("alignment is off by default — curveB starts from its natural phase, not the nearest point", () => {
+    const engine = createEngine(hLine);
+    engine.tick(5); // head at hLine(5) = (5, 0)
+    engine.startMorph(vLine); // no align flag → offset stays 0
+    engine.setMorphAlpha(1); // fully on curveB
+
+    const p = lastPoint(engine.tick(0), engine.trailCount);
+
+    // Un-aligned: vLine is driven at its natural phase 5 (equal periods, normalized), so
+    // the head sits at vLine(5) = (0, 5) — the "snap" the align flag is meant to remove.
+    expect(p.x).toBe(0);
+    expect(p.y).toBe(5);
   });
 });
 

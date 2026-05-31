@@ -68,6 +68,9 @@ If neither is provided, the canvas falls back to **300x300** with a console warn
 | trailLength | `number` | `120` | Number of trail points. **Init-only.** |
 | trailStyle | `TrailStyle` | `'default'` | `'default'` \| `'gradient-static'` \| `'gradient-animated'` |
 | morphDuration | `number` | `300` | Duration of the morph transition when `curve` changes (ms) |
+| morphStrategy | `'normalized' \| 'raw'` | `'normalized'` | Phase-mapping strategy for the `curve`-change morph |
+| morphEasing | `(t: number) => number` | `easeInOutCubic` | Eases the `curve`-change morph. Pass `(t) => t` for a constant-rate ramp |
+| morphAlign | `boolean` | `false` | Start the new curve from the point nearest the current head, removing the start "snap" |
 | onReady | `(instance) => void` | - | Fired once after the instance is created. Store the reference if you need imperative control. |
 
 #### Curve stability
@@ -174,7 +177,12 @@ function useSarmal(
     autoStart?: boolean;
     initialPhase?: number;
   },
-  morphOptions?: { morphDuration?: number },
+  morphOptions?: {
+    morphDuration?: number;
+    morphStrategy?: "normalized" | "raw";
+    morphEasing?: (t: number) => number;
+    morphAlign?: boolean;
+  },
 ): {
   canvasRef: React.RefObject<HTMLCanvasElement | null>;
   instance: React.RefObject<SarmalInstance | null>;
@@ -286,6 +294,9 @@ If neither is provided, the canvas falls back to **300x300** with a console warn
 | trailLength | `number` | `120` | Number of trail points. **Init-only.** |
 | trailStyle | `TrailStyle` | `'default'` | `'default'` \| `'gradient-static'` \| `'gradient-animated'` |
 | morphDuration | `number` | `300` | Duration of the morph transition when `curve` changes (ms) |
+| morphStrategy | `'normalized' \| 'raw'` | `'normalized'` | Phase-mapping strategy for the `curve`-change morph |
+| morphEasing | `(t: number) => number` | `easeInOutCubic` | Eases the `curve`-change morph. Pass `(t) => t` for a constant-rate ramp |
+| morphAlign | `boolean` | `false` | Start the new curve from the point nearest the current head, removing the start "snap" |
 | instance | `SarmalInstance \| null` | - | <strong>Bindable.</strong> Use `bind:instance` to get the live `SarmalInstance`. |
 | onready | `(instance) => void` | - | Callback fired once after the instance is created. |
 

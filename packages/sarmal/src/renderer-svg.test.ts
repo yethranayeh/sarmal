@@ -861,3 +861,73 @@ describe("destroy() — one-way door (SVG)", () => {
     await expect(promise).rejects.toThrow("Speed transition cancelled");
   });
 });
+
+describe("morphTo easing (SVG renderer)", () => {
+  // Same deterministic frame-driving harness as the canvas renderer tests: capture the
+  // RAF callback the loop schedules and control time via performance.now().
+  let rafCallbacks: FrameRequestCallback[] = [];
+  let nowMs = 0;
+
+  function setupClock() {
+    rafCallbacks = [];
+    nowMs = 1000;
+    vi.spyOn(globalThis, "requestAnimationFrame").mockImplementation((cb) => {
+      rafCallbacks.push(cb);
+      return rafCallbacks.length;
+    });
+    vi.spyOn(globalThis, "cancelAnimationFrame").mockImplementation(() => {});
+    vi.spyOn(performance, "now").mockImplementation(() => nowMs);
+  }
+
+  /** Advance the clock by `dtMs` and run one render frame. */
+  function frame(dtMs: number) {
+    nowMs += dtMs;
+    const cb = rafCallbacks[rafCallbacks.length - 1];
+    rafCallbacks = [];
+    cb?.(nowMs);
+  }
+
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  it("sends the eased value to the engine, not the raw progress", () => {
+    setupClock();
+    const engine = createEngine(testCircle);
+    const setSpy = vi.spyOn(engine, "setMorphAlpha");
+    const instance = createSVGRenderer({ container: makeContainer(), engine, autoStart: false });
+
+    instance.morphTo(testCircle, { duration: 100 }).catch(() => {}); // default easing
+    instance.play();
+    frame(25); // raw progress = 0.025s / 0.1s = 0.25
+
+    // easeInOutCubic(0.25) = 0.0625 — the eased value, NOT the raw 0.25.
+    const lastVal = setSpy.mock.calls[setSpy.mock.calls.length - 1]![0];
+    expect(lastVal).toBeCloseTo(0.0625, 4);
+    expect(lastVal).not.toBeCloseTo(0.25, 4);
+
+    instance.destroy();
+  });
+
+  it("uses raw progress (not the eased value) for completion timing", () => {
+    setupClock();
+    const engine = createEngine(testCircle);
+    const instance = createSVGRenderer({ container: makeContainer(), engine, autoStart: false });
+
+    // Easing reaches 1 at raw progress 0.5; completion must still wait for raw progress = 1.
+    instance
+      .morphTo(testCircle, { duration: 100, easing: (t) => Math.min(1, t * 2) })
+      .catch(() => {});
+    instance.play();
+
+    frame(30); // raw 0.3
+    frame(30); // raw 0.6 → eased = 1.0, but raw < 1 so the morph must continue
+    expect(engine.morphAlpha).not.toBeNull();
+
+    frame(30); // raw 0.9
+    frame(30); // raw 1.2 → clamps to 1 → morph completes
+    expect(engine.morphAlpha).toBeNull();
+
+    instance.destroy();
+  });
+});

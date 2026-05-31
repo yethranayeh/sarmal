@@ -149,6 +149,29 @@ export type MorphOptions = {
    * @default 'normalized'
    */
   morphStrategy?: MorphStrategy;
+  /**
+   * Easing applied to the morph's progress over time.
+   * Receives the raw linear progress (0 at the start of the morph, 1 at the end)
+   *  and returns the eased progress (also 0 to 1) that drives how far the shapes have blended.
+   *
+   * The default eases in and out.
+   * Pass `(t) => t` for a linear ramp, or any custom curve.
+   * @default easeInOutCubic
+   */
+  easing?: (t: number) => number;
+  /**
+   * When `true`, the target curve starts from the point nearest the current head
+   * instead of from its own phase 0. This removes the visual "snap" when the two
+   * curves' starting points are far apart.
+   *
+   * It is **off by default** because the nearest point is only an unambiguous win
+   * for asymmetric transitions. For highly symmetric targets (e.g. a 5-petal rose)
+   * many points are near-equidistant, so the chosen start can look arbitrary and
+   * sometimes worse than the natural phase-0 start. Enable it per morph when the
+   * specific transition benefits.
+   * @default false
+   */
+  align?: boolean;
 };
 
 export interface Engine extends AnimationControls {
@@ -193,8 +216,9 @@ export interface Engine extends AnimationControls {
    *  the interpolated state is frozen and becomes the new `curveA`
    * @param target The curve to transition to
    * @param strategy 'normalized' maps phase proportionally into each curve's period (default), 'raw' uses the same phase
+   * @param align When `true`, start `target` from the point nearest the current head instead of its phase 0 (default `false`)
    */
-  startMorph(target: CurveDef, strategy?: MorphStrategy): void;
+  startMorph(target: CurveDef, strategy?: MorphStrategy, align?: boolean): void;
   /**
    * Sets the interpolation amount between `curveA` and `curveB`.
    * 0 = full curveA
@@ -461,20 +485,41 @@ export interface DotMatrixSarmalOptions
   extends Omit<DotMatrixInit, "width" | "height">, DotMatrixRuntimeRenderOptions {}
 
 /**
- * Framework-agnostic configuration shared by all canvas/SVG renderer bindings.
- *
- * Framework packages (React, Svelte, etc.) extend this with their specific
- * surface: `class`/`className`, style type, event naming, bindable instance.
+ * Morph behavior shared by every framework binding (canvas, SVG, dot matrix).
+ * These props drive the transition that fires when the `curve` prop changes,
+ *  and map onto core `morphTo`'s call options ({@link MorphOptions}).
  */
-export interface BaseSarmalOptions {
+export interface BaseMorphOptions {
   curve: CurveDef;
+  morphDuration?: number;
+  /** @default 'normalized' */
+  morphStrategy?: MorphStrategy;
+  /**
+   * Easing applied to the morph triggered when the `curve` changes.
+   * Receives the raw linear progress (0 at the start, 1 at the end)
+   *  and returns the eased progress (also 0 to 1).
+   * Pass `(t) => t` for a constant-rate ramp.
+   * @default easeInOutCubic
+   */
+  morphEasing?: (t: number) => number;
+  /**
+   * When `true`, the new curve starts from the point nearest the current head
+   * instead of its own phase 0, removing the visual "snap" at the start of the
+   * morph. Off by default because it is only an unambiguous win for asymmetric
+   * transitions (see core `morphTo`'s `align` option).
+   * @default false
+   */
+  morphAlign?: boolean;
+}
+
+/**
+ * Framework-agnostic configuration shared by all renderer bindings.
+ */
+export interface BaseSarmalOptions extends BaseMorphOptions {
   trailColor?: TrailColor;
   skeletonColor?: string;
   headColor?: string;
   trailStyle?: TrailStyle;
-  morphDuration?: number;
-  /** @default 'normalized' */
-  morphStrategy?: MorphStrategy;
   trailLength?: number;
   headRadius?: number;
   trailWidth?: number;
@@ -487,11 +532,7 @@ export interface BaseSarmalOptions {
 /**
  * Framework-agnostic configuration shared by all dot matrix renderer bindings.
  *
- * Framework packages extend this with their specific surface: `class`/`className`, etc.
+ * Combines the dot matrix render surface ({@link DotMatrixSarmalOptions}) with the
+ *  shared morph props ({@link BaseMorphOptions}).
  */
-export interface BaseDotMatrixOptions extends DotMatrixSarmalOptions {
-  curve: CurveDef;
-  morphDuration?: number;
-  /** @default 'normalized' */
-  morphStrategy?: MorphStrategy;
-}
+export interface BaseDotMatrixOptions extends DotMatrixSarmalOptions, BaseMorphOptions {}

@@ -444,6 +444,12 @@ await sarmal.morphTo(curves.rose3, { duration: 500 });
 // Use 'raw' strategy for different period handling
 await sarmal.morphTo(curves.lissajous32, { morphStrategy: "raw" });
 
+// Pass a custom easing, or a linear ramp to opt out of the default ease
+await sarmal.morphTo(curves.rose3, { easing: (t) => t });
+
+// Start the target from the point nearest the current head (removes the start "snap")
+await sarmal.morphTo(curves.epicycloid3, { align: true });
+
 // Chain morphs
 await sarmal.morphTo(curves.astroid);
 await sarmal.morphTo(curves.rose5);
@@ -456,11 +462,19 @@ await sarmal.morphTo(curves.artemis2);
 |--------|------|---------|-------------|
 | `duration` | `number` | `300` | Duration of the morph transition in milliseconds |
 | `morphStrategy` | `'normalized' \| 'raw'` | `'normalized'` | Strategy for lerping between curves with different periods |
+| `easing` | `(t: number) => number` | `easeInOutCubic` | Eases the morph's progress over time. Receives raw linear progress (`0` to `1`) and returns the eased progress (`0` to `1`) that drives the blend. Pass `(t) => t` for a constant-rate ramp |
+| `align` | `boolean` | `false` | When `true`, the target curve starts from the point nearest the current head instead of its own phase 0 |
 
 **Morph strategies:**
 
 - `'normalized'` (default): `tB = (t / periodA) * periodB` smooth for all period ratios
 - `'raw'`: Same `t` for both curves, which can produce chaotic results with mismatched periods
+
+**Phase alignment (`align`):**
+
+By default the target curve begins from its own phase 0, which can make the head appear to "snap" to a distant point when the morph starts. Setting `align: true` instead starts the target from the point physically nearest the current head, removing that snap.
+
+It is off by default because it is rather a *situational* win for <strong class="group"><span class="inline-block translate-y-px group-hover:translate-y-0 transition-transform">asym</span><span class="inline-block -translate-y-px group-hover:translate-y-0 transition-transform">metric</span></strong> transitions. On symmetric shapes like a rose, multiple petals can be equally close, so the pick may feel arbitrary. Turn it on per-morph only when you see the head snap and the transition would benefit.
 
 **Behavior notes:**
 
@@ -628,6 +642,8 @@ interface SarmalInstance {
   morphTo(target: CurveDef, options?: {
     duration?: number;
     morphStrategy?: "normalized" | "raw";
+    easing?: (t: number) => number;
+    align?: boolean;
   }): Promise<void>;
   setRenderOptions(partial: RuntimeRenderOptions): void;
 }
