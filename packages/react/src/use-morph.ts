@@ -37,10 +37,15 @@ export function useMorphEffect(
 
     const rawOpts = morphOptionsRef.current;
     const opts =
-      rawOpts?.morphDuration != null || rawOpts?.morphStrategy != null
+      rawOpts?.morphDuration != null ||
+      rawOpts?.morphStrategy != null ||
+      rawOpts?.morphEasing != null ||
+      rawOpts?.morphAlign != null
         ? {
             ...(rawOpts.morphDuration != null && { duration: rawOpts.morphDuration }),
             ...(rawOpts.morphStrategy != null && { morphStrategy: rawOpts.morphStrategy }),
+            ...(rawOpts.morphEasing != null && { easing: rawOpts.morphEasing }),
+            ...(rawOpts.morphAlign != null && { align: rawOpts.morphAlign }),
           }
         : undefined;
 

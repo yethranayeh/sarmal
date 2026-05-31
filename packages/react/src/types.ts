@@ -1,10 +1,10 @@
 import type {
-  MorphStrategy,
   SarmalInstance,
   DotMatrixRuntimeRenderOptions,
   BaseInit,
   CanvasInit,
   DotMatrixInit,
+  BaseMorphOptions,
   BaseSarmalOptions,
   BaseDotMatrixOptions,
 } from "@sarmal/core";
@@ -13,16 +13,7 @@ import type { CSSProperties } from "react";
 export type { BaseInit, CanvasInit, DotMatrixInit };
 
 /** Options forwarded to morphTo when the curve prop changes. */
-export interface MorphOptions {
-  morphDuration?: number;
-  /**
-   * Strategy for lerping between curves with different periods.
-   * - `'normalized'`: maps phase proportionally into each curve's period (default, works well for all period ratios)
-   * - `'raw'`: uses the same phase value for both curves (can produce incoherent results for mismatched periods)
-   * @default 'normalized'
-   */
-  morphStrategy?: MorphStrategy;
-}
+export type MorphOptions = Omit<BaseMorphOptions, "curve">;
 
 /** Props shared by `<Sarmal>` and `<SarmalSVG>`. */
 export interface BaseSarmalProps extends BaseSarmalOptions {

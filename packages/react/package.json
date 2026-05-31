@@ -1,6 +1,6 @@
 {
   "name": "@sarmal/react",
-  "version": "0.9.0",
+  "version": "0.10.0",
   "description": "React components and hooks for @sarmal/core animated curves",
   "keywords": [
     "animation",

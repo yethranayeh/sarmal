@@ -12,6 +12,8 @@ const SarmalSVGInner = ({
   trailColor,
   morphDuration,
   morphStrategy,
+  morphEasing,
+  morphAlign,
   onReady,
   skeletonColor,
   headColor,
@@ -38,10 +40,15 @@ const SarmalSVGInner = ({
       ...(initialPhase !== undefined && { initialPhase }),
       ...(pauseOnHidden !== undefined && { pauseOnHidden }),
     },
-    morphDuration !== undefined || morphStrategy !== undefined
+    morphDuration !== undefined ||
+      morphStrategy !== undefined ||
+      morphEasing !== undefined ||
+      morphAlign !== undefined
       ? {
           ...(morphDuration !== undefined && { morphDuration }),
           ...(morphStrategy !== undefined && { morphStrategy }),
+          ...(morphEasing !== undefined && { morphEasing }),
+          ...(morphAlign !== undefined && { morphAlign }),
         }
       : undefined,
   );

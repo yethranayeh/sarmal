@@ -447,6 +447,10 @@ const sarmal = createSarmal(canvas, curves.artemis2, { initialT: Math.PI })
 
 ## React
 
+### 0.10.0 - 31.05.2026
+
+`<Sarmal>`, `<SarmalSVG>`, and `<SarmalDotMatrix>` accept `morphEasing` and `morphAlign` props, forwarded to `morphTo` when the `curve` prop changes. `morphEasing` defaults to the core `easeInOutCubic` ease, so prop-driven morphs are eased automatically with no change required.
+
 ### 0.9.0 - 25.05.2026
 
 `<SarmalDotMatrix>` now accepts a `gridColor` prop, passed through as a runtime option. Supports the same values as `@sarmal/core`.

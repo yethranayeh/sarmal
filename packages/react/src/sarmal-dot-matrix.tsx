@@ -15,6 +15,8 @@ const SarmalDotMatrixInner = ({
   gridColor,
   morphDuration,
   morphStrategy,
+  morphEasing,
+  morphAlign,
   onReady,
   cols,
   rows,
@@ -45,10 +47,15 @@ const SarmalDotMatrixInner = ({
       ...(initialPhase !== undefined && { initialPhase }),
       ...(pauseOnHidden !== undefined && { pauseOnHidden }),
     },
-    morphDuration !== undefined || morphStrategy !== undefined
+    morphDuration !== undefined ||
+      morphStrategy !== undefined ||
+      morphEasing !== undefined ||
+      morphAlign !== undefined
       ? {
           ...(morphDuration !== undefined && { morphDuration }),
           ...(morphStrategy !== undefined && { morphStrategy }),
+          ...(morphEasing !== undefined && { morphEasing }),
+          ...(morphAlign !== undefined && { morphAlign }),
         }
       : undefined,
   );

@@ -4,7 +4,7 @@ import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { render, screen, cleanup } from "@testing-library/react";
 import React from "react";
 
-import { useSarmal, Sarmal, useSarmalSVG, SarmalSVG } from "./index";
+import { useSarmal, Sarmal, useSarmalSVG, SarmalSVG, SarmalDotMatrix } from "./index";
 
 const circle: CurveDef = {
   name: "test-circle",
@@ -42,12 +42,14 @@ vi.mock("@sarmal/core", async (importOriginal) => {
     ...actual,
     createSarmal: vi.fn(() => mockInstance),
     createSarmalSVG: vi.fn(() => mockInstance),
+    createSarmalDotMatrix: vi.fn(() => mockInstance),
   };
 });
 
-import { createSarmal, createSarmalSVG } from "@sarmal/core";
+import { createSarmal, createSarmalSVG, createSarmalDotMatrix } from "@sarmal/core";
 const mockCreateSarmal = vi.mocked(createSarmal);
 const mockCreateSarmalSVG = vi.mocked(createSarmalSVG);
+const mockCreateSarmalDotMatrix = vi.mocked(createSarmalDotMatrix);
 
 describe("useSarmal", () => {
   beforeEach(() => {
@@ -337,6 +339,27 @@ describe("<Sarmal>", () => {
     expect(mockInstance.morphTo).toHaveBeenCalledWith(square, {
       duration: 500,
     });
+  });
+
+  it("forwards morphEasing as the morphTo easing option on curve change", () => {
+    const easing = (t: number) => t;
+    const { rerender } = render(
+      <Sarmal curve={circle} width={200} height={200} morphEasing={easing} />,
+    );
+
+    rerender(<Sarmal curve={square} width={200} height={200} morphEasing={easing} />);
+
+    expect(mockInstance.morphTo).toHaveBeenCalledWith(square, { easing });
+  });
+
+  it("forwards morphAlign as the morphTo align option on curve change", () => {
+    const { rerender } = render(
+      <Sarmal curve={circle} width={200} height={200} morphAlign={true} />,
+    );
+
+    rerender(<Sarmal curve={square} width={200} height={200} morphAlign={true} />);
+
+    expect(mockInstance.morphTo).toHaveBeenCalledWith(square, { align: true });
   });
 
   it("calls setRenderOptions when trailColor changes", () => {
@@ -647,6 +670,23 @@ describe("<SarmalSVG>", () => {
     });
   });
 
+  it("forwards morphEasing as the morphTo easing option on curve change", () => {
+    const easing = (t: number) => t;
+    const { rerender } = render(<SarmalSVG curve={circle} morphEasing={easing} />);
+
+    rerender(<SarmalSVG curve={square} morphEasing={easing} />);
+
+    expect(mockInstance.morphTo).toHaveBeenCalledWith(square, { easing });
+  });
+
+  it("forwards morphAlign as the morphTo align option on curve change", () => {
+    const { rerender } = render(<SarmalSVG curve={circle} morphAlign={true} />);
+
+    rerender(<SarmalSVG curve={square} morphAlign={true} />);
+
+    expect(mockInstance.morphTo).toHaveBeenCalledWith(square, { align: true });
+  });
+
   it("calls setRenderOptions when trailColor changes", () => {
     const { rerender } = render(<SarmalSVG curve={circle} trailColor="#ff0000" />);
 
@@ -712,5 +752,42 @@ describe("<SarmalSVG>", () => {
     expect(mockCreateSarmalSVG).toHaveBeenCalledWith(expect.anything(), circle, {
       headRadius: 10,
     });
+  });
+});
+
+describe("<SarmalDotMatrix>", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  afterEach(() => {
+    cleanup();
+  });
+
+  it("creates a dot matrix instance on mount", () => {
+    render(<SarmalDotMatrix curve={circle} width={200} height={200} />);
+
+    expect(mockCreateSarmalDotMatrix).toHaveBeenCalledTimes(1);
+  });
+
+  it("forwards morphEasing as the morphTo easing option on curve change", () => {
+    const easing = (t: number) => t;
+    const { rerender } = render(
+      <SarmalDotMatrix curve={circle} width={200} height={200} morphEasing={easing} />,
+    );
+
+    rerender(<SarmalDotMatrix curve={square} width={200} height={200} morphEasing={easing} />);
+
+    expect(mockInstance.morphTo).toHaveBeenCalledWith(square, { easing });
+  });
+
+  it("forwards morphAlign as the morphTo align option on curve change", () => {
+    const { rerender } = render(
+      <SarmalDotMatrix curve={circle} width={200} height={200} morphAlign={true} />,
+    );
+
+    rerender(<SarmalDotMatrix curve={square} width={200} height={200} morphAlign={true} />);
+
+    expect(mockInstance.morphTo).toHaveBeenCalledWith(square, { align: true });
   });
 });
