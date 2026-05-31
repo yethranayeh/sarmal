@@ -428,6 +428,13 @@ const id = `sbp-${Math.random().toString(36).slice(2, 8)}`;
 					dotmatrixInstnace?.setRenderOptions(opts);
 				} catch {}
 			},
+			render() {
+				if (isDM()) {
+					dotmatrixInstnace?.render();
+				} else {
+					instance.render();
+				}
+			},
 			getSarmalSkeleton() {
 				return instance.getSarmalSkeleton();
 			},
