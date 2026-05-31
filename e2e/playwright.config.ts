@@ -42,6 +42,7 @@ export default defineConfig({
       use: {
         ...devices['Desktop Chrome'],
         deviceScaleFactor: 1,
+        launchOptions: { args: ['--disable-features=MacAppCodeSignClone'] },
       },
     },
     {
@@ -49,6 +50,7 @@ export default defineConfig({
       use: {
         ...devices['Desktop Chrome'],
         deviceScaleFactor: 2,
+        launchOptions: { args: ['--disable-features=MacAppCodeSignClone'] },
       },
     },
 
