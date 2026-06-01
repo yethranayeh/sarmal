@@ -17,8 +17,7 @@ test('rose3 canvas gradient renders correctly', async ({ page }) => {
 
   await page.waitForFunction(() => {
     const c = document.getElementById('rose3-canvas-gradient') as HTMLCanvasElement;
-    const dpr = window.devicePixelRatio || 1;
-    return c !== null && c.width === Math.floor(200 * dpr);
+    return c !== null && c.dataset.sarmalReady === 'true';
   });
 
   await expect(canvas).toHaveScreenshot('rose3-canvas-gradient.png', {

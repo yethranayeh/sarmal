@@ -17,8 +17,7 @@ test('astroid renders correctly', async ({ page }) => {
 
   await page.waitForFunction(() => {
     const c = document.getElementById('astroid-canvas') as HTMLCanvasElement;
-    const dpr = window.devicePixelRatio || 1;
-    return c !== null && c.width === Math.floor(200 * dpr);
+    return c !== null && c.dataset.sarmalReady === 'true';
   });
 
   await expect(canvas).toHaveScreenshot('astroid.png', {

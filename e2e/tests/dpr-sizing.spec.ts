@@ -20,8 +20,7 @@ test('canvas element display size stays at logical dimensions despite DPR scalin
 
   await page.waitForFunction(() => {
     const c = document.getElementById('dpr-test-canvas') as HTMLCanvasElement;
-    const dpr = window.devicePixelRatio || 1;
-    return c !== null && c.width === Math.floor(200 * dpr);
+    return c !== null && c.dataset.sarmalReady === 'true';
   });
 
   // Get the rendered element bounds (display size, not buffer size)
@@ -56,8 +55,7 @@ test('canvas renders correctly at all DPR levels', async ({ page }) => {
 
   await page.waitForFunction(() => {
     const c = document.getElementById('dpr-test-canvas') as HTMLCanvasElement;
-    const dpr = window.devicePixelRatio || 1;
-    return c !== null && c.width === Math.floor(200 * dpr);
+    return c !== null && c.dataset.sarmalReady === 'true';
   });
 
   await expect(canvas).toHaveScreenshot('dpr-sizing.png', {

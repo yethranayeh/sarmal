@@ -1,23 +1,21 @@
 import { test, expect } from '@playwright/test';
 
 /**
- * Visual regression test: Mid-morph frame (Astroid → Deltoid at alpha=0.5)
+ * Visual regression test: Astroid → Deltoid morph at alpha=0 (start of morph)
  *
  * Covers:
- * - Morph rendering path
- * - Canvas renderer with interpolated curve
+ * - Canvas renderer initialization with engine already in morph state
+ * - Skeleton and trail rendering at morph start (alpha=0)
  * - DPR scaling
- * - Skeleton rendering during morph
  */
-test('morph mid-frame renders correctly', async ({ page }) => {
+test('morph init frame renders correctly', async ({ page }) => {
   await page.goto('/test/visual/morph-mid/');
 
   const canvas = page.locator('#morph-canvas');
 
   await page.waitForFunction(() => {
     const c = document.getElementById('morph-canvas') as HTMLCanvasElement;
-    const dpr = window.devicePixelRatio || 1;
-    return c !== null && c.width === Math.floor(200 * dpr);
+    return c !== null && c.dataset.sarmalReady === 'true';
   });
 
   await expect(canvas).toHaveScreenshot('morph-mid.png', {
