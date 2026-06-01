@@ -20,6 +20,8 @@
     gridColor,
     morphDuration,
     morphStrategy,
+    morphEasing,
+    morphAlign,
     instance = $bindable(null as SarmalInstance<DotMatrixRuntimeRenderOptions> | null),
     cols,
     rows,
@@ -89,6 +91,8 @@
       ?.morphTo(curve, {
         ...(morphDuration != null && { duration: morphDuration }),
         ...(morphStrategy != null && { morphStrategy }),
+        ...(morphEasing != null && { easing: morphEasing }),
+        ...(morphAlign != null && { align: morphAlign }),
       })
       .catch(() => {});
   });

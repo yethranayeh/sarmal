@@ -546,6 +546,10 @@ Peer dependencies: `react >= 18` and `@sarmal/core`. The package bundle emits `"
 
 ## Svelte
 
+### 0.6.0 - 31.05.2026
+
+The `<Sarmal>`, `<SarmalSVG>`, and `<SarmalDotMatrix>` components, the `sarmal`/`sarmalSVG`/`sarmalDotMatrix` actions, and the `useSarmal*` hooks accept `morphEasing` and `morphAlign`, forwarded to `morphTo` when the `curve` changes. `morphEasing` defaults to the core `easeInOutCubic` ease, so prop-driven morphs are eased automatically with no change required.
+
 ### 0.5.0 - 25.05.2026
 
 `<SarmalDotMatrix>`, `useSarmalDotMatrix`, and `sarmalDotMatrix` now accept a `gridColor` option, passed through as a runtime option. Supports the same values as `@sarmal/core`.

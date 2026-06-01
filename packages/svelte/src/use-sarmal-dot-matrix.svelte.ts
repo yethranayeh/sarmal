@@ -20,6 +20,8 @@ export function useSarmalDotMatrix(
   getInit?: () => DotMatrixInit,
   getMorphDuration?: () => number | undefined,
   getMorphStrategy?: () => MorphStrategy | undefined,
+  getMorphEasing?: () => ((t: number) => number) | undefined,
+  getMorphAlign?: () => boolean | undefined,
 ): {
   get instance(): SarmalInstance<DotMatrixRuntimeRenderOptions> | null;
 } {
@@ -81,6 +83,8 @@ export function useSarmalDotMatrix(
     getCurve,
     getMorphDuration,
     getMorphStrategy,
+    getMorphEasing,
+    getMorphAlign,
   );
 
   // Inline render options effect: dot matrix only supports trailColor, trailStyle, skeletonColor

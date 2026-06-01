@@ -101,6 +101,8 @@ export function sarmalDotMatrix(node: HTMLCanvasElement, options: SarmalDotMatri
           .morphTo(newOpts.curve, {
             ...(newOpts.morphDuration != null && { duration: newOpts.morphDuration }),
             ...(newOpts.morphStrategy != null && { morphStrategy: newOpts.morphStrategy }),
+            ...(newOpts.morphEasing != null && { easing: newOpts.morphEasing }),
+            ...(newOpts.morphAlign != null && { align: newOpts.morphAlign }),
           })
           .catch(() => {});
       }

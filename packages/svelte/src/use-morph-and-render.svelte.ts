@@ -8,6 +8,8 @@ export function registerMorphEffect(
   getCurve: () => CurveDef,
   getMorphDuration?: () => number | undefined,
   getMorphStrategy?: () => MorphStrategy | undefined,
+  getMorphEasing?: () => ((t: number) => number) | undefined,
+  getMorphAlign?: () => boolean | undefined,
 ) {
   $effect(() => {
     const curve = getCurve();
@@ -22,10 +24,14 @@ export function registerMorphEffect(
     committedCurve.value = curve;
     const dur = getMorphDuration?.();
     const strategy = getMorphStrategy?.();
+    const easing = getMorphEasing?.();
+    const align = getMorphAlign?.();
     getInstance()
       ?.morphTo(curve, {
         ...(dur != null && { duration: dur }),
         ...(strategy != null && { morphStrategy: strategy }),
+        ...(easing != null && { easing }),
+        ...(align != null && { align }),
       })
       .catch(() => {});
   });

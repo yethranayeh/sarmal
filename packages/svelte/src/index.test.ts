@@ -417,6 +417,23 @@ describe("sarmal (canvas action)", () => {
     });
   });
 
+  it("forwards morphEasing as the morphTo easing option when curve changes", () => {
+    const action = createAction({ curve: circle });
+    const easing = (t: number) => t;
+
+    action.update!({ curve: square, morphEasing: easing });
+
+    expect(mockInstance.morphTo).toHaveBeenCalledWith(square, { easing });
+  });
+
+  it("forwards morphAlign as the morphTo align option when curve changes", () => {
+    const action = createAction({ curve: circle });
+
+    action.update!({ curve: square, morphAlign: true });
+
+    expect(mockInstance.morphTo).toHaveBeenCalledWith(square, { align: true });
+  });
+
   it("calls setRenderOptions when trailColor changes", () => {
     const action = createAction({ curve: circle, trailColor: "#ff0000" });
 
@@ -718,6 +735,23 @@ describe("sarmalSVG (SVG action)", () => {
     expect(mockInstance.morphTo).toHaveBeenCalledWith(square, { morphStrategy: "raw" });
   });
 
+  it("forwards morphEasing as the morphTo easing option when curve changes", () => {
+    const action = createAction({ curve: circle });
+    const easing = (t: number) => t;
+
+    action.update!({ curve: square, morphEasing: easing });
+
+    expect(mockInstance.morphTo).toHaveBeenCalledWith(square, { easing });
+  });
+
+  it("forwards morphAlign as the morphTo align option when curve changes", () => {
+    const action = createAction({ curve: circle });
+
+    action.update!({ curve: square, morphAlign: true });
+
+    expect(mockInstance.morphTo).toHaveBeenCalledWith(square, { align: true });
+  });
+
   it("calls setRenderOptions when trailColor changes", () => {
     const action = createAction({ curve: circle, trailColor: "#ff0000" });
 
@@ -1002,6 +1036,23 @@ describe("sarmalDotMatrix (canvas action)", () => {
     action.update!({ curve: square, morphStrategy: "raw" });
 
     expect(mockInstance.morphTo).toHaveBeenCalledWith(square, { morphStrategy: "raw" });
+  });
+
+  it("forwards morphEasing as the morphTo easing option when curve changes", () => {
+    const action = createAction({ curve: circle });
+    const easing = (t: number) => t;
+
+    action.update!({ curve: square, morphEasing: easing });
+
+    expect(mockInstance.morphTo).toHaveBeenCalledWith(square, { easing });
+  });
+
+  it("forwards morphAlign as the morphTo align option when curve changes", () => {
+    const action = createAction({ curve: circle });
+
+    action.update!({ curve: square, morphAlign: true });
+
+    expect(mockInstance.morphTo).toHaveBeenCalledWith(square, { align: true });
   });
 
   it("calls setRenderOptions when trailColor changes", () => {

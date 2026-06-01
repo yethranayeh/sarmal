@@ -19,6 +19,8 @@
     trailStyle,
     morphDuration,
     morphStrategy,
+    morphEasing,
+    morphAlign,
     instance = $bindable(null as SarmalInstance | null),
     trailLength,
     headRadius,
@@ -86,6 +88,8 @@
       ?.morphTo(curve, {
         ...(morphDuration != null && { duration: morphDuration }),
         ...(morphStrategy != null && { morphStrategy }),
+        ...(morphEasing != null && { easing: morphEasing }),
+        ...(morphAlign != null && { align: morphAlign }),
       })
       .catch(() => {});
   });

@@ -19,6 +19,8 @@ export function useSarmalSVG(
   getInit?: () => BaseInit,
   getMorphDuration?: () => number | undefined,
   getMorphStrategy?: () => MorphStrategy | undefined,
+  getMorphEasing?: () => ((t: number) => number) | undefined,
+  getMorphAlign?: () => boolean | undefined,
 ): {
   get instance(): SarmalInstance | null;
 } {
@@ -75,6 +77,8 @@ export function useSarmalSVG(
     getCurve,
     getMorphDuration,
     getMorphStrategy,
+    getMorphEasing,
+    getMorphAlign,
   );
 
   registerRenderOptionsEffect(() => instance, getOptions);

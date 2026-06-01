@@ -19,6 +19,8 @@ export function useSarmal(
   getInit?: () => CanvasInit,
   getMorphDuration?: () => number | undefined,
   getMorphStrategy?: () => MorphStrategy | undefined,
+  getMorphEasing?: () => ((t: number) => number) | undefined,
+  getMorphAlign?: () => boolean | undefined,
 ): {
   get instance(): SarmalInstance | null;
 } {
@@ -79,6 +81,8 @@ export function useSarmal(
     getCurve,
     getMorphDuration,
     getMorphStrategy,
+    getMorphEasing,
+    getMorphAlign,
   );
 
   registerRenderOptionsEffect(() => instance, getOptions);
