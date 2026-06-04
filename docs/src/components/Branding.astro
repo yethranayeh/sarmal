@@ -65,11 +65,11 @@ const isAtHome = currentPath === "/";
 
 <a
 	href="/"
-	class="font-heading text-2xl text-foreground transition-colors group inline-flex items-center gap-1"
+	class="font-heading text-2xl text-foreground transition-colors group inline-flex items-center gap-1 [--opsz:24]"
 >
 	<span
 		class:list={[
-			'duration-300 transition-all [font-variation-settings:"wght"_var(--wght)]',
+			'duration-300 transition-all [font-variation-settings:"wght"_var(--wght),"opsz"_var(--opsz)]',
 			{
 				"text-primary group-hover:text-foreground [--wght:650] group-hover:[--wght:350]":
 					isAtHome,
@@ -112,7 +112,7 @@ const isAtHome = currentPath === "/";
 		</g>
 	</svg><span
 		class:list={[
-			'[--wght:350] [font-variation-settings:"wght"_var(--wght)] transition-all duration-300 -ml-4 group-hover:-ml-1',
+			'[--wght:350] [font-variation-settings:"wght"_var(--wght),"opsz"_var(--opsz)] transition-all duration-300 -ml-4 group-hover:-ml-1',
 			{
 				"text-foreground group-hover:text-primary [--wght:350] group-hover:[--wght:650]":
 					isAtHome,

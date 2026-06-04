@@ -183,6 +183,7 @@ h6 {
   font-weight: 500;
   letter-spacing: -0.02em;
   font-optical-sizing: auto;
+  --opsz: 18;
   position: relative;
   width: max-content;
 }

@@ -49,7 +49,7 @@ export default defineConfig({
       provider: fontProviders.google(),
       name: "Newsreader",
       cssVariable: "--font-heading",
-      weights: ["200", "300", "400", "500", "600", "700", "800"],
+      weights: ["200 800"],
       styles: ["normal", "italic"],
     },
     {
